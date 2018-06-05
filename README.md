@@ -14,3 +14,12 @@ Chat : https://leanprover.zulipchat.com/#narrow/stream/116395-maths/topic/Perfec
 ### Current Status
 
 Perfectoid rings and spaces formalised, modulo the entire theory of adic spaces.
+
+
+### Useful references
+
+[Brian Conrad's learning seminar](http://math.stanford.edu/~conrad/Perfseminar/)
+
+[Scholze etale cohomology of diamonds (ArXiv)](https://arxiv.org/abs/1709.07343)
+
+[Torsten Wedhorn's notes on adic spaces](https://www2.math.uni-paderborn.de/fileadmin/Mathematik/People/wedhorn/Lehre/AdicSpaces.pdf)
