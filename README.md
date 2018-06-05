@@ -7,7 +7,7 @@ This is a project whose first goal is to create a type in a certain computer lan
 
 The name of the type we're constructing is `perfectoid_space`. One could define a *perfectoid space* to be a term of this type. Hence any computer program which outputs a term of this type could be said to be a program which computed a perfectoid space. My initial goal is to finish formalising the definition, and after that one could imagine proving basic results about perfectoid spaces within Lean. Is this sort of thing feasible? I don't know. I think so though, and I'm not really sure if anyone has tried this sort of thing before. Let's find out!
 
-### Getting started.
+### Getting it working.
 
 This project runs with Lean 3.4.1 and Mathlib 3.4.1. You can find a precompiled Lean binary for most operating systems [here](https://github.com/leanprover/lean/releases/tag/v3.4.1). Once you have Lean up and running you can download the project as a zip file [here](https://github.com/kbuzzard/lean-perfectoid-spaces/archive/master.zip) and extract it into a directory, or just go to the [project home page](https://github.com/kbuzzard/lean-perfectoid-spaces) and clone or download the repository. Once you have unpacked the repository into a directory then change into the directory and run
 
