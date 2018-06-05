@@ -3,7 +3,7 @@ A formalization of the concept of a perfectoid space in the Lean formal theorem 
 
 ### Definition of a perfectoid space in the Lean Programming Language.
 
-This is a project whose first goal is to create a type in a certain computer language. The language is Lean, which is some version of dependent type theory. Dependent type theory is another foundation for mathematics, and in this type theory you can basically do all the things that mathematicians are used to doing in ZFC set theory.
+This is a project whose first goal is to create a type in a certain computer language. The language is Lean, which is some version of dependent type theory. Dependent type theory is another foundation for mathematics, and in this type theory you can do all the things that mathematicians are used to doing in ZFC set theory (and category theory too).
 
 The name of the type we're constructing is `perfectoid_space`. One could define a *perfectoid space* to be a term of this type. Hence any computer program which outputs a term of this type could be said to be a program which computed a perfectoid space. My initial goal is to finish formalising the definition, and after that one could imagine proving basic results about perfectoid spaces within Lean. Is this sort of thing feasible? I don't know. I think so though, and I'm not really sure if anyone has tried this sort of thing before. Let's find out!
 
