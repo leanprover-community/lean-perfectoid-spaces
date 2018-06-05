@@ -16,7 +16,15 @@ $ leanpkg upgrade
 ```
 and this will download mathlib. Typing `leanpkg build` will build the repository, which will take a while, but will ultimately make things run more quickly.
 
-If you are considering contributing then you will want to use an IDE, and the two standard ones for Lean are VS Code and emacs. Instructions for setting these editors up for Lean are [here](https://leanprover.github.io/reference/using_lean.html#using-lean-with-vscode) in the Lean user manual.
+If you are considering contributing then you will want to use an IDE, and the two standard ones for Lean are VS Code and emacs. Instructions for setting these editors up for Lean are [here](https://leanprover.github.io/reference/using_lean.html#using-lean-with-vscode) in the Lean reference manual.
+
+### I am a mathematician. How do I learn Lean?
+
+I read [theorem proving in Lean](https://leanprover.github.io/theorem_proving_in_lean/) and then I did a whole bunch of undergraduate level mathematics (I basically took a basic course which I teach, and tried to solve the problem sheets in Lean). Do note however that this whole thing is all very beta at the minute. I think [Tom Hales describes it best](https://jiggerwit.wordpress.com/2018/04/14/the-architecture-of-proof-assistants/).
+
+### Why are you even doing this?
+
+Because I think that [this idea](https://jiggerwit.wordpress.com/2018/04/09/formal-abstracts-a-long-term-vision/) is really interesting, and I want to see where it leads. And because I like computing examples of mathematical objects, especially complex ones like eigencurves and so on.
 
 ### Chat
 
