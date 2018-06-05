@@ -93,7 +93,7 @@ instance (A : Huber_pair) : preadic_space (Spa A) := sorry
 
 attribute [class] _root_.is_open 
 
-instance preadic_space_restriction {X : Type} [preadic_space X] {U : set X} [@_root_.is_open X _ U] :
+instance preadic_space_restriction {X : Type} [preadic_space X] {U : set X} [is_open U] :
   preadic_space {x : X // x ∈ U} := sorry
 
 -- unwritten 
