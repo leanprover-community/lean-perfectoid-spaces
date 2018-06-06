@@ -43,4 +43,6 @@ Perfectoid rings and spaces formalised, modulo the entire theory of adic spaces.
 
 [Scholze etale cohomology of diamonds (ArXiv)](https://arxiv.org/abs/1709.07343).
 
+[Fontaine's text for Seminaire Bourbaki](http://www.bourbaki.ens.fr/TEXTES/1057.pdf).
+
 [Torsten Wedhorn's notes on adic spaces](https://www2.math.uni-paderborn.de/fileadmin/Mathematik/People/wedhorn/Lehre/AdicSpaces.pdf).

@@ -108,6 +108,8 @@ structure preadic_space_equiv (X Y : Type) [AX : preadic_space X] [AY : preadic_
 definition is_preadic_space_equiv (X Y : Type) [AX : preadic_space X] [AY : preadic_space Y] := 
   nonempty (preadic_space_equiv X Y)
 
-definition preadic_space_pullback {X : Type} [preadic_space X] (U : set X) : preadic_space {x : X // x ∈ U} := sorry 
+definition preadic_space_pullback {X : Type} [preadic_space X] (U : set X) := {x : X // x ∈ U}
+
+instance pullback_is_preadic_space {X : Type} [preadic_space X] (U : set X) : preadic_space (preadic_space_pullback U) := sorry 
 
 -- notation `is_open` := _root_.is_open
