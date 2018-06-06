@@ -5,14 +5,11 @@ import ring_theory.ideals
 import for_mathlib.subrel 
 import for_mathlib.ideals 
 
-
-universes u v
-
-class linear_ordered_comm_group (α : Type u)
+class linear_ordered_comm_group (α : Type)
     extends comm_group α, linear_order α :=
 (mul_le_mul_left : ∀ {a b : α}, a ≤ b → ∀ c : α, c * a ≤ c * b)
 
-class linear_ordered_comm_monoid (α : Type u)
+class linear_ordered_comm_monoid (α : Type)
     extends comm_monoid α, linear_order α :=
 (mul_le_mul_left : ∀ {a b : α}, a ≤ b → ∀ c : α, c * a ≤ c * b)
 
@@ -20,8 +17,8 @@ local infix ^ := monoid.pow
 
 namespace linear_ordered_comm_group
 
-variables {α : Type u} [linear_ordered_comm_group α] {x y z : α}
-variables {β : Type v} [linear_ordered_comm_group β]
+variables {α : Type} [linear_ordered_comm_group α] {x y z : α}
+variables {β : Type} [linear_ordered_comm_group β]
 
 class is_hom (f : α → β) : Prop :=
 (Hf : is_group_hom f)
@@ -131,7 +128,7 @@ theorem ker.is_convex (f : α → β) (hf : is_hom f) : is_convex (ker f hf) :=
   inv_mem := λ x hx, show f x⁻¹ = 1, by dsimp [ker] at hx; rw [@is_group_hom.inv _ _ _ _ f (hf.1) x, hx, one_inv],
   mem_of_between := λ x y hxy hy1 hx, le_antisymm (is_group_hom.one f ▸ is_hom.Hord _ hy1) (hx ▸ is_hom.Hord _ hxy) }
 
-def height (α : Type u) [linear_ordered_comm_group α] : cardinal :=
+def height (α : Type) [linear_ordered_comm_group α] : cardinal :=
 cardinal.mk {S : set α // is_proper_convex S}
 
 namespace extend
@@ -233,8 +230,8 @@ end extend
 
 end linear_ordered_comm_group
 
-class is_valuation {α : Type u} [linear_ordered_comm_group α]
-  {R : Type v} [comm_ring R] (f : R → option α) : Prop :=
+class is_valuation {α : Type} [linear_ordered_comm_group α]
+  {R : Type} [comm_ring R] (f : R → option α) : Prop :=
 (map_zero : f 0 = 0)
 (map_one  : f 1 = 1)
 (map_mul  : ∀ x y, f (x * y) = f x * f y)
@@ -242,8 +239,8 @@ class is_valuation {α : Type u} [linear_ordered_comm_group α]
 
 namespace is_valuation
 
-variables {α : Type u} [linear_ordered_comm_group α]
-variables {R : Type v} [comm_ring R] (f : R → option α)
+variables {α : Type} [linear_ordered_comm_group α]
+variables {R : Type} [comm_ring R] (f : R → option α)
 variables [is_valuation f] {x y z : R}
 
 theorem map_unit : x * y = 1 → option.is_some (f x) :=
