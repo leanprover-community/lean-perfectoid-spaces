@@ -4,6 +4,7 @@ import analysis.topology.topological_structures
 import data.nat.prime 
 import algebra.group_power
 import for_mathlib.presheaves
+import for_mathlib.topology
 
 open nat function
 
@@ -25,15 +26,15 @@ class Huber_ring (R : Type) extends comm_ring R, topological_space R, topologica
 -- TODO should have an instance going from Tate to Huber
 
 -- peredicates we need for topological rings
-definition complete (R : Type) [topological_space R] [comm_ring R] [topological_ring R] : Prop := sorry 
-definition uniform (R : Type) : Prop := sorry 
+definition is_complete (R : Type) [topological_space R] [comm_ring R] [topological_ring R] : Prop := sorry 
+definition is_uniform (R : Type) : Prop := sorry 
 definition is_bounded {R : Type} [topological_space R] [comm_ring R] [topological_ring R] 
   (U : set R) : Prop := sorry
 definition is_power_bounded {R : Type} (r : R) : Prop := sorry 
 definition power_bounded_subring (R : Type) := {r : R // is_power_bounded r}
 instance subring_to_ring (R : Type) : has_coe (power_bounded_subring R) R := ⟨subtype.val⟩ 
 instance power_bounded_subring_is_ring (R : Type) : comm_ring (power_bounded_subring R) := sorry
-theorem p_is_power_bounded (R : Type) (p : Prime) : is_power_bounded (p : power_bounded_subring R) := sorry
+theorem p_is_power_bounded (R : Type) [p : Prime] : is_power_bounded (p : power_bounded_subring R) := sorry
 definition is_pseudo_uniformizer {R : Type} : R → Prop := sorry
 definition is_subring {R : Type} [comm_ring R] : set R → Prop := sorry 
 definition is_integrally_closed {R : Type} [comm_ring R] : set R → Prop := sorry  
@@ -91,10 +92,10 @@ class preadic_space (X : Type) extends topological_space X
 -- not logically necessary but should be easy
 instance (A : Huber_pair) : preadic_space (Spa A) := sorry 
 
-attribute [class] _root_.is_open 
+-- attribute [class] _root_.is_open 
 
-instance preadic_space_restriction {X : Type} [preadic_space X] {U : set X} [is_open U] :
-  preadic_space {x : X // x ∈ U} := sorry
+instance preadic_space_restriction {X : Type} [preadic_space X] {U : opens X} :
+  preadic_space U := sorry
 
 -- unwritten 
 class adic_space (X : Type) extends preadic_space X
@@ -111,4 +112,4 @@ definition preadic_space_pullback {X : Type} [preadic_space X] (U : set X) := {x
 
 instance pullback_is_preadic_space {X : Type} [preadic_space X] (U : set X) : preadic_space (preadic_space_pullback U) := sorry 
 
-notation `is_open` := _root_.is_open
+-- notation `is_open` := _root_.is_open
