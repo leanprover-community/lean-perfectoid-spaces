@@ -55,7 +55,7 @@ structure Huber_pair :=
 [intel : is_ring_of_integral_elements Rplus]
 
 instance : has_coe_to_sort Huber_pair := 
-{ S := Type, coe := λ A,A.R}
+{ S := Type, coe := Huber_pair.R}
 
 postfix `⁺` : 66 := λ R : Huber_pair _, R.Rplus  
 
