@@ -7,6 +7,7 @@ import algebra.group_power
 import for_mathlib.presheaves
 import for_mathlib.topology
 import for_mathlib.subring
+import linear_algebra.basic
 
 open nat function
 
@@ -15,12 +16,17 @@ variables {R : Type} [comm_ring R] [topological_space R] [topological_ring R]
 -- Schol= : "Recall that a topological ring R is Tate if it contains an
 -- open and bounded subring R0 ⊂ R and a topologically nilpotent unit pi ∈ R; such elements are
 -- called pseudo-uniformizers.""
--- we need definitions of bounded subsete and topologically nilpotent -- and do we have unit? Probably.
+-- we need definitions of bounded subsets and topologically nilpotent -- and do we have unit? Probably.
 class Tate_ring (R : Type) extends comm_ring R, topological_space R, topological_ring R :=
 (unfinished : sorry)
 
 def adic_topology {R : Type} [comm_ring R] (I : set R) [is_ideal I] : topological_space R :=
-sorry
+begin
+  have adic_nhd_of_zero : ℕ → (set R) := λn, span {i | ∃ x : multiset I, x.card = n ∧ i = (x.map subtype.val).prod},
+  have adic_nhd_of : R → set (set R) := λr, (set.range (λn : ℕ, {r' | ((r' : R) - r) ∈ adic_nhd_of_zero n})),
+  have adic_nhds := ⋃₀ (set.range adic_nhd_of),
+  exact topological_space.generate_from adic_nhds
+end
 
 def is_pair_of_definition [T : topological_space R] (R₀ : set R) [is_subring R₀] (I : set R₀) [is_ideal I]: Prop :=
 topological_space.induced (@subtype.val _ (R₀ : set R)) T = adic_topology I
