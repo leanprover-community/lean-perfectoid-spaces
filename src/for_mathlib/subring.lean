@@ -8,8 +8,8 @@ variables {R : Type} [ring R]
 class is_subring  (S : set R) extends is_add_subgroup S, is_submonoid S : Prop.
 
 instance subtype.ring {S : set R} [is_subring S] : ring S :=
-{ add_comm := sorry,
-  left_distrib := sorry,
-  right_distrib := sorry,
+{ add_comm      := assume ⟨a,_⟩ ⟨b,_⟩, subtype.eq $ add_comm _ _,
+  left_distrib  := assume ⟨a,_⟩ ⟨b,_⟩ ⟨c,_⟩, subtype.eq $ left_distrib _ _ _,
+  right_distrib := assume ⟨a,_⟩ ⟨b,_⟩ ⟨c,_⟩, subtype.eq $ right_distrib _ _ _,
   .. subtype.add_group,
   .. subtype.monoid }
