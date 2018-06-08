@@ -7,7 +7,7 @@ import algebra.group_power
 import for_mathlib.presheaves
 import for_mathlib.topology
 import for_mathlib.subring
-import linear_algebra.basic
+import linear_algebra.basic linear_algebra.subtype_module
 
 open nat function
 
@@ -20,6 +20,9 @@ variables {R : Type} [comm_ring R] [topological_space R] [topological_ring R]
 class Tate_ring (R : Type) extends comm_ring R, topological_space R, topological_ring R :=
 (unfinished : sorry)
 
+def is_finitely_generated {R : Type} [comm_ring R] (M : Type) [module R M] : Prop :=
+∃ b : finset M, M = span {m | m ∈ b}
+
 def adic_topology {R : Type} [comm_ring R] (I : set R) [is_ideal I] : topological_space R :=
 begin
   have adic_nhd_of_zero : ℕ → (set R) := λn, span {i | ∃ x : multiset I, x.card = n ∧ i = (x.map subtype.val).prod},
@@ -28,8 +31,11 @@ begin
   exact topological_space.generate_from adic_nhds
 end
 
+def ideal_to_module {R : Type} [comm_ring R] (I : set R) [is_ideal I] : module R I := sorry
+
 def is_pair_of_definition [T : topological_space R] (R₀ : set R) [is_subring R₀] (I : set R₀) [is_ideal I]: Prop :=
-topological_space.induced (@subtype.val _ (R₀ : set R)) T = adic_topology I
+topological_space.induced (@subtype.val _ (R₀ : set R)) T = adic_topology I ∧
+@is_finitely_generated _ _ I (ideal_to_module I)
 
 def is_ring_of_definition (R₀ : set R) [is_subring R₀] :=
 ∃ (I : set R₀) [hI : is_ideal I], @is_pair_of_definition _ _ _ _ _ R₀ _ I hI
