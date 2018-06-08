@@ -12,10 +12,10 @@ class is_add_submonoid (s : set α) : Prop :=
 (zero_mem : (0:α) ∈ s)
 (add_mem {a b} : a ∈ s → b ∈ s → a + b ∈ s)
 
-section addtiples
-def addtiples (x : α) : set α := {y | ∃ n:ℕ, add_monoid.smul n x = y}
+section multiples
+def multiples (x : α) : set α := {y | ∃ n:ℕ, add_monoid.smul n x = y}
 
-instance addtiples.is_add_submonoid (x : α) : is_add_submonoid (addtiples x) :=
+instance multiples.is_add_submonoid (x : α) : is_add_submonoid (multiples x) :=
 { zero_mem := ⟨0, by simp⟩,
   add_mem := λ x₁ x₂ ⟨n₁, hn₁⟩ ⟨n₂, hn₂⟩, ⟨n₁ + n₂, by simp [add_monoid.add_smul, *]⟩ }
 
@@ -24,10 +24,10 @@ lemma is_add_submonoid.smul_mem {a : α} [is_add_submonoid s] (h : a ∈ s) :
 | 0 := is_add_submonoid.zero_mem s
 | (n + 1) := is_add_submonoid.add_mem h is_add_submonoid.smul_mem
 
-lemma is_add_submonoid.addtiple_subset {a : α} [is_add_submonoid s] (h : a ∈ s) : addtiples a ⊆ s :=
+lemma is_add_submonoid.multiple_subset {a : α} [is_add_submonoid s] (h : a ∈ s) : multiples a ⊆ s :=
 assume x ⟨n, hx⟩, hx ▸ is_add_submonoid.smul_mem h
 
-end addtiples
+end multiples
 
 lemma is_add_submonoid.list_prod_mem [is_add_submonoid s] : ∀{l : list α}, (∀x∈l, x ∈ s) → l.sum ∈ s
 | []     h := is_add_submonoid.zero_mem s

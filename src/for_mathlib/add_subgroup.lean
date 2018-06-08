@@ -17,7 +17,7 @@ assume a₁ a₂ h,
 have -a + a + a₁ = -a + a + a₂, by rw [add_assoc, add_assoc, h],
 by rwa [neg_add_self, zero_add, zero_add] at this
 
-/-- `s` is a subgroup: a set containing 1 and closed under addtiplication and negerse. -/
+/-- `s` is an additive subgroup: a set containing 0 and closed under addition and negation. -/
 class is_add_subgroup [add_group α] (s : set α) extends is_add_submonoid s : Prop :=
 (neg_mem {a} : a ∈ s → -a ∈ s)
 
