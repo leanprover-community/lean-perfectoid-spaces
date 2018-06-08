@@ -14,6 +14,14 @@ instance subtype.ring {S : set R} [is_subring S] : ring S :=
   .. subtype.add_group,
   .. subtype.monoid }
 
+instance set.comm_ring [comm_ring R] {S : set R} [is_subring S] : comm_ring S :=
+{ mul_comm := sorry, -- assume ⟨a,_⟩ ⟨b,_⟩, subtype.eq $ mul_comm _ _,
+  .. subtype.ring }
+
+instance subtype.comm_ring [comm_ring R] {S : set R} [is_subring S] : comm_ring (subtype S) :=
+{ mul_comm := sorry, -- assume ⟨a,_⟩ ⟨b,_⟩, subtype.eq $ mul_comm _ _,
+  .. subtype.ring }
+
 def is_integral (S : set R) [is_subring S] (r : R) : Prop := sorry
 -- ∃ f : (poly S), (is_monic f) ∧ (f(r) = 0)
 

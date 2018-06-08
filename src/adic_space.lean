@@ -1,4 +1,5 @@
 import for_mathlib.prime
+import for_mathlib.ideals
 import for_mathlib.is_cover 
 import analysis.topology.topological_structures
 import data.nat.prime 
@@ -9,7 +10,7 @@ import for_mathlib.subring
 
 open nat function
 
-variables (R : Type) [comm_ring R] [topological_space R] [topological_ring R]  
+variables {R : Type} [comm_ring R] [topological_space R] [topological_ring R]  
 
 -- Schol= : "Recall that a topological ring R is Tate if it contains an
 -- open and bounded subring R0 ⊂ R and a topologically nilpotent unit pi ∈ R; such elements are
@@ -18,11 +19,20 @@ variables (R : Type) [comm_ring R] [topological_space R] [topological_ring R]
 class Tate_ring (R : Type) extends comm_ring R, topological_space R, topological_ring R :=
 (unfinished : sorry)
 
+def adic_topology {R : Type} [comm_ring R] (I : set R) [is_ideal I] : topological_space R :=
+sorry
+
+def is_pair_of_definition [T : topological_space R] (R₀ : set R) [is_subring R₀] (I : set R₀) [is_ideal I]: Prop :=
+topological_space.induced (@subtype.val _ (R₀ : set R)) T = adic_topology I
+
+def is_ring_of_definition (R₀ : set R) [is_subring R₀] :=
+∃ (I : set R₀) [hI : is_ideal I], @is_pair_of_definition _ _ _ _ _ R₀ _ I hI
+
 -- f-adic rings are called Huber rings by Scholze.
 -- Topological ring A contains on open subring A0 such that the subspace topology on A0 is
 -- I-adic, where I is a finitely generated ideal of A0 .
 class Huber_ring (R : Type) extends comm_ring R, topological_space R, topological_ring R :=
-(unfinished2 : sorry)
+(exists_ring_of_definition : ∃ (R₀ : set R) [is_subring R₀], is_ring_of_definition R₀)
 
 -- TODO should have an instance going from Tate to Huber
 
