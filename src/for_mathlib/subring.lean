@@ -17,5 +17,5 @@ instance subtype.ring {S : set R} [is_subring S] : ring S :=
 def is_integral (S : set R) [is_subring S] (r : R) : Prop := sorry
 -- ∃ f : (poly S), (is_monic f) ∧ (f(r) = 0)
 
-def is_integrally_closed {S : set R} [is_subring S] :=
+def is_integrally_closed (S : set R) [is_subring S] :=
 ∀ r : R, (is_integral S r) → r ∈ S
