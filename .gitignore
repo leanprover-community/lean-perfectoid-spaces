@@ -2,3 +2,7 @@
 /_target
 /leanpkg.path
 /pdf
+/LaTeX_docs/*.aux
+/LaTeX_docs/*.log
+/LaTeX_docs/*~
+*.txt~
