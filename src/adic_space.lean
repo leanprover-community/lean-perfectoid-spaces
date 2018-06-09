@@ -10,7 +10,7 @@ open nat function
 
 variables (R : Type) [comm_ring R] [topological_space R] [topological_ring R]  
 
--- Schol= : "Recall that a topological ring R is Tate if it contains an
+-- Scholze : "Recall that a topological ring R is Tate if it contains an
 -- open and bounded subring R0 ⊂ R and a topologically nilpotent unit pi ∈ R; such elements are
 -- called pseudo-uniformizers.""
 -- we need definitions of bounded subsete and topologically nilpotent -- and do we have unit? Probably.
