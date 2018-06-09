@@ -25,6 +25,7 @@ class is_hom (f : α → β) : Prop :=
 (Hord : ∀ {a b : α}, a ≤ b → f a ≤ f b)
 
 instance hom_is_group_hom (f : α → β) [H : is_hom f] : is_group_hom f := H.Hf
+
 structure equiv extends equiv α β :=
 (is_hom : is_hom to_fun)
 
