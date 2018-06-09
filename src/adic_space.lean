@@ -8,7 +8,63 @@ import for_mathlib.topology
 
 open nat function
 
-variables (R : Type) [comm_ring R] [topological_space R] [topological_ring R]  
+section comm_ring
+variables (R : Type) [comm_ring R]
+-- This section is filled in in Johan's PR
+definition is_subring {R : Type} [comm_ring R] : set R → Prop := sorry 
+definition is_integrally_closed {R : Type} [comm_ring R] : set R → Prop := sorry  
+end comm_ring
+
+section topological_ring
+
+-- The following two lines are a nasty hack to switch between having the carrier 
+-- Type implicit or explicit.
+variables (R : Type) [comm_ring R] [topological_space R] [comm_ring R] [topological_ring R]  
+variables {A : Type} [comm_ring A] [topological_space A] [comm_ring A] [topological_ring A]  
+
+def nhd_zero := (nhds (0 : R)).sets
+
+-- peredicates we need for topological rings
+
+-- Following is copy-pasted from t2_space class.
+-- We need to think whether we could directly use that class
+definition is_hausdorff (α : Type*) [topological_space α] : Prop := 
+  ∀x y, x ≠ y → ∃u v : set α, is_open u ∧ is_open v ∧ x ∈ u ∧ y ∈ v ∧ u ∩ v = ∅
+
+open filter
+instance toplogical_ring.to_uniform_space : uniform_space R := 
+uniform_space.of_core { uniformity  := (⨅ U ∈ nhd_zero R, principal {p : R×R | p.2 - p.1 ∈ U}),
+                        refl        := begin simp, intros i H r, exact mem_of_nhds H end,
+                        symm        := sorry,
+                        comp        := sorry }
+
+/-- Wedhorn Definition 5.31 page 38 -/
+definition is_complete : Prop := is_hausdorff R ∧ ∀ {f:filter R}, cauchy f → ∃x, f ≤ nhds x
+
+/-- Wedhorn Definition 5.27 page 36 -/
+definition is_bounded 
+  (B : set A) : Prop := ∀ U ∈ nhd_zero A, ∃ V ∈ nhd_zero A, ∀ v ∈ V, ∀ b ∈ B, v*b ∈ U
+
+def power_set (r : A) : set A := set.range (λ n : ℕ, r^n)
+
+definition is_power_bounded (r : A) : Prop := is_bounded (power_set r)
+
+-- Somehow we need R° both as a subset of R and a subtype. 
+-- There is a coercion from the set to the subtype but relying naively on it seems to bring 
+-- type class resolution issues
+definition power_bounded_subring := {r : R // is_power_bounded r}
+definition power_bounded_subring_set := {r : R | is_power_bounded r}
+
+instance power_bounded_subring_to_ring : has_coe (power_bounded_subring R) R := ⟨subtype.val⟩ 
+instance power_bounded_subring_is_ring  : comm_ring (power_bounded_subring R) := sorry
+instance : topological_space (power_bounded_subring R) := sorry
+instance : topological_ring (power_bounded_subring R) := sorry
+
+definition is_uniform : Prop := is_bounded (power_bounded_subring_set R)
+
+theorem p_is_power_bounded [p : Prime] : is_power_bounded (p : power_bounded_subring R) := sorry
+definition is_pseudo_uniformizer : A → Prop := sorry
+end topological_ring
 
 -- Schol= : "Recall that a topological ring R is Tate if it contains an
 -- open and bounded subring R0 ⊂ R and a topologically nilpotent unit pi ∈ R; such elements are
@@ -24,20 +80,6 @@ class Huber_ring (R : Type) extends comm_ring R, topological_space R, topologica
 (unfinished2 : sorry)
 
 -- TODO should have an instance going from Tate to Huber
-
--- peredicates we need for topological rings
-definition is_complete (R : Type) [topological_space R] [comm_ring R] [topological_ring R] : Prop := sorry 
-definition is_uniform (R : Type) : Prop := sorry 
-definition is_bounded {R : Type} [topological_space R] [comm_ring R] [topological_ring R] 
-  (U : set R) : Prop := sorry
-definition is_power_bounded {R : Type} (r : R) : Prop := sorry 
-definition power_bounded_subring (R : Type) := {r : R // is_power_bounded r}
-instance subring_to_ring (R : Type) : has_coe (power_bounded_subring R) R := ⟨subtype.val⟩ 
-instance power_bounded_subring_is_ring (R : Type) : comm_ring (power_bounded_subring R) := sorry
-theorem p_is_power_bounded (R : Type) [p : Prime] : is_power_bounded (p : power_bounded_subring R) := sorry
-definition is_pseudo_uniformizer {R : Type} : R → Prop := sorry
-definition is_subring {R : Type} [comm_ring R] : set R → Prop := sorry 
-definition is_integrally_closed {R : Type} [comm_ring R] : set R → Prop := sorry  
 
 
 -- Wedhorn Def 7.14
