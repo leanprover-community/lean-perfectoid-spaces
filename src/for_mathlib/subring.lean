@@ -17,12 +17,7 @@ instance subset.ring {S : set R} [is_subring S] : ring S :=
   .. subtype.add_group,
   .. subtype.monoid }
 
-instance subtype.ring {S : set R} [is_subring S] : ring (subtype S) :=
-{ add_comm      := assume ⟨a,_⟩ ⟨b,_⟩, subtype.eq $ add_comm _ _,
-  left_distrib  := assume ⟨a,_⟩ ⟨b,_⟩ ⟨c,_⟩, subtype.eq $ left_distrib _ _ _,
-  right_distrib := assume ⟨a,_⟩ ⟨b,_⟩ ⟨c,_⟩, subtype.eq $ right_distrib _ _ _,
-  .. subtype.add_group,
-  .. subtype.monoid }
+instance subtype.ring {S : set R} [is_subring S] : ring (subtype S) := subset.ring
 
 namespace is_ring_hom
 
