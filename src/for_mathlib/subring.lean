@@ -28,11 +28,13 @@ instance {S : set R} [is_subring S] : is_ring_hom (@subtype.val R S) :=
 
 end is_ring_hom
 
-noncomputable def poly.map {S : Type} [ring S] (f : S → R) [is_ring_hom f] : polynomial S → polynomial R :=
+variables [decidable_eq R]
+
+def polynomial.map {S : Type} [ring S] (f : S → R) [is_ring_hom f] : polynomial S → polynomial R :=
 finsupp.map_range f (is_ring_hom.map_zero f)
 
 def is_integral (S : set R) [is_subring S] (r : R) : Prop :=
-∃ f : polynomial S, (polynomial.monic f) ∧ (poly.map (@subtype.val R S) f).eval r = 0
+∃ f : polynomial S, (polynomial.monic f) ∧ (polynomial.map (@subtype.val R S) f).eval r = 0
 
 def is_integrally_closed (S : set R) [is_subring S] :=
 ∀ r : R, (is_integral S r) → r ∈ S
