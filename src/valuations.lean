@@ -1,5 +1,4 @@
 import algebra.group_power
---import Kenny_comm_alg.temp
 import set_theory.cardinal
 import ring_theory.ideals
 import for_mathlib.subrel 
