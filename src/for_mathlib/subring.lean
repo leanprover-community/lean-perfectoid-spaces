@@ -28,8 +28,8 @@ instance {S : set R} [is_subring S] : is_ring_hom (@subtype.val R S) :=
 
 end is_ring_hom
 
-variables [decidable_eq R]
-
+-- variables [decidable_eq R]
+-- 
 -- def polynomial.map {S : Type} [ring S] (f : S → R) [is_ring_hom f] : polynomial S → polynomial R :=
 -- finsupp.map_range f (is_ring_hom.map_zero f)
 
