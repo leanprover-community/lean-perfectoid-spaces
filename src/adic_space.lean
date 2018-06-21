@@ -5,6 +5,7 @@ import data.nat.prime
 import algebra.group_power
 import for_mathlib.presheaves
 import for_mathlib.topology
+import for_mathlib.subring
 
 open nat function
 
@@ -32,12 +33,10 @@ definition is_bounded {R : Type} [topological_space R] [comm_ring R] [topologica
   (U : set R) : Prop := sorry
 definition is_power_bounded {R : Type} (r : R) : Prop := sorry 
 definition power_bounded_subring (R : Type) := {r : R // is_power_bounded r}
-instance subring_to_ring (R : Type) : has_coe (power_bounded_subring R) R := ⟨subtype.val⟩ 
+-- instance subring_to_ring (R : Type) : has_coe (power_bounded_subring R) R := ⟨subtype.val⟩ 
 instance power_bounded_subring_is_ring (R : Type) : comm_ring (power_bounded_subring R) := sorry
 theorem p_is_power_bounded (R : Type) [p : Prime] : is_power_bounded (p : power_bounded_subring R) := sorry
-definition is_pseudo_uniformizer {R : Type} : R → Prop := sorry
-definition is_subring {R : Type} [comm_ring R] : set R → Prop := sorry 
-definition is_integrally_closed {R : Type} [comm_ring R] : set R → Prop := sorry  
+definition is_pseudo_uniformizer {R : Type} : R → Prop := sorry 
 
 
 -- Wedhorn Def 7.14
