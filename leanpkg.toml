@@ -6,4 +6,3 @@ path = "src"
 
 [dependencies]
 mathlib = {git = "https://github.com/leanprover/mathlib", rev = "b37526407ed1846f29dcdfb976554daf7f8a983e"}
-mason-stother = {git = "https://github.com/johoelzl/mason-stother", rev = "a4095993c2f7fc58091f1a1d05459eae17f786b1"}

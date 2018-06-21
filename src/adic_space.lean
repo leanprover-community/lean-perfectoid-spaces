@@ -9,6 +9,8 @@ import for_mathlib.subring
 
 open nat function
 
+local attribute [instance] classical.prop_decidable
+
 variables (R : Type) [comm_ring R] [topological_space R] [topological_ring R]  
 
 -- Schol= : "Recall that a topological ring R is Tate if it contains an

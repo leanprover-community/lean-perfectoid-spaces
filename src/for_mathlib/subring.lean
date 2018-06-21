@@ -1,5 +1,5 @@
 import for_mathlib.add_subgroup group_theory.submonoid
-import poly
+-- import poly -- mason-stother doesn't compile at the moment
 import algebra.ring
 local attribute [instance] classical.prop_decidable
 
@@ -30,11 +30,11 @@ end is_ring_hom
 
 variables [decidable_eq R]
 
-def polynomial.map {S : Type} [ring S] (f : S → R) [is_ring_hom f] : polynomial S → polynomial R :=
-finsupp.map_range f (is_ring_hom.map_zero f)
+-- def polynomial.map {S : Type} [ring S] (f : S → R) [is_ring_hom f] : polynomial S → polynomial R :=
+-- finsupp.map_range f (is_ring_hom.map_zero f)
 
-def is_integral (S : set R) [is_subring S] (r : R) : Prop :=
-∃ f : polynomial S, (polynomial.monic f) ∧ (polynomial.map (@subtype.val R S) f).eval r = 0
+def is_integral (S : set R) [is_subring S] (r : R) : Prop := sorry
+-- ∃ f : polynomial S, (polynomial.monic f) ∧ (polynomial.map (@subtype.val R S) f).eval r = 0
 
 def is_integrally_closed (S : set R) [is_subring S] :=
 ∀ r : R, (is_integral S r) → r ∈ S
