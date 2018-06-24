@@ -5,10 +5,43 @@ import data.nat.prime
 import algebra.group_power
 import for_mathlib.presheaves
 import for_mathlib.topology
+import for_mathlib.topological_structures
 
 open nat function
 
-variables (R : Type) [comm_ring R] [topological_space R] [topological_ring R]  
+section comm_ring
+variables (R : Type) [comm_ring R]
+-- This section is filled in in Johan's PR
+definition is_subring {R : Type} [comm_ring R] : set R → Prop := sorry
+definition is_integrally_closed {R : Type} [comm_ring R] : set R → Prop := sorry
+end comm_ring
+
+section topological_ring
+variables {R : Type*} [comm_ring R] [topological_space R] [topological_ring R]  
+
+/-- Wedhorn Definition 5.27 page 36 -/
+definition is_bounded 
+  (B : set R) : Prop := ∀ U ∈ (nhds (0 :R)).sets, ∃ V ∈ (nhds (0 :R)).sets, ∀ v ∈ V, ∀ b ∈ B, v*b ∈ U
+
+def powers (r : R) : set R := set.range (λ n : ℕ, r^n)
+
+definition is_power_bounded (r : R) : Prop := is_bounded (powers r)
+
+variable (R)
+definition power_bounded_subring := {r : R | is_power_bounded r}
+
+instance power_bounded_subring_to_ring : has_coe (power_bounded_subring R) R := ⟨subtype.val⟩ 
+instance power_bounded_subring_is_ring  : comm_ring (power_bounded_subring R) := sorry
+instance : topological_space (power_bounded_subring R) := sorry
+instance : topological_ring (power_bounded_subring R) := sorry
+
+definition is_uniform : Prop := is_bounded (power_bounded_subring R)
+
+theorem p_is_power_bounded [p : Prime] : is_power_bounded (p : power_bounded_subring R) := sorry
+
+variable {R}
+definition is_pseudo_uniformizer : R → Prop := sorry
+end topological_ring
 
 -- Scholze : "Recall that a topological ring R is Tate if it contains an
 -- open and bounded subring R0 ⊂ R and a topologically nilpotent unit pi ∈ R; such elements are
@@ -24,20 +57,6 @@ class Huber_ring (R : Type) extends comm_ring R, topological_space R, topologica
 (unfinished2 : sorry)
 
 -- TODO should have an instance going from Tate to Huber
-
--- peredicates we need for topological rings
-definition is_complete (R : Type) [topological_space R] [comm_ring R] [topological_ring R] : Prop := sorry 
-definition is_uniform (R : Type) : Prop := sorry 
-definition is_bounded {R : Type} [topological_space R] [comm_ring R] [topological_ring R] 
-  (U : set R) : Prop := sorry
-definition is_power_bounded {R : Type} (r : R) : Prop := sorry 
-definition power_bounded_subring (R : Type) := {r : R // is_power_bounded r}
-instance subring_to_ring (R : Type) : has_coe (power_bounded_subring R) R := ⟨subtype.val⟩ 
-instance power_bounded_subring_is_ring (R : Type) : comm_ring (power_bounded_subring R) := sorry
-theorem p_is_power_bounded (R : Type) [p : Prime] : is_power_bounded (p : power_bounded_subring R) := sorry
-definition is_pseudo_uniformizer {R : Type} : R → Prop := sorry
-definition is_subring {R : Type} [comm_ring R] : set R → Prop := sorry 
-definition is_integrally_closed {R : Type} [comm_ring R] : set R → Prop := sorry  
 
 
 -- Wedhorn Def 7.14
