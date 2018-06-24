@@ -336,14 +336,14 @@ structure valuations (R : Type) [comm_ring R] :=
 
 attribute [instance] valuations.Hα
 
-instance (R : Type) [comm_ring R] : has_coe_to_fun (valuations R) :=
-{ F := λ v,R → option v.α, 
-  coe := λ v,v.f
-}
+--instance (R : Type) [comm_ring R] : has_coe_to_fun (valuations R) :=
+--{ F := λ v,R → option v.α, 
+--  coe := λ v,v.f
+--}
 
 /- Wedhorn 1.27 (ii) -/
 instance valuations.setoid (R : Type) [comm_ring R] : setoid (valuations R) :=
-{ r := λ f g, ∀ r s : R, f r ≤ f s ↔ g r ≤ g s,
+{ r := λ v w, ∀ r s : R, v.f r ≤ v.f s ↔ w.f r ≤ w.f s,
   iseqv := ⟨
     -- reflexivity 
     λ _ _ _,iff.rfl,
