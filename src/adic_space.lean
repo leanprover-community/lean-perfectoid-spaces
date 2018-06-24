@@ -6,15 +6,9 @@ import algebra.group_power
 import for_mathlib.presheaves
 import for_mathlib.topology
 import for_mathlib.topological_structures
+import for_mathlib.subring
 
 open nat function
-
-section comm_ring
-variables (R : Type) [comm_ring R]
--- This section is filled in in Johan's PR
-definition is_subring {R : Type} [comm_ring R] : set R → Prop := sorry
-definition is_integrally_closed {R : Type} [comm_ring R] : set R → Prop := sorry
-end comm_ring
 
 section topological_ring
 variables {R : Type*} [comm_ring R] [topological_space R] [topological_ring R]  
@@ -22,8 +16,6 @@ variables {R : Type*} [comm_ring R] [topological_space R] [topological_ring R]
 /-- Wedhorn Definition 5.27 page 36 -/
 definition is_bounded 
   (B : set R) : Prop := ∀ U ∈ (nhds (0 :R)).sets, ∃ V ∈ (nhds (0 :R)).sets, ∀ v ∈ V, ∀ b ∈ B, v*b ∈ U
-
-def powers (r : R) : set R := set.range (λ n : ℕ, r^n)
 
 definition is_power_bounded (r : R) : Prop := is_bounded (powers r)
 
@@ -58,6 +50,21 @@ class Huber_ring (R : Type) extends comm_ring R, topological_space R, topologica
 
 -- TODO should have an instance going from Tate to Huber
 
+<<<<<<< HEAD
+=======
+-- peredicates we need for topological rings
+definition is_complete (R : Type) [topological_space R] [comm_ring R] [topological_ring R] : Prop := sorry 
+definition is_uniform (R : Type) : Prop := sorry 
+definition is_bounded {R : Type} [topological_space R] [comm_ring R] [topological_ring R] 
+  (U : set R) : Prop := sorry
+definition is_power_bounded {R : Type} (r : R) : Prop := sorry 
+definition power_bounded_subring (R : Type) := {r : R // is_power_bounded r}
+-- instance subring_to_ring (R : Type) : has_coe (power_bounded_subring R) R := ⟨subtype.val⟩ 
+instance power_bounded_subring_is_ring (R : Type) : comm_ring (power_bounded_subring R) := sorry
+theorem p_is_power_bounded (R : Type) [p : Prime] : is_power_bounded (p : power_bounded_subring R) := sorry
+definition is_pseudo_uniformizer {R : Type} : R → Prop := sorry 
+
+>>>>>>> f30f04dd50c20f974f89603164200c577d11a1f9
 
 -- Wedhorn Def 7.14
 structure is_ring_of_integral_elements {R : Type} [Huber_ring R] (Rplus : set R) : Prop :=
