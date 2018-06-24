@@ -50,21 +50,6 @@ class Huber_ring (R : Type) extends comm_ring R, topological_space R, topologica
 
 -- TODO should have an instance going from Tate to Huber
 
-<<<<<<< HEAD
-=======
--- peredicates we need for topological rings
-definition is_complete (R : Type) [topological_space R] [comm_ring R] [topological_ring R] : Prop := sorry 
-definition is_uniform (R : Type) : Prop := sorry 
-definition is_bounded {R : Type} [topological_space R] [comm_ring R] [topological_ring R] 
-  (U : set R) : Prop := sorry
-definition is_power_bounded {R : Type} (r : R) : Prop := sorry 
-definition power_bounded_subring (R : Type) := {r : R // is_power_bounded r}
--- instance subring_to_ring (R : Type) : has_coe (power_bounded_subring R) R := ⟨subtype.val⟩ 
-instance power_bounded_subring_is_ring (R : Type) : comm_ring (power_bounded_subring R) := sorry
-theorem p_is_power_bounded (R : Type) [p : Prime] : is_power_bounded (p : power_bounded_subring R) := sorry
-definition is_pseudo_uniformizer {R : Type} : R → Prop := sorry 
-
->>>>>>> f30f04dd50c20f974f89603164200c577d11a1f9
 
 -- Wedhorn Def 7.14
 structure is_ring_of_integral_elements {R : Type} [Huber_ring R] (Rplus : set R) : Prop :=
