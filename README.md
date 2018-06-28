@@ -1,5 +1,5 @@
 # lean-perfectoid-spaces
-A formalization of the concept of a perfectoid space in the Lean formal theorem prover.
+A formalization of the concept of a perfectoid space in the Lean formal proof verification system.
 
 ### Definition of a perfectoid space in the Lean Programming Language.
 

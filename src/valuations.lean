@@ -1,16 +1,15 @@
 import algebra.group_power
---import Kenny_comm_alg.temp
 import set_theory.cardinal
 import ring_theory.ideals
 import for_mathlib.subrel 
 import for_mathlib.ideals 
 
-class linear_ordered_comm_group (α : Type)
-    extends comm_group α, linear_order α :=
-(mul_le_mul_left : ∀ {a b : α}, a ≤ b → ∀ c : α, c * a ≤ c * b)
-
 class linear_ordered_comm_monoid (α : Type)
     extends comm_monoid α, linear_order α :=
+(mul_le_mul_left : ∀ {a b : α}, a ≤ b → ∀ c : α, c * a ≤ c * b)
+
+class linear_ordered_comm_group (α : Type)
+    extends comm_group α, linear_order α :=
 (mul_le_mul_left : ∀ {a b : α}, a ≤ b → ∀ c : α, c * a ≤ c * b)
 
 local infix ^ := monoid.pow
@@ -25,6 +24,7 @@ class is_hom (f : α → β) : Prop :=
 (Hord : ∀ {a b : α}, a ≤ b → f a ≤ f b)
 
 instance hom_is_group_hom (f : α → β) [H : is_hom f] : is_group_hom f := H.Hf
+
 structure equiv extends equiv α β :=
 (is_hom : is_hom to_fun)
 
@@ -327,3 +327,28 @@ instance : is_prime_ideal (supp f) :=
     end }
 
 end is_valuation
+
+structure valuations (R : Type) [comm_ring R] :=
+{α : Type}
+[Hα : linear_ordered_comm_group α]
+(f : R → option α)
+(Hf : is_valuation f)
+
+attribute [instance] valuations.Hα
+
+--instance (R : Type) [comm_ring R] : has_coe_to_fun (valuations R) :=
+--{ F := λ v,R → option v.α, 
+--  coe := λ v,v.f
+--}
+
+/- Wedhorn 1.27 (ii) -/
+instance valuations.setoid (R : Type) [comm_ring R] : setoid (valuations R) :=
+{ r := λ v w, ∀ r s : R, v.f r ≤ v.f s ↔ w.f r ≤ w.f s,
+  iseqv := ⟨
+    -- reflexivity 
+    λ _ _ _,iff.rfl,
+    -- symmetry
+    λ v w H r s,(H r s).symm,
+    -- transitivity
+    λ v w x Hvw Hwx r s,iff.trans (Hvw r s) (Hwx r s)⟩
+} 

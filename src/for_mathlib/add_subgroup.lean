@@ -1,13 +1,13 @@
 /-
-Copyright (c) 2018 Johannes Hölzl. All rights reserved.
-Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Johannes Hölzl, Mitchell Rowett, Scott Morrison
+This file is a modification of `subgroup.lean` by
+Johannes Hölzl, Mitchell Rowett, Scott Morrison.
+The only thing it does is translating all the multiplicative
+notions into their additive counterparts.
 -/
 import .add_submonoid
 open set function
 
 variables {α : Type*} {β : Type*} {s : set α} {a a₁ a₂ b c: α}
-
 
 section add_group
 variable [add_group α]
@@ -26,7 +26,7 @@ instance subtype.add_group {s : set α} [is_add_subgroup s] : add_group s :=
   add_left_neg := assume ⟨a, _⟩, subtype.eq $ add_left_neg _,
   .. subtype.add_monoid }
 
-theorem is_add_subgroup.of_div [group α] (s : set α)
+theorem is_add_subgroup.of_sub [group α] (s : set α)
   (zero_mem : (0:α) ∈ s) (sub_mem : ∀{a b:α}, a ∈ s → b ∈ s → a - b ∈ s):
   is_add_subgroup s :=
 have neg_mem : ∀a, a ∈ s → -a ∈ s, from
