@@ -3,6 +3,7 @@ import set_theory.cardinal
 import ring_theory.ideals
 import for_mathlib.subrel 
 import for_mathlib.ideals 
+import for_mathlib.quotient_ring
 import group_theory.subgroup
 
 class linear_ordered_comm_monoid (α : Type)
@@ -326,6 +327,10 @@ instance : is_prime_ideal (supp f) :=
       rw [map_mul f x y] at hxy,
       exact linear_ordered_comm_group.extend.eq_zero_or_eq_zero_of_mul_eq_zero _ _ hxy
     end }
+
+definition extension_to_integral_domain {α : Type} [linear_ordered_comm_group α]
+  {R : Type} [comm_ring R] (f : R → option α) [H : valuation f] :
+  (comm_ring.quotient R (supp f)) → option α := sorry
 
 definition value_group {α : Type} [linear_ordered_comm_group α]
   {R : Type} [comm_ring R] (f : R → option α) [H : valuation f] := 
