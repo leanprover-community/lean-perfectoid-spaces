@@ -1,4 +1,4 @@
-import valuation_spectrum data.equiv
+import valuation_spectrum data.equiv.basic
 
 definition zfc.Spv (A : Type) [comm_ring A] : Type := 
   {ineq : A → A → Prop // ∃ v : valuations A, ∀ r s : A, ineq r s ↔ v.f r ≤ v.f s}
