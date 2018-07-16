@@ -3,7 +3,7 @@ import set_theory.cardinal
 import ring_theory.ideals
 import for_mathlib.subrel 
 import for_mathlib.ideals 
-import for_mathlib.quotient_ring
+-- import for_mathlib.quotient_ring -- might be best to use what Chris did!
 import group_theory.subgroup
 
 class linear_ordered_comm_monoid (α : Type)
@@ -240,13 +240,11 @@ class is_valuation {α : Type} [linear_ordered_comm_group α]
 (map_mul  : ∀ x y, f (x * y) = f x * f y)
 (map_add  : ∀ x y, f (x + y) ≤ f x ∨ f (x + y) ≤ f y)
 
-namespace valuation
+namespace is_valuation
 
 variables {α : Type} [linear_ordered_comm_group α]
 variables {R : Type} [comm_ring R] (f : R → option α)
 variables [is_valuation f] {x y z : R}
-
-#check gt 
 
 theorem map_unit : x * y = 1 → option.is_some (f x) :=
 begin
@@ -331,9 +329,11 @@ instance : is_prime_ideal (supp f) :=
       exact linear_ordered_comm_group.extend.eq_zero_or_eq_zero_of_mul_eq_zero _ _ hxy
     end }
 
+/-
 definition extension_to_integral_domain {α : Type} [linear_ordered_comm_group α]
   {R : Type} [comm_ring R] (f : R → option α) [H : is_valuation f] :
   (comm_ring.quotient R (supp f)) → option α := sorry
+-/
 
 definition value_group {α : Type} [linear_ordered_comm_group α]
   {R : Type} [comm_ring R] (f : R → option α) [H : is_valuation f] := 
@@ -343,26 +343,26 @@ instance {α : Type} [linear_ordered_comm_group α]
   {R : Type} [comm_ring R] (f : R → option α) [H : is_valuation f] : group (value_group f) :=
   @subtype.group _ _ (value_group f) (group.closure.is_subgroup {a : α | ∃ r : R, f r = some a})
 
-structure is_valuations (R : Type) [comm_ring R] :=
+structure valuations (R : Type) [comm_ring R] :=
 {α : Type}
 [Hα : linear_ordered_comm_group α]
 (f : R → option α)
 [Hf : is_valuation f]
 
-instance is_valuations.linear_ordered_comm_group {R : Type} [comm_ring R] (v : is_valuations R) : linear_ordered_comm_group (v.α) := v.Hα 
+instance valuations.linear_ordered_comm_group {R : Type} [comm_ring R] (v : valuations R) : linear_ordered_comm_group (v.α) := v.Hα 
 
-instance is_valuations.is_valuation {R : Type} [comm_ring R] (v : is_valuations R) : is_valuation (v.f) := v.Hf 
+instance valuations.is_valuation {R : Type} [comm_ring R] (v : valuations R) : is_valuation (v.f) := v.Hf 
 
-attribute [instance] is_valuations.Hα
-attribute [instance] is_valuations.Hf
+attribute [instance] valuations.Hα
+attribute [instance] valuations.Hf
 
---instance (R : Type) [comm_ring R] : has_coe_to_fun (is_valuations R) :=
+--instance (R : Type) [comm_ring R] : has_coe_to_fun (valuations R) :=
 --{ F := λ v,R → option v.α, 
 --  coe := λ v,v.f
 --}
 
 /- Wedhorn 1.27 (ii) -/
-instance is_valuations.setoid (R : Type) [comm_ring R] : setoid (is_valuations R) :=
+instance valuations.setoid (R : Type) [comm_ring R] : setoid (valuations R) :=
 { r := λ v w, ∀ r s : R, v.f r ≤ v.f s ↔ w.f r ≤ w.f s,
   iseqv := ⟨
     -- reflexivity 
@@ -374,7 +374,7 @@ instance is_valuations.setoid (R : Type) [comm_ring R] : setoid (is_valuations R
 } 
 
 /-
-theorem equiv_value_group_map (R : Type) [comm_ring R] (v w : is_valuations R) (H : v ≈ w) :
+theorem equiv_value_group_map (R : Type) [comm_ring R] (v w : valuations R) (H : v ≈ w) :
 ∃ φ : value_group v.f → value_group w.f, is_group_hom φ ∧ function.bijective φ :=
 begin
   existsi _,tactic.swap,
@@ -391,5 +391,5 @@ begin
 end 
 -/
 
-end valuation
+end is_valuation
 
