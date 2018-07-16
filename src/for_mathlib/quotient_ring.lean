@@ -38,7 +38,7 @@ instance quotient.has_mul : has_mul (quotient R I) :=
     exact is_submodule.add H₂ H₃
   end)⟩
 
-instance : comm_ring (quotient R I) := {
+instance quotient.is_comm_ring : comm_ring (quotient R I) := {
   mul := (*),
   mul_assoc := assume a b c, quotient.induction_on₃ a b c $ assume a' b' c', quotient.sound $
     by rw mul_assoc;refl,
@@ -55,14 +55,74 @@ instance : comm_ring (quotient R I) := {
   ..is_submodule.quotient.add_comm_group I
 }
 
+instance quotient.is_ring : ring (quotient R I) := by apply_instance 
+
+instance quotient.has_zero : has_zero (comm_ring.quotient R I) := by apply_instance 
+
+instance quotient.mk_is_ring_hom : @is_ring_hom _ _ _ (quotient.is_ring I) (quotient.mk : R → quotient R I) := 
+{ map_add := λ a b, rfl,
+  map_mul := λ a b, rfl,
+  map_one := rfl
+}
+
+#check add_zero 
+#check sub_zero
+#print setoid
+variable (a : R)
+#check (setoid.r a 0)
+
+
+@[simp] lemma quotient.zero (a : R) : a ∈ I ↔ (⟦a⟧ : quotient R I) = (0 : quotient R I) := 
+  calc a ∈ I ↔ a - 0 ∈ I : by rw sub_zero
+  ...        ↔ a ≈ 0 : begin have X := setoid.r a 0,sorry,end
+  ...        ↔ ⟦a⟧ = ⟦0⟧ : by sorry
+  ...        ↔ (⟦a⟧ : quotient R I) = (0 : quotient R I) : by sorry
+
 variable {I} 
 
-definition quotient.universal_map {S : Type} [comm_ring S] {f : R → S} (H : I ⊆ f ⁻¹' {0}) :
-  quotient R I → S := sorry 
+definition quotient.lift {S : Type} [comm_ring S] {f : R → S} [is_ring_hom f] (H : ∀ i : I, f i = 0) :
+  quotient R I → S := quotient.lift f $ λ a b H1,
+  begin
+  rw is_submodule.quotient_rel_eq at H1,
+  have H2 : ∃ i : I, a - b = i := by simpa using H1,
+  cases H2 with i Hi,
+  have H3 : f (a - b) = 0,
+    rw Hi,
+    exact H i,
+  rw is_ring_hom.map_sub f at H3,
+  exact eq_of_sub_eq_zero H3
+  end
 
-theorem quotient.universal_property {S : Type} [comm_ring S] {f : R → S} (H : I ⊆ f ⁻¹' {0}) :
-  is_ring_hom (quotient.universal_map H) := sorry
+theorem quotient.universal_property {S : Type} [comm_ring S] {f : R → S} [is_ring_hom f] (H : ∀ i : I, f i = 0) :
+  is_ring_hom (quotient.lift H) := 
+{ map_add := λ a b, quotient.induction_on₂ a b $ λ a' b',
+    begin show f (a' + b') = f a' + f b',exact is_ring_hom.map_add f,end,
+  map_mul := λ a b, quotient.induction_on₂ a b $ λ a' b',
+    begin show f (a' * b') = f a' * f b',exact is_ring_hom.map_mul f,end,
+  map_one := begin show f 1 = 1,exact is_ring_hom.map_one f end
+}
 
-instance [is_prime_ideal I] : integral_domain (quotient R I) := sorry
+--#check @quotient.rel
+#check @setoid.r
+#check setoid
 
+set_option pp.implicit true
+--set_option pp.all true
+instance [HPI : is_prime_ideal I] : integral_domain (quotient R I) := 
+{ eq_zero_or_eq_zero_of_mul_eq_zero := λ a b,quotient.induction_on₂ a b $ λ a' b' (H : ⟦a' * b'⟧ = 0),begin
+  have H2 : a' * b' ∈ I,
+    unfold quotient.mk at H,
+    -- testing
+    let Htest : setoid R := (@quotient_rel R _inst_1 I _inst_2),
+    let Htest_r := Htest.r,
+    let Htest_rab := Htest_r a' b',
+    
+    trace_state,
+    sorry,sorry
+--    unfold comm_ring.quotient_rel I at H,
+--    simp [H],
+    end,
+  zero_ne_one := sorry,
+  ..quotient.is_comm_ring I,
+}
 end comm_ring
