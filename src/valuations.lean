@@ -343,6 +343,8 @@ instance {α : Type} [linear_ordered_comm_group α]
   {R : Type} [comm_ring R] (f : R → option α) [H : is_valuation f] : group (value_group f) :=
   @subtype.group _ _ (value_group f) (group.closure.is_subgroup {a : α | ∃ r : R, f r = some a})
 
+end is_valuation
+
 structure valuations (R : Type) [comm_ring R] :=
 {α : Type}
 [Hα : linear_ordered_comm_group α]
@@ -356,14 +358,14 @@ instance valuations.is_valuation {R : Type} [comm_ring R] (v : valuations R) : i
 attribute [instance] valuations.Hα
 attribute [instance] valuations.Hf
 
---instance (R : Type) [comm_ring R] : has_coe_to_fun (valuations R) :=
---{ F := λ v,R → option v.α, 
---  coe := λ v,v.f
---}
+instance (R : Type) [comm_ring R] : has_coe_to_fun (valuations R) :=
+{ F := λ v,R → option v.α, 
+ coe := λ v,v.f
+}
 
 /- Wedhorn 1.27 (ii) -/
 instance valuations.setoid (R : Type) [comm_ring R] : setoid (valuations R) :=
-{ r := λ v w, ∀ r s : R, v.f r ≤ v.f s ↔ w.f r ≤ w.f s,
+{ r := λ v w, ∀ r s : R, v r ≤ v s ↔ w r ≤ w s,
   iseqv := ⟨
     -- reflexivity 
     λ _ _ _,iff.rfl,
@@ -390,6 +392,3 @@ begin
   }
 end 
 -/
-
-end is_valuation
-
