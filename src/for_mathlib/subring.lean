@@ -1,6 +1,7 @@
 import for_mathlib.add_subgroup group_theory.submonoid
 -- import poly -- mason-stother doesn't compile at the moment
 import algebra.ring
+import analysis.topology.topological_structures
 local attribute [instance] classical.prop_decidable
 
 open group
@@ -38,3 +39,42 @@ def is_integral (S : set R) [is_subring S] (r : R) : Prop := sorry
 
 def is_integrally_closed (S : set R) [is_subring S] :=
 ∀ r : R, (is_integral S r) → r ∈ S
+
+section topological_subring
+
+variables [topological_space R] [topological_ring R]
+variables {S : set R} [is_subring S]
+
+instance subring.topological_space : topological_space S := by apply subtype.topological_space
+instance subring.topological_ring : topological_ring S :=
+{ continuous_add :=
+  begin
+    refine continuous_subtype_mk _ _,
+    rw show (λ (p : ↥S × ↥S), ↑(p.fst) + ↑(p.snd)) = function.comp (λ p : R × R, p.fst + p.snd) (λ p : ↥S × ↥S, (↑p.fst,↑p.snd)),
+    by simp [function.comp],
+    exact continuous.comp
+            (continuous.prod_mk
+              (continuous.comp continuous_fst continuous_subtype_val)
+              (continuous.comp continuous_snd continuous_subtype_val))
+            (topological_add_monoid.continuous_add R),
+  end,
+  continuous_mul :=
+  begin
+    refine continuous_subtype_mk _ _,
+    rw show (λ (p : ↥S × ↥S), ↑(p.fst) * ↑(p.snd)) = function.comp (λ p : R × R, p.fst * p.snd) (λ p : ↥S × ↥S, (↑p.fst,↑p.snd)),
+    by simp [function.comp],
+    exact continuous.comp
+            (continuous.prod_mk
+              (continuous.comp continuous_fst continuous_subtype_val)
+              (continuous.comp continuous_snd continuous_subtype_val))
+            (topological_monoid.continuous_mul R),
+  end,
+  continuous_neg := 
+  begin
+    apply continuous_subtype_mk,
+    apply continuous.comp continuous_subtype_val (topological_add_group.continuous_neg R),
+  end,
+  .. subtype.ring,
+  .. subring.topological_space }
+
+end topological_subring
