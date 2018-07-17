@@ -32,18 +32,11 @@ begin
   simp [power_bounded_subring,is_power_bounded,is_bounded,powers],
   intros U hU,
   existsi U,
-  split,
-  exact hU,
+  split, {exact hU},
   intros v hv b n,
-  induction n,
-  { simp,
-    intro hb,
-    rw ← hb,
-    simpa },
+  induction n;
   { intro hb,
-    rw ← hb,
-    simp [pow_succ],
-    exact mem_of_nhds hU }
+    simpa [hb.symm, pow_succ, mem_of_nhds hU] }
 end
 
 lemma one_mem : (1 : R) ∈ power_bounded_subring R :=
@@ -51,8 +44,7 @@ begin
   simp [power_bounded_subring,is_power_bounded,is_bounded,powers],
   intros U hU,
   existsi U,
-  split,
-  exact hU,
+  split, {exact hU},
   intros v hv b n hb,
   simpa [hb.symm],
 end
@@ -68,12 +60,10 @@ begin
     apply continuous.tendsto (topological_add_group.continuous_neg R) 0,
     simpa
   end,
-  replace ha := ha Usymm hUsymm,
-  cases ha with V hV,
+  rcases ha Usymm hUsymm with ⟨V, ⟨V_nhd, hV⟩⟩,
+  clear hUsymm,
   existsi V,
-  split,
-  exact hV.1,
-  replace hV := hV.2,
+  split, {exact V_nhd},
   intros v hv b n hb,
   rw ← hb,
   rw show v * (-a)^n = ((-1)^n * v) * a^n,
@@ -93,24 +83,60 @@ lemma mul_mem :
 ∀ {a b : R}, a ∈ power_bounded_subring R → b ∈ power_bounded_subring R → a * b ∈ power_bounded_subring R :=
 begin
   simp [power_bounded_subring,is_power_bounded,is_bounded,powers],
-  intros a b ha hb U hU,
-  replace ha := ha U hU,
-  replace hb := hb U hU,
-  cases ha with Va hVa,
-  cases hb with Vb hVb,
-  existsi Va ∩ Vb, -- just my wild guess. Is it even math-true?
-  split,
-  apply filter.inter_mem_sets hVa.1 hVb.1,
+  intros a b ha hb U U_nhd,
+  rcases hb U U_nhd with ⟨Vb, ⟨Vb_nhd, hVb⟩⟩,
+  rcases ha Vb Vb_nhd with ⟨Va, ⟨Va_nhd, hVa⟩⟩,
+  clear ha hb,
+  existsi Va,
+  split, {exact Va_nhd},
   { intros v hv x n hx,
-    sorry } 
+    rw [← hx,
+          mul_pow,
+        ← mul_assoc],
+    apply hVb (v * a^n) _ _ n rfl,
+    apply hVa v hv _ n rfl }
 end
 
+-- this needs an extra hypothesis
+lemma add_mem :
+∀ {a b : R}, a ∈ power_bounded_subring R → b ∈ power_bounded_subring R → a + b ∈ power_bounded_subring R :=
+begin
+  simp [power_bounded_subring,is_power_bounded,is_bounded,powers],
+  intros a b ha hb U hU,
+  sorry
+  -- replace hb := hb U hU,
+  -- cases hb with Vb hVb,
+  -- replace ha := ha Vb hVb.1,
+  -- cases ha with Va hVa,
+  -- existsi Va, -- just my wild guess. Is it even math-true?
+  -- split,
+  -- { exact hVa.1 },
+  -- { intros v hv x n hx,
+  --   rw ← hx,
+  --   revert v,
+  --   induction n with n ih,
+  --   { intros v hv,
+  --     rw show v * (a + b) ^ 0 = v * b ^ 0, by simp,
+  --     apply hVb.2 v _ _ 0 rfl,
+  --     rw show v = v * a ^ 0, by simp,
+  --     apply hVa.2 v hv _ 0 rfl },
+  --   { intros v hv,
+  --     rw [pow_succ, ← mul_assoc],
+  --     sorry
+  --   }
+  -- }
+end
+
+instance : is_submonoid (power_bounded_subring R) :=
+{ one_mem := power_bounded_subring.one_mem R,
+  mul_mem := λ a b, power_bounded_subring.mul_mem R }
+
+-- this needs an extra hypothesis
 instance : is_subring (power_bounded_subring R) :=
 { zero_mem := power_bounded_subring.zero_mem R,
-  one_mem := power_bounded_subring.one_mem R,
-  add_mem := sorry,
   neg_mem := λ a, power_bounded_subring.neg_mem R,
-  mul_mem := λ a b, power_bounded_subring.mul_mem R }
+  add_mem := λ a b, power_bounded_subring.add_mem R, -- this needs an extra hypothesis
+  .. power_bounded_subring.is_submonoid R }
 
 instance : ring (power_bounded_subring R) := by apply_instance
 instance power_bounded_subring_is_comm_ring : comm_ring (power_bounded_subring R) :=
