@@ -13,11 +13,13 @@ by the sets {v : v(r) <= v(s) != 0} for r,s in A.
 import valuations 
 import analysis.topology.topological_space
 
-definition Spv (A : Type) [comm_ring A] : Type 1 := quotient (valuations.setoid A)
+definition Spv (A : Type) [comm_ring A] : Type 1 := quotient (is_valuation.valuations.setoid A)
 
 namespace Spv 
 
 variables {A : Type} [comm_ring A]
+
+open is_valuation
 
 lemma basic_open.aux1 (r s : A) (v w : valuations A) (H : v ≈ w) :
   v.f(r) ≤ v.f(s) ↔ w.f(r) ≤ w.f(s) := H r s

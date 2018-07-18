@@ -1,4 +1,8 @@
-import valuation_spectrum data.equiv
+-- This file is never used -- it was KMB trying to get everything
+-- to fit into "Type".
+#exit 
+
+import valuation_spectrum data.equiv.basic
 
 definition zfc.Spv (A : Type) [comm_ring A] : Type := 
   {ineq : A → A → Prop // ∃ v : valuations A, ∀ r s : A, ineq r s ↔ v.f r ≤ v.f s}
