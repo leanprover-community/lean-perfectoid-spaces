@@ -1,3 +1,7 @@
+-- This file is never used -- it was KMB trying to get everything
+-- to fit into "Type".
+#exit 
+
 import valuation_spectrum data.equiv.basic
 
 definition zfc.Spv (A : Type) [comm_ring A] : Type := 
