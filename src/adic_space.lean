@@ -16,8 +16,8 @@ section topological_ring
 variables {R : Type*} [comm_ring R] [topological_space R] [topological_ring R]
 
 /-- Wedhorn Definition 5.27 page 36 -/
-definition is_bounded 
-  (B : set R) : Prop := ∀ U ∈ (nhds (0 :R)).sets, ∃ V ∈ (nhds (0 :R)).sets, ∀ v ∈ V, ∀ b ∈ B, v*b ∈ U
+definition is_bounded (B : set R) : Prop :=
+∀ U ∈ (nhds (0 :R)).sets, ∃ V ∈ (nhds (0 :R)).sets, ∀ v ∈ V, ∀ b ∈ B, v*b ∈ U
 
 definition is_power_bounded (r : R) : Prop := is_bounded (powers r)
 
@@ -34,7 +34,12 @@ definition is_uniform : Prop := is_bounded (power_bounded_subring R)
 theorem p_is_power_bounded [p : Prime] : is_power_bounded (p : power_bounded_subring R) := sorry
 
 variable {R}
-definition is_pseudo_uniformizer : R → Prop := sorry
+
+def topologically_nilpotent (r : R) : Prop :=
+∀ U ∈ (nhds (0 :R)).sets, ∃ N : ℕ, ∀ n : ℕ, n > N → r^n ∈ U
+
+definition is_pseudo_uniformizer (ϖ : units R) : Prop := topologically_nilpotent ϖ.val
+
 end topological_ring
 
 -- Scholze : "Recall that a topological ring R is Tate if it contains an
@@ -42,7 +47,11 @@ end topological_ring
 -- called pseudo-uniformizers.""
 -- we need definitions of bounded subsets and topologically nilpotent -- and do we have unit? Probably.
 class Tate_ring (R : Type) extends comm_ring R, topological_space R, topological_ring R :=
-(unfinished : sorry)
+(R₀ : set R)
+(R₀_is_open : is_open R₀)
+(R₀_is_subring : is_subring R₀)
+(ϖ : units R)
+(ϖ_is_pseudo_uniformizer : is_pseudo_uniformizer ϖ)
 
 def is_finitely_generated {R : Type} [comm_ring R] (M : Type) [module R M] : Prop :=
 ∃ b : finset M, M = span {m | m ∈ b}
