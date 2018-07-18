@@ -1,12 +1,17 @@
 --import data.equiv.basic
 import valuations 
 import analysis.topology.topological_space
-
+universes u v
 open is_valuation 
 
-definition Spv (A : Type*) [comm_ring A] := 
-{ineq : A → A → Prop // ∃ (Γ : Type*) [linear_ordered_comm_group Γ],
+definition Spv (A : Type u) [comm_ring A] := 
+{ineq : A → A → Prop // ∃ (Γ : Type u) [linear_ordered_comm_group Γ],
   by exactI ∃ (v : valuation A Γ), ∀ r s : A, ineq r s ↔ v r ≤ v s}
+
+-- TODO (if I understood Mario correctly):
+-- definition Spv.mk (A : Type u) [comm_ring A] (Γ : Type v) -- note : not type u 
+-- [linear_ordered_comm_group Γ] : Spv A := 
+-- this is a set-theoretic issue: I need to find Gamma' of type u to push this through 
 
 namespace Spv 
 
@@ -26,4 +31,3 @@ instance (A : Type*) [comm_ring A] : topological_space (Spv A) :=
   topological_space.generate_from {U : set (Spv A) | ∃ r s : A, U = basic_open r s}
 
 end Spv 
-
