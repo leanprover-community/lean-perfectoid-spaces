@@ -13,7 +13,7 @@ import linear_algebra.basic linear_algebra.subtype_module
 open nat function
 
 section topological_ring
-variables {R : Type*} [comm_ring R] [topological_space R] [topological_ring R]  
+variables {R : Type*} [comm_ring R] [topological_space R] [topological_ring R]
 
 /-- Wedhorn Definition 5.27 page 36 -/
 definition is_bounded 
@@ -56,6 +56,8 @@ begin
 end
 
 def ideal_to_module {R : Type} [comm_ring R] (I : set R) [is_ideal I] : module R I := sorry
+
+variables {R : Type} [comm_ring R] [topological_space R] [topological_ring R]
 
 def is_pair_of_definition [T : topological_space R] (R₀ : set R) [is_subring R₀] (I : set R₀) [is_ideal I]: Prop :=
 topological_space.induced (@subtype.val _ (R₀ : set R)) T = adic_topology I ∧
