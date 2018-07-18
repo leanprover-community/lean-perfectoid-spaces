@@ -52,23 +52,6 @@ MC: As opposed to, say, quot.out, which picks an element from an equivalence cla
 MC: Although in your case if I understand correctly you also have a canonical way to define quot.out
     satisfying some other universal property to do with the ordered group
 
-definition zfc.Spv (A : Type) [comm_ring A] : Type :=
-  {ineq : A → A → Prop // ∃ v : valuations A, ∀ r s : A, ineq r s ↔ v.f r ≤ v.f s}
-
-  For augmented functions, I recommend a has_coe_to_fun instance so you can write v r <= v s at the end there
-
-  definition zfc.Spv (A : Type) [comm_ring A] : Type :=
-{ineq : A → A → Prop // ∃ (A : Type) [linear_ordered_comm_group A]
-  (v : valuation R A), ∀ r s : A, ineq r s ↔ v r ≤ v s}
-
-9:36 AM
-
-If you want to be polymorphic, I suggest writing
-
- def zfc.Spv (A : Type u) [comm_ring A] : Type :=
-{ineq : A → A → Prop // ∃ (A : Type u) [linear_ordered_comm_group A]
-  (v : valuation R A), ∀ r s : A, ineq r s ↔ v r ≤ v s}
-
 where the valuation and ring have to share the same universe
 9:37 AM
 
@@ -382,6 +365,16 @@ end extend
 
 end linear_ordered_comm_group
 
+structure valuation (R : Type*) [comm_ring R] (Γ : Type*) [linear_ordered_comm_group Γ] :=
+(f : R → option Γ)
+(map_zero : f 0 = 0)
+(map_one  : f 1 = 1)
+(map_mul  : ∀ x y, f (x * y) = f x * f y)
+(map_add  : ∀ x y, f (x + y) ≤ f x ∨ f (x + y) ≤ f y)
+
+instance (R : Type*) [comm_ring R] (Γ : Type*) [HΓ : linear_ordered_comm_group Γ] :
+has_coe_to_fun (valuation R Γ) := { F := λ _,R → option Γ, coe := λ v,v.f}
+
 class is_valuation {α : Type*} [linear_ordered_comm_group α]
   {R : Type*} [comm_ring R] (f : R → option α) : Prop :=
 (map_zero : f 0 = 0)
@@ -492,17 +485,7 @@ instance {α : Type*} [linear_ordered_comm_group α]
   {R : Type*} [comm_ring R] (f : R → option α) [H : is_valuation f] : group (value_group f) :=
   @subtype.group _ _ (value_group f) (group.closure.is_subgroup {a : α | ∃ r : R, f r = some a})
 
-structure valuation (R : Type*) [comm_ring R] (Γ : Type*) [linear_ordered_comm_group Γ] :=
-(f : R → option Γ)
-[Hf : is_valuation f]
 
-instance (R : Type*) [comm_ring R] (Γ : Type*) [HΓ : linear_ordered_comm_group Γ] :
-has_coe_to_fun (valuation R Γ) := { F := λ _,R → option Γ, coe := λ v,v.f}
-
-instance {R : Type} [comm_ring R] {Γ : Type*} [linear_ordered_comm_group Γ]
-(v : valuation R Γ) : is_valuation (v) := v.Hf 
-
-attribute [instance] valuation.Hf
 
 /- Wedhorn 1.27 (ii) -/
 -- WR ARE NO LONGER USING AN EQUIV RELN FOR VALUATIONS
