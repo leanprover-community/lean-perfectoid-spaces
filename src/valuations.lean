@@ -73,59 +73,11 @@ at least in contravariant positions (i.e. the inputs should be maximally polymor
 This is why we don't have nat : Type u
 10:41 AM
 
-If I read correctly, you want to have a class is_valuation, and then a structure type valuation made of all functions f satisfying the valuation axioms, i.e., with is_valuation f. What is the advantage of this approach (with typeclass inference) over the more direct approach with a structure type valuation in which you put directly the axioms, and then when you want to work with a valuation you just use (v : valuation R A) (so, getting rid completely of the typeclass is_valuation)?
-10:58 AM
-
-The problem is that a valuation is a function from a ring to some totally ordered monoid, and there's an equivalence relation which needs to be taken into account, of the form "these monoids might not be the same, but there's a map from the image of one function to the image of the other which makes lots of things commute". Spv R is the equivalence classes of valuations.
-11:22 AM
-
-I understand this. My question is about the beginning of the discussion, with this is_valuation class at the start of your formalization.
 11:51 AM
 
-I am not the person to ask, I don't think. I have no understanding of how best to do these things in Lean, that's why I'm floundering around here. I understand the maths perfectly. Let me try and read your messages. Yes we have an inductive prop is_valuation fwhich is a class although I don't know if that's sensible (I think Kenny made it a class so it probably is). We then apparently are supposed to have a type valuation R alpha which is all valuations taking values in alpha; I have no real understanding of why this is needed because I definitely don't care about all valuations taking values in alpha. You mention typeclass inference but I have no idea what should be a class because whilst I now understand what typeclass inference is and how to use it when other people have made the typeclasses, I am still extremely unclear myself about which of my own objects should be typeclasses. You now suggest I could be making a structure type valuation -- would this take alpha as part of the structure? I think we used to have that; Johan maybe mentioned it, and Mario said that alpha should not be part of the structure. Is A the totally ordered monoid? The only reason we have is_valuation is that someone else wrote it. I say again -- I completely understand the mathematics I want to do; I am extremely foggy about how to do it in Lean in the sense that I can see several ways and simply do not possess the toolkit necessary to work out the best way. There's my attempt to answer your question in full. At the end of the day I want Spv R to be the equivalence classes of valuations on R, and I have no idea whether valuation or valuations or is_valuation or structure or class or what is the best approach. I would happily be told explicitly what to do.
-11:52 AM
-
-Am I right in thinking that Mario basically told me a way of doing it above, and you are suggesting another way?
-11:57 AM
-
-I don't think Sebastien is suggesting anything different from what I recommended (using augmented functions)
-11:59 AM
-
-    I have no real understanding of why this is needed because I definitely don't care about all valuations taking values in alpha.
-
 The general rule is to keep types out of classes if at all possible. Lean behaves better when the types are given as "alpha" rather than "the type inside v", particularly if you start manipulating the functions (adding them, say)
-12:00 PM
-
-Although you want to deal with "the collection of all valuations" (which is what Spv is for), when doing a concrete calculation you will have a fixed alpha with respect to which to do your monoid algebra stuff
-1:25 PM
-
-        I have no real understanding of why this is needed because I definitely don't care about all valuations taking values in alpha.
-
-    The general rule is to keep types out of classes if at all possible. Lean behaves better when the types are given as "alpha" rather than "the type inside v", particularly if you start manipulating the functions (adding them, say)
-
-Hmmm, can you be more precise about how Lean would misbehave? Because it seems "mathematically natural/convenient" to make alpha part of the structure, instead of a parameter.
-1:33 PM
-
-it is the same things that make the difference between bundled vs unbundled groups. When working "internally", i.e. calculations using the monoid structure, it is better for the type to be exposed as a variable
-1:34 PM
-
-When working externally, there is already the type Spv to do this
-1:35 PM
-
-Also, there is a universe issue for the ZFC diehards
-1:49 PM
-
-If I understand Sebastien correctly, then he suggesting to just merge is_valuation fand valuation R Gamma into one class. In other words, substitute the fields of is_valuation for the Hf field in valuation.
-3:15 PM
 
     it is the same things that make the difference between bundled vs unbundled groups. When working "internally", i.e. calculations using the monoid structure, it is better for the type to be exposed as a variable
-
-I am still not up to speed with notation. "bundled" means alpha is part of the structure? exposed type means it's not?
-9:05 PM
-
-    If I understand Sebastien correctly, then he suggesting to just merge is_valuation fand valuation R Gamma into one class. In other words, substitute the fields of is_valuation for the Hf field in valuation.
-
-Exactly (except that I don't think it should be a class, only a structure, as typeclass inference will not help you there and you want to put several valuations on the same object).
 
 
 -/
