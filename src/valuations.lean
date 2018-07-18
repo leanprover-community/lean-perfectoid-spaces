@@ -34,6 +34,8 @@ KB: So what about proofs which go "Spv(R) is compact. Proof: take an element of 
     f or whatever, and now manipulate f in the following way..."
 MC:  9:23 AM
 
+**All Jul03**
+
 That's quot.lift
 9:23 AM
 
