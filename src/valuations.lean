@@ -19,10 +19,14 @@ structure valuation (R : Type) [comm_ring R] (α : Type) [Hα : linear_ordered_c
 
 ...
 
+**All Jul03**
+
 MC: What's wrong, again, with defining Spv as the collection of all valuation relations?
 KB: All proofs need an actual valuation
 MC: You can define your own version of quot.lift and quot.mk that take valuations
 MC: valuation functions that is
+[quot.lift is the statement that if I have a function on valuations which is constant
+on equiv classes then I can produce a function on Spv]
 MC: You only use the relations as inhabitants of the type so that the universe isn't pushed up,
     but all the work uses functions
 MC: You will need to prove the computation rule, so it won't be definitional, but otherwise it
@@ -32,35 +36,21 @@ MC: quot.mk takes a valuation function and produces an element of Spv
 MC: quot.lift takes a function defined on valuation functions and produces a function defined on Spv
 KB: So what about proofs which go "Spv(R) is compact. Proof: take an element of Spv(R), call it v or
     f or whatever, and now manipulate f in the following way..."
-MC:  9:23 AM
-
-**All Jul03**
-
-That's quot.lift
-9:23 AM
-
-Actually you will want quot.ind as well
-9:23 AM
-
+MC: That's quot.lift
+MC: Actually you will want quot.ind as well
+["any subset of the quotient type containing the image of quot.mk is everything"]
 or equivalently quot.exists_rep
-9:24 AM
-
-that is, for every element of Spv there is a valuation function that quot.mk's to it
-9:24 AM
-
-Note it's not actually a function producing valuation functions, it's an exists
-
- 9:26 AM
-
-if you prove analogues of those theorems for your type, then you have constructed the quotient up to isomorphism
-
-This all has a category theoretic interpretation as a coequalizer, and all constructions are natural in that category
-9:28 AM
-
-As opposed to, say, quot.out, which picks an element from an equivalence class
-9:30 AM
-
-Although in your case if I understand correctly you also have a canonical way to define quot.out satisfying some other universal property to do with the ordered group
+[lemma exists_rep {α : Sort u} {r : α → α → Prop} (q : quot r) : ∃ a : α, (quot.mk r a) = q :=
+]
+MC: that is, for every element of Spv there is a valuation function that quot.mk's to it
+MC: Note it's not actually a function producing valuation functions, it's an exists
+MC: if you prove analogues of those theorems for your type, then you have constructed the
+    quotient up to isomorphism
+MC: This all has a category theoretic interpretation as a coequalizer, and all constructions
+    are natural in that category
+MC: As opposed to, say, quot.out, which picks an element from an equivalence class
+MC: Although in your case if I understand correctly you also have a canonical way to define quot.out
+    satisfying some other universal property to do with the ordered group
 
 definition zfc.Spv (A : Type) [comm_ring A] : Type :=
   {ineq : A → A → Prop // ∃ v : valuations A, ∀ r s : A, ineq r s ↔ v.f r ≤ v.f s}
@@ -166,11 +156,11 @@ import for_mathlib.ideals
 -- import for_mathlib.quotient_ring -- might be best to use what Chris did!
 import group_theory.subgroup
 
-class linear_ordered_comm_monoid (α : Type)
+class linear_ordered_comm_monoid (α : Type*)
     extends comm_monoid α, linear_order α :=
 (mul_le_mul_left : ∀ {a b : α}, a ≤ b → ∀ c : α, c * a ≤ c * b)
 
-class linear_ordered_comm_group (α : Type)
+class linear_ordered_comm_group (α : Type*)
     extends comm_group α, linear_order α :=
 (mul_le_mul_left : ∀ {a b : α}, a ≤ b → ∀ c : α, c * a ≤ c * b)
 
@@ -178,8 +168,8 @@ local infix ^ := monoid.pow
 
 namespace linear_ordered_comm_group
 
-variables {α : Type} [linear_ordered_comm_group α] {x y z : α}
-variables {β : Type} [linear_ordered_comm_group β]
+variables {α : Type*} [linear_ordered_comm_group α] {x y z : α}
+variables {β : Type*} [linear_ordered_comm_group β]
 
 class is_hom (f : α → β) : Prop :=
 (Hf : is_group_hom f)
@@ -392,9 +382,8 @@ end extend
 
 end linear_ordered_comm_group
 
---TODO -- ask Mario whether f should be part of the data or what.
-class is_valuation {α : Type} [linear_ordered_comm_group α]
-  {R : Type} [comm_ring R] (f : R → option α) : Prop :=
+class is_valuation {α : Type*} [linear_ordered_comm_group α]
+  {R : Type*} [comm_ring R] (f : R → option α) : Prop :=
 (map_zero : f 0 = 0)
 (map_one  : f 1 = 1)
 (map_mul  : ∀ x y, f (x * y) = f x * f y)
@@ -402,8 +391,8 @@ class is_valuation {α : Type} [linear_ordered_comm_group α]
 
 namespace is_valuation
 
-variables {α : Type} [linear_ordered_comm_group α]
-variables {R : Type} [comm_ring R] (f : R → option α)
+variables {α : Type*} [linear_ordered_comm_group α]
+variables {R : Type*} [comm_ring R] (f : R → option α)
 variables [is_valuation f] {x y z : R}
 
 theorem map_unit : x * y = 1 → option.is_some (f x) :=
@@ -495,33 +484,29 @@ definition extension_to_integral_domain {α : Type} [linear_ordered_comm_group �
   (comm_ring.quotient R (supp f)) → option α := sorry
 -/
 
-definition value_group {α : Type} [linear_ordered_comm_group α]
+definition value_group {α : Type*} [linear_ordered_comm_group α]
   {R : Type} [comm_ring R] (f : R → option α) [H : is_valuation f] := 
   group.closure {a : α | ∃ r : R, f r = some a}
 
-instance {α : Type} [linear_ordered_comm_group α]
-  {R : Type} [comm_ring R] (f : R → option α) [H : is_valuation f] : group (value_group f) :=
+instance {α : Type*} [linear_ordered_comm_group α]
+  {R : Type*} [comm_ring R] (f : R → option α) [H : is_valuation f] : group (value_group f) :=
   @subtype.group _ _ (value_group f) (group.closure.is_subgroup {a : α | ∃ r : R, f r = some a})
 
-structure valuations (R : Type) [comm_ring R] :=
-{α : Type}
-[Hα : linear_ordered_comm_group α]
-(f : R → option α)
+structure valuation (R : Type*) [comm_ring R] (Γ : Type*) [linear_ordered_comm_group Γ] :=
+(f : R → option Γ)
 [Hf : is_valuation f]
 
-instance valuations.linear_ordered_comm_group {R : Type} [comm_ring R] (v : valuations R) : linear_ordered_comm_group (v.α) := v.Hα 
+instance (R : Type*) [comm_ring R] (Γ : Type*) [HΓ : linear_ordered_comm_group Γ] :
+has_coe_to_fun (valuation R Γ) := { F := λ _,R → option Γ, coe := λ v,v.f}
 
-instance valuations.is_valuation {R : Type} [comm_ring R] (v : valuations R) : is_valuation (v.f) := v.Hf 
+instance {R : Type} [comm_ring R] {Γ : Type*} [linear_ordered_comm_group Γ]
+(v : valuation R Γ) : is_valuation (v) := v.Hf 
 
-attribute [instance] valuations.Hα
-attribute [instance] valuations.Hf
-
---instance (R : Type) [comm_ring R] : has_coe_to_fun (valuations R) :=
---{ F := λ v,R → option v.α, 
---  coe := λ v,v.f
---}
+attribute [instance] valuation.Hf
 
 /- Wedhorn 1.27 (ii) -/
+-- WR ARE NO LONGER USING AN EQUIV RELN FOR VALUATIONS
+/-
 instance valuations.setoid (R : Type) [comm_ring R] : setoid (valuations R) :=
 { r := λ v w, ∀ r s : R, v.f r ≤ v.f s ↔ w.f r ≤ w.f s,
   iseqv := ⟨
@@ -532,6 +517,7 @@ instance valuations.setoid (R : Type) [comm_ring R] : setoid (valuations R) :=
     -- transitivity
     λ v w x Hvw Hwx r s,iff.trans (Hvw r s) (Hwx r s)⟩
 } 
+-/
 
 /-
 theorem equiv_value_group_map (R : Type) [comm_ring R] (v w : valuations R) (H : v ≈ w) :
