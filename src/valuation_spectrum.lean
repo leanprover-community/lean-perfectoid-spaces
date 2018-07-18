@@ -8,6 +8,21 @@ The valuation spectrum Spv(A) of a (commutative) ring A is the set of all
 equivalence classes of valuations on A, equipped with the topology generated
 by the sets {v : v(r) <= v(s) != 0} for r,s in A.
 
+IMPORTANT NOTE: Mario says
+
+structure valuations (R : Type) [comm_ring R] :=
+{α : Type}
+[Hα : linear_ordered_comm_group α]
+(f : R → option α)
+(Hf : is_valuation f)
+
+should (a) be called valuation and (b) should only have f and Hf in the structure
+
+structure valuation (R : Type) [comm_ring R]
+(α : Type) [Hα : linear_ordered_comm_group α] :=
+(f : R → option α)
+(Hf : is_valuation f)
+
 -/
 
 import valuations 
