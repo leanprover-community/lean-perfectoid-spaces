@@ -91,6 +91,8 @@ import for_mathlib.ideals
 -- import for_mathlib.quotient_ring -- might be best to use what Chris did!
 import group_theory.subgroup
 
+universes u1 u2
+
 class linear_ordered_comm_monoid (α : Type*)
     extends comm_monoid α, linear_order α :=
 (mul_le_mul_left : ∀ {a b : α}, a ≤ b → ∀ c : α, c * a ≤ c * b)
@@ -317,20 +319,20 @@ end extend
 
 end linear_ordered_comm_group
 
-structure valuation (R : Type*) [comm_ring R] (Γ : Type*) [linear_ordered_comm_group Γ] :=
+structure valuation (R : Type u1) [comm_ring R] (Γ : Type u2) [linear_ordered_comm_group Γ] :=
 (f : R → option Γ)
 (map_zero : f 0 = 0)
 (map_one  : f 1 = 1)
 (map_mul  : ∀ x y, f (x * y) = f x * f y)
 (map_add  : ∀ x y, f (x + y) ≤ f x ∨ f (x + y) ≤ f y)
 
-instance (R : Type*) [comm_ring R] (Γ : Type*) [HΓ : linear_ordered_comm_group Γ] :
+instance (R : Type u1) [comm_ring R] (Γ : Type u2) [HΓ : linear_ordered_comm_group Γ] :
 has_coe_to_fun (valuation R Γ) := { F := λ _,R → option Γ, coe := λ v,v.f}
 
 -- do I need this now?
 
-class is_valuation {α : Type*} [linear_ordered_comm_group α]
-  {R : Type*} [comm_ring R] (f : R → option α) : Prop :=
+class is_valuation {R : Type u1} [comm_ring R] {Γ : Type u2} [linear_ordered_comm_group Γ]
+  (f : R → option Γ) : Prop :=
 (map_zero : f 0 = 0)
 (map_one  : f 1 = 1)
 (map_mul  : ∀ x y, f (x * y) = f x * f y)
@@ -443,35 +445,13 @@ definition extension_to_integral_domain {α : Type} [linear_ordered_comm_group �
   (comm_ring.quotient R (supp f)) → option α := sorry
 -/
 
-definition value_group {R : Type} [comm_ring R] {Γ : Type*} [linear_ordered_comm_group Γ]
+definition value_group {R : Type u1} [comm_ring R] {Γ : Type u2} [linear_ordered_comm_group Γ]
   (v : valuation R Γ) := 
 group.closure {a : Γ | ∃ r : R, v r = some a}
 
-instance {R : Type*} [comm_ring R] {Γ : Type*} [linear_ordered_comm_group Γ]
+instance {R : Type u1} [comm_ring R] {Γ : Type u2} [linear_ordered_comm_group Γ]
    (v : valuation R Γ) : group (value_group v) :=
   @subtype.group _ _ (value_group v) (group.closure.is_subgroup {a : Γ | ∃ r : R, v r = some a})
-
-
-
-/- Wedhorn 1.27 (ii) -/
-
-/-
-theorem equiv_value_group_map (R : Type) [comm_ring R] (v w : valuations R) (H : v ≈ w) :
-∃ φ : value_group v.f → value_group w.f, is_group_hom φ ∧ function.bijective φ :=
-begin
-  existsi _,tactic.swap,
-  { intro g,
-    cases g with g Hg,
-    unfold value_group at Hg,
-    unfold group.closure at Hg,
-    dsimp at Hg,
-    induction Hg,
-  },
-  {sorry 
-
-  }
-end 
--/
 
 end valuation
 

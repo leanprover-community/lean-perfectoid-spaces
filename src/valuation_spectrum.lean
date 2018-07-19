@@ -1,20 +1,90 @@
 import valuations 
 import analysis.topology.topological_space
+import data.finsupp
 
-universes u v
+universes u u1 u2
 
-open is_valuation 
+open valuation 
 
 definition Spv (R : Type u) [comm_ring R] := 
 {ineq : R → R → Prop // ∃ (Γ : Type u) [linear_ordered_comm_group Γ],
   by exactI ∃ (v : valuation R Γ), ∀ r s : R, ineq r s ↔ v r ≤ v s}
 
--- TODO (if I understood Mario correctly):
--- definition Spv.mk (A : Type u) [comm_ring A] (Γ : Type v) -- note : not type u 
--- [linear_ordered_comm_group Γ] : Spv A := 
--- this is a set-theoretic issue: I need to find Gamma' of type u to push this through 
+namespace Spv 
+
+#check multiplicative 
+
+-- decidable equality on R to make the finsupp an add_comm_group?!
+theorem value_group_universe (R : Type u1) [comm_ring R] [decidable_eq R] (Γ2 : Type u2) [linear_ordered_comm_group Γ2]
+  (f2 : R → option Γ2) (Hf2 : is_valuation f2) : 
+∃ (Γ1 : Type u1) [linear_ordered_comm_group Γ1], by exactI ∃ (f1 : R → option Γ1) (Hf1 : is_valuation f1),
+  ∀ r s : R, f1 r ≤ f1 s ↔ f2 r ≤ f2 s := 
+begin
+  let FG : Type u1 := multiplicative (R →₀ ℤ), -- free group on R
+  let φ₀ : R → Γ2 := λ r, option.get_or_else (f2 r) 1, 
+  let φ : FG → Γ2 := λ f, finsupp.prod f (λ r n,(φ₀ r) ^ n),
+  -- have H : comm_group (FG) := by apply_instance,
+  have H0 : ∀ (a : R), φ₀ a ^ 0 = 1 := λ a,rfl,
+  have Hprod:  ∀ (a : R) (b₁ b₂ : ℤ), φ₀ a ^ (b₁ + b₂) = φ₀ a ^ b₁ * φ₀ a ^ b₂ := 
+    λ a b₁ b₂, gpow_add _ _ _,
+  have Hφ : is_group_hom φ :=
+  { mul := λ a b,finsupp.prod_add_index H0 Hprod,
+  },
+  -- let Γ1 be the quotient of FG by kernel of phi,
+  -- write down injective group hom Γ1 -> Γ2
+  -- deduce linear ordered comm group
+  -- etc etc
+
+end 
+
+
+definition quot.mk (R : Type u1) [comm_ring R] (Γ2 : Type u2) [linear_ordered_comm_group Γ2]
+(f : R → option Γ2) (H : is_valuation f) : Spv R := sorry
+
+-- and now a huge technical interlude, to define
+
+-- Spv.mk (A : Type u) [comm_ring A] (Γ : Type v) -- note : v ≠ u 
+-- [linear_ordered_comm_group Γ] (v : valuation A Γ) : Spv A := ...
+
+-- quot.mk (f : A → option Γ) [ is_valuation f] : Spv A
+-- quot.lift takes a function defined on valuation functions and produces a function defined on Spv
+-- quot.ind as well
+--or equivalently quot.exists_rep
+-- exists_rep {α : Sort u} {r : α → α → Prop} (q : quot r) : ∃ a : α, (quot.mk r a) = q :=
+-- that is, for every element of Spv there is a valuation function that quot.mk's to it
+-- Note it's not actually a function producing valuation functions, it's an exists
+-- if you prove analogues of those theorems for your type, then you have constructed the
+--  quotient up to isomorphism
+-- This all has a category theoretic interpretation as a coequalizer, and all constructions
+--  are natural in that category
+-- As opposed to, say, quot.out, which picks an element from an equivalence class
+-- Although in your case if I understand correctly you also have a canonical way to define quot.out
+--  satisfying some other universal property to do with the ordered group
+
+-- Also need a variant of  Wedhorn 1.27 (ii) -/
+
+/-
+theorem equiv_value_group_map (R : Type) [comm_ring R] (v w : valuations R) (H : v ≈ w) :
+∃ φ : value_group v.f → value_group w.f, is_group_hom φ ∧ function.bijective φ :=
+begin
+  existsi _,tactic.swap,
+  { intro g,
+    cases g with g Hg,
+    unfold value_group at Hg,
+    unfold group.closure at Hg,
+    dsimp at Hg,
+    induction Hg,
+  },
+  {sorry 
+
+  }
+end 
+-/
 
 namespace Spv 
+
+
+
 
 variables {A : Type*} [comm_ring A]
 
