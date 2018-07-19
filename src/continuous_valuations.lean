@@ -2,8 +2,6 @@ import analysis.topology.topological_structures
 import valuations 
 import valuation_spectrum
 
-namespace valuation
-
 /- although strictly speaking the commented-out defintion her
    is a "correct" definition, note that it is
    not constant across equivalence classes of valuations! The "correct" notion of
@@ -16,30 +14,25 @@ namespace valuation
 
 -/    
 
+namespace valuation 
 
-def is_continuous_aux {R : Type} [comm_ring R] [topological_space R] [topological_ring R] 
-  {α : Type} [linear_ordered_comm_group α] {f : R → option α} (Hf : is_valuation f) :
-  Prop := ∀ x : α, x ∈ is_valuation.value_group f → is_open {r : R | f r < x}
+def is_continuous {R : Type*} [comm_ring R] [topological_space R] [topological_ring R] 
+  {Γ : Type*} [linear_ordered_comm_group Γ] (v : valuation R Γ) : Prop := 
+∀ x : Γ, x ∈ value_group v → is_open {r : R | v r < x}
 
--- incomplete -- needs Wedhorn 1.25/1.27 
-def is_continuous {R : Type} [comm_ring R] [topological_space R] [topological_ring R] 
-  : Spv R → Prop := sorry
-  
-/-
-quotient.lift (λ v : valuations R,is_continuous_aux v.Hf) 
-  (λ (v w : Spv R) H,begin
-    dsimp,
-    apply propext,
-    split,
-    { intro Hv,
-      intro b,
-      sorry
-    },
-    sorry
-  end)
--/
+end valuation 
+
+namespace Spv 
+
+def is_continuous {R : Type*} [comm_ring R] [topological_space R] [topological_ring R]
+  (vs : Spv R) := ∃ (Γ : Type*) [linear_ordered_comm_group Γ],
+  by exactI ∃ (v : valuation R Γ), ∀ r s : R, vs.val r s ↔ v r ≤ v s ∧ valuation.is_continuous v 
+
+theorem forall_continuous {R : Type*} [comm_ring R] [topological_space R] [topological_ring R]
+  (vs : Spv R) : Spv.is_continuous vs ↔ ∀ (Γ : Type*) [linear_ordered_comm_group Γ],
+  by exactI ∀ (v : valuation R Γ), (∀ r s : R, vs.val r s ↔ v r ≤ v s → valuation.is_continuous v) := sorry 
+
+end Spv 
 
 def Cont (R : Type) [comm_ring R] [topological_space R] [topological_ring R]
-  := {vs : Spv R // is_continuous vs}
-
-end valuation
+  := {vs : Spv R // Spv.is_continuous vs}
