@@ -327,6 +327,8 @@ structure valuation (R : Type*) [comm_ring R] (Γ : Type*) [linear_ordered_comm_
 instance (R : Type*) [comm_ring R] (Γ : Type*) [HΓ : linear_ordered_comm_group Γ] :
 has_coe_to_fun (valuation R Γ) := { F := λ _,R → option Γ, coe := λ v,v.f}
 
+-- do I need this now?
+
 class is_valuation {α : Type*} [linear_ordered_comm_group α]
   {R : Type*} [comm_ring R] (f : R → option α) : Prop :=
 (map_zero : f 0 = 0)
@@ -334,10 +336,18 @@ class is_valuation {α : Type*} [linear_ordered_comm_group α]
 (map_mul  : ∀ x y, f (x * y) = f x * f y)
 (map_add  : ∀ x y, f (x + y) ≤ f x ∨ f (x + y) ≤ f y)
 
+instance valuation.is_valuation {R : Type*} [comm_ring R] {Γ : Type*} [linear_ordered_comm_group Γ]
+  (v : valuation R Γ) : is_valuation v := {
+  map_zero := v.map_zero,
+  map_one := v.map_one,
+  map_mul := v.map_mul,
+  map_add := v.map_add  
+  }
+
 namespace valuation
 
 variables {Γ : Type*} [linear_ordered_comm_group Γ]
-variables {R : Type*} [comm_ring R] (f : R → option Γ)
+variables {R : Type*} [comm_ring R]
 variables (v : valuation R Γ) {x y z : R}
 
 theorem map_unit : x * y = 1 → option.is_some (v x) :=
@@ -406,7 +416,7 @@ instance : is_valuation (λ x, if x ∈ S then (0 : option Γ) else 1) :=
 
 end trivial
 
-def supp : set R := {x | f x = 0}
+def supp : set R := {x | v x = 0}
 
 instance : is_prime_ideal (supp v) :=
 { zero_ := map_zero v,
@@ -433,13 +443,13 @@ definition extension_to_integral_domain {α : Type} [linear_ordered_comm_group �
   (comm_ring.quotient R (supp f)) → option α := sorry
 -/
 
-definition value_group {α : Type*} [linear_ordered_comm_group α]
-  {R : Type} [comm_ring R] (f : R → option α) [H : is_valuation f] := 
-  group.closure {a : α | ∃ r : R, f r = some a}
+definition value_group {R : Type} [comm_ring R] {Γ : Type*} [linear_ordered_comm_group Γ]
+  (v : valuation R Γ) := 
+group.closure {a : Γ | ∃ r : R, v r = some a}
 
-instance {α : Type*} [linear_ordered_comm_group α]
-  {R : Type*} [comm_ring R] (f : R → option α) [H : is_valuation f] : group (value_group f) :=
-  @subtype.group _ _ (value_group f) (group.closure.is_subgroup {a : α | ∃ r : R, f r = some a})
+instance {R : Type*} [comm_ring R] {Γ : Type*} [linear_ordered_comm_group Γ]
+   (v : valuation R Γ) : group (value_group v) :=
+  @subtype.group _ _ (value_group v) (group.closure.is_subgroup {a : Γ | ∃ r : R, v r = some a})
 
 
 
