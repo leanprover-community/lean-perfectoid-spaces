@@ -30,6 +30,7 @@ begin
   have Hφ : is_group_hom φ :=
   { mul := λ a b,finsupp.prod_add_index H0 Hprod,
   },
+
   -- let Γ1 be the quotient of FG by kernel of phi,
   -- write down injective group hom Γ1 -> Γ2
   -- deduce linear ordered comm group
