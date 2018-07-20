@@ -18,7 +18,7 @@ instance quotient.inhabited : inhabited Q := ⟨1⟩
 
 definition quotient.mk : G → Q := λ g, ⟦g⟧
 
-lemma is_group_hom_quotient_mk : is_group_hom (quotient.mk N) := by refine {..}; intros; refl 
+instance is_group_hom_quotient_mk : is_group_hom (quotient.mk N) := by refine {..}; intros; refl 
 
 def quotient.lift (φ : G → H) [Hφ : is_group_hom φ] (HN : ∀x∈N, φ x = 1) (q : Q) : H :=
 q.lift_on φ $ assume a b (hab : a⁻¹ * b ∈ N),
@@ -38,10 +38,17 @@ lemma is_group_hom_quotient_lift {φ : G → H} {HN : ∀x y, x⁻¹ * y ∈ N �
 ⟨λ q r, quotient.induction_on₂ q r $ λ a b, show φ (a * b) = φ a * φ b, from is_group_hom.mul φ a b⟩
 
 open function 
-lemma quotient.injective_lift {φ : G → H} (Hφ : is_group_hom φ)
+
+lemma quotient.injective_lift (φ : G → H) [Hφ : is_group_hom φ]
   (HN : N = {x | φ x = 1}) : injective (quotient.lift N φ $ λ x h,by rwa HN at h) :=
 assume a b, quotient.induction_on₂ a b $ assume a b (h : φ a = φ b), quotient.sound $ 
 have φ (a⁻¹ * b) = 1, by rw [Hφ.mul,←h,is_group_hom.inv φ,inv_mul_self],
 show a⁻¹ * b ∈ N,from HN.symm ▸ this
 
+instance [HCG: comm_group G] : comm_group Q := 
+{ mul_comm := λ a b,quotient.induction_on₂ a b $ λ g h, 
+    show ⟦g * h⟧ = ⟦h * g⟧, by rw [comm_group.mul_comm g h],
+  ..left_cosets.group N
+}
 end group
+
