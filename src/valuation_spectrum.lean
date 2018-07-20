@@ -1,6 +1,7 @@
 import valuations 
 import analysis.topology.topological_space
 import data.finsupp
+import for_mathlib.quotient_group
 
 universes u u1 u2
 
@@ -27,17 +28,37 @@ begin
   have H0 : ∀ (a : R), φ₀ a ^ 0 = 1 := λ a,rfl,
   have Hprod:  ∀ (a : R) (b₁ b₂ : ℤ), φ₀ a ^ (b₁ + b₂) = φ₀ a ^ b₁ * φ₀ a ^ b₂ := 
     λ a b₁ b₂, gpow_add _ _ _,
-  have Hφ : is_group_hom φ :=
+  letI Hφ : is_group_hom φ :=
   { mul := λ a b,finsupp.prod_add_index H0 Hprod,
   },
+  let N := is_group_hom.ker φ,
+  let Γ1 := group.quotient_group N,
+  existsi Γ1,
+  let GΓ1 : group Γ1 := by apply_instance,
+  let ψ : Γ1 → Γ2 := group.quotient.lift N φ (λ _,(is_group_hom.mem_ker φ).1),
+  have Hψ : function.injective ψ := group.quotient.injective_lift N φ
+  begin
+    funext,apply propext,
+    show x ∈ N ↔ _,
+    exact is_group_hom.mem_ker φ,
+  end,
+  letI Γ1linord : linear_order Γ1 := 
+  {
 
+  },
+
+  letI Γ1order : linear_ordered_comm_group Γ1 :=
+  { mul_le_mul_left := sorry,
+    mul_comm := sorry,
+    ..GΓ1
+  }
   -- let Γ1 be the quotient of FG by kernel of phi,
   -- write down injective group hom Γ1 -> Γ2
   -- deduce linear ordered comm group
   -- etc etc
 
 end 
-
+#print linear_order
 
 definition quot.mk (R : Type u1) [comm_ring R] (Γ2 : Type u2) [linear_ordered_comm_group Γ2]
 (f : R → option Γ2) (H : is_valuation f) : Spv R := sorry
