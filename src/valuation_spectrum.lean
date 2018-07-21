@@ -2,6 +2,7 @@ import valuations
 import analysis.topology.topological_space
 import data.finsupp
 import for_mathlib.quotient_group
+import valuation_universe 
 
 universes u u1 u2
 
@@ -13,9 +14,10 @@ definition Spv (R : Type u) [comm_ring R] :=
 
 namespace Spv 
 
-#check multiplicative 
+set_option class.instance_max_depth 100
 
 -- decidable equality on R to make the finsupp an add_comm_group?!
+
 theorem value_group_universe (R : Type u1) [comm_ring R] [decidable_eq R] (Γ2 : Type u2) [linear_ordered_comm_group Γ2]
   (f2 : R → option Γ2) (Hf2 : is_valuation f2) : 
 ∃ (Γ1 : Type u1) [linear_ordered_comm_group Γ1], by exactI ∃ (f1 : R → option Γ1) (Hf1 : is_valuation f1),
@@ -33,35 +35,92 @@ begin
   },
   let N := is_group_hom.ker φ,
   let Γ1 := group.quotient_group N,
-  existsi Γ1,
-  let GΓ1 : group Γ1 := by apply_instance,
   let ψ : Γ1 → Γ2 := group.quotient.lift N φ (λ _,(is_group_hom.mem_ker φ).1),
   have Hψ : function.injective ψ := group.quotient.injective_lift N φ
-  begin
+    begin
     funext,apply propext,
     show x ∈ N ↔ _,
     exact is_group_hom.mem_ker φ,
-  end,
+    end,
   letI Γ1linord : linear_order Γ1 := 
-  {
-
+  { le := λ g h,ψ g ≤ ψ h,
+    le_refl := λ _,le_refl _,
+    le_trans := λ _ _ _ hab hbc,le_trans hab hbc,
+    le_antisymm := λ g h Hgh Hhg,Hψ $ le_antisymm Hgh Hhg,
+    le_total := λ g h, le_total _ _
   },
-
   letI Γ1order : linear_ordered_comm_group Γ1 :=
-  { mul_le_mul_left := sorry,
-    mul_comm := sorry,
-    ..GΓ1
-  }
-  -- let Γ1 be the quotient of FG by kernel of phi,
-  -- write down injective group hom Γ1 -> Γ2
-  -- deduce linear ordered comm group
-  -- etc etc
-
+  { mul_le_mul_left := λ a b H c,
+      begin 
+      show ψ (c * a) ≤ ψ (c * b),
+        rw is_group_hom.mul ψ c b,
+        rw is_group_hom.mul ψ c a,
+        exact linear_ordered_comm_group.mul_le_mul_left H _
+      end
+  },
+  existsi Γ1,
+  existsi Γ1order,
+  let f1 : R → option Γ1 := (λ r, 
+--    match (f2 r) with
+--    | none := none
+--    | some _ := some (group.quotient.mk N (finsupp.single r (1 : ℤ)))
+--    end : R → option Γ1),
+  option.rec_on (f2 r) (none : option Γ1) 
+    (λ (r' : Γ2), (group.quotient.mk N (finsupp.single r (1 : ℤ)) : option Γ1))),
+  existsi f1,
+  -- equation lemma :-)
+  have H12 : ∀ r : R, option.map ψ (f1 r) = f2 r,
+  { intro r,
+    dsimp [f1],
+    destruct (f2 r),
+    { intro Hnone,
+      rw Hnone,
+      refl},
+    intro val,
+    intro Hval,
+    rw Hval,
+    show some (ψ ((group.quotient.mk N (finsupp.single r 1)))) = some val,
+    congr' 1,
+    show group.quotient.lift N φ _ (group.quotient.mk N (finsupp.single r 1)) = val,
+    --show group.quotient.lift N φ _ ⟦finsupp.single r 1⟧ = val,
+    rw group.quotient.lift_mk',
+    suffices : finsupp.prod (finsupp.single r (1:ℤ)) (λ (r : R), pow (φ₀ r)) = val,
+      simpa [φ] using this,
+    rw finsupp.prod_single_index,
+      show φ₀ r ^ 0 = 1,refl,
+    show (φ₀ r) * 1 = val,
+    rw mul_one,
+    dsimp [φ₀],
+    rw Hval,
+    refl,
+  },
+  have Hf1 : is_valuation f1 := valuation.valuation_of_valuation R f1 f2 ψ
+                                  Hψ H12 (λ g h,iff.refl _) Hf2,
+  existsi Hf1,
+  exact valuation.le_of_le R f1 f2 ψ H12 (λ g h, iff.refl _),
 end 
-#print linear_order
 
-definition quot.mk (R : Type u1) [comm_ring R] (Γ2 : Type u2) [linear_ordered_comm_group Γ2]
-(f : R → option Γ2) (H : is_valuation f) : Spv R := sorry
+definition quot.mk {R : Type u1} [comm_ring R] [decidable_eq R] {Γ2 : Type u2} [linear_ordered_comm_group Γ2]
+(f : R → option Γ2) [Hf : is_valuation f] : Spv R := ⟨λ r s, f r ≤ f s,
+  begin
+    rcases (value_group_universe R Γ2 f Hf) with ⟨Γ1,HΓ1,f1,Hf1,H12⟩,
+    existsi Γ1,existsi HΓ1,
+    letI : linear_ordered_comm_group Γ1 := HΓ1,
+    let v : @valuation R _ Γ1 HΓ1 := {
+      f := f1,
+      ..Hf1,
+    },
+    existsi v,
+    intros r s,
+    show _ ↔ f1 r ≤ f1 s,
+    rw H12 r s,
+  end 
+⟩
+
+definition mk {R : Type u1} [comm_ring R] [decidable_eq R] {Γ2 : Type u2} [linear_ordered_comm_group Γ2]
+(v : valuation R Γ2) : Spv R := quot.mk v.f
+
+end Spv 
 
 -- and now a huge technical interlude, to define
 
@@ -104,9 +163,6 @@ end
 -/
 
 namespace Spv 
-
-
-
 
 variables {A : Type*} [comm_ring A]
 
