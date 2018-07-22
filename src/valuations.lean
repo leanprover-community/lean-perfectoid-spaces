@@ -449,9 +449,16 @@ definition value_group {R : Type u1} [comm_ring R] {Γ : Type u2} [linear_ordere
   (v : valuation R Γ) := 
 group.closure {a : Γ | ∃ r : R, v r = some a}
 
+definition value_group_f {R : Type u1} [comm_ring R] {Γ : Type u2} [linear_ordered_comm_group Γ]
+  (f : R → option Γ) [is_valuation f] := group.closure {a : Γ | ∃ r : R, f r = some a}
+
 instance {R : Type u1} [comm_ring R] {Γ : Type u2} [linear_ordered_comm_group Γ]
    (v : valuation R Γ) : group (value_group v) :=
   @subtype.group _ _ (value_group v) (group.closure.is_subgroup {a : Γ | ∃ r : R, v r = some a})
+
+instance valutaion.group_f {R : Type u1} [comm_ring R] {Γ : Type u2} [linear_ordered_comm_group Γ]
+   (f : R → option Γ) [is_valuation f] : group (value_group_f f) :=
+  @subtype.group _ _ (value_group_f f) (group.closure.is_subgroup {a : Γ | ∃ r : R, f r = some a})
 
 end valuation
 
