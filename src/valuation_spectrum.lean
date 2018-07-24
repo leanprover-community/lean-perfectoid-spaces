@@ -29,18 +29,16 @@ definition valuation.minimal_value_group {R : Type u1} [comm_ring R] [decidable_
   (f2 : R → option Γ2) [Hf2 : is_valuation f2] : 
 Type u1 :=
 begin
-  let FG : Type u1 := multiplicative (R →₀ ℤ), -- free group on R
+  let FG : Type u1 := multiplicative (R →₀ ℤ), -- free ab group on R
   let φ₀ : R → Γ2 := λ r, option.get_or_else (f2 r) 1, 
   let φ : FG → Γ2 := λ f, finsupp.prod f (λ r n,(φ₀ r) ^ n),
-  have H0 : ∀ (a : R), φ₀ a ^ 0 = 1 := λ a,rfl,
   have Hprod:  ∀ (a : R) (b₁ b₂ : ℤ), φ₀ a ^ (b₁ + b₂) = φ₀ a ^ b₁ * φ₀ a ^ b₂ := 
     λ a b₁ b₂, gpow_add _ _ _,
   letI Hφ : is_group_hom φ :=
-  { mul := λ a b,finsupp.prod_add_index H0 Hprod,
+  { mul := λ a b,finsupp.prod_add_index (λ a,rfl) Hprod,
   },
   let N := is_group_hom.ker φ,
-  let Γ1 := group.quotient_group N,
-  exact Γ1 
+  exact group.quotient_group (is_group_hom.ker φ) 
 end 
 
 instance valuation.minimal_value_group_is_linear_ordered_comm_group
@@ -52,11 +50,10 @@ begin
   let FG : Type u1 := multiplicative (R →₀ ℤ), -- free group on R
   let φ₀ : R → Γ2 := λ r, option.get_or_else (f2 r) 1, 
   let φ : FG → Γ2 := λ f, finsupp.prod f (λ r n,(φ₀ r) ^ n), 
-  have H0 : ∀ (a : R), φ₀ a ^ 0 = 1 := λ a,rfl,
   have Hprod:  ∀ (a : R) (b₁ b₂ : ℤ), φ₀ a ^ (b₁ + b₂) = φ₀ a ^ b₁ * φ₀ a ^ b₂ := 
     λ a b₁ b₂, gpow_add _ _ _,
   letI Hφ : is_group_hom φ :=
-  { mul := λ a b,finsupp.prod_add_index H0 Hprod,
+  { mul := λ a b,finsupp.prod_add_index (λ a,rfl) Hprod,
   },
   let N := is_group_hom.ker φ,
   let Γ1 := group.quotient_group N,
@@ -95,11 +92,10 @@ begin
   let FG : Type u1 := multiplicative (R →₀ ℤ), -- free group on R
   let φ₀ : R → Γ2 := λ r, option.get_or_else (f2 r) 1, 
   let φ : FG → Γ2 := λ f, finsupp.prod f (λ r n,(φ₀ r) ^ n), 
-  have H0 : ∀ (a : R), φ₀ a ^ 0 = 1 := λ a,rfl,
   have Hprod:  ∀ (a : R) (b₁ b₂ : ℤ), φ₀ a ^ (b₁ + b₂) = φ₀ a ^ b₁ * φ₀ a ^ b₂ := 
     λ a b₁ b₂, gpow_add _ _ _,
   letI Hφ : is_group_hom φ :=
-  { mul := λ a b,finsupp.prod_add_index H0 Hprod,
+  { mul := λ a b,finsupp.prod_add_index (λ a,rfl) Hprod,
   },
   let N := is_group_hom.ker φ,
   let Γ1 := group.quotient_group N,
