@@ -34,14 +34,9 @@ begin
   { mul := λ a b,finsupp.prod_add_index H0 Hprod,
   },
   let N := is_group_hom.ker φ,
-  let Γ1 := group.quotient_group N,
+  let Γ1 := quotient_group N,
   let ψ : Γ1 → Γ2 := group.quotient.lift N φ (λ _,(is_group_hom.mem_ker φ).1),
-  have Hψ : function.injective ψ := group.quotient.injective_lift N φ
-    begin
-    funext,apply propext,
-    show x ∈ N ↔ _,
-    exact is_group_hom.mem_ker φ,
-    end,
+  have Hψ : function.injective ψ := group.quotient.injective_ker_lift φ,
   letI Γ1linord : linear_order Γ1 := 
   { le := λ g h,ψ g ≤ ψ h,
     le_refl := λ _,le_refl _,

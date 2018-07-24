@@ -37,7 +37,6 @@ begin
   letI Hφ : is_group_hom φ :=
   { mul := λ a b,finsupp.prod_add_index (λ a,rfl) Hprod,
   },
-  let N := is_group_hom.ker φ,
   exact group.quotient_group (is_group_hom.ker φ) 
 end 
 
@@ -56,9 +55,9 @@ begin
   { mul := λ a b,finsupp.prod_add_index (λ a,rfl) Hprod,
   },
   let N := is_group_hom.ker φ,
-  let Γ1 := group.quotient_group N,
-  let ψ : Γ1 → Γ2 := group.quotient.lift N φ (λ _,(is_group_hom.mem_ker φ).1),
-  have Hψ : function.injective ψ := group.quotient.injective_lift N φ
+  let Γ1 := quotient_group N,
+  let ψ : Γ1 → Γ2 := quotient_group.lift N φ (λ _,(is_group_hom.mem_ker φ).1),
+  have Hψ : function.injective ψ := quotient_group.injective_ker_lift φ
     begin
     funext,apply propext,
     show x ∈ N ↔ _,
