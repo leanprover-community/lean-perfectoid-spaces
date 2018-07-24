@@ -37,7 +37,7 @@ begin
   letI Hφ : is_group_hom φ :=
   { mul := λ a b,finsupp.prod_add_index (λ a,rfl) Hprod,
   },
-  exact group.quotient_group (is_group_hom.ker φ) 
+  exact quotient_group (is_group_hom.ker φ) 
 end 
 
 instance valuation.minimal_value_group_is_linear_ordered_comm_group
@@ -56,13 +56,13 @@ begin
   },
   let N := is_group_hom.ker φ,
   let Γ1 := quotient_group N,
-  let ψ : Γ1 → Γ2 := quotient_group.lift N φ (λ _,(is_group_hom.mem_ker φ).1),
-  have Hψ : function.injective ψ := quotient_group.injective_ker_lift φ
-    begin
-    funext,apply propext,
-    show x ∈ N ↔ _,
-    exact is_group_hom.mem_ker φ,
-    end,
+  let ψ : Γ1 → Γ2 := group.quotient.lift N φ (λ _,(is_group_hom.mem_ker φ).1),
+  have Hψ : function.injective ψ := group.quotient.injective_ker_lift φ,
+  --  begin
+  --  funext,apply propext,
+  --  show x ∈ N ↔ _,
+  --  exact is_group_hom.mem_ker φ,
+  --  end,
   letI Γ1linord : linear_order Γ1 := 
   { le := λ g h,ψ g ≤ ψ h,
     le_refl := λ _,le_refl _,
@@ -97,14 +97,14 @@ begin
   { mul := λ a b,finsupp.prod_add_index (λ a,rfl) Hprod,
   },
   let N := is_group_hom.ker φ,
-  let Γ1 := group.quotient_group N,
+  let Γ1 := quotient_group N,
   let ψ : Γ1 → Γ2 := group.quotient.lift N φ (λ _,(is_group_hom.mem_ker φ).1),
-  have Hψ : function.injective ψ := group.quotient.injective_lift N φ
-    begin
-    funext,apply propext,
-    show x ∈ N ↔ _,
-    exact is_group_hom.mem_ker φ,
-    end,
+  have Hψ : function.injective ψ := group.quotient.injective_ker_lift φ,
+  --  begin
+  --  funext,apply propext,
+  --  show x ∈ N ↔ _,
+  --  exact is_group_hom.mem_ker φ,
+  --  end,
   letI Γ1linord : linear_order Γ1 := 
   { le := λ g h,ψ g ≤ ψ h,
     le_refl := λ _,le_refl _,
@@ -143,14 +143,14 @@ begin
   { mul := λ a b,finsupp.prod_add_index H0 Hprod,
   },
   let N := is_group_hom.ker φ,
-  let Γ1 := group.quotient_group N,
+  let Γ1 := quotient_group N,
   let ψ : Γ1 → Γ2 := group.quotient.lift N φ (λ _,(is_group_hom.mem_ker φ).1),
-  have Hψ : function.injective ψ := group.quotient.injective_lift N φ
-    begin
-    funext,apply propext,
-    show x ∈ N ↔ _,
-    exact is_group_hom.mem_ker φ,
-    end,
+  have Hψ : function.injective ψ := group.quotient.injective_ker_lift φ,
+  --  begin
+  --  funext,apply propext,
+  --  show x ∈ N ↔ _,
+  --  exact is_group_hom.mem_ker φ,
+  --  end,
   letI Γ1linord : linear_order Γ1 := 
   { le := λ g h,ψ g ≤ ψ h,
     le_refl := λ _,le_refl _,
@@ -217,14 +217,9 @@ begin
   { mul := λ a b,finsupp.prod_add_index H0 Hprod,
   },
   let N := is_group_hom.ker φ,
-  let Γ1 := group.quotient_group N,
+  let Γ1 := quotient_group N,
   let ψ : Γ1 → Γ2 := group.quotient.lift N φ (λ _,(is_group_hom.mem_ker φ).1),
-  have Hψ : function.injective ψ := group.quotient.injective_lift N φ
-    begin
-    funext,apply propext,
-    show x ∈ N ↔ _,
-    exact is_group_hom.mem_ker φ,
-    end,
+  have Hψ : function.injective ψ := group.quotient.injective_ker_lift φ,
   letI Γ1linord : linear_order Γ1 := 
   { le := λ g h,ψ g ≤ ψ h,
     le_refl := λ _,le_refl _,
