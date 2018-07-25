@@ -2,34 +2,36 @@ import analysis.topology.topological_structures
 import valuations 
 import valuation_spectrum
 
-/- although strictly speaking the commented-out defintion here
-   is a "correct" definition, note that it is
-   not constant across equivalence classes of valuations! The "correct" notion of
-   continuity for an arbitrary equivalence class of valuations is that the induced
-   valuation taking values in the value group is continuous.
--/
-
 universes u v w
 
 namespace valuation 
 
+-- this definition should only be applied to valuations such that Gamma is the value group;
+-- without this assumption the definition is meaningless (e.g. one can have two equivalent
+-- valuations, one continuous and one not).
 def function_is_continuous {R : Type u} [comm_ring R] [topological_space R] [topological_ring R] 
   {Γ : Type v} [linear_ordered_comm_group Γ] (f : R → option Γ) [Hf : is_valuation f] :
   Prop := ∀ x : Γ, is_open {r : R | f r < x}
 
+-- This definition is the correct definition of continuity of a valuation. It's constant
+-- across equivalence classes (although at the time of writing I've not proved this)
 def is_continuous {R : Type u} [comm_ring R] [topological_space R] [topological_ring R] 
   {Γ : Type u} [linear_ordered_comm_group Γ] (v : valuation R Γ) : Prop := 
 ∀ x : Γ, x ∈ value_group v → is_open {r : R | v r < x}
-
--- definition of continuous depends on value group
 
 end valuation 
 
 namespace Spv 
 
+-- This is a mathematically correct definition of what it means for a valuation to be continuous.
 def is_continuous {R : Type u} [comm_ring R] [topological_space R] [topological_ring R]
   (vs : Spv R) := ∃ (Γ : Type u) [linear_ordered_comm_group Γ],
   by exactI ∃ (v : valuation R Γ), (∀ r s : R, vs.val r s ↔ v r ≤ v s) ∧ valuation.is_continuous v 
+-- What we unfortunately do not yet have is a proof that this definition is equivalent to the
+-- condition that *all* valuations giving rise to `vs` are continuous.
+
+/-
+Proof of the below two theorems needs stuff like Wedhorn 1.27 which we didn't do yet.
 
 theorem continuous_iff_out_continuous {R : Type u} [comm_ring R] [topological_space R]
   [topological_ring R] [decidable_eq R] {Γ2 : Type v} [linear_ordered_comm_group Γ2]
@@ -65,19 +67,12 @@ begin
     exact Hv
   }
 end 
+-/
 
 end Spv 
-
-#check Spv.is_continuous -- Spv.is_continuous : Spv ?M_1 → Prop
 
 def Cont (R : Type) [comm_ring R] [topological_space R] [topological_ring R]
   := {vs : Spv R // Spv.is_continuous vs}
 
-example (R : Type) [comm_ring R] [topological_space R] [topological_ring R] :
-topological_space (Spv R) := by apply_instance -- works
-
---example (R : Type) [comm_ring R] [topological_space R] [topological_ring R] :
---topological_space (Cont R) := by apply_instance -- fails
-
 instance (R : Type) [comm_ring R] [topological_space R] [topological_ring R] :
-topological_space (Cont R) := subtype.topological_space
+topological_space (Cont R) := by unfold Cont; apply_instance
