@@ -68,5 +68,16 @@ end
 
 end Spv 
 
+#check Spv.is_continuous -- Spv.is_continuous : Spv ?M_1 → Prop
+
 def Cont (R : Type) [comm_ring R] [topological_space R] [topological_ring R]
   := {vs : Spv R // Spv.is_continuous vs}
+
+example (R : Type) [comm_ring R] [topological_space R] [topological_ring R] :
+topological_space (Spv R) := by apply_instance -- works
+
+--example (R : Type) [comm_ring R] [topological_space R] [topological_ring R] :
+--topological_space (Cont R) := by apply_instance -- fails
+
+instance (R : Type) [comm_ring R] [topological_space R] [topological_ring R] :
+topological_space (Cont R) := subtype.topological_space
