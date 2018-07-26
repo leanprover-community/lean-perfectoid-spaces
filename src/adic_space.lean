@@ -36,19 +36,25 @@ theorem p_is_power_bounded [p : Prime] : is_power_bounded (p : power_bounded_sub
 
 variable {R}
 definition is_pseudo_uniformizer : R → Prop := sorry
+
+definition power (R : Type) [comm_ring R] (n : ℕ) (I : set R) [is_ideal I] := I ^ n 
+
+definition Iadic_topology {R : Type*} [comm_ring R] (I : set R) [is_ideal I] : topological_space R :=
+topological_space.generate_from {U : set R | ∃ (n : ℕ) (r : R), U = r + I ^ n } 
+
 end topological_ring
+
+-- f-adic rings are called Huber rings by Scholze.
+-- Topological ring A contains on open subring A0 such that the subspace topology on A0 is
+-- I-adic, where I is a finitely generated ideal of A0 .
+class Huber_ring (R : Type) extends comm_ring R, topological_space R, topological_ring R :=
+(unfinished2 : sorry)
 
 -- Scholze : "Recall that a topological ring R is Tate if it contains an
 -- open and bounded subring R0 ⊂ R and a topologically nilpotent unit pi ∈ R; such elements are
 -- called pseudo-uniformizers.""
 -- we need definitions of bounded subsete and topologically nilpotent -- and do we have unit? Probably.
 class Tate_ring (R : Type) extends comm_ring R, topological_space R, topological_ring R :=
-(unfinished : sorry)
-
--- f-adic rings are called Huber rings by Scholze.
--- Topological ring A contains on open subring A0 such that the subspace topology on A0 is
--- I-adic, where I is a finitely generated ideal of A0 .
-class Huber_ring (R : Type) extends comm_ring R, topological_space R, topological_ring R :=
 (unfinished2 : sorry)
 
 -- TODO should have an instance going from Tate to Huber
