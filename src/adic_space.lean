@@ -85,7 +85,7 @@ class Tate_ring (R : Type*) extends comm_ring R, topological_space R, topologica
 
 
 -- Wedhorn Def 7.14
-structure is_ring_of_integral_elements {R : Type} [Huber_ring R] (Rplus : set R) : Prop :=
+structure is_ring_of_integral_elements {R : Type u} [Huber_ring R] (Rplus : set R) : Prop :=
 [is_subring : is_subring Rplus]
 (is_open : is_open Rplus)
 (is_int_closed : is_integrally_closed Rplus)
@@ -102,10 +102,13 @@ structure Huber_pair :=
 instance : has_coe_to_sort Huber_pair := 
 { S := Type, coe := Huber_pair.R}
 
+instance Huber_pair.Huber_ring (A : Huber_pair) : Huber_ring A.R := A.RHuber 
+
 postfix `⁺` : 66 := λ R : Huber_pair _, R.Rplus  
 
-definition Spa (A : Huber_pair) : Type := {}
-instance Spa_topology (A : Huber_pair) : topological_space (Spa A) := sorry 
+definition Spa (A : Huber_pair) := {vs : Spv A.R // Spv.is_continuous vs ∧ ∀ r : A.R, r ∈ A.Rplus → vs.val r 1}
+
+instance (A : Huber_pair) : topological_space (Spa A) := by unfold Spa; apply_instance 
 
 --definition 𝓞_X (A : Huber_pair) : presheaf_of_rings (Spa A) := sorry 
 -- it's a presheaf of complete topological rings on all opens (defined on rational opens
