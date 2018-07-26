@@ -7,6 +7,9 @@ import for_mathlib.presheaves
 import for_mathlib.topology
 import for_mathlib.topological_structures
 import for_mathlib.subring
+import continuous_valuations
+
+universe u 
 
 open nat function
 
@@ -24,7 +27,7 @@ definition power_bounded_subring := {r : R | is_power_bounded r}
 
 instance power_bounded_subring_to_ring : has_coe (power_bounded_subring R) R := ⟨subtype.val⟩ 
 instance power_bounded_subring_is_ring  : comm_ring (power_bounded_subring R) := sorry
-instance : topological_space (power_bounded_subring R) := sorry
+instance : topological_space (power_bounded_subring R) := subtype.topological_space
 instance : topological_ring (power_bounded_subring R) := sorry
 
 definition is_uniform : Prop := is_bounded (power_bounded_subring R)
@@ -61,7 +64,7 @@ structure is_ring_of_integral_elements {R : Type} [Huber_ring R] (Rplus : set R)
 -- a Huber Ring is an f-adic ring.
 -- a Huber Pair is what Huber called an Affinoid Ring.
 structure Huber_pair :=
-(R : Type) 
+(R : Type u) 
 [RHuber : Huber_ring R]
 (Rplus : set R)
 [intel : is_ring_of_integral_elements Rplus]
@@ -71,7 +74,7 @@ instance : has_coe_to_sort Huber_pair :=
 
 postfix `⁺` : 66 := λ R : Huber_pair _, R.Rplus  
 
-definition Spa (A : Huber_pair) : Type := sorry
+definition Spa (A : Huber_pair) : Type := {}
 instance Spa_topology (A : Huber_pair) : topological_space (Spa A) := sorry 
 
 --definition 𝓞_X (A : Huber_pair) : presheaf_of_rings (Spa A) := sorry 
