@@ -44,11 +44,35 @@ definition is_pseudo_uniformizer : R → Prop := sorry
 
 end topological_ring
 
+section pow_ideal
+
+variables {α : Type u} [comm_ring α] (S T T₁ T₂ : set α)
+variables [is_ideal S]
+
+def mul_ideal (T₁ T₂ : set α) : set α :=
+span { x | ∃ y z, y ∈ T₁ ∧ z ∈ T₂ ∧ x = y * z}
+
+def pow_ideal : ℕ → set α
+| 0 := set.univ
+| (n+1) := mul_ideal (pow_ideal n) T
+
+instance pow_ideal.is_ideal (n : ℕ) : is_ideal (pow_ideal S n) :=
+nat.cases_on n (@is_ideal.mk _ _ _ $ is_submodule.univ) $ λ n,
+span.is_ideal _
+
+end pow_ideal
+
 -- f-adic rings are called Huber rings by Scholze.
 -- Topological ring A contains on open subring A0 such that the subspace topology on A0 is
 -- I-adic, where I is a finitely generated ideal of A0 .
 class Huber_ring (R : Type*) extends comm_ring R, topological_space R, topological_ring R :=
-(unfinished2 : sorry)
+(S : set R) [HS : is_subring S]
+(J : set S) [HJ : is_ideal J]
+(HJ_fin : ∃ gen : set S, set.finite gen ∧ span gen = J)
+(H1 : ∀ n, @topological_space.is_open S (topological_space.induced subtype.val to_topological_space) (pow_ideal J n))
+(H2 : ∀ K : set S, 0 ∈ K
+  → @topological_space.is_open S (topological_space.induced subtype.val to_topological_space) K
+  → ∃ n, pow_ideal J n ⊆ K)
 
 -- Scholze : "Recall that a topological ring R is Tate if it contains an
 -- open and bounded subring R0 ⊂ R and a topologically nilpotent unit pi ∈ R; such elements are
