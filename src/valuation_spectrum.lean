@@ -82,9 +82,6 @@ begin
   exact Γ1order,
 end
 
-<<<<<<< HEAD
-definition Spv (A : Type) [comm_ring A] : Type 1 := quotient (valuations.setoid A)
-=======
 definition valuation.minimal_valuation 
   {R : Type u1} [comm_ring R] [decidable_eq R] 
   {Γ2 : Type u2} [linear_ordered_comm_group Γ2]
@@ -129,7 +126,6 @@ begin
     (λ (r' : Γ2), (group.quotient.mk N (finsupp.single r (1 : ℤ)) : option Γ1))),
   exact f1,
 end 
->>>>>>> master
 
 instance valuation.minimal_valuation_is_valuation
   {R : Type u1} [comm_ring R] [decidable_eq R] 
@@ -295,22 +291,6 @@ definition quot.mk {R : Type u1} [comm_ring R] [decidable_eq R] {Γ2 : Type u2} 
 definition mk {R : Type u1} [comm_ring R] [decidable_eq R] {Γ2 : Type u2} [linear_ordered_comm_group Γ2]
 (v : valuation R Γ2) : Spv R := quot.mk v.f
 
-<<<<<<< HEAD
-variables {A : Type} [comm_ring A] -- fix a ring A
-
-local attribute [instance] classical.prop_decidable
-
--- Should this lemma be in the file valuations.lean ??
-lemma gt_zero_iff_equiv_gt_zero (s : A) (v w : valuations A) (H : v ≈ w) :
-v(s) > 0 ↔ w(s) > 0 :=
-begin
-  rw [←not_iff_not,
-      iff.intro le_of_not_gt not_lt_of_ge,
-      iff.intro le_of_not_gt not_lt_of_ge,
-      ←v.Hf.map_zero,
-      ←w.Hf.map_zero],
-  exact H s 0,
-=======
 end Spv 
 
 -- TODO:
@@ -350,7 +330,6 @@ begin
   {sorry 
 
   }
->>>>>>> master
 end 
 -/
 
@@ -358,25 +337,10 @@ namespace Spv
 
 variables {A : Type*} [comm_ring A]
 
-<<<<<<< HEAD
-/-- The basic open subset for the topology on Spv(A).-/
-definition basic_open (r s : A) : set (Spv A) :=
--- on representatives
-quotient.lift (λ v : valuations A, v(r) ≤ v(s) ∧ v(s) > 0)
--- independence of representative
-  (λ v w H,
-  begin
-    dsimp,
-    rw [H r s, gt_zero_iff_equiv_gt_zero s v w H]
-  end)
-
-instance (A : Type) [comm_ring A] : topological_space (Spv A) :=
-=======
 definition basic_open (r s : A) : set (Spv A) := 
 {v | v.val r s ∧ ¬ v.val s 0}
 
 instance (A : Type*) [comm_ring A] : topological_space (Spv A) :=
->>>>>>> master
 topological_space.generate_from {U : set (Spv A) | ∃ r s : A, U = basic_open r s}
 
 end Spv 

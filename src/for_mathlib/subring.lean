@@ -1,11 +1,8 @@
 import for_mathlib.add_subgroup group_theory.submonoid
 import data.polynomial
 import algebra.ring
-<<<<<<< HEAD
 import analysis.topology.topological_structures
-=======
 
->>>>>>> master
 local attribute [instance] classical.prop_decidable
 universes u v
 
@@ -51,7 +48,6 @@ finsupp.map_range f (is_ring_hom.map_zero f)
 def is_integral (S : set cR) [is_subring S] (r : cR) : Prop := 
 ∃ f : polynomial ↥S, (polynomial.monic f) ∧ polynomial.eval r (@polynomial.map cR _ ↥S _ (subtype.val) is_ring_hom.is_ring_hom f) = 0
 
-<<<<<<< HEAD
 def is_integrally_closed (S : set R) [is_subring S] :=
 ∀ r : R, (is_integral S r) → r ∈ S
 
@@ -93,7 +89,3 @@ instance subring.topological_ring : topological_ring S :=
   .. subring.topological_space }
 
 end topological_subring
-=======
-def is_integrally_closed (S : set cR) [is_subring S] :=
-∀ r : cR, (is_integral S r) → r ∈ S
->>>>>>> master

@@ -449,57 +449,6 @@ definition value_group {R : Type u1} [comm_ring R] {Γ : Type u2} [linear_ordere
   (v : valuation R Γ) := 
 group.closure {a : Γ | ∃ r : R, v r = some a}
 
-<<<<<<< HEAD
-end is_valuation
-
-structure valuations (R : Type) [comm_ring R] :=
-{α : Type}
-[Hα : linear_ordered_comm_group α]
-(f : R → option α)
-[Hf : is_valuation f]
-
-instance valuations.linear_ordered_comm_group {R : Type} [comm_ring R] (v : valuations R) : linear_ordered_comm_group (v.α) := v.Hα 
-
-instance valuations.is_valuation {R : Type} [comm_ring R] (v : valuations R) : is_valuation (v.f) := v.Hf 
-
-attribute [instance] valuations.Hα
-attribute [instance] valuations.Hf
-
-instance (R : Type) [comm_ring R] : has_coe_to_fun (valuations R) :=
-{ F := λ v,R → option v.α, 
- coe := λ v,v.f
-}
-
-/- Wedhorn 1.27 (ii) -/
-instance valuations.setoid (R : Type) [comm_ring R] : setoid (valuations R) :=
-{ r := λ v w, ∀ r s : R, v r ≤ v s ↔ w r ≤ w s,
-  iseqv := ⟨
-    -- reflexivity 
-    λ _ _ _,iff.rfl,
-    -- symmetry
-    λ v w H r s,(H r s).symm,
-    -- transitivity
-    λ v w x Hvw Hwx r s,iff.trans (Hvw r s) (Hwx r s)⟩
-} 
-
-/-
-theorem equiv_value_group_map (R : Type) [comm_ring R] (v w : valuations R) (H : v ≈ w) :
-∃ φ : value_group v.f → value_group w.f, is_group_hom φ ∧ function.bijective φ :=
-begin
-  existsi _,tactic.swap,
-  { intro g,
-    cases g with g Hg,
-    unfold value_group at Hg,
-    unfold group.closure at Hg,
-    dsimp at Hg,
-    induction Hg,
-  },
-  {sorry 
-
-  }
-end 
--/
-=======
 definition value_group_f {R : Type u1} [comm_ring R] {Γ : Type u2} [linear_ordered_comm_group Γ]
   (f : R → option Γ) [is_valuation f] := group.closure {a : Γ | ∃ r : R, f r = some a}
 
@@ -513,4 +462,3 @@ instance valutaion.group_f {R : Type u1} [comm_ring R] {Γ : Type u2} [linear_or
 
 end valuation
 
->>>>>>> master

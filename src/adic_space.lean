@@ -15,29 +15,7 @@ universe u
 open function
 
 section topological_ring
-<<<<<<< HEAD
 variables {R : Type} [comm_ring R] [topological_space R] [topological_ring R]  
-=======
-variables {R : Type*} [comm_ring R] [topological_space R] [topological_ring R]  
-
-/-- Wedhorn Definition 5.27 page 36 -/
-definition is_bounded 
-  (B : set R) : Prop := ∀ U ∈ (nhds (0 :R)).sets, ∃ V ∈ (nhds (0 :R)).sets, ∀ v ∈ V, ∀ b ∈ B, v*b ∈ U
-
-definition is_power_bounded (r : R) : Prop := is_bounded (powers r)
-
-variable (R)
-definition power_bounded_subring := {r : R | is_power_bounded r}
-
-instance power_bounded_subring_to_ring : has_coe (power_bounded_subring R) R := ⟨subtype.val⟩ 
-instance power_bounded_subring_is_ring  : comm_ring (power_bounded_subring R) := sorry
-instance : topological_space (power_bounded_subring R) := subtype.topological_space
-instance : topological_ring (power_bounded_subring R) := sorry
-
-definition is_uniform : Prop := is_bounded (power_bounded_subring R)
-
-theorem p_is_power_bounded [p : Prime] : is_power_bounded (p : power_bounded_subring R) := sorry
->>>>>>> master
 
 variable {R}
 definition is_pseudo_uniformizer : R → Prop := sorry
