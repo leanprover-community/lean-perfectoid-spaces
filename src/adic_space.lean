@@ -9,6 +9,9 @@ import for_mathlib.topology
 import for_mathlib.topological_structures
 import for_mathlib.subring
 import linear_algebra.basic linear_algebra.subtype_module
+import continuous_valuations
+
+universe u 
 
 open nat function
 
@@ -26,7 +29,7 @@ definition power_bounded_subring := {r : R | is_power_bounded r}
 
 instance power_bounded_subring_to_ring : has_coe (power_bounded_subring R) R := ⟨subtype.val⟩ 
 instance power_bounded_subring_is_ring  : comm_ring (power_bounded_subring R) := sorry
-instance : topological_space (power_bounded_subring R) := sorry
+instance : topological_space (power_bounded_subring R) := subtype.topological_space
 instance : topological_ring (power_bounded_subring R) := sorry
 
 definition is_uniform : Prop := is_bounded (power_bounded_subring R)
@@ -41,6 +44,24 @@ def topologically_nilpotent (r : R) : Prop :=
 definition is_pseudo_uniformizer (ϖ : units R) : Prop := topologically_nilpotent ϖ.val
 
 end topological_ring
+
+section pow_ideal
+
+variables {α : Type u} [comm_ring α] (S T T₁ T₂ : set α)
+variables [is_ideal S]
+
+def mul_ideal (T₁ T₂ : set α) : set α :=
+span { x | ∃ y z, y ∈ T₁ ∧ z ∈ T₂ ∧ x = y * z}
+
+def pow_ideal : ℕ → set α
+| 0 := set.univ
+| (n+1) := mul_ideal (pow_ideal n) T
+
+instance pow_ideal.is_ideal (n : ℕ) : is_ideal (pow_ideal S n) :=
+nat.cases_on n (@is_ideal.mk _ _ _ $ is_submodule.univ) $ λ n,
+span.is_ideal _
+
+end pow_ideal
 
 -- Scholze : "Recall that a topological ring R is Tate if it contains an
 -- open and bounded subring R0 ⊂ R and a topologically nilpotent unit pi ∈ R; such elements are
@@ -78,14 +99,23 @@ def is_ring_of_definition (R₀ : set R) [is_subring R₀] :=
 -- f-adic rings are called Huber rings by Scholze.
 -- Topological ring A contains on open subring A0 such that the subspace topology on A0 is
 -- I-adic, where I is a finitely generated ideal of A0 .
-class Huber_ring (R : Type) extends comm_ring R, topological_space R, topological_ring R :=
+class Huber_ring₂ (R : Type) extends comm_ring R, topological_space R, topological_ring R :=
 (exists_ring_of_definition : ∃ (R₀ : set R) [is_subring R₀], is_ring_of_definition R₀)
+
+class Huber_ring (R : Type*) extends comm_ring R, topological_space R, topological_ring R :=
+(S : set R) [HS : is_subring S]
+(J : set S) [HJ : is_ideal J]
+(HJ_fin : ∃ gen : set S, set.finite gen ∧ span gen = J)
+(H1 : ∀ n, @topological_space.is_open S (topological_space.induced subtype.val to_topological_space) (pow_ideal J n))
+(H2 : ∀ K : set S, 0 ∈ K
+  → @topological_space.is_open S (topological_space.induced subtype.val to_topological_space) K
+  → ∃ n, pow_ideal J n ⊆ K)
 
 -- TODO should have an instance going from Tate to Huber
 
 
 -- Wedhorn Def 7.14
-structure is_ring_of_integral_elements {R : Type} [Huber_ring R] (Rplus : set R) : Prop :=
+structure is_ring_of_integral_elements {R : Type u} [Huber_ring R] (Rplus : set R) : Prop :=
 [is_subring : is_subring Rplus]
 (is_open : is_open Rplus)
 (is_int_closed : is_integrally_closed Rplus)
@@ -94,7 +124,7 @@ structure is_ring_of_integral_elements {R : Type} [Huber_ring R] (Rplus : set R)
 -- a Huber Ring is an f-adic ring.
 -- a Huber Pair is what Huber called an Affinoid Ring.
 structure Huber_pair :=
-(R : Type) 
+(R : Type u) 
 [RHuber : Huber_ring R]
 (Rplus : set R)
 [intel : is_ring_of_integral_elements Rplus]
@@ -102,10 +132,13 @@ structure Huber_pair :=
 instance : has_coe_to_sort Huber_pair := 
 { S := Type, coe := Huber_pair.R}
 
+instance Huber_pair.Huber_ring (A : Huber_pair) : Huber_ring A.R := A.RHuber 
+
 postfix `⁺` : 66 := λ R : Huber_pair _, R.Rplus  
 
-definition Spa (A : Huber_pair) : Type := sorry
-instance Spa_topology (A : Huber_pair) : topological_space (Spa A) := sorry 
+definition Spa (A : Huber_pair) := {vs : Spv A.R // Spv.is_continuous vs ∧ ∀ r : A.R, r ∈ A.Rplus → vs.val r 1}
+
+instance (A : Huber_pair) : topological_space (Spa A) := by unfold Spa; apply_instance 
 
 --definition 𝓞_X (A : Huber_pair) : presheaf_of_rings (Spa A) := sorry 
 -- it's a presheaf of complete topological rings on all opens (defined on rational opens
