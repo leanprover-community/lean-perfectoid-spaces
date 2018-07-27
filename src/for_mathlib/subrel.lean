@@ -2,7 +2,7 @@ import order.complete_lattice order.order_iso
 
 namespace subrel
 
-variables {α : Type} [partial_order α] {p : α → Prop}
+variables {α : Type*} [partial_order α] {p : α → Prop}
 
 instance : partial_order {x // p x} :=
 { le := subrel (≤) p,

@@ -1,12 +1,17 @@
 import for_mathlib.add_subgroup group_theory.submonoid
--- import poly -- mason-stother doesn't compile at the moment
+import data.polynomial
 import algebra.ring
+<<<<<<< HEAD
 import analysis.topology.topological_structures
+=======
+
+>>>>>>> master
 local attribute [instance] classical.prop_decidable
+universes u v
 
 open group
 
-variables {R : Type} [ring R]
+variables {R : Type u} [ring R]
 
 /-- `S` is a subring: a set containing 1 and closed under multiplication, addition and and additive inverse. -/
 class is_subring  (S : set R) extends is_add_subgroup S, is_submonoid S : Prop.
@@ -29,14 +34,24 @@ instance {S : set R} [is_subring S] : is_ring_hom (@subtype.val R S) :=
 
 end is_ring_hom
 
--- variables [decidable_eq R]
--- 
--- def polynomial.map {S : Type} [ring S] (f : S → R) [is_ring_hom f] : polynomial S → polynomial R :=
--- finsupp.map_range f (is_ring_hom.map_zero f)
+variables {cR : Type u} [comm_ring cR]
 
-def is_integral (S : set R) [is_subring S] (r : R) : Prop := sorry
--- ∃ f : polynomial S, (polynomial.monic f) ∧ (polynomial.map (@subtype.val R S) f).eval r = 0
+instance subset.comm_ring {S : set cR} [is_subring S] : comm_ring S :=
+{ mul_comm := λ ⟨a,_⟩ ⟨b,_⟩, subtype.eq $ mul_comm _ _,
+  ..subset.ring
+}
 
+instance subtype.comm_ring {S : set cR} [is_subring S] : comm_ring (subtype S) := subset.comm_ring
+
+variables [decidable_eq R]
+ 
+noncomputable def polynomial.map {S : Type v} [comm_ring S] (f : S → cR) [is_ring_hom f] : polynomial S → polynomial cR :=
+finsupp.map_range f (is_ring_hom.map_zero f)
+
+def is_integral (S : set cR) [is_subring S] (r : cR) : Prop := 
+∃ f : polynomial ↥S, (polynomial.monic f) ∧ polynomial.eval r (@polynomial.map cR _ ↥S _ (subtype.val) is_ring_hom.is_ring_hom f) = 0
+
+<<<<<<< HEAD
 def is_integrally_closed (S : set R) [is_subring S] :=
 ∀ r : R, (is_integral S r) → r ∈ S
 
@@ -78,3 +93,7 @@ instance subring.topological_ring : topological_ring S :=
   .. subring.topological_space }
 
 end topological_subring
+=======
+def is_integrally_closed (S : set cR) [is_subring S] :=
+∀ r : cR, (is_integral S r) → r ∈ S
+>>>>>>> master
