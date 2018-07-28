@@ -108,7 +108,7 @@ instance [HPI : is_prime_ideal I] : integral_domain (quotient R I) :=
     let Htest_r := Htest.r,
     let Htest_rab := Htest_r a' b',
     
-    trace_state,
+    --trace_state,
     sorry,sorry
 --    unfold comm_ring.quotient_rel I at H,
 --    simp [H],
