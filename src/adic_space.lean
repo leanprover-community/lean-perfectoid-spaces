@@ -1,4 +1,5 @@
 import for_mathlib.prime
+import for_mathlib.ideals
 import for_mathlib.is_cover 
 import analysis.topology.topological_structures
 import data.nat.prime 
@@ -8,6 +9,7 @@ import for_mathlib.presheaves
 import for_mathlib.topology
 import for_mathlib.topological_structures
 import for_mathlib.subring
+import linear_algebra.basic linear_algebra.subtype_module
 import continuous_valuations
 
 universe u 
@@ -15,15 +17,33 @@ universe u
 open function
 
 section topological_ring
-variables {R : Type} [comm_ring R] [topological_space R] [topological_ring R]  
+
+variables {R : Type*} [comm_ring R] [topological_space R] [topological_ring R]
+
+/-- Wedhorn Definition 5.27 page 36 -/
+definition is_bounded (B : set R) : Prop :=
+∀ U ∈ (nhds (0 :R)).sets, ∃ V ∈ (nhds (0 :R)).sets, ∀ v ∈ V, ∀ b ∈ B, v*b ∈ U
+
+definition is_power_bounded (r : R) : Prop := is_bounded (powers r)
+
+variable (R)
+definition power_bounded_subring := {r : R | is_power_bounded r}
+
+instance power_bounded_subring_to_ring : has_coe (power_bounded_subring R) R := ⟨subtype.val⟩ 
+instance power_bounded_subring_is_ring  : comm_ring (power_bounded_subring R) := sorry
+instance : topological_space (power_bounded_subring R) := subtype.topological_space
+instance : topological_ring (power_bounded_subring R) := sorry
+
+definition is_uniform : Prop := is_bounded (power_bounded_subring R)
+
+theorem p_is_power_bounded [p : Prime] : is_power_bounded (p : power_bounded_subring R) := sorry
 
 variable {R}
-definition is_pseudo_uniformizer : R → Prop := sorry
 
--- definition power (R : Type) [comm_ring R] (n : ℕ) (I : set R) [is_ideal I] := I ^ n 
+def topologically_nilpotent (r : R) : Prop :=
+∀ U ∈ (nhds (0 :R)).sets, ∃ N : ℕ, ∀ n : ℕ, n > N → r^n ∈ U
 
---definition Iadic_topology {R : Type*} [comm_ring R] (I : set R) [is_ideal I] : topological_space R :=
---topological_space.generate_from {U : set R | ∃ (n : ℕ) (r : R), U = r + I ^ n } 
+definition is_pseudo_uniformizer (ϖ : units R) : Prop := topologically_nilpotent ϖ.val
 
 end topological_ring
 
@@ -45,9 +65,45 @@ span.is_ideal _
 
 end pow_ideal
 
+-- Scholze : "Recall that a topological ring R is Tate if it contains an
+-- open and bounded subring R0 ⊂ R and a topologically nilpotent unit pi ∈ R; such elements are
+-- called pseudo-uniformizers.""
+-- we need definitions of bounded subsets and topologically nilpotent -- and do we have unit? Probably.
+class Tate_ring (R : Type) extends comm_ring R, topological_space R, topological_ring R :=
+(R₀ : set R)
+(R₀_is_open : is_open R₀)
+(R₀_is_subring : is_subring R₀)
+(ϖ : units R)
+(ϖ_is_pseudo_uniformizer : is_pseudo_uniformizer ϖ)
+
+def is_finitely_generated {R : Type} [comm_ring R] (M : Type) [module R M] : Prop :=
+∃ b : finset M, M = span {m | m ∈ b}
+
+def adic_topology {R : Type} [comm_ring R] (I : set R) [is_ideal I] : topological_space R :=
+begin
+  have adic_nhd_of_zero : ℕ → (set R) := λn, span {i | ∃ x : multiset I, x.card = n ∧ i = (x.map subtype.val).prod},
+  have adic_nhd_of : R → set (set R) := λr, (set.range (λn : ℕ, {r' | ((r' : R) - r) ∈ adic_nhd_of_zero n})),
+  have adic_nhds := ⋃₀ (set.range adic_nhd_of),
+  exact topological_space.generate_from adic_nhds
+end
+
+def ideal_to_module {R : Type} [comm_ring R] (I : set R) [is_ideal I] : module R I := sorry
+
+variables {R : Type} [comm_ring R] [topological_space R] [topological_ring R]
+
+def is_pair_of_definition [T : topological_space R] (R₀ : set R) [is_subring R₀] (I : set R₀) [is_ideal I]: Prop :=
+topological_space.induced (@subtype.val _ (R₀ : set R)) T = adic_topology I ∧
+@is_finitely_generated _ _ I (ideal_to_module I)
+
+def is_ring_of_definition (R₀ : set R) [is_subring R₀] :=
+∃ (I : set R₀) [hI : is_ideal I], @is_pair_of_definition _ _ _ _ _ R₀ _ I hI
+
 -- f-adic rings are called Huber rings by Scholze.
 -- Topological ring A contains on open subring A0 such that the subspace topology on A0 is
 -- I-adic, where I is a finitely generated ideal of A0 .
+class Huber_ring₂ (R : Type) extends comm_ring R, topological_space R, topological_ring R :=
+(exists_ring_of_definition : ∃ (R₀ : set R) [is_subring R₀], is_ring_of_definition R₀)
+
 class Huber_ring (R : Type*) extends comm_ring R, topological_space R, topological_ring R :=
 (S : set R) [HS : is_subring S]
 (J : set S) [HJ : is_ideal J]
@@ -56,13 +112,6 @@ class Huber_ring (R : Type*) extends comm_ring R, topological_space R, topologic
 (H2 : ∀ K : set S, 0 ∈ K
   → @topological_space.is_open S (topological_space.induced subtype.val to_topological_space) K
   → ∃ n, pow_ideal J n ⊆ K)
-
--- Scholze : "Recall that a topological ring R is Tate if it contains an
--- open and bounded subring R0 ⊂ R and a topologically nilpotent unit pi ∈ R; such elements are
--- called pseudo-uniformizers.""
--- we need definitions of bounded subsete and topologically nilpotent -- and do we have unit? Probably.
-class Tate_ring (R : Type*) extends comm_ring R, topological_space R, topological_ring R :=
-(unfinished2 : sorry)
 
 -- TODO should have an instance going from Tate to Huber
 
