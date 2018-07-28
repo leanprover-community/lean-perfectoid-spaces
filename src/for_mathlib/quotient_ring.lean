@@ -65,12 +65,7 @@ instance quotient.mk_is_ring_hom : @is_ring_hom _ _ _ (quotient.is_ring I) (quot
   map_one := rfl
 }
 
-#check add_zero 
-#check sub_zero
-#print setoid
 variable (a : R)
-#check (setoid.r a 0)
-
 
 @[simp] lemma quotient.zero (a : R) : a ∈ I ↔ (⟦a⟧ : quotient R I) = (0 : quotient R I) := 
   calc a ∈ I ↔ a - 0 ∈ I : by rw sub_zero
@@ -102,11 +97,7 @@ theorem quotient.universal_property {S : Type} [comm_ring S] {f : R → S} [is_r
   map_one := begin show f 1 = 1,exact is_ring_hom.map_one f end
 }
 
---#check @quotient.rel
-#check @setoid.r
-#check setoid
-
-set_option pp.implicit true
+--set_option pp.implicit true
 --set_option pp.all true
 instance [HPI : is_prime_ideal I] : integral_domain (quotient R I) := 
 { eq_zero_or_eq_zero_of_mul_eq_zero := λ a b,quotient.induction_on₂ a b $ λ a' b' (H : ⟦a' * b'⟧ = 0),begin

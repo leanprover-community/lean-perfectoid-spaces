@@ -20,8 +20,6 @@ example (X : Type u) [decidable_eq X] : add_comm_group (X →₀ ℤ) := by appl
 definition group.free_ab_gens (X : Type u) [decidable_eq X] : 
 X → (X →₀ ℤ) := λ x, finsupp.single x (1 : ℤ)
 
-#check @group.closure 
-
 -- do we have to copy out all of the definitions here?
 definition group.add_closure {G : Type u} [add_group G] (S : set G) : set G := sorry 
 
