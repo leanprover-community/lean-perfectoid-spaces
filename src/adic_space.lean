@@ -106,13 +106,14 @@ instance Huber_pair.Huber_ring (A : Huber_pair) : Huber_ring A.R := A.RHuber
 
 postfix `⁺` : 66 := λ R : Huber_pair _, R.Rplus  
 
-definition Spa (A : Huber_pair) := {vs : Spv A.R // Spv.is_continuous vs ∧ ∀ r : A.R, r ∈ A.Rplus → vs.val r 1}
 
-instance (A : Huber_pair) : topological_space (Spa A) := by unfold Spa; apply_instance 
+
+
+
 
 --definition 𝓞_X (A : Huber_pair) : presheaf_of_rings (Spa A) := sorry 
 -- it's a presheaf of complete topological rings on all opens (defined on rational opens
--- first and then extended to all via proj limits) -- Huber p75
+-- first and then extended to all via proj limits) -- Wedhorn p75
 -- most of that would not be in the adic_space file.
 
 --structure 𝓥pre :=
