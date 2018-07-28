@@ -1,7 +1,7 @@
 [package]
 name = "lean-perfectoid-spaces"
 version = "0.1"
-lean_version = "master"
+lean_version = "nightly-2018-06-21"
 path = "src"
 
 [dependencies]
