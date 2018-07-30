@@ -1,5 +1,22 @@
 import analysis.topology.topological_structures
 
+import for_mathlib.completion
+import for_mathlib.function
+import for_mathlib.is_add_group_hom
+
+section
+variables {α : Type*} {β : Type*} {γ : Type*}
+/-- This is a helper lemma for associativity of addition in `completion_group_str`. 
+    It could probably be inlined. TODO: prove every permutation of a finite product 
+    of top spaces is continuous. -/
+lemma continuous_pat_perm [topological_space α] [topological_space β] [topological_space γ] : 
+  continuous (λ x : α × β × γ, (x.2.2, (x.1, x.2.1))) :=
+have c : continuous (λ x : α × β × γ, x.2.2) :=
+   continuous.comp continuous_snd continuous_snd,
+have c' : continuous (λ x : α × β × γ, (x.1, x.2.1)) :=
+ continuous.prod_mk continuous_fst (continuous.comp continuous_snd continuous_fst), 
+continuous.prod_mk c c'
+end
 open filter
 
 lemma set.preimage_subset_iff {α : Type*} {β : Type*} {A : set α} {B : set β} {f : α → β} :
@@ -80,7 +97,8 @@ variables {G : Type u} [add_comm_group G] [topological_space G] [topological_add
 def δ : G × G → G := λ p, p.2 - p.1
 def Δ : filter (G × G) := principal id_rel
 
-instance toplogical_add_group.to_uniform_space : uniform_space G := 
+variable (G)
+instance topological_add_group.to_uniform_space : uniform_space G := 
 { uniformity          := vmap δ (nhds 0),
   refl                := 
     begin 
@@ -127,7 +145,7 @@ instance toplogical_add_group.to_uniform_space : uniform_space G :=
   is_open_uniformity  := 
     begin
       intro S,
-      let S' := λ x, {p : G × G | p.fst = x → p.snd ∈ S},
+      let S' := λ x, {p : G × G | p.1 = x → p.2 ∈ S},
       
       change is_open S ↔ ∀ (x : G), x ∈ S → S' x ∈ (vmap δ (nhds (0 : G))).sets,
       have := calc 
@@ -154,4 +172,61 @@ instance toplogical_add_group.to_uniform_space : uniform_space G :=
             cc } },
       cc 
     end,}
+
+variable {G}
+lemma uniformity_eq_vmap_nhds_zero : uniformity = vmap δ (nhds (0 : G)) := rfl
+
+instance topological_add_group_is_uniform : uniform_add_group G := 
+⟨begin
+  rw [uniform_continuous, uniformity_prod_eq_prod],
+  apply tendsto_map',
+  apply tendsto_vmap_iff.2,
+
+  suffices : tendsto (λ (x : (G × G) × G × G), (x.1).2 - (x.1).1 - ((x.2).2 - (x.2).1))
+    (filter.prod uniformity uniformity)
+    (nhds 0),
+  { simpa [(∘), δ] },
+
+  suffices : tendsto (λ (x : (G × G) × G × G), (x.1).2 - (x.1).1 - ((x.2).2 - (x.2).1))
+    (vmap (λ (p : (G × G) × G × G), ((p.1).2 - (p.1).1, (p.2).2 - (p.2).1))
+       (filter.prod (nhds 0) (nhds 0)))
+    (nhds 0),
+  by simpa [(∘), δ, uniformity_eq_vmap_nhds_zero, prod_vmap_vmap_eq, -sub_eq_add_neg],
+  
+  conv { for (nhds _) [3] { rw [show (0:G) = 0 - 0, by simp] }},
+  exact tendsto_sub (tendsto.comp tendsto_vmap tendsto_fst) (tendsto.comp tendsto_vmap tendsto_snd),
+end⟩
+
+variables {H : Type*} [add_comm_group H] [topological_space H] [topological_add_group H]  
+
+lemma uniform_continuous_of_continuous {f : G → H} [is_add_group_hom f] (h : continuous f) : 
+  uniform_continuous f := 
+begin
+  simp only [uniform_continuous, uniformity_eq_vmap_nhds_zero],
+  rw [tendsto_iff_vmap, vmap_vmap_comp],
+  
+  change vmap δ (nhds 0) ≤ vmap ( λ (x : G × G), f x.2 - f x.1) (nhds 0),
+  have : (λ (x : G × G), f (x.snd) - f (x.fst)) = λ (x : G × G), f (x.snd -  x.fst),
+    by simp only [is_add_group_hom.sub f],
+  rw [this, ←tendsto_iff_vmap],
+  
+  exact tendsto.comp tendsto_vmap (is_add_group_hom.zero f ▸ continuous.tendsto h (0:G))
+end
 end topological_add_comm_group
+
+section topological_ring
+universe u
+variables {A : Type u} [topological_space A] [ring A] [topological_ring A]
+
+/- I'm not sure even the following lemma is always true-/
+lemma mul_uc : uniform_continuous (function.uncurry ((*) : A → A → A)) :=
+begin
+  simp only [uniform_continuous, uniformity_eq_vmap_nhds_zero],
+  rw [tendsto_iff_vmap],
+  rw vmap_vmap_comp,
+  
+  rw uncurry_def,
+  change uniformity ≤ vmap (λ (x : (A × A) × (A × A)), (x.2.1*x.2.2)-(x.1.1*x.1.2))  (nhds 0),
+  sorry
+end
+end topological_ring
