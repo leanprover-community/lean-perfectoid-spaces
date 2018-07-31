@@ -213,20 +213,3 @@ begin
   exact tendsto.comp tendsto_vmap (is_add_group_hom.zero f ▸ continuous.tendsto h (0:G))
 end
 end topological_add_comm_group
-
-section topological_ring
-universe u
-variables {A : Type u} [topological_space A] [ring A] [topological_ring A]
-
-/- I'm not sure even the following lemma is always true-/
-lemma mul_uc : uniform_continuous (function.uncurry ((*) : A → A → A)) :=
-begin
-  simp only [uniform_continuous, uniformity_eq_vmap_nhds_zero],
-  rw [tendsto_iff_vmap],
-  rw vmap_vmap_comp,
-  
-  rw uncurry_def,
-  change uniformity ≤ vmap (λ (x : (A × A) × (A × A)), (x.2.1*x.2.2)-(x.1.1*x.1.2))  (nhds 0),
-  sorry
-end
-end topological_ring
