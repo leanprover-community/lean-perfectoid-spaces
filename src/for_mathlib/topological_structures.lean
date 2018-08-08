@@ -1,4 +1,5 @@
 import analysis.topology.topological_structures
+import tactic.ring
 
 import for_mathlib.completion
 import for_mathlib.function
@@ -56,6 +57,16 @@ begin
   intros v w Hv Hw,
   have : (v,w) ∈ set.prod V₁ V₂, by finish,
   simpa using H this
+end
+
+lemma quarter_nhd (U ∈ (nhds (0 : G)).sets) : 
+  ∃ V ∈ (nhds (0 : G)).sets, ∀ {v w s t}, v ∈ V → w ∈ V → s ∈ V → t ∈ V → v + w + s + t ∈ U :=
+begin
+  rcases half_nhd U H with ⟨W, W_nhd, h⟩, 
+  rcases half_nhd W W_nhd with ⟨V, V_nhd, h'⟩,
+  existsi [V, V_nhd],
+  intros v w s t v_in w_in s_in t_in,
+  simpa using h _ _ (h' v w v_in w_in) (h' s t s_in t_in)
 end
 
 lemma continuous_translation (a : G) : continuous (λ b, b + a) := 
@@ -211,5 +222,56 @@ begin
   rw [this, ←tendsto_iff_vmap],
   
   exact tendsto.comp tendsto_vmap (is_add_group_hom.zero f ▸ continuous.tendsto h (0:G))
+end
+
+lemma inter_vmap_sets {α : Type*} {β: Type*} (f : α → β) (F : filter β) : 
+  ⋂₀(vmap f F).sets = ⋂ U ∈ F.sets, f ⁻¹' U :=
+begin
+  ext x,
+  suffices : (∀ (A : set α) (B : set β), B ∈ F.sets → f ⁻¹' B ⊆ A → x ∈ A) ↔
+    ∀ (B : set β), B ∈ F.sets → f x ∈ B,
+  by simp [set.mem_sInter, set.mem_Inter, mem_vmap_sets, this],
+  split,
+  { intros h U U_in,
+    simpa [set.subset.refl] using h (f ⁻¹' U) U U_in },
+  { intros h V U U_in f_U_V,
+    exact f_U_V (h U U_in) },
+end
+
+lemma set.inter_singleton_neq_empty {α : Type*} {s : set α} {a : α} : s ∩ {a} ≠ ∅ ↔ a ∈ s :=
+by finish  [set.inter_singleton_eq_empty]
+
+lemma group_separation_rel (x y : G) : (x, y) ∈ separation_rel G ↔ x - y ∈ closure ({0} : set G) :=
+begin
+  change (x, y) ∈ ⋂₀ uniformity.sets ↔ x - y ∈ closure ({0} : set G),
+  rw uniformity_eq_vmap_nhds_zero,
+  rw inter_vmap_sets,
+  rw mem_closure_iff_nhds,
+  rw nhds_translation (x - y),
+  
+  simp [-sub_eq_add_neg, set.inter_singleton_eq_empty, δ],
+  split,
+  { rintros h U V V_in h',
+    specialize h V V_in,
+    suffices : (0:G) ∈ U, by finish,
+    have : (0:G) ∈ (λ z, z - (x - y)) ⁻¹' V,
+      by simpa using h,
+    exact h' this },
+  { intros h U U_nhd, 
+    specialize h ((λ z, z+x-y) '' U) U U_nhd,
+    have li :  function.left_inverse (λ (z : G), z + x - y) (λ (y_1 : G), y_1 - (x - y)), 
+    { intro z,
+      simp,
+      rw ←add_assoc,
+      simp [add_assoc, add_comm] },
+    have := h (set.preimage_subset_image_of_inverse li U),
+    have : (0:G) ∈ ((λ (z : G), z + x - y) '' U), by finish,
+    have ri : function.right_inverse (λ (z : G), z + x - y) (λ (y_1 : G), y_1 - (x - y)), 
+    { intro z,
+      simp,
+      rw ←add_assoc,
+      simp [add_assoc, add_comm] },
+    rw set.mem_image_iff_of_inverse ri li at this,
+    simpa using this }
 end
 end topological_add_comm_group
