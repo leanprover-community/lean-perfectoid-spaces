@@ -1,7 +1,10 @@
 /-
-This file is a modification of `subgroup.lean` by
-Johannes Hölzl, Kenny Lau.
-The only thing it does is translating all the multiplicative
+Copyright (c) 2018 Johan Commelin. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Johan Commelin, Johannes Hölzl, Kenny Lau.
+
+This file is a modification of `group_theory/submonoid.lean`.
+It simply translates all the multiplicative
 notions into their additive counterparts.
 -/
 import algebra.group_power
