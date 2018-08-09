@@ -274,4 +274,27 @@ begin
     rw set.mem_image_iff_of_inverse ri li at this,
     simpa using this }
 end
+
+section
+variables {E : Type*} [topological_space E] [add_comm_group E] [topological_add_group E]
+
+-- A is a dense subgroup of E, inclusion is denoted by e
+variables {A : Type*} [topological_space A] [add_comm_group A] [topological_add_group A]
+variables {e : A → E} [is_add_group_hom e] (de : dense_embedding e)
+include de
+
+lemma tendsto_sub_vmap_self (x₀ : E) :
+  tendsto (λ (t : A × A), t.2 - t.1) (vmap (λ p : A × A, (e p.1, e p.2)) $ nhds (x₀, x₀)) (nhds 0) :=
+begin
+  have comm : (λ x : E × E, x.2-x.1) ∘ (λ (t : A × A), (e t.1, e t.2)) = e ∘ (λ (t : A × A), t.2 - t.1),
+  { ext t, 
+    change e t.2 - e t.1 = e (t.2 - t.1),
+    rwa ← is_add_group_hom.sub e t.2 t.1 },
+  have lim : tendsto (λ x : E × E, x.2-x.1) (nhds (x₀, x₀)) (nhds (e 0)),
+    { have := continuous.tendsto (continuous.comp continuous_swap continuous_sub') (x₀, x₀),
+      simpa [-sub_eq_add_neg, sub_self, eq.symm (is_add_group_hom.zero e)] using this },
+  have := de.tendsto_vmap_nhds_nhds lim comm,
+  simp [-sub_eq_add_neg, this]
+end
+end
 end topological_add_comm_group
