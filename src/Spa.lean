@@ -1,7 +1,6 @@
--- this is not right.
-import adic_space 
--- We actually need only the first half of this file.
--- What we want is Huber pairs. 
+import valuation_spectrum
+import continuous_valuations
+import Huber_pair 
 
 -- Wedhorn def 7.23.
 definition Spa (A : Huber_pair) := {vs : Spv A.R // Spv.is_continuous vs ∧ ∀ r : A.R, r ∈ A.Rplus → vs.val r 1}

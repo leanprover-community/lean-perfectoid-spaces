@@ -1,5 +1,23 @@
 import analysis.topology.topological_structures
+import tactic.ring
 
+import for_mathlib.completion
+import for_mathlib.function
+import for_mathlib.is_add_group_hom
+
+section
+variables {α : Type*} {β : Type*} {γ : Type*}
+/-- This is a helper lemma for associativity of addition in `completion_group_str`. 
+    It could probably be inlined. TODO: prove every permutation of a finite product 
+    of top spaces is continuous. -/
+lemma continuous_pat_perm [topological_space α] [topological_space β] [topological_space γ] : 
+  continuous (λ x : α × β × γ, (x.2.2, (x.1, x.2.1))) :=
+have c : continuous (λ x : α × β × γ, x.2.2) :=
+   continuous.comp continuous_snd continuous_snd,
+have c' : continuous (λ x : α × β × γ, (x.1, x.2.1)) :=
+ continuous.prod_mk continuous_fst (continuous.comp continuous_snd continuous_fst), 
+continuous.prod_mk c c'
+end
 open filter
 
 lemma set.preimage_subset_iff {α : Type*} {β : Type*} {A : set α} {B : set β} {f : α → β} :
@@ -41,6 +59,16 @@ begin
   simpa using H this
 end
 
+lemma quarter_nhd (U ∈ (nhds (0 : G)).sets) : 
+  ∃ V ∈ (nhds (0 : G)).sets, ∀ {v w s t}, v ∈ V → w ∈ V → s ∈ V → t ∈ V → v + w + s + t ∈ U :=
+begin
+  rcases half_nhd U H with ⟨W, W_nhd, h⟩, 
+  rcases half_nhd W W_nhd with ⟨V, V_nhd, h'⟩,
+  existsi [V, V_nhd],
+  intros v w s t v_in w_in s_in t_in,
+  simpa using h _ _ (h' v w v_in w_in) (h' s t s_in t_in)
+end
+
 lemma continuous_translation (a : G) : continuous (λ b, b + a) := 
 have cont : continuous (λ b : G, (b, a)) := continuous.prod_mk continuous_id continuous_const,
  by simp[continuous.comp cont continuous_add']
@@ -80,7 +108,8 @@ variables {G : Type u} [add_comm_group G] [topological_space G] [topological_add
 def δ : G × G → G := λ p, p.2 - p.1
 def Δ : filter (G × G) := principal id_rel
 
-instance toplogical_add_group.to_uniform_space : uniform_space G := 
+variable (G)
+instance topological_add_group.to_uniform_space : uniform_space G := 
 { uniformity          := vmap δ (nhds 0),
   refl                := 
     begin 
@@ -127,7 +156,7 @@ instance toplogical_add_group.to_uniform_space : uniform_space G :=
   is_open_uniformity  := 
     begin
       intro S,
-      let S' := λ x, {p : G × G | p.fst = x → p.snd ∈ S},
+      let S' := λ x, {p : G × G | p.1 = x → p.2 ∈ S},
       
       change is_open S ↔ ∀ (x : G), x ∈ S → S' x ∈ (vmap δ (nhds (0 : G))).sets,
       have := calc 
@@ -154,4 +183,95 @@ instance toplogical_add_group.to_uniform_space : uniform_space G :=
             cc } },
       cc 
     end,}
+
+variable {G}
+lemma uniformity_eq_vmap_nhds_zero : uniformity = vmap δ (nhds (0 : G)) := rfl
+
+instance topological_add_group_is_uniform : uniform_add_group G := 
+⟨begin
+  rw [uniform_continuous, uniformity_prod_eq_prod],
+  apply tendsto_map',
+  apply tendsto_vmap_iff.2,
+
+  suffices : tendsto (λ (x : (G × G) × G × G), (x.1).2 - (x.1).1 - ((x.2).2 - (x.2).1))
+    (filter.prod uniformity uniformity)
+    (nhds 0),
+  { simpa [(∘), δ] },
+
+  suffices : tendsto (λ (x : (G × G) × G × G), (x.1).2 - (x.1).1 - ((x.2).2 - (x.2).1))
+    (vmap (λ (p : (G × G) × G × G), ((p.1).2 - (p.1).1, (p.2).2 - (p.2).1))
+       (filter.prod (nhds 0) (nhds 0)))
+    (nhds 0),
+  by simpa [(∘), δ, uniformity_eq_vmap_nhds_zero, prod_vmap_vmap_eq, -sub_eq_add_neg],
+  
+  conv { for (nhds _) [3] { rw [show (0:G) = 0 - 0, by simp] }},
+  exact tendsto_sub (tendsto.comp tendsto_vmap tendsto_fst) (tendsto.comp tendsto_vmap tendsto_snd),
+end⟩
+
+variables {H : Type*} [add_comm_group H] [topological_space H] [topological_add_group H]  
+
+lemma uniform_continuous_of_continuous {f : G → H} [is_add_group_hom f] (h : continuous f) : 
+  uniform_continuous f := 
+begin
+  simp only [uniform_continuous, uniformity_eq_vmap_nhds_zero],
+  rw [tendsto_iff_vmap, vmap_vmap_comp],
+  
+  change vmap δ (nhds 0) ≤ vmap ( λ (x : G × G), f x.2 - f x.1) (nhds 0),
+  have : (λ (x : G × G), f (x.snd) - f (x.fst)) = λ (x : G × G), f (x.snd -  x.fst),
+    by simp only [is_add_group_hom.sub f],
+  rw [this, ←tendsto_iff_vmap],
+  
+  exact tendsto.comp tendsto_vmap (is_add_group_hom.zero f ▸ continuous.tendsto h (0:G))
+end
+
+lemma inter_vmap_sets {α : Type*} {β: Type*} (f : α → β) (F : filter β) : 
+  ⋂₀(vmap f F).sets = ⋂ U ∈ F.sets, f ⁻¹' U :=
+begin
+  ext x,
+  suffices : (∀ (A : set α) (B : set β), B ∈ F.sets → f ⁻¹' B ⊆ A → x ∈ A) ↔
+    ∀ (B : set β), B ∈ F.sets → f x ∈ B,
+  by simp [set.mem_sInter, set.mem_Inter, mem_vmap_sets, this],
+  split,
+  { intros h U U_in,
+    simpa [set.subset.refl] using h (f ⁻¹' U) U U_in },
+  { intros h V U U_in f_U_V,
+    exact f_U_V (h U U_in) },
+end
+
+lemma set.inter_singleton_neq_empty {α : Type*} {s : set α} {a : α} : s ∩ {a} ≠ ∅ ↔ a ∈ s :=
+by finish  [set.inter_singleton_eq_empty]
+
+lemma group_separation_rel (x y : G) : (x, y) ∈ separation_rel G ↔ x - y ∈ closure ({0} : set G) :=
+begin
+  change (x, y) ∈ ⋂₀ uniformity.sets ↔ x - y ∈ closure ({0} : set G),
+  rw uniformity_eq_vmap_nhds_zero,
+  rw inter_vmap_sets,
+  rw mem_closure_iff_nhds,
+  rw nhds_translation (x - y),
+  
+  simp [-sub_eq_add_neg, set.inter_singleton_eq_empty, δ],
+  split,
+  { rintros h U V V_in h',
+    specialize h V V_in,
+    suffices : (0:G) ∈ U, by finish,
+    have : (0:G) ∈ (λ z, z - (x - y)) ⁻¹' V,
+      by simpa using h,
+    exact h' this },
+  { intros h U U_nhd, 
+    specialize h ((λ z, z+x-y) '' U) U U_nhd,
+    have li :  function.left_inverse (λ (z : G), z + x - y) (λ (y_1 : G), y_1 - (x - y)), 
+    { intro z,
+      simp,
+      rw ←add_assoc,
+      simp [add_assoc, add_comm] },
+    have := h (set.preimage_subset_image_of_inverse li U),
+    have : (0:G) ∈ ((λ (z : G), z + x - y) '' U), by finish,
+    have ri : function.right_inverse (λ (z : G), z + x - y) (λ (y_1 : G), y_1 - (x - y)), 
+    { intro z,
+      simp,
+      rw ←add_assoc,
+      simp [add_assoc, add_comm] },
+    rw set.mem_image_iff_of_inverse ri li at this,
+    simpa using this }
+end
 end topological_add_comm_group

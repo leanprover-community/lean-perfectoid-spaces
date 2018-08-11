@@ -1,3 +1,12 @@
+/-
+Copyright (c) 2018 Kevin Buzzard and Patrick Massot. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Kevin Buzzard, Patrick Massot.
+
+This file is to a certain extent based on `quotient_module.lean` by Johannes Hölzl.
+-/
+
+
 import group_theory.coset
 
 universes u v 
@@ -11,7 +20,6 @@ definition quotient_group := left_cosets N
 local notation ` Q ` := quotient_group N
 
 instance : group Q := left_cosets.group N 
-
 
 namespace group.quotient
 

@@ -1,4 +1,8 @@
 /-
+Copyright (c) 2018 Johan Commelin. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Johan Commelin, Johannes Hölzl, Mitchell Rowett, Scott Morrison
+
 This file is a modification of `subgroup.lean` by
 Johannes Hölzl, Mitchell Rowett, Scott Morrison.
 The only thing it does is translating all the multiplicative
