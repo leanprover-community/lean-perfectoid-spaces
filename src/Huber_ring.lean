@@ -9,7 +9,8 @@ class Huber_ring (R : Type*) extends comm_ring R, topological_space R, topologic
 (S : set R) [HS : is_subring S]
 (J : set S) [HJ : is_ideal J]
 (HJ_fin : ∃ gen : set S, set.finite gen ∧ span gen = J)
-(H1 : ∀ n, @topological_space.is_open S (topological_space.induced subtype.val to_topological_space) (pow_ideal J n))
+(H1 : ∀ n, @topological_space.is_open S 
+  (topological_space.induced subtype.val to_topological_space) (pow_ideal J n))
 (H2 : ∀ K : set S, 0 ∈ K
   → @topological_space.is_open S (topological_space.induced subtype.val to_topological_space) K
   → ∃ n, pow_ideal J n ⊆ K)
