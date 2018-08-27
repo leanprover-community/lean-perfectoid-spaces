@@ -6,3 +6,4 @@
 /LaTeX_docs/*.log
 /LaTeX_docs/*~
 *.txt~
+/scratch/
