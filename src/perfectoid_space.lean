@@ -1,5 +1,6 @@
 -- definitions of adic_space, preadic_space, Huber_pair etc
 import adic_space
+import Tate_ring
 
 --notation
 postfix `ᵒ` : 66 := power_bounded_subring
