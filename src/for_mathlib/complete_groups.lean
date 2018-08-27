@@ -57,7 +57,7 @@ variables {A : Type*} [topological_space A] [add_comm_group A] [topological_add_
 variables {e : A → E} [de : dense_embedding e] [is_add_group_hom e]
 include de
 
--- A is a dense subgroup of E, inclusion is denoted by e
+-- B is a dense subgroup of F, inclusion is denoted by f
 variables {B : Type*} [topological_space B] [add_comm_group B] [topological_add_group B]
 variables {f : B → F} [df : dense_embedding f] [is_add_group_hom f]
 include df
