@@ -1,3 +1,5 @@
+-- ** I THINK CHRIS HUGHES DID ALL THIS NOW; THIS IS INCOMPLETE **
+
 /-
 Copyright (c) 2018 Kevin Buzzard. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
@@ -69,9 +71,9 @@ variable (a : R)
 
 @[simp] lemma quotient.zero (a : R) : a ∈ I ↔ (⟦a⟧ : quotient R I) = (0 : quotient R I) := 
   calc a ∈ I ↔ a - 0 ∈ I : by rw sub_zero
-  ...        ↔ a ≈ 0 : begin have X := setoid.r a 0,sorry,end
-  ...        ↔ ⟦a⟧ = ⟦0⟧ : by sorry
-  ...        ↔ (⟦a⟧ : quotient R I) = (0 : quotient R I) : by sorry
+  ...        ↔ a ≈ 0 : by refl
+  ...        ↔ quotient.mk a = quotient.mk 0 : ⟨quotient.sound,_⟩
+  ...        ↔ (⟦a⟧ : quotient R I) = (0 : quotient R I) : by refl
 
 variable {I} 
 
@@ -96,24 +98,3 @@ theorem quotient.universal_property {S : Type} [comm_ring S] {f : R → S} [is_r
     begin show f (a' * b') = f a' * f b',exact is_ring_hom.map_mul f,end,
   map_one := begin show f 1 = 1,exact is_ring_hom.map_one f end
 }
-
---set_option pp.implicit true
---set_option pp.all true
-instance [HPI : is_prime_ideal I] : integral_domain (quotient R I) := 
-{ eq_zero_or_eq_zero_of_mul_eq_zero := λ a b,quotient.induction_on₂ a b $ λ a' b' (H : ⟦a' * b'⟧ = 0),begin
-  have H2 : a' * b' ∈ I,
-    unfold quotient.mk at H,
-    -- testing
-    let Htest : setoid R := (@quotient_rel R _inst_1 I _inst_2),
-    let Htest_r := Htest.r,
-    let Htest_rab := Htest_r a' b',
-    
-    --trace_state,
-    sorry,sorry
---    unfold comm_ring.quotient_rel I at H,
---    simp [H],
-    end,
-  zero_ne_one := sorry,
-  ..quotient.is_comm_ring I,
-}
-end comm_ring
