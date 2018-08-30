@@ -8,7 +8,7 @@ Johannes Hölzl, Mitchell Rowett, Scott Morrison.
 The only thing it does is translating all the multiplicative
 notions into their additive counterparts.
 -/
-import .add_submonoid
+import group_theory.submonoid
 open set function
 
 variables {α : Type*} {β : Type*} {s : set α} {a a₁ a₂ b c: α}
