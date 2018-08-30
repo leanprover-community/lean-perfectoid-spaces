@@ -1,11 +1,12 @@
 -- definitions of adic_space, preadic_space, Huber_pair etc
 import adic_space
 import Tate_ring
+import power_bounded
 
 --notation
 postfix `ᵒ` : 66 := power_bounded_subring
 
-open nat.Prime
+open nat.Prime power_bounded
 variable [nat.Prime] -- fix a prime p
 
 /-- A perfectoid ring, following Fontaine Sem Bourb-/
