@@ -19,6 +19,7 @@ definition power_bounded_subring := {r : R | is_power_bounded r}
 
 namespace power_bounded
 
+instance : is_subring (power_bounded_subring R) := sorry
 instance : has_coe (power_bounded_subring R) R := ⟨subtype.val⟩
 
 lemma zero_mem : (0 : R) ∈ power_bounded_subring R :=

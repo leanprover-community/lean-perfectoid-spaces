@@ -13,7 +13,7 @@ variable [nat.Prime] -- fix a prime p
 class perfectoid_ring (R : Type*) extends Tate_ring R :=
 (complete : is_complete R)
 (uniform  : is_uniform R)
-(ramified : ∃ ϖ : Rᵒ, (is_pseudo_uniformizer ϖ) ∧ (ϖ^p ∣ p))
+(ramified : ∃ ϖ : units R, (is_pseudo_uniformizer ϖ) ∧ ((ϖ^p : R) ∣ p))
 (Frob     : ∀ a : Rᵒ, ∃ b : Rᵒ, (p : Rᵒ) ∣ (b^p - a))
 
 class perfectoid_space (X : Type*) extends adic_space X :=

@@ -1,7 +1,5 @@
 import for_mathlib.topological_structures
 import for_mathlib.completion
-import for_mathlib.function
-import for_mathlib.is_add_group_hom
 
 universe u
 variables {α : Type*} [uniform_space α]
