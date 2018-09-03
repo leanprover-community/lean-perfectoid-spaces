@@ -1,14 +1,16 @@
 import data.set.basic
 
-variables {α : Type*} {β : Type*} {γ : Type*}
-variables {U : set α} {V : set β}
+variables {α : Type*} {β : Type*}
 
 namespace set
-lemma mem_prod' {a : α} {b : β} (a_in : a ∈ U) (b_in : b ∈ V) : (a, b) ∈ set.prod U V :=
-⟨a_in, b_in⟩
 
---lemma prod_sub_preimage_iff {W : set γ} {f : α × β → γ} :
---set.prod U V ⊆ f ⁻¹' W ↔ ∀ a b, a ∈ U → b ∈ V → f (a, b) ∈ W :=
---⟨λ h a b a_in b_in, h (mem_prod' a_in b_in),
--- λ h p p_in, by have := h p.1 p.2 p_in.1 p_in.2 ; rwa prod.mk.eta at this⟩
+lemma prod_quotient_preimage_eq_image [s : setoid α] (g : quotient s → β) {h : α → β} (Hh : h = g ∘ quotient.mk) (r : set (β × β)) :
+  {x : quotient s × quotient s | (g x.1, g x.2) ∈ r} =
+  (λ a : α × α, (⟦a.1⟧, ⟦a.2⟧)) '' ((λ a : α × α, (h a.1, h a.2)) ⁻¹' r) :=
+  Hh.symm ▸
+  set.ext (λ ⟨a₁, a₂⟩, ⟨quotient.induction_on₂ a₁ a₂
+    (λ a₁ a₂ h, ⟨(a₁, a₂), h, rfl⟩),
+    λ ⟨⟨b₁, b₂⟩, h₁, h₂⟩, show (g a₁, g a₂) ∈ r, from
+    have h₃ : ⟦b₁⟧ = a₁ ∧ ⟦b₂⟧ = a₂ := prod.ext_iff.1 h₂,
+     h₃.1 ▸ h₃.2 ▸ h₁⟩)
 end set

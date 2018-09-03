@@ -1,12 +1,12 @@
 import valuations 
 import analysis.topology.topological_space
 import data.finsupp
-import for_mathlib.quotient_group
+import group_theory.quotient_group
 import valuation_universe 
 
 universes u u1 u2
 
-open valuation 
+open valuation quotient_group
 
 definition Spv (R : Type u) [comm_ring R] := 
 {ineq : R → R → Prop // ∃ (Γ : Type u) [linear_ordered_comm_group Γ],
@@ -14,7 +14,7 @@ definition Spv (R : Type u) [comm_ring R] :=
 
 namespace Spv 
 
-set_option class.instance_max_depth 100
+set_option class.instance_max_depth 41
 
 -- decidable equality on R to make the finsupp an add_comm_group?!
 
@@ -24,272 +24,123 @@ theorem value_group_universe (R : Type u1) [comm_ring R] [decidable_eq R] (Γ2 :
 ∃ (Γ1 : Type u1) [linear_ordered_comm_group Γ1], by exactI ∃ (f1 : R → option Γ1) (Hf1 : is_valuation f1),
   (∀ r s : R, f1 r ≤ f1 s ↔ f2 r ≤ f2 s) ∧ value_group_f f1 = set.univ := 
 -/
-definition valuation.minimal_value_group {R : Type u1} [comm_ring R] [decidable_eq R] 
-  {Γ2 : Type u2} [linear_ordered_comm_group Γ2]
-  (f2 : R → option Γ2) [Hf2 : is_valuation f2] : 
-Type u1 :=
+variables {R : Type u1} [comm_ring R] [decidable_eq R] 
+  (Γ2 : Type u2) [linear_ordered_comm_group Γ2]
+  (f2 : R → option Γ2) [is_valuation f2]
+include Γ2
+
+structure parametrized_subgroup :=
+(Γ : Type u1)
+[grp : comm_group Γ]
+(map : Γ → Γ2)
+(hom : is_group_hom map)
+(inj : function.injective map)
+
+local attribute [instance] parametrized_subgroup.grp
+local attribute [instance] parametrized_subgroup.hom
+
+variable {Γ2}
+include R f2 
+
+def minimal_value_group : parametrized_subgroup Γ2 :=
 begin
   let FG : Type u1 := multiplicative (R →₀ ℤ), -- free ab group on R
-  let φ₀ : R → Γ2 := λ r, option.get_or_else (f2 r) 1, 
+  let φ₀ : R → Γ2 := λ r, option.get_or_else (f2 r) 1,
   let φ : FG → Γ2 := λ f, finsupp.prod f (λ r n,(φ₀ r) ^ n),
-  have Hprod:  ∀ (a : R) (b₁ b₂ : ℤ), φ₀ a ^ (b₁ + b₂) = φ₀ a ^ b₁ * φ₀ a ^ b₂ := 
-    λ a b₁ b₂, gpow_add _ _ _,
-  letI Hφ : is_group_hom φ :=
-  { mul := λ a b,finsupp.prod_add_index (λ a,rfl) Hprod,
-  },
-  exact quotient_group (is_group_hom.ker φ) 
-end 
-
-instance valuation.minimal_value_group_is_linear_ordered_comm_group
-  {R : Type u1} [comm_ring R] [decidable_eq R] 
-  {Γ2 : Type u2} [linear_ordered_comm_group Γ2]
-  (f2 : R → option Γ2) [Hf2 : is_valuation f2] : 
-linear_ordered_comm_group (valuation.minimal_value_group f2) :=
-begin
-  let FG : Type u1 := multiplicative (R →₀ ℤ), -- free group on R
-  let φ₀ : R → Γ2 := λ r, option.get_or_else (f2 r) 1, 
-  let φ : FG → Γ2 := λ f, finsupp.prod f (λ r n,(φ₀ r) ^ n), 
-  have Hprod:  ∀ (a : R) (b₁ b₂ : ℤ), φ₀ a ^ (b₁ + b₂) = φ₀ a ^ b₁ * φ₀ a ^ b₂ := 
-    λ a b₁ b₂, gpow_add _ _ _,
-  letI Hφ : is_group_hom φ :=
-  { mul := λ a b,finsupp.prod_add_index (λ a,rfl) Hprod,
-  },
-  let N := is_group_hom.ker φ,
-  let Γ1 := quotient_group N,
-  let ψ : Γ1 → Γ2 := group.quotient.lift N φ (λ _,(is_group_hom.mem_ker φ).1),
-  have Hψ : function.injective ψ := group.quotient.injective_ker_lift φ,
-  --  begin
-  --  funext,apply propext,
-  --  show x ∈ N ↔ _,
-  --  exact is_group_hom.mem_ker φ,
-  --  end,
-  letI Γ1linord : linear_order Γ1 := 
-  { le := λ g h,ψ g ≤ ψ h,
-    le_refl := λ _,le_refl _,
-    le_trans := λ _ _ _ hab hbc,le_trans hab hbc,
-    le_antisymm := λ g h Hgh Hhg,Hψ $ le_antisymm Hgh Hhg,
-    le_total := λ g h, le_total _ _
-  },
-  letI Γ1order : linear_ordered_comm_group Γ1 :=
-  { mul_le_mul_left := λ a b H c,
-      begin 
-      show ψ (c * a) ≤ ψ (c * b),
-        rw is_group_hom.mul ψ c b,
-        rw is_group_hom.mul ψ c a,
-        exact linear_ordered_comm_group.mul_le_mul_left H _
-      end
-  },
-  exact Γ1order,
+  haveI : is_group_hom φ := 
+    ⟨λ a b, finsupp.prod_add_index (λ a, rfl) (λ a b₁ b₂, gpow_add (φ₀ a) b₁ b₂)⟩,
+  
+  exact
+  { Γ :=  quotient (is_group_hom.ker φ),
+    map   :=  lift (is_group_hom.ker φ) φ (λ _,(is_group_hom.mem_ker φ).1),
+    hom   := quotient_group.is_group_hom_quotient_lift _ _ _,
+    inj   := injective_ker_lift φ }
 end
 
-definition valuation.minimal_valuation 
-  {R : Type u1} [comm_ring R] [decidable_eq R] 
-  {Γ2 : Type u2} [linear_ordered_comm_group Γ2]
-  (f2 : R → option Γ2) [Hf2 : is_valuation f2] : 
-R → option (valuation.minimal_value_group f2) :=
+def minimal_value_group.mk (r : R) : (minimal_value_group f2).Γ :=
 begin
-  let FG : Type u1 := multiplicative (R →₀ ℤ), -- free group on R
-  let φ₀ : R → Γ2 := λ r, option.get_or_else (f2 r) 1, 
-  let φ : FG → Γ2 := λ f, finsupp.prod f (λ r n,(φ₀ r) ^ n), 
-  have Hprod:  ∀ (a : R) (b₁ b₂ : ℤ), φ₀ a ^ (b₁ + b₂) = φ₀ a ^ b₁ * φ₀ a ^ b₂ := 
-    λ a b₁ b₂, gpow_add _ _ _,
-  letI Hφ : is_group_hom φ :=
-  { mul := λ a b,finsupp.prod_add_index (λ a,rfl) Hprod,
-  },
-  let N := is_group_hom.ker φ,
-  let Γ1 := quotient_group N,
-  let ψ : Γ1 → Γ2 := group.quotient.lift N φ (λ _,(is_group_hom.mem_ker φ).1),
-  have Hψ : function.injective ψ := group.quotient.injective_ker_lift φ,
-  --  begin
-  --  funext,apply propext,
-  --  show x ∈ N ↔ _,
-  --  exact is_group_hom.mem_ker φ,
-  --  end,
-  letI Γ1linord : linear_order Γ1 := 
-  { le := λ g h,ψ g ≤ ψ h,
-    le_refl := λ _,le_refl _,
-    le_trans := λ _ _ _ hab hbc,le_trans hab hbc,
-    le_antisymm := λ g h Hgh Hhg,Hψ $ le_antisymm Hgh Hhg,
-    le_total := λ g h, le_total _ _
-  },
-  letI Γ1order : linear_ordered_comm_group Γ1 :=
-  { mul_le_mul_left := λ a b H c,
-      begin 
-      show ψ (c * a) ≤ ψ (c * b),
-        rw is_group_hom.mul ψ c b,
-        rw is_group_hom.mul ψ c a,
-        exact linear_ordered_comm_group.mul_le_mul_left H _
-      end
-  },
-  let f1 : R → option Γ1 := (λ r, 
-  option.rec_on (f2 r) (none : option Γ1) 
-    (λ (r' : Γ2), (group.quotient.mk N (finsupp.single r (1 : ℤ)) : option Γ1))),
-  exact f1,
-end 
+  let FG : Type u1 := multiplicative (R →₀ ℤ), -- free ab group on R
+  let φ₀ : R → Γ2 := λ r, option.get_or_else (f2 r) 1,
+  let φ : FG → Γ2 := λ f, finsupp.prod f (λ r n,(φ₀ r) ^ n),
+  haveI : is_group_hom φ := 
+    ⟨λ a b, finsupp.prod_add_index (λ a, rfl) (λ a b₁ b₂, gpow_add (φ₀ a) b₁ b₂)⟩,
 
-instance valuation.minimal_valuation_is_valuation
-  {R : Type u1} [comm_ring R] [decidable_eq R] 
-  {Γ2 : Type u2} [linear_ordered_comm_group Γ2]
-  (f2 : R → option Γ2) [Hf2 : is_valuation f2] : 
-is_valuation (valuation.minimal_valuation f2) :=
-begin
-  let FG : Type u1 := multiplicative (R →₀ ℤ), -- free group on R
-  let φ₀ : R → Γ2 := λ r, option.get_or_else (f2 r) 1, 
-  let φ : FG → Γ2 := λ f, finsupp.prod f (λ r n,(φ₀ r) ^ n), 
-  have H0 : ∀ (a : R), φ₀ a ^ 0 = 1 := λ a,rfl,
-  have Hprod:  ∀ (a : R) (b₁ b₂ : ℤ), φ₀ a ^ (b₁ + b₂) = φ₀ a ^ b₁ * φ₀ a ^ b₂ := 
-    λ a b₁ b₂, gpow_add _ _ _,
-  letI Hφ : is_group_hom φ :=
-  { mul := λ a b,finsupp.prod_add_index H0 Hprod,
-  },
-  let N := is_group_hom.ker φ,
-  let Γ1 := quotient_group N,
-  let ψ : Γ1 → Γ2 := group.quotient.lift N φ (λ _,(is_group_hom.mem_ker φ).1),
-  have Hψ : function.injective ψ := group.quotient.injective_ker_lift φ,
-  --  begin
-  --  funext,apply propext,
-  --  show x ∈ N ↔ _,
-  --  exact is_group_hom.mem_ker φ,
-  --  end,
-  letI Γ1linord : linear_order Γ1 := 
-  { le := λ g h,ψ g ≤ ψ h,
-    le_refl := λ _,le_refl _,
-    le_trans := λ _ _ _ hab hbc,le_trans hab hbc,
-    le_antisymm := λ g h Hgh Hhg,Hψ $ le_antisymm Hgh Hhg,
-    le_total := λ g h, le_total _ _
-  },
-  letI Γ1order : linear_ordered_comm_group Γ1 :=
-  { mul_le_mul_left := λ a b H c,
-      begin 
-      show ψ (c * a) ≤ ψ (c * b),
-        rw is_group_hom.mul ψ c b,
-        rw is_group_hom.mul ψ c a,
-        exact linear_ordered_comm_group.mul_le_mul_left H _
-      end
-  },
-  let f1 : R → option Γ1 := (λ r, 
-  option.rec_on (f2 r) (none : option Γ1) 
-    (λ (r' : Γ2), (group.quotient.mk N (finsupp.single r (1 : ℤ)) : option Γ1))),
-  -- equation lemma :-)
-  have H12 : ∀ r : R, option.map ψ (f1 r) = f2 r,
-  { intro r,
-    dsimp [f1],
-    destruct (f2 r),
-    { intro Hnone,
-      rw Hnone,
-      refl},
-    intro val,
-    intro Hval,
-    rw Hval,
-    show some (ψ ((group.quotient.mk N (finsupp.single r 1)))) = some val,
-    congr' 1,
-    show group.quotient.lift N φ _ (group.quotient.mk N (finsupp.single r 1)) = val,
-    rw group.quotient.lift_mk',
-    suffices : finsupp.prod (finsupp.single r (1:ℤ)) (λ (r : R), pow (φ₀ r)) = val,
-      simpa [φ] using this,
-    rw finsupp.prod_single_index,
-      show φ₀ r ^ 0 = 1,refl,
-    show (φ₀ r) * 1 = val,
-    rw mul_one,
-    dsimp [φ₀],
-    rw Hval,
-    refl,
-  },
-  have Hf1 : is_valuation f1 := valuation.valuation_of_valuation R f1 f2 ψ
-                                  Hψ H12 (λ g h,iff.refl _) Hf2,
-  exact Hf1,
+ exact quotient_group.mk (finsupp.single r (1 : ℤ))
 end
 
-definition valuation.minimal_valuation_equiv
-  {R : Type u1} [comm_ring R] [decidable_eq R] 
-  {Γ2 : Type u2} [linear_ordered_comm_group Γ2]
-  (f2 : R → option Γ2) [Hf2 : is_valuation f2] : 
-let f1 := valuation.minimal_valuation f2 in
-(∀ r s : R, f1 r ≤ f1 s ↔ f2 r ≤ f2 s) :=
+lemma minimal_value_group.mk_some {r : R} {g : Γ2} (h : f2 r = some g) : 
+  f2 r = some ((minimal_value_group f2).map (minimal_value_group.mk f2 r)) :=
 begin
-  let FG : Type u1 := multiplicative (R →₀ ℤ), -- free group on R
-  let φ₀ : R → Γ2 := λ r, option.get_or_else (f2 r) 1, 
-  let φ : FG → Γ2 := λ f, finsupp.prod f (λ r n,(φ₀ r) ^ n), 
-  have H0 : ∀ (a : R), φ₀ a ^ 0 = 1 := λ a,rfl,
-  have Hprod:  ∀ (a : R) (b₁ b₂ : ℤ), φ₀ a ^ (b₁ + b₂) = φ₀ a ^ b₁ * φ₀ a ^ b₂ := 
-    λ a b₁ b₂, gpow_add _ _ _,
-  letI Hφ : is_group_hom φ :=
-  { mul := λ a b,finsupp.prod_add_index H0 Hprod,
-  },
-  let N := is_group_hom.ker φ,
-  let Γ1 := quotient_group N,
-  let ψ : Γ1 → Γ2 := group.quotient.lift N φ (λ _,(is_group_hom.mem_ker φ).1),
-  have Hψ : function.injective ψ := group.quotient.injective_ker_lift φ,
+  rw h,
+  congr' 1,
+  dsimp[minimal_value_group, minimal_value_group.mk],
+  rw finsupp.prod_single_index ; finish
+end
+
+instance valuation.minimal_value_group_is_linear_ordered_comm_group : 
+linear_ordered_comm_group (minimal_value_group f2).Γ :=
+begin
+  cases minimal_value_group f2 with Γ1 _ ψ _ inj,
+  
   letI Γ1linord : linear_order Γ1 := 
   { le := λ g h,ψ g ≤ ψ h,
     le_refl := λ _,le_refl _,
     le_trans := λ _ _ _ hab hbc,le_trans hab hbc,
-    le_antisymm := λ g h Hgh Hhg,Hψ $ le_antisymm Hgh Hhg,
-    le_total := λ g h, le_total _ _
-  },
-  letI Γ1order : linear_ordered_comm_group Γ1 :=
-  { mul_le_mul_left := λ a b H c,
-      begin 
-      show ψ (c * a) ≤ ψ (c * b),
-        rw is_group_hom.mul ψ c b,
-        rw is_group_hom.mul ψ c a,
-        exact linear_ordered_comm_group.mul_le_mul_left H _
-      end
-  },
-  let f1 : R → option Γ1 := (λ r, 
-  option.rec_on (f2 r) (none : option Γ1) 
-    (λ (r' : Γ2), (group.quotient.mk N (finsupp.single r (1 : ℤ)) : option Γ1))),
-  -- equation lemma :-)
-  have H12 : ∀ r : R, option.map ψ (f1 r) = f2 r,
-  { intro r,
-    dsimp [f1],
-    destruct (f2 r),
-    { intro Hnone,
-      rw Hnone,
-      refl},
-    intro val,
-    intro Hval,
-    rw Hval,
-    show some (ψ ((group.quotient.mk N (finsupp.single r 1)))) = some val,
-    congr' 1,
-    show group.quotient.lift N φ _ (group.quotient.mk N (finsupp.single r 1)) = val,
-    rw group.quotient.lift_mk',
-    suffices : finsupp.prod (finsupp.single r (1:ℤ)) (λ (r : R), pow (φ₀ r)) = val,
-      simpa [φ] using this,
-    rw finsupp.prod_single_index,
-      show φ₀ r ^ 0 = 1,refl,
-    show (φ₀ r) * 1 = val,
-    rw mul_one,
-    dsimp [φ₀],
-    rw Hval,
-    refl,
-  },
-  have Hf1 : is_valuation f1 := valuation.valuation_of_valuation R f1 f2 ψ
-                                  Hψ H12 (λ g h,iff.refl _) Hf2,
-    exact valuation.le_of_le R f1 f2 ψ H12 (λ g h, iff.refl _),
-end 
+    le_antisymm := λ g h Hgh Hhg, inj $ le_antisymm Hgh Hhg,
+    le_total := λ g h, le_total _ _ },
+  exact ⟨λ a b H c,
+    begin 
+      change ψ (c * a) ≤ ψ (c * b),
+      rw [is_group_hom.mul ψ c b, is_group_hom.mul ψ c a],
+      exact linear_ordered_comm_group.mul_le_mul_left H _,
+    end⟩
+end
 
-definition quot.mk {R : Type u1} [comm_ring R] [decidable_eq R] {Γ2 : Type u2} [linear_ordered_comm_group Γ2]
-(f : R → option Γ2) [Hf : is_valuation f] : Spv R := ⟨λ r s, f r ≤ f s,
+definition valuation.minimal_valuation (r : R) : option ((minimal_value_group f2).Γ) :=
+match f2 r with 
+| some g := some (minimal_value_group.mk f2 r)
+| none := none
+end
+
+lemma valuation.minimal_valuation_none {r : R} (h : f2 r = none) : valuation.minimal_valuation f2 r = none :=
+by simp[valuation.minimal_valuation, h]
+
+lemma valuation.minimal_valuation_some {r : R} {g} (h : f2 r = some g) :
+  valuation.minimal_valuation f2 r = some (minimal_value_group.mk f2 r) :=
+by simp[valuation.minimal_valuation, h]
+
+lemma valuation.minimal_valuation_map (r : R) :
+  option.map (minimal_value_group f2).map (valuation.minimal_valuation f2 r) = f2 r :=
+begin
+  destruct (f2 r),
+  { intro h, 
+    simp[valuation.minimal_valuation_none f2 h, h] },
+  { intros g h,
+    rw [minimal_value_group.mk_some f2 h, valuation.minimal_valuation_some f2 h, option.map_some'] },
+end
+
+instance valuation.minimal_valuation_is_valuation : is_valuation (valuation.minimal_valuation f2) :=
+let f1 := valuation.minimal_valuation f2 in let Γ1 := minimal_value_group f2 in
+  valuation.valuation_of_valuation R f1 f2 Γ1.map
+    Γ1.inj (valuation.minimal_valuation_map f2) (λ g h,iff.refl _) (by apply_instance)
+
+definition valuation.minimal_valuation_equiv (r s : R) :
+  valuation.minimal_valuation f2 r ≤ valuation.minimal_valuation f2 s ↔ f2 r ≤ f2 s :=
+valuation.le_of_le _ _ _ _ (valuation.minimal_valuation_map f2) (λ g h, iff.refl _) r s
+
+
+definition quot.mk : Spv R := ⟨λ r s, f2 r ≤ f2 s,
   begin
-    let Γ1 := valuation.minimal_value_group f,
-    let f1 := valuation.minimal_valuation f,
-    have H12 := valuation.minimal_valuation_equiv f,
-    let v : valuation R Γ1 := {
-      f := f1,
-      ..(valuation.minimal_valuation_is_valuation f)
-    },
-    existsi Γ1,
-    existsi (valuation.minimal_value_group_is_linear_ordered_comm_group f),
-    existsi v,
+    let Γ1 := (minimal_value_group f2).Γ,
+    let f1 := valuation.minimal_valuation f2,
+    let v : valuation R Γ1 := { f := f1, ..(valuation.minimal_valuation_is_valuation f2) },
+    existsi [Γ1, valuation.minimal_value_group_is_linear_ordered_comm_group f2, v],
     intros r s,
     show _ ↔ f1 r ≤ f1 s,
-    rw H12 r s,
-  end 
-⟩
+    rw valuation.minimal_valuation_equiv f2 r s,
+  end⟩
 
-definition mk {R : Type u1} [comm_ring R] [decidable_eq R] {Γ2 : Type u2} [linear_ordered_comm_group Γ2]
-(v : valuation R Γ2) : Spv R := quot.mk v.f
+definition mk (v : valuation R Γ2) : Spv R := quot.mk v.f
 
 end Spv 
 
