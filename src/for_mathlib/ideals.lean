@@ -17,8 +17,9 @@ def pow_ideal : ℕ → set α
 | 0 := set.univ
 | (n+1) := mul_ideal (pow_ideal n) T
 
-instance pow_ideal.is_ideal (n : ℕ) : is_ideal (pow_ideal S n) :=
-nat.cases_on n (@is_ideal.mk _ _ _ $ is_submodule.univ) $ λ n,
-span.is_ideal _
+instance pow_ideal.is_ideal (n : ℕ) : is_ideal (pow_ideal S n) := match n with
+| 0     := is_ideal.univ
+| n + 1 := by dsimp[pow_ideal, mul_ideal] ; apply_instance
+end
 
 end pow_ideal

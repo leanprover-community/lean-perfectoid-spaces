@@ -31,10 +31,8 @@ import analysis.topology.uniform_space
 import analysis.topology.continuity
 import data.set.function
 
-import for_mathlib.quotient
-import for_mathlib.continuity
 import for_mathlib.uniform_space
-import for_mathlib.function
+import for_mathlib.data.set.basic
 
 local attribute [instance, priority 0] classical.prop_decidable
 
@@ -86,7 +84,7 @@ lemma dense : closure (range (to_completion α)) = univ   :=
 begin
   dsimp[to_completion],
   rw range_comp,
-  exact dense_of_quotient_dense pure_cauchy_dense
+  exact quotient_dense_of_dense pure_cauchy_dense
 end
 
 lemma dense₁ : closure (range (λ x : α, (x : completion α))) = univ := 
@@ -184,7 +182,7 @@ begin
 
   rw filter.mem_map,
   dsimp[completion],
-  rw quotient.prod_preimage_eq_image _ rfl r, 
+  rw prod_quotient_preimage_eq_image _ rfl r,
   exact filter.image_mem_map (g₀_unif r_in)
 end
 
@@ -229,7 +227,7 @@ end
 lemma prod.uc : uniform_continuous (@prod α _ β _) :=
 begin
   dsimp[prod],
-  rw uncurry_def,
+  rw function.uncurry_def,
   apply uniform_continuous_quotient_lift₂,
   suffices : uniform_continuous (dense_embedding.extend prod.de (to_completion (α × β))),
   by simpa,

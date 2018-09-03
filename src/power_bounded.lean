@@ -2,7 +2,7 @@ import analysis.topology.topological_space
 import analysis.topology.topological_structures
 import for_mathlib.topological_structures
 import algebra.group_power
-import for_mathlib.subring
+import ring_theory.subring
 
 universe u
 

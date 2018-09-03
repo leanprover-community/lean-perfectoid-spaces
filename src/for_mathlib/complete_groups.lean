@@ -80,7 +80,8 @@ namespace dense_embedding
     Note that Bourbaki assumes that E and F are also complete Hausdorff, but this is useless -/
 theorem extend_Z_bilin {φ : A × B → G} (hφ : continuous φ) [is_Z_bilin φ] : continuous (extend (dense_embedding.prod de df) φ) :=
 begin
-  let dp := dense_embedding.prod de df,
+  sorry
+  /- let dp := dense_embedding.prod de df,
   let ee := λ u : A × A, (e u.1, e u.2),
   let ff := λ u : B × B, (f u.1, f u.2),
   refine dense_embedding.continuous_extend_of_cauchy dp _,
@@ -138,7 +139,7 @@ begin
         rcases V_in with ⟨V₁, V₁_in, HV₁⟩,
         existsi [U₁, U₁_in, V₁, V₁_in],
         intros x x' x_in x'_in y y' y_in y'_in,
-        exact H _ _ (HU₁ (mem_prod' x_in x'_in)) (HV₁ (mem_prod' y_in y'_in)) },
+        exact H _ _ (HU₁ (mk_mem_prod x_in x'_in)) (HV₁ (mk_mem_prod y_in y'_in)) },
       rcases this with ⟨U₁, U₁_nhd, V₁, V₁_nhd, H⟩,
       
       have : ∃ x₁, x₁ ∈ U₁ := exists_mem_of_ne_empty 
@@ -215,6 +216,6 @@ begin
     { intros p h',
       simp only [set.mem_preimage_eq, set.prod_mk_mem_set_prod_eq] at h',
       rcases p with ⟨⟨x, y⟩, ⟨x', y'⟩⟩, 
-      apply h ; tauto }}
+      apply h ; tauto }} -/
 end
 end dense_embedding
