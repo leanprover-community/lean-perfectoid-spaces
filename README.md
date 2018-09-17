@@ -9,7 +9,7 @@ The name of the type we're constructing is `perfectoid_space`. One could define 
 
 ### Getting it working.
 
-This project runs with Lean 3.4.1 and Mathlib 3.4.1. You can find a precompiled Lean binary for most operating systems [here](https://github.com/leanprover/lean/releases/tag/v3.4.1). Once you have Lean up and running you can download the project as a zip file [here](https://github.com/kbuzzard/lean-perfectoid-spaces/archive/master.zip) and extract it into a directory, or just go to the [project home page](https://github.com/kbuzzard/lean-perfectoid-spaces) and clone or download the repository. Once you have unpacked the repository into a directory then change into the directory and run
+This project is not yet finished. It usually compiles, or mostly compiles, with Lean 3.4.1 and Mathlib Head. When we've finished it I'll put up a more coherent description of how to compile it. In the mean time, you can find a precompiled Lean binary for most operating systems [here](https://github.com/leanprover/lean/releases/tag/v3.4.1). Once you have Lean up and running you can download the project as a zip file [here](https://github.com/kbuzzard/lean-perfectoid-spaces/archive/master.zip) and extract it into a directory, or just go to the [project home page](https://github.com/kbuzzard/lean-perfectoid-spaces) and clone or download the repository. Once you have unpacked the repository into a directory then change into the directory and run
 
 ```bash
 $ leanpkg upgrade

@@ -2,7 +2,7 @@ import analysis.topology.topological_space
 import analysis.topology.topological_structures
 import for_mathlib.topological_structures
 import algebra.group_power
-import for_mathlib.subring
+import ring_theory.subring
 
 universe u
 
@@ -19,6 +19,7 @@ definition power_bounded_subring := {r : R | is_power_bounded r}
 
 namespace power_bounded
 
+instance : is_subring (power_bounded_subring R) := sorry
 instance : has_coe (power_bounded_subring R) R := ⟨subtype.val⟩
 
 lemma zero_mem : (0 : R) ∈ power_bounded_subring R :=

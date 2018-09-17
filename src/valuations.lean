@@ -88,7 +88,6 @@ import set_theory.cardinal
 import ring_theory.ideals
 import for_mathlib.subrel 
 import for_mathlib.ideals 
--- import for_mathlib.quotient_ring -- might be best to use what Chris did!
 import group_theory.subgroup
 
 universes u1 u2

@@ -1,5 +1,5 @@
 import analysis.topology.topological_structures
-import for_mathlib.subring
+import ring_theory.subring
 
 -- Scholze : "Recall that a topological ring R is Tate if it contains an
 -- open and bounded subring R₀ ⊂ R and a topologically nilpotent unit ϖ ∈ R; such elements are

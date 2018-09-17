@@ -1,7 +1,6 @@
 import analysis.topology.topological_structures
 import for_mathlib.ideals
-import for_mathlib.subring
-
+import ring_theory.subring
 -- f-adic rings are called Huber rings by Scholze.
 -- Topological ring A contains on open subring A0 such that the subspace topology on A0 is
 -- I-adic, where I is a finitely generated ideal of A0 .

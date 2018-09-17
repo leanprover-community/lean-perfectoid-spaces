@@ -1,9 +1,8 @@
 import analysis.topology.topological_structures
 import tactic.ring
-
 import for_mathlib.completion
 import for_mathlib.function
-import for_mathlib.is_add_group_hom
+--import for_mathlib.is_add_group_hom
 
 section
 variables {α : Type*} {β : Type*} {γ : Type*}
@@ -20,24 +19,24 @@ continuous.prod_mk c c'
 end
 open filter
 
-lemma set.preimage_subset_iff {α : Type*} {β : Type*} {A : set α} {B : set β} {f : α → β} :
-  (∀ a : α, f a ∈ B → a ∈ A) ↔ f⁻¹' B ⊆ A :=
-⟨λ H x h, H x h, λ H x h, H h⟩ 
+--lemma set.preimage_subset_iff {α : Type*} {β : Type*} {A : set α} {B : set β} {f : α → β} :
+--  (∀ a : α, f a ∈ B → a ∈ A) ↔ f⁻¹' B ⊆ A :=
+--⟨λ H x h, H x h, λ H x h, H h⟩ 
 
-lemma vmap_eq_of_inverse {α : Type*} {β : Type*} {f : filter α} {g : filter β} 
-  {φ : α → β} {ψ : β → α} (inv₁ : φ ∘ ψ = id) (inv₂ : ψ ∘ φ = id)
-  (lim₁ : tendsto φ f g) (lim₂ : tendsto ψ g f)
- : vmap φ g = f :=
-begin
-  have ineq₁ := calc
-    vmap φ g = map ψ g : eq.symm (map_eq_vmap_of_inverse inv₂ inv₁)
-         ... ≤ f : lim₂,
-  have ineq₂ : f ≤ vmap φ g := map_le_iff_le_vmap.1 lim₁,
-  exact le_antisymm ineq₁ ineq₂
-end
+--lemma vmap_eq_of_inverse {α : Type*} {β : Type*} {f : filter α} {g : filter β} 
+--  {φ : α → β} {ψ : β → α} (inv₁ : φ ∘ ψ = id) (inv₂ : ψ ∘ φ = id)
+--  (lim₁ : tendsto φ f g) (lim₂ : tendsto ψ g f)
+-- : vmap φ g = f :=
+--begin
+--  have ineq₁ := calc
+--    vmap φ g = map ψ g : eq.symm (map_eq_vmap_of_inverse inv₂ inv₁)
+--         ... ≤ f : lim₂,
+--  have ineq₂ : f ≤ vmap φ g := map_le_iff_le_vmap.1 lim₁,
+--  exact le_antisymm ineq₁ ineq₂
+--end
 
-lemma pure_le_nhds {α : Type*} [topological_space α] (a : α) : pure a ≤ nhds a :=
-assume s s_nhds, by simp[mem_of_nhds s_nhds]
+--lemma pure_le_nhds {α : Type*} [topological_space α] (a : α) : pure a ≤ nhds a :=
+--assume s s_nhds, by simp[mem_of_nhds s_nhds]
 
 section topological_add_group
 universe u
