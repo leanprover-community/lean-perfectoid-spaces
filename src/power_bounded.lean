@@ -6,7 +6,7 @@ import ring_theory.subring
 
 universe u
 
-variables {R : Type u} [comm_ring R] [topological_space R] [topological_ring R]  
+variables {R : Type u} [comm_ring R] [topological_space R] [topological_ring R]
 
 /-- Wedhorn Definition 5.27 page 36 -/
 definition is_bounded (B : set R) : Prop :=
@@ -28,7 +28,7 @@ begin
   split, {exact hU},
   intros v hv b H,
   cases H with n H,
-  induction n; simpa [H.symm, pow_succ, mem_of_nhds hU] 
+  induction n ; { simp [H.symm, pow_succ, mem_of_nhds hU], try {assumption} }
 end⟩
 
 lemma one_mem : (1 : R) ∈ power_bounded_subring R :=
