@@ -1,8 +1,6 @@
 import analysis.topology.topological_structures
 import tactic.ring
 import for_mathlib.completion
-import for_mathlib.function
---import for_mathlib.is_add_group_hom
 
 section
 variables {α : Type*} {β : Type*} {γ : Type*}
