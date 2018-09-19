@@ -8,10 +8,10 @@ open Cauchy set
 lemma prod_cauchy {f : filter α} {g : filter β} : cauchy f → cauchy g → cauchy (filter.prod f g)
 | ⟨f_proper, hf⟩ ⟨g_proper, hg⟩ := ⟨filter.prod_neq_bot.2 ⟨f_proper, g_proper⟩,
   let p_α := λp:(α×β)×(α×β), (p.1.1, p.2.1), p_β := λp:(α×β)×(α×β), (p.1.2, p.2.2) in
-  suffices (f.prod f).vmap p_α ⊓ (g.prod g).vmap p_β ≤ uniformity.vmap p_α ⊓ uniformity.vmap p_β,
-    by simpa [uniformity_prod, filter.prod, filter.vmap_inf, filter.vmap_vmap_comp, (∘),
+  suffices (f.prod f).comap p_α ⊓ (g.prod g).comap p_β ≤ uniformity.comap p_α ⊓ uniformity.comap p_β,
+    by simpa [uniformity_prod, filter.prod, filter.comap_inf, filter.comap_comap_comp, (∘),
         lattice.inf_assoc, lattice.inf_comm, lattice.inf_left_comm],
-  lattice.inf_le_inf (filter.vmap_mono hf) (filter.vmap_mono hg)⟩
+  lattice.inf_le_inf (filter.comap_mono hf) (filter.comap_mono hg)⟩
 
 def pure_cauchy₂ : α × β → Cauchy α × Cauchy β := λ x, (pure_cauchy x.1, pure_cauchy x.2)
 
@@ -41,7 +41,7 @@ variables {e : α → β} (de : dense_embedding e)
 
 variables {γ : Type*} [uniform_space γ]  [complete_space γ] [separated γ]
 
-lemma continuous_extend_of_cauchy {f : α → γ}  (h : ∀ b : β, cauchy (map f (vmap e $ nhds b))) :
+lemma continuous_extend_of_cauchy {f : α → γ}  (h : ∀ b : β, cauchy (map f (comap e $ nhds b))) :
   continuous (de.extend f) :=
 continuous_extend de $ λ b, complete_space.complete (h b)
 
