@@ -23,7 +23,8 @@ end valuation
 
 namespace Spv 
 
--- This is a mathematically correct definition of what it means for a valuation to be continuous.
+-- This is a mathematically correct definition of what it means for an equivalence
+-- class of valuations to be continuous.
 def is_continuous {R : Type u} [comm_ring R] [topological_space R] [topological_ring R]
   (vs : Spv R) := ∃ (Γ : Type u) [linear_ordered_comm_group Γ],
   by exactI ∃ (v : valuation R Γ), (∀ r s : R, vs.val r s ↔ v r ≤ v s) ∧ valuation.is_continuous v 
@@ -76,3 +77,11 @@ def Cont (R : Type) [comm_ring R] [topological_space R] [topological_ring R]
 
 instance (R : Type) [comm_ring R] [topological_space R] [topological_ring R] :
 topological_space (Cont R) := by unfold Cont; apply_instance
+
+/-
+Wedhorn p59:
+  A valuation v on A is continuous if and only if for all γ ∈ Γ_v (the value group),
+  the set A_{≤γ} := { a ∈ A ; v(a) ≥ γ } is open in A. 
+ 
+  This is a typo -- should be v(a) ≤ γ. 
+-/
