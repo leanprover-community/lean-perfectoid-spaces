@@ -51,35 +51,22 @@ MC: This all has a category theoretic interpretation as a coequalizer, and all c
 MC: As opposed to, say, quot.out, which picks an element from an equivalence class
 MC: Although in your case if I understand correctly you also have a canonical way to define quot.out
     satisfying some other universal property to do with the ordered group
-
-where the valuation and ring have to share the same universe
-9:37 AM
-
-You can prove that the universe need not be the same as part of the universal properties
-9:38 AM
-
-i.e. Spv.mk takes as input a valuation function  (v : valuation R A) where {R : Type u} and {A : Type v} (so it isn't just instantiating the exists)
-9:41 AM
-
-"If you want to be polymorphic" -- I just want to do maths. I have no idea if I want to be polymorphic. If I just want to define a perfectoid space, do I want to be polymorphic?
-9:46 AM
-
-In lean, you should usually be polymorphic
-9:47 AM
-
-at least in contravariant positions (i.e. the inputs should be maximally polymorphic, the output should be minimally polymorphic)
-9:47 AM
-
-This is why we don't have nat : Type u
-10:41 AM
-
-11:51 AM
-
-The general rule is to keep types out of classes if at all possible. Lean behaves better when the types are given as "alpha" rather than "the type inside v", particularly if you start manipulating the functions (adding them, say)
-
-    it is the same things that make the difference between bundled vs unbundled groups. When working "internally", i.e. calculations using the monoid structure, it is better for the type to be exposed as a variable
-
-
+    where the valuation and ring have to share the same universe.
+    You can prove that the universe need not be the same as part of the universal properties
+    i.e. Spv.mk takes as input a valuation function  (v : valuation R A) where {R : Type u} and
+    {A : Type v} (so it isn't just instantiating the exists)
+KB: "If you want to be polymorphic" -- I just want to do maths. I have no idea if I want to be polymorphic.
+     If I just want to define a perfectoid space, do I want to be polymorphic?
+MC : In lean, you should usually be polymorphic
+     at least in contravariant positions (i.e. the inputs should be maximally polymorphic, the output should
+      be minimally polymorphic)
+     This is why we don't have nat : Type u
+     The general rule is to keep types out of classes if at all possible. Lean behaves better when the
+     types are given as "alpha" rather than "the type inside v", particularly if you start manipulating
+     the functions (adding them, say).
+     It is the same things that make the difference between bundled vs unbundled groups. When
+     working "internally", i.e. calculations using the monoid structure, it is better for the type
+     to be exposed as a variable
 -/
 
 
@@ -460,4 +447,3 @@ instance valutaion.group_f {R : Type u1} [comm_ring R] {Γ : Type u2} [linear_or
   @subtype.group _ _ (value_group_f f) (group.closure.is_subgroup {a : Γ | ∃ r : R, f r = some a})
 
 end valuation
-
