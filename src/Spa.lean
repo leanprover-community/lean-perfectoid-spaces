@@ -21,10 +21,15 @@ rational_open s T = (set.Inter (λ (t : T), basic_open t s)) ∩ {vs | ¬ vs.val
 set.ext $ λ vs, ⟨λ H, ⟨set.mem_Inter.2 $ λ t,⟨H.left _ t.property,H.right⟩,H.right⟩,
   λ ⟨H1,H2⟩,⟨λ t ht,(set.mem_Inter.1 H1 ⟨t, ht⟩).1,H2⟩⟩
 
-#check rational_open_Inter
+lemma rational_open_add_s {A : Huber_pair} (s : A.R) (T : set A.R) :
+rational_open s T = rational_open s (insert s T) := sorry
+-- set.ext $ λ x, ⟨λ Hx,⟨λ t Ht,Hx.1 t (_),_⟩,_⟩ -- made a start then ran out of time
 
 lemma rational_open_is_open {A : Huber_pair} (s : A.R) (T : set A.R) (HFinT : fintype T) :
-is_open (rational_open s T) := sorry -- finite intersection of opens is open
+is_open (rational_open s T) := begin
+  rw rational_open_Inter,
+  sorry -- should hopefully be easy, if I've got it right.
+end
 
--- goal now to define the 𝓞_X on *rational subsets*. 
+-- goal now to define the 𝓞_X on *rational subsets* and then to extend.
 
