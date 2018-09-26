@@ -22,7 +22,38 @@ set.ext $ λ vs, ⟨λ H, ⟨set.mem_Inter.2 $ λ t,⟨H.left _ t.property,H.rig
   λ ⟨H1,H2⟩,⟨λ t ht,(set.mem_Inter.1 H1 ⟨t, ht⟩).1,H2⟩⟩
 
 lemma rational_open_add_s {A : Huber_pair} (s : A.R) (T : set A.R) :
-rational_open s T = rational_open s (insert s T) := sorry
+rational_open s T = rational_open s (insert s T) :=
+set.ext $ λ ⟨⟨r,Γ,HΓ,v,Hv⟩,_,_⟩, 
+⟨ λ ⟨H1, H2⟩, ⟨λ t Ht, or.rec_on Ht (λ H, begin rw H, show r s s, rw Hv s s, end) (H1 t), H2⟩,
+  λ ⟨H1, H2⟩, ⟨λ t Ht, H1 t $ set.mem_insert_of_mem _ Ht,H2⟩⟩
+
+/- this used to say 
+begin
+  intro x,
+  split,
+  { intro Hx,
+    split,
+      intro t,
+      intro Ht,
+      cases Ht,
+        rw Ht,
+        rcases x.val.property with ⟨Γ,_,v,Hv⟩,
+        rw Hv s s,
+      exact Hx.1 t Ht,
+    exact Hx.2
+  },
+  { intro Hx,
+    split,
+      intros t Ht,
+      refine Hx.1 t _,
+      exact set.mem_insert_of_mem _ Ht,
+    exact Hx.2
+  }
+end
+
+and then I golfed it. 
+-/
+
 -- set.ext $ λ x, ⟨λ Hx,⟨λ t Ht,Hx.1 t (_),_⟩,_⟩ -- made a start then ran out of time
 
 lemma rational_open_is_open {A : Huber_pair} (s : A.R) (T : set A.R) (HFinT : fintype T) :
