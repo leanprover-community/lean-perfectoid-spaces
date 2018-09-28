@@ -29,8 +29,8 @@ structure Huber_pair :=
 [intel : is_ring_of_integral_elements Rplus]
 
 instance : has_coe_to_sort Huber_pair :=
-{ S := Type, coe := Huber_pair.R}
+{ S := Type u, coe := Huber_pair.R }
 
-instance Huber_pair.Huber_ring (A : Huber_pair) : Huber_ring A.R := A.RHuber
+instance Huber_pair.Huber_ring (A : Huber_pair) : Huber_ring A := A.RHuber
 
-postfix `⁺` : 66 := λ R : Huber_pair _, R.Rplus
+postfix `⁺` : 66 := λ A : Huber_pair, A.Rplus
