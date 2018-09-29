@@ -2,21 +2,38 @@ import valuation_spectrum
 import continuous_valuations
 import Huber_pair 
 
+open set
+
 -- Wedhorn def 7.23.
-definition Spa (A : Huber_pair) := {vs : Spv A.R // Spv.is_continuous vs ∧ ∀ r : A.R, r ∈ A.Rplus → vs.val r 1}
+definition Spa (A : Huber_pair) := {vs : Spv A | Spv.is_continuous vs ∧ ∀ r, r ∈ A⁺ → vs.val r 1}
 
 /-- basic open corresponding to r, s is v : v(r) <= v(s) and v(s) isn't 0 ( = v(0) ) -/
-definition basic_open {A : Huber_pair} (r s : A.R) : set (Spa A) := 
+definition basic_open {A : Huber_pair} (r s : A) : set (Spa A) :=
 {vs | vs.val.val r s ∧ ¬ vs.val.val s 0}
 
 instance (A : Huber_pair) : topological_space (Spa A) :=
-topological_space.generate_from {U : set (Spa A) | ∃ r s : A.R, U = basic_open r s}
+topological_space.generate_from {U : set (Spa A) | ∃ r s : A, U = basic_open r s}
 
--- should only be applied with (HFinT : fintype T) and (Hopen: is_open (span T))
-definition rational_open {A : Huber_pair} (s : A.R) (T : set A.R) : set (Spa A) :=
+lemma basic_open.is_open {A : Huber_pair} (r s : A) : is_open (basic_open r s) :=
+topological_space.generate_open.basic (basic_open r s) ⟨r, ⟨s, rfl⟩⟩
+
+lemma basic_open_eq {A : Huber_pair} (s : A) : basic_open s s = {vs | ¬ vs.val.val s 0} :=
+begin
+  ext vs,
+  split,
+  { intro h,
+    exact h.2 },
+  { intro h,
+    split, swap, exact h,
+    rcases vs.val.property with ⟨Γ, ⟨inst, ⟨v, H⟩⟩⟩,
+    simp [H] }
+end
+
+-- should only be applied with (HfinT : fintype T) and (Hopen: is_open (span T))
+definition rational_open {A : Huber_pair} (s : A) (T : set A) : set (Spa A) :=
 {vs | (∀ t ∈ T, (vs.val.val t s)) ∧ (¬ vs.val.val s 0)}
 
-theorem rational_open_Inter {A : Huber_pair} (s : A.R) (T : set A.R) :
+definition rational_open_Inter {A : Huber_pair} (s : A) (T : set A) :
 rational_open s T = (set.Inter (λ (t : T), basic_open t s)) ∩ {vs | ¬ vs.val.val s 0} :=
 set.ext $ λ vs, ⟨λ H, ⟨set.mem_Inter.2 $ λ t,⟨H.left _ t.property,H.right⟩,H.right⟩,
   λ ⟨H1,H2⟩,⟨λ t ht,(set.mem_Inter.1 H1 ⟨t, ht⟩).1,H2⟩⟩
@@ -56,10 +73,13 @@ and then I golfed it.
 
 -- set.ext $ λ x, ⟨λ Hx,⟨λ t Ht,Hx.1 t (_),_⟩,_⟩ -- made a start then ran out of time
 
-lemma rational_open_is_open {A : Huber_pair} (s : A.R) (T : set A.R) (HFinT : fintype T) :
-is_open (rational_open s T) := begin
+lemma rational_open.is_open {A : Huber_pair} (s : A) (T : set A) (HfinT : fintype T) :
+is_open (rational_open s T) :=
+begin
   rw rational_open_Inter,
-  sorry -- should hopefully be easy, if I've got it right.
+  apply is_open_inter, swap, rw ← basic_open_eq s, exact basic_open.is_open s s,
+  simpa using @is_open_bInter _ _ _ _ (λ t : T, basic_open t.1 s) 
+    (finite_mem_finset finset.univ) (λ t ht, basic_open.is_open t s),
 end
 
 -- goal now to define the 𝓞_X on *rational subsets* and then to extend.
