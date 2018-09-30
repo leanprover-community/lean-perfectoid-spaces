@@ -4,12 +4,12 @@ import data.finsupp
 import group_theory.quotient_group
 import valuation_universe 
 
-universes u u1 u2
+universes u₁ u₂ u₃
 
 open valuation quotient_group
 
-definition Spv (R : Type u) [comm_ring R] := 
-{ineq : R → R → Prop // ∃ (Γ : Type u) [linear_ordered_comm_group Γ],
+definition Spv (R : Type u₁) [comm_ring R] := 
+{ineq : R → R → Prop // ∃ (Γ : Type u₁) [linear_ordered_comm_group Γ],
   by exactI ∃ (v : valuation R Γ), ∀ r s : R, ineq r s ↔ v r ≤ v s}
 
 namespace Spv 
@@ -19,34 +19,34 @@ set_option class.instance_max_depth 41
 -- decidable equality on R to make the finsupp an add_comm_group?!
 
 /-
-theorem value_group_universe (R : Type u1) [comm_ring R] [decidable_eq R] (Γ2 : Type u2) [linear_ordered_comm_group Γ2]
-  (f2 : R → option Γ2) (Hf2 : is_valuation f2) : 
-∃ (Γ1 : Type u1) [linear_ordered_comm_group Γ1], by exactI ∃ (f1 : R → option Γ1) (Hf1 : is_valuation f1),
-  (∀ r s : R, f1 r ≤ f1 s ↔ f2 r ≤ f2 s) ∧ value_group_f f1 = set.univ := 
+theorem value_group_universe (R : Type u₁) [comm_ring R] [decidable_eq R] (Γ₂ : Type u2) [linear_ordered_comm_group Γ₂]
+  (v₂ : R → option Γ₂) (Hv₂ : is_valuation v₂) : 
+∃ (Γ₁ : Type u₁) [linear_ordered_comm_group Γ₁], by exactI ∃ (v₁ : R → option Γ₁) (Hv₁ : is_valuation v₁),
+  (∀ r s : R, v₁ r ≤ v₁ s ↔ v₂ r ≤ v₂ s) ∧ value_group_f v₁ = set.univ := 
 -/
-variables {R : Type u1} [comm_ring R] [decidable_eq R] 
-  (Γ2 : Type u2) [linear_ordered_comm_group Γ2]
-  (f2 : R → option Γ2) [is_valuation f2]
-include Γ2
+variables {R : Type u₁} [comm_ring R] [decidable_eq R] 
+variables (Γ₂ : Type u₂) [linear_ordered_comm_group Γ₂]
+variables (v₂ : valuation R  Γ₂)
+include Γ₂
 
 structure parametrized_subgroup :=
-(Γ : Type u1)
+(Γ : Type u₁)
 [grp : comm_group Γ]
-(map : Γ → Γ2)
+(map : Γ → Γ₂)
 (hom : is_group_hom map)
 (inj : function.injective map)
 
 local attribute [instance] parametrized_subgroup.grp
 local attribute [instance] parametrized_subgroup.hom
 
-variable {Γ2}
-include R f2 
+variable {Γ₂}
+include R v₂ 
 
-def minimal_value_group : parametrized_subgroup Γ2 :=
+def minimal_value_group : parametrized_subgroup Γ₂ :=
 begin
-  let FG : Type u1 := multiplicative (R →₀ ℤ), -- free ab group on R
-  let φ₀ : R → Γ2 := λ r, option.get_or_else (f2 r) 1,
-  let φ : FG → Γ2 := λ f, finsupp.prod f (λ r n,(φ₀ r) ^ n),
+  let FG : Type u₁ := multiplicative (R →₀ ℤ), -- free ab group on R
+  let φ₀ : R → Γ₂ := λ r, option.get_or_else (v₂ r) 1,
+  let φ : FG → Γ₂ := λ f, finsupp.prod f (λ r n,(φ₀ r) ^ n),
   haveI : is_group_hom φ := 
     ⟨λ a b, finsupp.prod_add_index (λ a, rfl) (λ a b₁ b₂, gpow_add (φ₀ a) b₁ b₂)⟩,
   
@@ -57,19 +57,19 @@ begin
     inj   := injective_ker_lift φ }
 end
 
-def minimal_value_group.mk (r : R) : (minimal_value_group f2).Γ :=
+def minimal_value_group.mk (r : R) : (minimal_value_group v₂).Γ :=
 begin
-  let FG : Type u1 := multiplicative (R →₀ ℤ), -- free ab group on R
-  let φ₀ : R → Γ2 := λ r, option.get_or_else (f2 r) 1,
-  let φ : FG → Γ2 := λ f, finsupp.prod f (λ r n,(φ₀ r) ^ n),
+  let FG : Type u₁ := multiplicative (R →₀ ℤ), -- free ab group on R
+  let φ₀ : R → Γ₂ := λ r, option.get_or_else (v₂ r) 1,
+  let φ : FG → Γ₂ := λ f, finsupp.prod f (λ r n,(φ₀ r) ^ n),
   haveI : is_group_hom φ := 
     ⟨λ a b, finsupp.prod_add_index (λ a, rfl) (λ a b₁ b₂, gpow_add (φ₀ a) b₁ b₂)⟩,
 
  exact quotient_group.mk (finsupp.single r (1 : ℤ))
 end
 
-lemma minimal_value_group.mk_some {r : R} {g : Γ2} (h : f2 r = some g) : 
-  f2 r = some ((minimal_value_group f2).map (minimal_value_group.mk f2 r)) :=
+lemma minimal_value_group.mk_some {r : R} {g : Γ₂} (h : v₂ r = some g) : 
+  v₂ r = some ((minimal_value_group v₂).map (minimal_value_group.mk v₂ r)) :=
 begin
   rw h,
   congr' 1,
@@ -78,11 +78,11 @@ begin
 end
 
 instance valuation.minimal_value_group_is_linear_ordered_comm_group : 
-linear_ordered_comm_group (minimal_value_group f2).Γ :=
+linear_ordered_comm_group (minimal_value_group v₂).Γ :=
 begin
-  cases minimal_value_group f2 with Γ1 _ ψ _ inj,
+  cases minimal_value_group v₂ with Γ₁ _ ψ _ inj,
   
-  letI Γ1linord : linear_order Γ1 := 
+  letI Γ₁linord : linear_order Γ₁ := 
   { le := λ g h,ψ g ≤ ψ h,
     le_refl := λ _,le_refl _,
     le_trans := λ _ _ _ hab hbc,le_trans hab hbc,
@@ -96,51 +96,51 @@ begin
     end⟩
 end
 
-definition valuation.minimal_valuation (r : R) : option ((minimal_value_group f2).Γ) :=
-match f2 r with 
-| some g := some (minimal_value_group.mk f2 r)
-| none := none
+definition valuation.minimal_valuation (r : R) : with_zero ((minimal_value_group v₂).Γ) :=
+match v₂ r with 
+| some _ := some (minimal_value_group.mk v₂ r)
+| 0 := 0
 end
 
-lemma valuation.minimal_valuation_none {r : R} (h : f2 r = none) : valuation.minimal_valuation f2 r = none :=
-by simp[valuation.minimal_valuation, h]
+lemma valuation.minimal_valuation_none {r : R} (h : v₂ r = 0) : valuation.minimal_valuation v₂ r = 0 :=
+by simp [valuation.minimal_valuation, h]
 
-lemma valuation.minimal_valuation_some {r : R} {g} (h : f2 r = some g) :
-  valuation.minimal_valuation f2 r = some (minimal_value_group.mk f2 r) :=
+lemma valuation.minimal_valuation_some {r : R} {g} (h : v₂ r = some g) :
+  valuation.minimal_valuation v₂ r = some (minimal_value_group.mk v₂ r) :=
 by simp[valuation.minimal_valuation, h]
 
 lemma valuation.minimal_valuation_map (r : R) :
-  option.map (minimal_value_group f2).map (valuation.minimal_valuation f2 r) = f2 r :=
+  option.map (minimal_value_group v₂).map (valuation.minimal_valuation v₂ r) = v₂ r :=
 begin
-  destruct (f2 r),
+  destruct (v₂ r),
   { intro h, 
-    simp[valuation.minimal_valuation_none f2 h, h] },
+    simp[valuation.minimal_valuation_none v₂ h, h] },
   { intros g h,
-    rw [minimal_value_group.mk_some f2 h, valuation.minimal_valuation_some f2 h, option.map_some'] },
+    rw [minimal_value_group.mk_some v₂ h, valuation.minimal_valuation_some v₂ h, option.map_some'] },
 end
 
-instance valuation.minimal_valuation_is_valuation : is_valuation (valuation.minimal_valuation f2) :=
-let f1 := valuation.minimal_valuation f2 in let Γ1 := minimal_value_group f2 in
-  valuation.valuation_of_valuation R f1 f2 Γ1.map
-    Γ1.inj (valuation.minimal_valuation_map f2) (λ g h,iff.refl _) (by apply_instance)
+instance valuation.minimal_valuation_is_valuation : is_valuation (valuation.minimal_valuation v₂) :=
+let v₁ := valuation.minimal_valuation v₂ in let Γ₁ := minimal_value_group v₂ in
+  valuation.valuation_of_valuation R v₁ v₂ Γ₁.map
+    Γ₁.inj (valuation.minimal_valuation_map v₂) (λ g h,iff.refl _) (by apply_instance)
 
 definition valuation.minimal_valuation_equiv (r s : R) :
-  valuation.minimal_valuation f2 r ≤ valuation.minimal_valuation f2 s ↔ f2 r ≤ f2 s :=
-valuation.le_of_le _ _ _ _ (valuation.minimal_valuation_map f2) (λ g h, iff.refl _) r s
+  valuation.minimal_valuation v₂ r ≤ valuation.minimal_valuation v₂ s ↔ v₂ r ≤ v₂ s :=
+valuation.le_of_le _ _ _ _ (valuation.minimal_valuation_map v₂) (λ g h, iff.refl _) r s
 
 
-definition quot.mk : Spv R := ⟨λ r s, f2 r ≤ f2 s,
+definition quot.mk : Spv R := ⟨λ r s, v₂ r ≤ v₂ s,
   begin
-    let Γ1 := (minimal_value_group f2).Γ,
-    let f1 := valuation.minimal_valuation f2,
-    let v : valuation R Γ1 := { f := f1, ..(valuation.minimal_valuation_is_valuation f2) },
-    existsi [Γ1, valuation.minimal_value_group_is_linear_ordered_comm_group f2, v],
+    let Γ₁ := (minimal_value_group v₂).Γ,
+    let v₁ := valuation.minimal_valuation v₂,
+    let v : valuation R Γ₁ := { f := v₁, ..(valuation.minimal_valuation_is_valuation v₂) },
+    existsi [Γ₁, valuation.minimal_value_group_is_linear_ordered_comm_group v₂, v],
     intros r s,
-    show _ ↔ f1 r ≤ f1 s,
-    rw valuation.minimal_valuation_equiv f2 r s,
+    show _ ↔ v₁ r ≤ v₁ s,
+    rw valuation.minimal_valuation_equiv v₂ r s,
   end⟩
 
-definition mk (v : valuation R Γ2) : Spv R := quot.mk v.f
+definition mk (v : valuation R Γ₂) : Spv R := quot.mk v.f
 
 end Spv 
 
@@ -162,7 +162,7 @@ end Spv
 
 -- **also need to check that continuity is well-defined on Spv R**
 -- continuity of an inequality is defined using the minimal Gamma
--- need value_group_f f1 = set.univ
+-- need value_group_f v₁ = set.univ
 
 -- Also might need a variant of  Wedhorn 1.27 (ii) -/
 

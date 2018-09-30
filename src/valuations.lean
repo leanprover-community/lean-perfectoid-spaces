@@ -76,7 +76,7 @@ import tactic.tidy
 import for_mathlib.ideals
 import for_mathlib.linear_ordered_comm_group
 
-universes u₁ u₂ -- v is used for valuations
+universes u₁ u₂ u₃ -- v is used for valuations
 
 namespace valuation
 
@@ -132,6 +132,14 @@ begin
   have h4 : x^2 = 1 := by simpa [pow_two] using h3,
   exact linear_ordered_comm_group.eq_one_of_pow_eq_one h4
 end
+
+def map {S : Type u₃} [comm_ring S] (f : S → R) [is_ring_hom f] : valuation S Γ :=
+{ val := v ∘ f,
+  property :=
+  { map_zero := by simp [is_ring_hom.map_zero f],
+    map_one  := by simp [is_ring_hom.map_one f],
+    map_mul  := by simp [is_ring_hom.map_mul f],
+    map_add  := by simp [is_ring_hom.map_add f] } }
 
 section trivial
 variables (S : set R) [is_prime_ideal S] [decidable_pred S]
