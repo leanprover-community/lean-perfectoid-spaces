@@ -2,22 +2,31 @@ import power_bounded Huber_ring
 
 universes u v
 
+--notation
+local postfix `ᵒ` : 66 := power_bounded_subring
+
 open power_bounded
-variables {cR : Type u} [comm_ring cR] [decidable_eq cR]
 
-def is_integral (S : set cR) [is_subring S] (r : cR) : Prop :=
-sorry
---∃ f : polynomial ↥S, (polynomial.monic f) ∧ polynomial.eval r (@polynomial.map cR _ ↥S _ (subtype.val) is_ring_hom.is_ring_hom f) = 0
+section integral
+variables {R : Type u} [comm_ring R] [decidable_eq R]
 
-def is_integrally_closed (S : set cR) [is_subring S] :=
-∀ r : cR, (is_integral S r) → r ∈ S
+instance subtype.val.is_ring_hom (S : set R) [is_subring S] : is_ring_hom (@subtype.val _ S) :=
+by apply_instance
+
+def is_integral (S : set R) [is_subring S] (r : R) : Prop :=
+∃ f : polynomial ↥S, (f.monic) ∧ f.eval₂ (@subtype.val _ S) r = 0
+
+def is_integrally_closed (S : set R) [is_subring S] : Prop :=
+∀ r : R, (is_integral S r) → r ∈ S
+
+end integral
 
 -- Wedhorn Def 7.14
 structure is_ring_of_integral_elements {R : Type u} [Huber_ring R] [decidable_eq R] (Rplus : set R) : Prop :=
 [is_subring : is_subring Rplus]
 (is_open : is_open Rplus)
 (is_int_closed : is_integrally_closed Rplus)
-(is_power_bounded : Rplus ⊆ { r : R | is_power_bounded r})
+(is_power_bounded : Rplus ⊆ Rᵒ)
 
 -- a Huber Ring is an f-adic ring.
 -- a Huber Pair is what Huber called an Affinoid Ring.
