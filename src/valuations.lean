@@ -23,14 +23,16 @@ end valuation
 def valuation (R : Type u₁) [comm_ring R] (Γ : Type u₂) [linear_ordered_comm_group Γ] :=
 { v : R → with_zero Γ // valuation.is_valuation v }
 
+namespace valuation
+
 instance (R : Type u₁) [comm_ring R] (Γ : Type u₂) [linear_ordered_comm_group Γ] :
 has_coe_to_fun (valuation R Γ) := { F := λ _, R → with_zero Γ, coe := subtype.val}
-
-namespace valuation
 
 variables {R : Type u₁} [comm_ring R]
 variables {Γ : Type u₂} [linear_ordered_comm_group Γ]
 variables (v : valuation R Γ) {x y z : R}
+
+instance : is_valuation v := v.property
 
 @[simp] lemma map_zero : v 0 = 0 := v.property.map_zero
 @[simp] lemma map_one  : v 1 = 1 := v.property.map_one
@@ -63,6 +65,9 @@ begin
   have h4 : x^2 = 1 := by simpa [pow_two] using h3,
   exact linear_ordered_comm_group.eq_one_of_pow_eq_one h4
 end
+
+@[simp] theorem eq_zero_iff_le_zero {r : R} : v r = 0 ↔ v r ≤ v 0 :=
+by split; intro h; simpa using h
 
 section
 

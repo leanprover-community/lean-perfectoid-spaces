@@ -150,6 +150,9 @@ end
 λ h, option.no_confusion (le_antisymm h zero_le)
 def map (f : α → β) : with_zero α → with_zero β := option.map f
 
+@[simp] theorem le_zero_iff_eq_zero [partial_order α] {x : with_zero α} : x ≤ 0 ↔ x = 0 :=
+by cases x; simp; try {refl}; {intro h, exact option.no_confusion h}
+
 @[simp] lemma map_zero {f : α → β} : map f 0 = 0 := option.map_none'
 @[simp] lemma map_none {f : α → β} : map f none = 0 := option.map_none'
 

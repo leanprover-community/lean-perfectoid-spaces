@@ -1,15 +1,46 @@
-import valuation_spectrum
 import continuous_valuations
 import Huber_pair 
+
+universes u₁ u₂ u₃
+
+local attribute [instance] classical.prop_decidable
 
 open set
 
 -- Wedhorn def 7.23.
-definition Spa (A : Huber_pair) := {vs : Spv A | Spv.is_continuous vs ∧ ∀ r, r ∈ A⁺ → vs.val r 1}
+definition Spa (A : Huber_pair) : set (Spv A) :=
+Spv.lift (λ v : Valuation A, v.is_continuous ∧ ∀ r, r ∈ A⁺ → v r ≤ 1)
+(λ v₁ v₂ heq,
+begin
+  ext, split; intro; split,
+  { exact Valuation.is_continuous_of_equiv_is_continuous heq a.left },
+  { rw ← v₁.val.map_one at a,
+    rw ← v₂.val.map_one,
+    intros r h,
+    exact (heq r 1).mp (a.right r h) },
+  { exact Valuation.is_continuous_of_equiv_is_continuous (setoid.symm heq) a.left },
+  { rw ← v₁.val.map_one,
+    rw ← v₂.val.map_one at a,
+    intros r h,
+    exact (heq r 1).mpr (a.right r h) },
+end)
+
+namespace Spa
+
+variable {A : Huber_pair}
 
 /-- basic open corresponding to r, s is v : v(r) <= v(s) and v(s) isn't 0 ( = v(0) ) -/
 definition basic_open {A : Huber_pair} (r s : A) : set (Spa A) :=
-{vs | vs.val.val r s ∧ ¬ vs.val.val s 0}
+Spv.lift (λ v : Valuation A, v r ≤ v s ∧ v s ≠ 0)
+(λ v₁ v₂ heq,
+begin
+  ext, split; intro; split,
+  { exact (heq r s).mp a.left },
+  { exact Valuation.ne_zero_of_equiv_ne_zero heq a.right },
+  { exact (heq r s).mpr a.left },
+  { exact Valuation.ne_zero_of_equiv_ne_zero (setoid.symm heq) a.right }
+end)
+∘ subtype.val
 
 instance (A : Huber_pair) : topological_space (Spa A) :=
 topological_space.generate_from {U : set (Spa A) | ∃ r s : A, U = basic_open r s}
@@ -52,6 +83,8 @@ begin
   simpa using @is_open_bInter _ _ _ _ (λ t : T, basic_open t.1 s) 
     (finite_mem_finset finset.univ) (λ t ht, basic_open.is_open t s),
 end
+
+end Spa
 
 -- goal now to define the 𝓞_X on *rational subsets* and then to extend.
 
