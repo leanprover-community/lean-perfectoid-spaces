@@ -325,9 +325,15 @@ def minimal_valuation : valuation R (minimal_value_group v₂).Γ :=
   property := let Γ₁ := minimal_value_group v₂ in
     valuation_of_valuation (minimal_valuation.map v₂) (λ g h, iff.refl _) Γ₁.inj (v₂.property) }
 
-def minimal_valuation_equiv (r s : R) : (v₂.minimal_valuation :
-valuation R (minimal_value_group v₂).Γ) r ≤ (v₂.minimal_valuation : valuation R (minimal_value_group v₂).Γ) s ↔ v₂ r ≤ v₂ s :=
-le_of_le (minimal_valuation.map v₂) (λ g h, iff.refl _) r s
+def is_equiv {R : Type u₁} [comm_ring R]
+{Γ₁ : Type u₂} [linear_ordered_comm_group Γ₁]
+{Γ₂ : Type u₃} [linear_ordered_comm_group Γ₂]
+(v₁ : valuation R Γ₁) (v₂ : valuation R Γ₂) : Prop :=
+∀ r s, v₁ r ≤ v₁ s ↔ v₂ r ≤ v₂ s
+
+lemma minimal_valuation_equiv :
+is_equiv (v₂.minimal_valuation : valuation R (minimal_value_group v₂).Γ) v₂ :=
+le_of_le (minimal_valuation.map v₂) (λ g h, iff.refl _)
 
 end valuation
 

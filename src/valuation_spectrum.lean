@@ -5,22 +5,53 @@ import group_theory.quotient_group
 
 universes u₁ u₂ u₃
 
-open valuation quotient_group
+open valuation
 
-definition Spv (R : Type u₁) [comm_ring R] := 
-{ineq : R → R → Prop // ∃ {Γ : Type u₁} [linear_ordered_comm_group Γ],
-  by exactI ∃ (v : valuation R Γ), ∀ r s : R, v r ≤ v s ↔ ineq r s}
+variables (R : Type u₁) [comm_ring R] [decidable_eq R]
 
-namespace Spv 
+structure Valuation (R : Type u₁) [comm_ring R] :=
+(Γ   : Type u₁)
+(grp : linear_ordered_comm_group Γ)
+(val : @valuation R _ Γ grp)
 
-variables {R : Type u₁} [comm_ring R] [decidable_eq R] 
-variables {Γ : Type u₂} [linear_ordered_comm_group Γ]
+namespace Valuation
+
+instance : has_coe_to_fun (Valuation R) :=
+{ F := λ v, R → with_zero v.Γ, coe := λ v, v.val.val }
+
+instance linear_ordered_value_group {v : Valuation R} : linear_ordered_comm_group v.Γ := v.grp
+
+end Valuation
+
+instance Spv.setoid : setoid (Valuation R) :=
+{ r := λ v₁ v₂, ∀ r s, v₁ r ≤ v₁ s ↔ v₂ r ≤ v₂ s,
+  iseqv := begin
+    split,
+    { intros v r s, refl },
+    split,
+    { intros v₁ v₂ h r s, symmetry, exact h r s },
+    { intros v₁ v₂ v₃ h₁ h₂ r s,
+      exact iff.trans (h₁ r s) (h₂ r s) }
+  end }
+
+definition Spv := quotient (Spv.setoid R)
+-- {ineq : R → R → Prop // ∃ {Γ : Type u₁} [linear_ordered_comm_group Γ],
+--   by exactI ∃ (v : valuation R Γ), ∀ r s : R, v r ≤ v s ↔ ineq r s}
+
+namespace Spv
+
+variables {R} {Γ : Type u₂} [linear_ordered_comm_group Γ]
 
 definition mk (v : valuation R Γ) : Spv R :=
-⟨λ r s, v r ≤ v s,
-  ⟨(minimal_value_group v).Γ,
-    ⟨minimal_value_group.linear_ordered_comm_group v,
-      ⟨v.minimal_valuation, v.minimal_valuation_equiv⟩⟩⟩⟩
+quotient.mk
+{ Γ  := (minimal_value_group v).Γ,
+  grp := minimal_value_group.linear_ordered_comm_group v,
+  val := v.minimal_valuation }
+
+definition lift {β : Type u₃} (f : Valuation R → β) (H : ∀ v₁ v₂ : Valuation R, v₁ ≈ v₂ → f v₁ = f v₂) :
+Spv R → β := quotient.lift f H
+
+definition ind {f : Spv R → Prop} (H : ∀ v, f ⟦v⟧) : ∀ v : Spv R, f v := quotient.ind H
 
 end Spv 
 
@@ -66,12 +97,19 @@ end
 
 namespace Spv 
 
-variables {A : Type*} [comm_ring A]
+variables {A : Type u₁} [comm_ring A] [decidable_eq A]
 
-definition basic_open (r s : A) : set (Spv A) := 
-{v | v.val r s ∧ ¬ v.val s 0}
+definition basic_open (r s : A) : set (Spv A) :=
+Spv.lift (λ v : Valuation A, v r ≤ v s ∧ ¬ v s ≤ v 0) (λ v₁ v₂ h,
+begin
+  ext,
+  dsimp [valuation.is_equiv] at h,
+  split; intro; split; rw h at *;
+  try {exact a.left}; try {exact a.right},
+  rw h at *, exact a.right
+end)
 
-instance (A : Type*) [comm_ring A] : topological_space (Spv A) :=
+instance : topological_space (Spv A) :=
 topological_space.generate_from {U : set (Spv A) | ∃ r s : A, U = basic_open r s}
 
 end Spv 
