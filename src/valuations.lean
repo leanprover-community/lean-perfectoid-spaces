@@ -1,77 +1,8 @@
-/- quotes from mathlib (mostly Mario) (all 2018)
-
-Jul03
-
-class is_valuation {α : Type} [linear_ordered_comm_group α]
-  {R : Type} [comm_ring R] (f : R → option α) : Prop :=
-(map_zero : f 0 = 0)
-(map_one  : f 1 = 1)
-(map_mul  : ∀ x y, f (x * y) = f x * f y)
-(map_add  : ∀ x y, f (x + y) ≤ f x ∨ f (x + y) ≤ f y)
-
-namespace is_valuation 
-
-...
-
-structure valuation (R : Type) [comm_ring R] (α : Type) [Hα : linear_ordered_comm_group α] :=
-(f : R → option α)
-(Hf : is_valuation f)
-
-...
-
-**All Jul03**
-
-MC: What's wrong, again, with defining Spv as the collection of all valuation relations?
-KB: All proofs need an actual valuation
-MC: You can define your own version of quot.lift and quot.mk that take valuations
-MC: valuation functions that is
-[quot.lift is the statement that if I have a function on valuations which is constant
-on equiv classes then I can produce a function on Spv]
-MC: You only use the relations as inhabitants of the type so that the universe isn't pushed up,
-    but all the work uses functions
-MC: You will need to prove the computation rule, so it won't be definitional, but otherwise it
-    should work smoothly if your API is solid
-MC: No equivalence class needed either
-MC: quot.mk takes a valuation function and produces an element of Spv
-MC: quot.lift takes a function defined on valuation functions and produces a function defined on Spv
-KB: So what about proofs which go "Spv(R) is compact. Proof: take an element of Spv(R), call it v or
-    f or whatever, and now manipulate f in the following way..."
-MC: That's quot.lift
-MC: Actually you will want quot.ind as well
-["any subset of the quotient type containing the image of quot.mk is everything"]
-or equivalently quot.exists_rep
-[lemma exists_rep {α : Sort u} {r : α → α → Prop} (q : quot r) : ∃ a : α, (quot.mk r a) = q :=
-]
-MC: that is, for every element of Spv there is a valuation function that quot.mk's to it
-MC: Note it's not actually a function producing valuation functions, it's an exists
-MC: if you prove analogues of those theorems for your type, then you have constructed the
-    quotient up to isomorphism
-MC: This all has a category theoretic interpretation as a coequalizer, and all constructions
-    are natural in that category
-MC: As opposed to, say, quot.out, which picks an element from an equivalence class
-MC: Although in your case if I understand correctly you also have a canonical way to define quot.out
-    satisfying some other universal property to do with the ordered group
-    where the valuation and ring have to share the same universe.
-    You can prove that the universe need not be the same as part of the universal properties
-    i.e. Spv.mk takes as input a valuation function  (v : valuation R A) where {R : Type u} and
-    {A : Type v} (so it isn't just instantiating the exists)
-KB: "If you want to be polymorphic" -- I just want to do maths. I have no idea if I want to be polymorphic.
-     If I just want to define a perfectoid space, do I want to be polymorphic?
-MC : In lean, you should usually be polymorphic
-     at least in contravariant positions (i.e. the inputs should be maximally polymorphic, the output should
-      be minimally polymorphic)
-     This is why we don't have nat : Type u
-     The general rule is to keep types out of classes if at all possible. Lean behaves better when the
-     types are given as "alpha" rather than "the type inside v", particularly if you start manipulating
-     the functions (adding them, say).
-     It is the same things that make the difference between bundled vs unbundled groups. When
-     working "internally", i.e. calculations using the monoid structure, it is better for the type
-     to be exposed as a variable
--/
-
 import algebra.group_power
 import set_theory.cardinal
 import ring_theory.ideals
+import data.finsupp
+import group_theory.quotient_group
 import tactic.tidy
 import for_mathlib.ideals
 import for_mathlib.linear_ordered_comm_group
@@ -131,6 +62,72 @@ begin
   replace h3 := eq.symm (option.some.inj h3),
   have h4 : x^2 = 1 := by simpa [pow_two] using h3,
   exact linear_ordered_comm_group.eq_one_of_pow_eq_one h4
+end
+
+section
+
+variables {Γ₁ : Type u₂} [linear_ordered_comm_group Γ₁]
+variables {Γ₂ : Type u₃} [linear_ordered_comm_group Γ₂] 
+variables {v₁ : R → with_zero Γ₁} {v₂ : R → with_zero Γ₂}
+variables {ψ : Γ₁ → Γ₂}
+variables (H12 : ∀ r, with_zero.map ψ (v₁ r) = v₂ r)
+variables (Hle : ∀ g h : Γ₁, g ≤ h ↔ ψ g ≤ ψ h)
+include H12 Hle
+
+theorem le_of_le (r s : R) : v₁ r ≤ v₁ s ↔ v₂ r ≤ v₂ s :=
+begin
+  rw ←H12 r, rw ←H12 s,
+  cases hr : (v₁ r) with g;
+  cases hs : (v₁ s) with h; try {simp},
+  exact Hle g h
+end 
+
+theorem valuation_of_valuation [is_group_hom ψ]
+  (Hiψ : function.injective ψ)
+  (H : is_valuation v₂) :
+is_valuation v₁ :=
+{ map_zero := begin
+    show v₁ 0 = 0,
+    have H0 : v₂ 0 = 0 := H.map_zero,
+    rw ←H12 0 at H0,
+    change with_zero.map ψ (v₁ 0) = 0 at H0,
+    cases h : v₁ 0, refl,
+    exfalso,
+    rw h at H0,
+    revert H0,
+    exact dec_trivial
+  end,
+map_one := begin
+    show v₁ 1 = 1,
+    have H0 : v₂ 1 = 1 := H.map_one,
+    rw ←H12 1 at H0,
+    cases h : v₁ 1,
+    { change v₁ 1 = 0 at h, rw h at H0,
+      simpa only [with_zero.map_zero] using H0 },
+    { rw h at H0,
+      change some (ψ val) = some 1 at H0,
+      congr,
+      apply Hiψ,
+      rw [option.some_inj.1 H0, is_group_hom.one ψ] }
+  end,
+map_mul := begin
+    intros r s,
+    apply with_zero.map_inj Hiψ,
+    rw [H12 (r * s), H.map_mul, ←H12 r, ←H12 s],
+    symmetry,
+    exact with_zero.map_mul _ _ _,
+  end,
+map_add := begin
+    intros r s,
+    cases is_valuation.map_add v₂ r s,
+    { left,
+      rw [←H12 r, ←H12 (r+s)] at h,
+      rwa with_zero.map_le Hle },
+    { right,
+      rw [←H12 s, ←H12 (r+s)] at h,
+      rwa with_zero.map_le Hle }
+  end }
+
 end
 
 def map {S : Type u₃} [comm_ring S] (f : S → R) [is_ring_hom f] : valuation S Γ :=
@@ -219,3 +216,188 @@ instance valutaion.group_v (v : R → with_zero Γ) [is_valuation v] : group (va
   @subtype.group _ _ (value_group_v v) (group.closure.is_subgroup {a : Γ | ∃ r : R, v r = some a})
 
 end valuation
+
+namespace valuation
+open quotient_group
+
+variables {R : Type u₁} [comm_ring R] [decidable_eq R]
+
+structure minimal_valuation.parametrized_subgroup (Γ₂ : Type u₂) [linear_ordered_comm_group Γ₂] :=
+(Γ : Type u₁)
+[grp : comm_group Γ]
+(inc : Γ → Γ₂)
+[hom : is_group_hom inc]
+(inj : function.injective inc)
+
+local attribute [instance] parametrized_subgroup.grp
+local attribute [instance] parametrized_subgroup.hom
+
+variables  {Γ₂ : Type u₂} [linear_ordered_comm_group Γ₂]
+variables (v₂ : valuation R  Γ₂)
+
+set_option class.instance_max_depth 41
+include R v₂
+def minimal_value_group : minimal_valuation.parametrized_subgroup Γ₂ :=
+begin
+  let FG : Type u₁ := multiplicative (R →₀ ℤ), -- free ab group on R
+  let φ₀ : R → Γ₂ := λ r, option.get_or_else (v₂ r) 1,
+  let φ : FG → Γ₂ := λ f, finsupp.prod f (λ r n,(φ₀ r) ^ n),
+  haveI : is_group_hom φ := 
+    ⟨λ a b, finsupp.prod_add_index (λ a, rfl) (λ a b₁ b₂, gpow_add (φ₀ a) b₁ b₂)⟩,
+  
+  exact
+  { Γ     :=  quotient (is_group_hom.ker φ),
+    inc   :=  lift (is_group_hom.ker φ) φ (λ _,(is_group_hom.mem_ker φ).1),
+    hom   := quotient_group.is_group_hom_quotient_lift _ _ _,
+    inj   := injective_ker_lift φ }
+end
+
+namespace minimal_value_group
+
+def mk (r : R) : (minimal_value_group v₂).Γ :=
+begin
+  let FG : Type u₁ := multiplicative (R →₀ ℤ), -- free ab group on R
+  let φ₀ : R → Γ₂ := λ r, option.get_or_else (v₂ r) 1,
+  let φ : FG → Γ₂ := λ f, finsupp.prod f (λ r n,(φ₀ r) ^ n),
+  haveI : is_group_hom φ := 
+    ⟨λ a b, finsupp.prod_add_index (λ a, rfl) (λ a b₁ b₂, gpow_add (φ₀ a) b₁ b₂)⟩,
+
+  exact quotient_group.mk (finsupp.single r (1 : ℤ))
+end
+
+lemma mk_some {r : R} {g : Γ₂} (h : v₂ r = some g) : 
+  v₂ r = some ((minimal_value_group v₂).inc (mk v₂ r)) :=
+begin
+  rw h,
+  congr' 1,
+  dsimp[minimal_value_group, minimal_value_group.mk],
+  rw finsupp.prod_single_index ; finish
+end
+
+instance : linear_ordered_comm_group (minimal_value_group v₂).Γ :=
+begin
+  cases minimal_value_group v₂ with Γ₁ _ ψ _ inj,
+  
+  letI Γ₁linord : linear_order Γ₁ := 
+  { le := λ g h, ψ g ≤ ψ h,
+    le_refl := λ _, le_refl _,
+    le_trans := λ _ _ _ hab hbc, le_trans hab hbc,
+    le_antisymm := λ g h Hgh Hhg, inj $ le_antisymm Hgh Hhg,
+    le_total := λ g h, le_total _ _ },
+  exact ⟨λ a b H c,
+    begin
+      change ψ (c * a) ≤ ψ (c * b),
+      rw [is_group_hom.mul ψ c b, is_group_hom.mul ψ c a],
+      exact linear_ordered_comm_group.mul_le_mul_left H _,
+    end⟩
+end
+
+end minimal_value_group
+
+definition minimal_valuation.val (r : R) : with_zero ((minimal_value_group v₂).Γ) :=
+match v₂ r with 
+| some _ := some (minimal_value_group.mk v₂ r)
+| 0 := 0
+end
+
+namespace minimal_valuation
+
+@[simp] lemma zero {r} (h : v₂ r = 0) : val v₂ r = 0 :=
+by simp [val, h]
+
+lemma some {r} {g} (h : v₂ r = some g) : val v₂ r = some (minimal_value_group.mk v₂ r) :=
+by simp [val, h]
+
+lemma map (r : R) :
+with_zero.map (minimal_value_group v₂).inc (val v₂ r) = v₂ r :=
+begin
+  destruct (v₂ r),
+  { intro h, change v₂ r = 0 at h,
+    simp [zero v₂ h, h], },
+  { intros g h,
+    rw [minimal_value_group.mk_some v₂ h, some v₂ h, with_zero.map_some] },
+end
+
+end minimal_valuation
+
+def minimal_valuation : valuation R (minimal_value_group v₂).Γ :=
+{ val := minimal_valuation.val v₂,
+  property := let Γ₁ := minimal_value_group v₂ in
+    valuation_of_valuation (minimal_valuation.map v₂) (λ g h, iff.refl _) Γ₁.inj (v₂.property) }
+
+def minimal_valuation_equiv (r s : R) : (v₂.minimal_valuation :
+valuation R (minimal_value_group v₂).Γ) r ≤ (v₂.minimal_valuation : valuation R (minimal_value_group v₂).Γ) s ↔ v₂ r ≤ v₂ s :=
+le_of_le (minimal_valuation.map v₂) (λ g h, iff.refl _) r s
+
+end valuation
+
+/- quotes from mathlib (mostly Mario) (all 2018)
+
+Jul03
+
+class is_valuation {α : Type} [linear_ordered_comm_group α]
+  {R : Type} [comm_ring R] (f : R → option α) : Prop :=
+(map_zero : f 0 = 0)
+(map_one  : f 1 = 1)
+(map_mul  : ∀ x y, f (x * y) = f x * f y)
+(map_add  : ∀ x y, f (x + y) ≤ f x ∨ f (x + y) ≤ f y)
+
+namespace is_valuation 
+
+...
+
+structure valuation (R : Type) [comm_ring R] (α : Type) [Hα : linear_ordered_comm_group α] :=
+(f : R → option α)
+(Hf : is_valuation f)
+
+...
+
+**All Jul03**
+
+MC: What's wrong, again, with defining Spv as the collection of all valuation relations?
+KB: All proofs need an actual valuation
+MC: You can define your own version of quot.lift and quot.mk that take valuations
+MC: valuation functions that is
+[quot.lift is the statement that if I have a function on valuations which is constant
+on equiv classes then I can produce a function on Spv]
+MC: You only use the relations as inhabitants of the type so that the universe isn't pushed up,
+    but all the work uses functions
+MC: You will need to prove the computation rule, so it won't be definitional, but otherwise it
+    should work smoothly if your API is solid
+MC: No equivalence class needed either
+MC: quot.mk takes a valuation function and produces an element of Spv
+MC: quot.lift takes a function defined on valuation functions and produces a function defined on Spv
+KB: So what about proofs which go "Spv(R) is compact. Proof: take an element of Spv(R), call it v or
+    f or whatever, and now manipulate f in the following way..."
+MC: That's quot.lift
+MC: Actually you will want quot.ind as well
+["any subset of the quotient type containing the image of quot.mk is everything"]
+or equivalently quot.exists_rep
+[lemma exists_rep {α : Sort u} {r : α → α → Prop} (q : quot r) : ∃ a : α, (quot.mk r a) = q :=
+]
+MC: that is, for every element of Spv there is a valuation function that quot.mk's to it
+MC: Note it's not actually a function producing valuation functions, it's an exists
+MC: if you prove analogues of those theorems for your type, then you have constructed the
+    quotient up to isomorphism
+MC: This all has a category theoretic interpretation as a coequalizer, and all constructions
+    are natural in that category
+MC: As opposed to, say, quot.out, which picks an element from an equivalence class
+MC: Although in your case if I understand correctly you also have a canonical way to define quot.out
+    satisfying some other universal property to do with the ordered group
+    where the valuation and ring have to share the same universe.
+    You can prove that the universe need not be the same as part of the universal properties
+    i.e. Spv.mk takes as input a valuation function  (v : valuation R A) where {R : Type u} and
+    {A : Type v} (so it isn't just instantiating the exists)
+KB: "If you want to be polymorphic" -- I just want to do maths. I have no idea if I want to be polymorphic.
+     If I just want to define a perfectoid space, do I want to be polymorphic?
+MC : In lean, you should usually be polymorphic
+     at least in contravariant positions (i.e. the inputs should be maximally polymorphic, the output should
+      be minimally polymorphic)
+     This is why we don't have nat : Type u
+     The general rule is to keep types out of classes if at all possible. Lean behaves better when the
+     types are given as "alpha" rather than "the type inside v", particularly if you start manipulating
+     the functions (adding them, say).
+     It is the same things that make the difference between bundled vs unbundled groups. When
+     working "internally", i.e. calculations using the monoid structure, it is better for the type
+     to be exposed as a variable
+-/
