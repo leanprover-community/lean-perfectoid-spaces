@@ -67,37 +67,32 @@ definition mk (v : Valuation R) : Spv R := ⟨λ r s, v r ≤ v s, ⟨v, λ _ _,
 
 definition mk' {Γ : Type u₂} [linear_ordered_comm_group Γ] (v : valuation R Γ) : Spv R := mk (Valuation.of_valuation v)
 
+noncomputable definition out (v : Spv R) : Valuation R :=
+subtype.cases_on v (λ ineq hv, classical.rec_on hv (λ v h, v))
+
 noncomputable definition lift {β : Type u₃}
-(f : Valuation R → β) (H : ∀ v₁ v₂ : Valuation R, v₁ ≈ v₂ → f v₁ = f v₂) (ineq : Spv R) : β :=
-subtype.cases_on ineq (λ ineq hv, classical.rec_on hv (λ v h, f v))
+(f : Valuation R → β) (H : ∀ v₁ v₂ : Valuation R, v₁ ≈ v₂ → f v₁ = f v₂) : Spv R → β :=
+f ∘ out
 
-def exists_rep (ineq : Spv R) : ∃ v : Valuation R, mk v = ineq :=
+lemma out_mk {v : Valuation R} : out (mk v) ≈ v := classical.some_spec (mk v).property
+
+@[simp] lemma mk_out {v : Spv R} : mk (out v) = v :=
 begin
-  cases ineq with ineq hv,
-  refine classical.rec_on hv (λ v h, _),
-  existsi v,
+  cases v with ineq hv,
   rw subtype.ext,
-  dsimp [mk],
-  ext, exact h _ _
-end
-
-definition ind {f : Spv R → Prop} (H : ∀ v, f (mk v)) : ∀ v, f v :=
-begin
-  intro ineq,
-  refine classical.rec_on (exists_rep ineq) (λ v h', _),
-  subst h', exact H v
+  ext,
+  exact classical.some_spec hv _ _
 end
 
 lemma lift_mk {β : Type u₃} {f : Valuation R → β} {H : ∀ v₁ v₂ : Valuation R, v₁ ≈ v₂ → f v₁ = f v₂} (v : Valuation R) :
-lift f H (mk v) = f v :=
-begin
-  let ineq := mk v,
-  have spec := classical.some_spec (mk v).property,
-  refine H _ _ _,
-  intros r s,
-  dsimp [mk] at spec,
-  exact spec r s
-end
+lift f H (mk v) = f v := H _ _ out_mk
+
+lemma exists_rep (v : Spv R) : ∃ v' : Valuation R, mk v' = v := ⟨out v, mk_out⟩
+
+lemma ind {f : Spv R → Prop} (H : ∀ v, f (mk v)) : ∀ v, f v :=
+λ v, by simpa using H (out v)
+
+noncomputable instance : has_coe (Spv R) (Valuation R) := ⟨out⟩
 
 end Spv 
 

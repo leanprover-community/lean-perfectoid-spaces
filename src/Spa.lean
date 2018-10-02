@@ -9,38 +9,16 @@ open set
 
 -- Wedhorn def 7.23.
 definition Spa (A : Huber_pair) : set (Spv A) :=
-Spv.lift (λ v : Valuation A, v.is_continuous ∧ ∀ r, r ∈ A⁺ → v r ≤ 1)
-(λ v₁ v₂ heq,
-begin
-  ext, split; intro; split,
-  { exact Valuation.is_continuous_of_equiv_is_continuous heq a.left },
-  { rw ← v₁.val.map_one at a,
-    rw ← v₂.val.map_one,
-    intros r h,
-    exact (heq r 1).mp (a.right r h) },
-  { exact Valuation.is_continuous_of_equiv_is_continuous (setoid.symm heq) a.left },
-  { rw ← v₁.val.map_one,
-    rw ← v₂.val.map_one at a,
-    intros r h,
-    exact (heq r 1).mpr (a.right r h) },
-end)
+{v | (v : Valuation A).is_continuous ∧ ∀ r, r ∈ A⁺ → v r ≤ 1}
 
 namespace Spa
 
 variable {A : Huber_pair}
 
-/-- basic open corresponding to r, s is v : v(r) <= v(s) and v(s) isn't 0 ( = v(0) ) -/
-definition basic_open {A : Huber_pair} (r s : A) : set (Spa A) :=
-Spv.lift (λ v : Valuation A, v r ≤ v s ∧ v s ≠ 0)
-(λ v₁ v₂ heq,
-begin
-  ext, split; intro; split,
-  { exact (heq r s).mp a.left },
-  { exact Valuation.ne_zero_of_equiv_ne_zero heq a.right },
-  { exact (heq r s).mpr a.left },
-  { exact Valuation.ne_zero_of_equiv_ne_zero (setoid.symm heq) a.right }
-end)
-∘ subtype.val
+instance : has_coe (Spa A) (Spv A) := ⟨subtype.val⟩
+
+definition basic_open (r s : A) : set (Spa A) :=
+{v | v r ≤ v s ∧ v s ≠ 0 }
 
 instance (A : Huber_pair) : topological_space (Spa A) :=
 topological_space.generate_from {U : set (Spa A) | ∃ r s : A, U = basic_open r s}
@@ -48,31 +26,22 @@ topological_space.generate_from {U : set (Spa A) | ∃ r s : A, U = basic_open r
 lemma basic_open.is_open {A : Huber_pair} (r s : A) : is_open (basic_open r s) :=
 topological_space.generate_open.basic (basic_open r s) ⟨r, ⟨s, rfl⟩⟩
 
-lemma basic_open_eq {A : Huber_pair} (s : A) : basic_open s s = {vs | ¬ vs.val.val s 0} :=
-begin
-  ext vs,
-  split,
-  { intro h,
-    exact h.2 },
-  { intro h,
-    split, swap, exact h,
-    rcases vs.val.property with ⟨Γ, ⟨inst, ⟨v, H⟩⟩⟩,
-    simp [H] }
-end
+lemma basic_open_eq {A : Huber_pair} (s : A) : basic_open s s = {v | v s ≠ 0} :=
+set.ext $ λ v, ⟨λ h, h.right, λ h, ⟨le_refl _, h⟩⟩
 
 -- should only be applied with (HfinT : fintype T) and (Hopen: is_open (span T))
 definition rational_open {A : Huber_pair} (s : A) (T : set A) : set (Spa A) :=
-{vs | (∀ t ∈ T, (vs.val.val t s)) ∧ (¬ vs.val.val s 0)}
+{v | (∀ t ∈ T, (v t ≤ v s)) ∧ (v s ≠ 0)}
 
 definition rational_open_Inter {A : Huber_pair} (s : A) (T : set A) :
-rational_open s T = (set.Inter (λ (t : T), basic_open t s)) ∩ {vs | ¬ vs.val.val s 0} :=
-set.ext $ λ vs, ⟨λ H, ⟨set.mem_Inter.2 $ λ t,⟨H.left _ t.property,H.right⟩,H.right⟩,
-  λ ⟨H1,H2⟩,⟨λ t ht,(set.mem_Inter.1 H1 ⟨t, ht⟩).1,H2⟩⟩
+rational_open s T = (set.Inter (λ (t : T), basic_open t s)) ∩ {v | v s ≠ 0} :=
+set.ext $ λ v, ⟨λ ⟨H1, H2⟩, ⟨set.mem_Inter.2 $ λ t, ⟨H1 _ t.property, H2⟩, H2⟩,
+  λ ⟨H1, H2⟩, ⟨λ t ht, (set.mem_Inter.1 H1 ⟨t, ht⟩).1, H2⟩⟩
 
 lemma rational_open_add_s {A : Huber_pair} (s : A.R) (T : set A.R) :
 rational_open s T = rational_open s (insert s T) :=
-set.ext $ λ ⟨⟨r,Γ,HΓ,v,Hv⟩,_,_⟩, 
-⟨ λ ⟨H1, H2⟩, ⟨λ t Ht, or.rec_on Ht (λ H, begin rw H, show r s s, rw Hv s s, end) (H1 t), H2⟩,
+set.ext $ λ v,
+⟨ λ ⟨H1, H2⟩, ⟨λ t Ht, or.rec_on Ht (λ H, by rw H; exact le_refl _) (H1 t), H2⟩,
   λ ⟨H1, H2⟩, ⟨λ t Ht, H1 t $ set.mem_insert_of_mem _ Ht,H2⟩⟩
 
 lemma rational_open.is_open {A : Huber_pair} (s : A) (T : set A) (HfinT : fintype T) :
