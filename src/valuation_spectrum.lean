@@ -2,168 +2,109 @@ import valuations
 import analysis.topology.topological_space
 import data.finsupp
 import group_theory.quotient_group
-import valuation_universe 
 
-universes u u1 u2
+universes u₁ u₂ u₃
 
-open valuation quotient_group
+local attribute [instance] classical.prop_decidable
 
-definition Spv (R : Type u) [comm_ring R] := 
-{ineq : R → R → Prop // ∃ (Γ : Type u) [linear_ordered_comm_group Γ],
-  by exactI ∃ (v : valuation R Γ), ∀ r s : R, ineq r s ↔ v r ≤ v s}
+variables {R : Type u₁} [comm_ring R] [decidable_eq R]
 
-namespace Spv 
+structure Valuation (R : Type u₁) [comm_ring R] :=
+(Γ   : Type u₁)
+(grp : linear_ordered_comm_group Γ)
+(val : @valuation R _ Γ grp)
 
-set_option class.instance_max_depth 41
+namespace Valuation
+open valuation
 
--- decidable equality on R to make the finsupp an add_comm_group?!
+instance : has_coe_to_fun (Valuation R) :=
+{ F := λ v, R → with_zero v.Γ, coe := λ v, v.val.val }
 
-/-
-theorem value_group_universe (R : Type u1) [comm_ring R] [decidable_eq R] (Γ2 : Type u2) [linear_ordered_comm_group Γ2]
-  (f2 : R → option Γ2) (Hf2 : is_valuation f2) : 
-∃ (Γ1 : Type u1) [linear_ordered_comm_group Γ1], by exactI ∃ (f1 : R → option Γ1) (Hf1 : is_valuation f1),
-  (∀ r s : R, f1 r ≤ f1 s ↔ f2 r ≤ f2 s) ∧ value_group_f f1 = set.univ := 
--/
-variables {R : Type u1} [comm_ring R] [decidable_eq R] 
-  (Γ2 : Type u2) [linear_ordered_comm_group Γ2]
-  (f2 : R → option Γ2) [is_valuation f2]
-include Γ2
+instance linear_ordered_value_group {v : Valuation R} : linear_ordered_comm_group v.Γ := v.grp
 
-structure parametrized_subgroup :=
-(Γ : Type u1)
-[grp : comm_group Γ]
-(map : Γ → Γ2)
-(hom : is_group_hom map)
-(inj : function.injective map)
+def of_valuation {Γ : Type u₂} [linear_ordered_comm_group Γ] (v : valuation R Γ) : Valuation R :=
+{ Γ   := (minimal_value_group v).Γ,
+  grp := minimal_value_group.linear_ordered_comm_group v,
+  val := v.minimal_valuation }
 
-local attribute [instance] parametrized_subgroup.grp
-local attribute [instance] parametrized_subgroup.hom
+section
+variables (R)
 
-variable {Γ2}
-include R f2 
+instance : setoid (Valuation R) :=
+{ r := λ v₁ v₂, ∀ r s, v₁ r ≤ v₁ s ↔ v₂ r ≤ v₂ s,
+  iseqv := begin
+    split,
+    { intros v r s, refl },
+    split,
+    { intros v₁ v₂ h r s, symmetry, exact h r s },
+    { intros v₁ v₂ v₃ h₁ h₂ r s,
+      exact iff.trans (h₁ r s) (h₂ r s) }
+  end }
 
-def minimal_value_group : parametrized_subgroup Γ2 :=
+end
+
+lemma ne_zero_of_equiv_ne_zero {Γ₁ : Type u₂} [linear_ordered_comm_group Γ₁] {Γ₂ : Type u₃} [linear_ordered_comm_group Γ₂]
+{v₁ : valuation R Γ₁} {v₂ : valuation R Γ₂} {r : R} (heq : valuation.is_equiv v₁ v₂) (H : v₁ r ≠ 0) : v₂ r ≠ 0 :=
 begin
-  let FG : Type u1 := multiplicative (R →₀ ℤ), -- free ab group on R
-  let φ₀ : R → Γ2 := λ r, option.get_or_else (f2 r) 1,
-  let φ : FG → Γ2 := λ f, finsupp.prod f (λ r n,(φ₀ r) ^ n),
-  haveI : is_group_hom φ := 
-    ⟨λ a b, finsupp.prod_add_index (λ a, rfl) (λ a b₁ b₂, gpow_add (φ₀ a) b₁ b₂)⟩,
-  
-  exact
-  { Γ :=  quotient (is_group_hom.ker φ),
-    map   :=  lift (is_group_hom.ker φ) φ (λ _,(is_group_hom.mem_ker φ).1),
-    hom   := quotient_group.is_group_hom_quotient_lift _ _ _,
-    inj   := injective_ker_lift φ }
+  intro h,
+  rw [eq_zero_iff_le_zero, ← heq r 0, ← eq_zero_iff_le_zero] at h,
+  exact H h
 end
 
-def minimal_value_group.mk (r : R) : (minimal_value_group f2).Γ :=
+end Valuation
+
+section
+variables (R)
+
+definition Spv := {ineq : R → R → Prop // ∃ (v : Valuation R), ∀ r s : R, v r ≤ v s ↔ ineq r s}
+
+end
+
+namespace Spv
+open valuation
+
+definition mk (v : Valuation R) : Spv R := ⟨λ r s, v r ≤ v s, ⟨v, λ _ _, iff.rfl⟩⟩
+
+definition mk' {Γ : Type u₂} [linear_ordered_comm_group Γ] (v : valuation R Γ) : Spv R := mk (Valuation.of_valuation v)
+
+noncomputable definition out (v : Spv R) : Valuation R :=
+subtype.cases_on v (λ ineq hv, classical.rec_on hv (λ v h, v))
+
+noncomputable definition lift {β : Type u₃}
+(f : Valuation R → β) (H : ∀ v₁ v₂ : Valuation R, v₁ ≈ v₂ → f v₁ = f v₂) : Spv R → β :=
+f ∘ out
+
+lemma out_mk {v : Valuation R} : out (mk v) ≈ v := classical.some_spec (mk v).property
+
+@[simp] lemma mk_out {v : Spv R} : mk (out v) = v :=
 begin
-  let FG : Type u1 := multiplicative (R →₀ ℤ), -- free ab group on R
-  let φ₀ : R → Γ2 := λ r, option.get_or_else (f2 r) 1,
-  let φ : FG → Γ2 := λ f, finsupp.prod f (λ r n,(φ₀ r) ^ n),
-  haveI : is_group_hom φ := 
-    ⟨λ a b, finsupp.prod_add_index (λ a, rfl) (λ a b₁ b₂, gpow_add (φ₀ a) b₁ b₂)⟩,
-
- exact quotient_group.mk (finsupp.single r (1 : ℤ))
+  cases v with ineq hv,
+  rw subtype.ext,
+  ext,
+  exact classical.some_spec hv _ _
 end
 
-lemma minimal_value_group.mk_some {r : R} {g : Γ2} (h : f2 r = some g) : 
-  f2 r = some ((minimal_value_group f2).map (minimal_value_group.mk f2 r)) :=
+lemma lift_mk {β : Type u₃} {f : Valuation R → β} {H : ∀ v₁ v₂ : Valuation R, v₁ ≈ v₂ → f v₁ = f v₂} (v : Valuation R) :
+lift f H (mk v) = f v := H _ _ out_mk
+
+lemma exists_rep (v : Spv R) : ∃ v' : Valuation R, mk v' = v := ⟨out v, mk_out⟩
+
+lemma ind {f : Spv R → Prop} (H : ∀ v, f (mk v)) : ∀ v, f v :=
+λ v, by simpa using H (out v)
+
+lemma sound {v₁ v₂ : Valuation R} (heq : v₁ ≈ v₂) : mk v₁ = mk v₂ :=
 begin
-  rw h,
-  congr' 1,
-  dsimp[minimal_value_group, minimal_value_group.mk],
-  rw finsupp.prod_single_index ; finish
+  rw subtype.ext,
+  funext,
+  ext,
+  exact heq _ _
 end
 
-instance valuation.minimal_value_group_is_linear_ordered_comm_group : 
-linear_ordered_comm_group (minimal_value_group f2).Γ :=
-begin
-  cases minimal_value_group f2 with Γ1 _ ψ _ inj,
-  
-  letI Γ1linord : linear_order Γ1 := 
-  { le := λ g h,ψ g ≤ ψ h,
-    le_refl := λ _,le_refl _,
-    le_trans := λ _ _ _ hab hbc,le_trans hab hbc,
-    le_antisymm := λ g h Hgh Hhg, inj $ le_antisymm Hgh Hhg,
-    le_total := λ g h, le_total _ _ },
-  exact ⟨λ a b H c,
-    begin 
-      change ψ (c * a) ≤ ψ (c * b),
-      rw [is_group_hom.mul ψ c b, is_group_hom.mul ψ c a],
-      exact linear_ordered_comm_group.mul_le_mul_left H _,
-    end⟩
-end
-
-definition valuation.minimal_valuation (r : R) : option ((minimal_value_group f2).Γ) :=
-match f2 r with 
-| some g := some (minimal_value_group.mk f2 r)
-| none := none
-end
-
-lemma valuation.minimal_valuation_none {r : R} (h : f2 r = none) : valuation.minimal_valuation f2 r = none :=
-by simp[valuation.minimal_valuation, h]
-
-lemma valuation.minimal_valuation_some {r : R} {g} (h : f2 r = some g) :
-  valuation.minimal_valuation f2 r = some (minimal_value_group.mk f2 r) :=
-by simp[valuation.minimal_valuation, h]
-
-lemma valuation.minimal_valuation_map (r : R) :
-  option.map (minimal_value_group f2).map (valuation.minimal_valuation f2 r) = f2 r :=
-begin
-  destruct (f2 r),
-  { intro h, 
-    simp[valuation.minimal_valuation_none f2 h, h] },
-  { intros g h,
-    rw [minimal_value_group.mk_some f2 h, valuation.minimal_valuation_some f2 h, option.map_some'] },
-end
-
-instance valuation.minimal_valuation_is_valuation : is_valuation (valuation.minimal_valuation f2) :=
-let f1 := valuation.minimal_valuation f2 in let Γ1 := minimal_value_group f2 in
-  valuation.valuation_of_valuation R f1 f2 Γ1.map
-    Γ1.inj (valuation.minimal_valuation_map f2) (λ g h,iff.refl _) (by apply_instance)
-
-definition valuation.minimal_valuation_equiv (r s : R) :
-  valuation.minimal_valuation f2 r ≤ valuation.minimal_valuation f2 s ↔ f2 r ≤ f2 s :=
-valuation.le_of_le _ _ _ _ (valuation.minimal_valuation_map f2) (λ g h, iff.refl _) r s
-
-
-definition quot.mk : Spv R := ⟨λ r s, f2 r ≤ f2 s,
-  begin
-    let Γ1 := (minimal_value_group f2).Γ,
-    let f1 := valuation.minimal_valuation f2,
-    let v : valuation R Γ1 := { f := f1, ..(valuation.minimal_valuation_is_valuation f2) },
-    existsi [Γ1, valuation.minimal_value_group_is_linear_ordered_comm_group f2, v],
-    intros r s,
-    show _ ↔ f1 r ≤ f1 s,
-    rw valuation.minimal_valuation_equiv f2 r s,
-  end⟩
-
-definition mk (v : valuation R Γ2) : Spv R := quot.mk v.f
+noncomputable instance : has_coe (Spv R) (Valuation R) := ⟨out⟩
 
 end Spv 
 
 -- TODO:
-
--- quot.lift takes a function defined on valuation functions and produces a function defined on Spv
--- quot.ind as well
---or equivalently quot.exists_rep
--- exists_rep {α : Sort u} {r : α → α → Prop} (q : quot r) : ∃ a : α, (quot.mk r a) = q :=
--- that is, for every element of Spv there is a valuation function that quot.mk's to it
--- Note it's not actually a function producing valuation functions, it's an exists
--- if you prove analogues of those theorems for your type, then you have constructed the
---  quotient up to isomorphism
--- This all has a category theoretic interpretation as a coequalizer, and all constructions
---  are natural in that category
--- As opposed to, say, quot.out, which picks an element from an equivalence class
--- Although in your case if I understand correctly you also have a canonical way to define quot.out
---  satisfying some other universal property to do with the ordered group
-
--- **also need to check that continuity is well-defined on Spv R**
--- continuity of an inequality is defined using the minimal Gamma
--- need value_group_f f1 = set.univ
-
 -- Also might need a variant of  Wedhorn 1.27 (ii) -/
 
 /-
@@ -186,12 +127,18 @@ end
 
 namespace Spv 
 
-variables {A : Type*} [comm_ring A]
+variables {A : Type u₁} [comm_ring A] [decidable_eq A]
 
-definition basic_open (r s : A) : set (Spv A) := 
-{v | v.val r s ∧ ¬ v.val s 0}
+definition basic_open (r s : A) : set (Spv A) :=
+{v | v r ≤ v s ∧ v s ≠ 0}
 
-instance (A : Type*) [comm_ring A] : topological_space (Spv A) :=
+lemma mk_mem_basic_open {r s : A} (v : Valuation A) : mk v ∈ basic_open r s ↔ v r ≤ v s ∧ v s ≠ 0 :=
+begin
+  split; intro h,
+  sorry, sorry
+end
+
+instance : topological_space (Spv A) :=
 topological_space.generate_from {U : set (Spv A) | ∃ r s : A, U = basic_open r s}
 
 end Spv 
