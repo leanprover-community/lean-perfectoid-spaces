@@ -96,13 +96,12 @@ begin
 end 
 -/
 
+variable (R)
+@[reducible] def Cont := {v : Spv R | v.is_continuous }
+
+instance Cont.topological_space : topological_space (Cont R) := by apply_instance
+
 end Spv 
-
-def Cont (R : Type) [comm_ring R] [topological_space R] [topological_ring R] [decidable_eq R]
-  := {v : Spv R // Spv.is_continuous v}
-
-instance (R : Type) [comm_ring R] [topological_space R] [topological_ring R] [decidable_eq R] :
-topological_space (Cont R) := by unfold Cont; apply_instance
 
 /-
 Wedhorn p59:

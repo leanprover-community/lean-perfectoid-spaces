@@ -5,11 +5,11 @@ universes u₁ u₂ u₃
 
 local attribute [instance] classical.prop_decidable
 
-open set
+open set Spv
 
 -- Wedhorn def 7.23.
 definition Spa (A : Huber_pair) : set (Spv A) :=
-{v | (v : Valuation A).is_continuous ∧ ∀ r, r ∈ A⁺ → v r ≤ 1}
+{v | (v ∈ Cont A) ∧ ∀ r, r ∈ A⁺ → v r ≤ 1}
 
 namespace Spa
 
