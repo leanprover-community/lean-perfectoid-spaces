@@ -82,9 +82,9 @@ include H12 Hle
 theorem le_of_le (r s : R) : v₁ r ≤ v₁ s ↔ v₂ r ≤ v₂ s :=
 begin
   rw ←H12 r, rw ←H12 s,
-  cases hr : (v₁ r) with g;
-  cases hs : (v₁ s) with h; try {simp},
-  exact Hle g h
+  cases hr : (v₁ r) with g; cases hs : (v₁ s) with h; try {simp},
+  { intro oops, exact option.no_confusion oops },
+  { exact Hle g h }
 end 
 
 theorem valuation_of_valuation [is_group_hom ψ]
