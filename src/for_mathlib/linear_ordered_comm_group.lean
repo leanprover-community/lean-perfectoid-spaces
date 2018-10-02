@@ -167,6 +167,7 @@ function.injective (map f) := option.map_inj H
 begin
   intros x y,
   cases x; cases y; intros; try {simp},
+  { intro oops, exact option.no_confusion oops },
   { exact H x y }
 end
 

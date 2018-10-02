@@ -134,8 +134,11 @@ definition basic_open (r s : A) : set (Spv A) :=
 
 lemma mk_mem_basic_open {r s : A} (v : Valuation A) : mk v ∈ basic_open r s ↔ v r ≤ v s ∧ v s ≠ 0 :=
 begin
-  split; intro h,
-  sorry, sorry
+  split; intro h; split,
+  { exact (out_mk r s).mp h.left },
+  { exact Valuation.ne_zero_of_equiv_ne_zero out_mk h.right },
+  { exact (out_mk r s).mpr h.left },
+  { exact Valuation.ne_zero_of_equiv_ne_zero (setoid.symm out_mk) h.right }
 end
 
 instance : topological_space (Spv A) :=
