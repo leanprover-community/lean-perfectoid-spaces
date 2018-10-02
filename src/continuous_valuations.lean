@@ -41,30 +41,7 @@ namespace Spv
 
 variables {R : Type u₁} [comm_ring R] [topological_space R] [topological_ring R] [decidable_eq R]
 
--- This is a mathematically correct definition of what it means for an equivalence
--- class of valuations to be continuous.
-def is_continuous : Spv R → Prop :=
-Spv.lift (λ v : Valuation R, v.is_continuous)
-(λ v₁ v₂ heq, begin
-ext, split; intro h,
-exact Valuation.is_continuous_of_equiv_is_continuous heq h,
-exact Valuation.is_continuous_of_equiv_is_continuous (setoid.symm heq) h,
-end)
-
---  ∃ (Γ : Type u) [linear_ordered_comm_group Γ],
---   by exactI ∃ (v : valuation R Γ), (∀ r s : R, vs.val r s ↔ v r ≤ v s) ∧ valuation.is_continuous v
-
--- What we unfortunately do not yet have is a proof that this definition is equivalent to the
--- condition that *all* valuations giving rise to `vs` are continuous.
-
 /-
-Proof of the below two theorems needs stuff like Wedhorn 1.27 which we didn't do yet.
-
-theorem continuous_iff_out_continuous {R : Type u} [comm_ring R] [topological_space R]
-  [topological_ring R] [decidable_eq R] {Γ2 : Type v} [linear_ordered_comm_group Γ2]
-  (v : valuation R Γ2): 
-Spv.is_continuous (Spv.mk v) ↔ valuation.function_is_continuous (valuation.minimal_valuation v.f) := sorry
-
 theorem forall_continuous {R : Type*} [comm_ring R] [topological_space R] [topological_ring R]
   (vs : Spv R) : Spv.is_continuous vs ↔ ∀ (Γ : Type*) [linear_ordered_comm_group Γ],
   by exactI ∀ (v : valuation R Γ), (∀ r s : R, vs.val r s ↔ v r ≤ v s) → valuation.is_continuous v :=
@@ -97,7 +74,14 @@ end
 -/
 
 variable (R)
-@[reducible] def Cont := {v : Spv R | v.is_continuous }
+def Cont := {v : Spv R | (v : Valuation R).is_continuous}
+variable {R}
+
+def mk_mem_Cont {v : Valuation R} : mk v ∈ Cont R ↔ v.is_continuous :=
+begin
+split; intro h; refine Valuation.is_continuous_of_equiv_is_continuous _ h,
+exact out_mk, exact (setoid.symm out_mk),
+end
 
 instance Cont.topological_space : topological_space (Cont R) := by apply_instance
 

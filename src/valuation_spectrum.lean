@@ -92,30 +92,19 @@ lemma exists_rep (v : Spv R) : ∃ v' : Valuation R, mk v' = v := ⟨out v, mk_o
 lemma ind {f : Spv R → Prop} (H : ∀ v, f (mk v)) : ∀ v, f v :=
 λ v, by simpa using H (out v)
 
+lemma sound {v₁ v₂ : Valuation R} (heq : v₁ ≈ v₂) : mk v₁ = mk v₂ :=
+begin
+  rw subtype.ext,
+  funext,
+  ext,
+  exact heq _ _
+end
+
 noncomputable instance : has_coe (Spv R) (Valuation R) := ⟨out⟩
 
 end Spv 
 
 -- TODO:
-
--- quot.lift takes a function defined on valuation functions and produces a function defined on Spv
--- quot.ind as well
---or equivalently quot.exists_rep
--- exists_rep {α : Sort u} {r : α → α → Prop} (q : quot r) : ∃ a : α, (quot.mk r a) = q :=
--- that is, for every element of Spv there is a valuation function that quot.mk's to it
--- Note it's not actually a function producing valuation functions, it's an exists
--- if you prove analogues of those theorems for your type, then you have constructed the
---  quotient up to isomorphism
--- This all has a category theoretic interpretation as a coequalizer, and all constructions
---  are natural in that category
--- As opposed to, say, quot.out, which picks an element from an equivalence class
--- Although in your case if I understand correctly you also have a canonical way to define quot.out
---  satisfying some other universal property to do with the ordered group
-
--- **also need to check that continuity is well-defined on Spv R**
--- continuity of an inequality is defined using the minimal Gamma
--- need value_group_f v₁ = set.univ
-
 -- Also might need a variant of  Wedhorn 1.27 (ii) -/
 
 /-
@@ -141,14 +130,13 @@ namespace Spv
 variables {A : Type u₁} [comm_ring A] [decidable_eq A]
 
 definition basic_open (r s : A) : set (Spv A) :=
-Spv.lift (λ v : Valuation A, v r ≤ v s ∧ ¬ v s ≤ v 0) (λ v₁ v₂ h,
+{v | v r ≤ v s ∧ v s ≠ 0}
+
+lemma mk_mem_basic_open {r s : A} (v : Valuation A) : mk v ∈ basic_open r s ↔ v r ≤ v s ∧ v s ≠ 0 :=
 begin
-  ext,
-  dsimp [valuation.is_equiv] at h,
-  split; intro; split; rw h at *;
-  try {exact a.left}; try {exact a.right},
-  rw h at *, exact a.right
-end)
+  split; intro h,
+  sorry, sorry
+end
 
 instance : topological_space (Spv A) :=
 topological_space.generate_from {U : set (Spv A) | ∃ r s : A, U = basic_open r s}
