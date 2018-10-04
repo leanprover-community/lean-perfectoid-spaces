@@ -21,20 +21,8 @@ is_open A₀ ∧ (∃ (J : set A₀) [hJ : is_ideal J] (gen : set A₀), (set.fi
 namespace is_ring_of_definition
 open list
 
--- Wedhorn, lemma 6.1. (i) → (ii)
-lemma tfae_i_to_ii : (∃ U T : set A, T ⊆ U ∧ set.finite T ∧
-(filter.generate {U' : set A | ∃ n : pnat, U' = {x | ∃ y : A, y^(n:ℕ) = x}} = (nhds 0)) ∧
-{y : A | ∃ (t ∈ T) (u ∈ U), y = t * u} = {y : A | ∃ (t ∈ U) (u ∈ U), y = t * u} ∧ 
-{y : A | ∃ (t ∈ U) (u ∈ U), y = t * u} ⊆ U) →
-(∃ (A₀ : set A) [h : is_subring A₀], by haveI := h; exact is_ring_of_definition A₀) :=
-begin
- rintro ⟨U, T, Tsub, Tfin, hnhds, hTU, hU2⟩,
- let W := span U,
- sorry
-end
-
--- Wedhorn, lemma 6.1. (1) → (3)
-lemma tfae_1_to_3 (A₀ : set A) [is_subring A₀] :
+-- Wedhorn, lemma 6.2.
+lemma tfae (A₀ : set A) [is_subring A₀] :
 tfae [is_ring_of_definition A₀, (is_open A₀ ∧ is_adic A₀), (is_open A₀ ∧ is_bounded A₀)] :=
 begin
   tfae_have : 1 → 2,
@@ -79,3 +67,62 @@ class Huber_ring (A : Type u) extends comm_ring A, topological_space A, topologi
 (A₀ : set A)
 [HA₀ : is_subring A₀]
 (A₀_is_ring_of_definition : is_ring_of_definition A₀)
+
+namespace Huber_ring
+
+-- Wedhorn, lemma 6.1.
+lemma tfae : (∃ U T : set A, T ⊆ U ∧ set.finite T ∧
+(filter.generate {U' : set A | ∃ n : pnat, U' = {x | ∃ y ∈ U, y^(n:ℕ) = x}} = (nhds 0)) ∧
+{y : A | ∃ (t ∈ T) (u ∈ U), y = t * u} = {y : A | ∃ (t ∈ U) (u ∈ U), y = t * u} ∧ 
+{y : A | ∃ (t ∈ U) (u ∈ U), y = t * u} ⊆ U) ↔
+(∃ (A₀ : set A) [h : is_subring A₀], by haveI := h; exact is_ring_of_definition A₀) :=
+begin
+  split,
+  { rintro ⟨U, T, Tsub, Tfin, hnhds, hTU, hU2⟩,
+    let W := add_group.closure U,
+    have hU : is_open U,
+    { -- is this provable, or should it have been an assumption?
+      sorry },
+    have hW : is_open W,
+    { sorry },
+    existsi (add_group.closure (W ∪ {1})),
+    split,
+    { split,
+      sorry,
+      sorry },
+    { sorry } },
+  { rintro ⟨A₀, hA₀, A₀_open, J, hJ, gen, hgen, h1, h2⟩,
+    haveI := hA₀,
+    existsi subtype.val '' J,
+    existsi subtype.val '' gen,
+    split,
+    have gensubJ : subtype.val '' gen ⊆ subtype.val '' J,
+    { have : gen ⊆ J,
+      rw ← hgen.right,
+      exact subset_span,
+      rintros x ⟨x₀, hx1, hx2⟩,
+      exact ⟨x₀, this hx1,hx2⟩ },
+    exact gensubJ, -- why is gensubJ now cleared from my context? I want to reuse it !!!
+    have gensubJ : subtype.val '' gen ⊆ subtype.val '' J,
+    { have : gen ⊆ J,
+      rw ← hgen.right,
+      exact subset_span,
+      rintros x ⟨x₀, hx1, hx2⟩,
+      exact ⟨x₀, this hx1,hx2⟩ },
+    split, { exact set.finite_image _ hgen.left },
+    split,
+    { apply le_antisymm,
+      { sorry },
+      { sorry } },
+    split,
+    { ext x, split;
+      rintros ⟨t, ht, u, hu, H⟩,
+      { exact ⟨t, (gensubJ ht), u, hu, H⟩ },
+      sorry },
+    { rintros x ⟨x₀, hx1, hx2⟩,
+      sorry } }
+end
+
+#print set.finite_range
+
+end Huber_ring
