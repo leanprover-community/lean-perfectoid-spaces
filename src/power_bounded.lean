@@ -1,16 +1,13 @@
 import analysis.topology.topological_space
 import analysis.topology.topological_structures
-import for_mathlib.topological_structures
 import algebra.group_power
 import ring_theory.subring
+import for_mathlib.topological_structures
+import for_mathlib.bounded
 
 universe u
 
 variables {R : Type u} [comm_ring R] [topological_space R] [topological_ring R]
-
-/-- Wedhorn Definition 5.27 page 36 -/
-definition is_bounded (B : set R) : Prop :=
-∀ U ∈ (nhds (0 : R)).sets, ∃ V ∈ (nhds (0 : R)).sets, ∀ v ∈ V, ∀ b ∈ B, v*b ∈ U
 
 definition is_power_bounded (r : R) : Prop := is_bounded (powers r)
 
