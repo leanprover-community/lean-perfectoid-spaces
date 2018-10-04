@@ -18,8 +18,44 @@ is_open A₀ ∧ (∃ (J : set A₀) [hJ : is_ideal J] (gen : set A₀), (set.fi
 
 namespace is_ring_of_definition
 
+-- Wedhorn, lemma 6.1. (i) → (ii)
+lemma tfae_i_to_ii : (∃ U T : set A, T ⊆ U ∧ set.finite T ∧
+(filter.generate {U' : set A | ∃ n : pnat, U' = {x | ∃ y : A, y^(n:ℕ) = x}} = (nhds 0)) ∧
+{y : A | ∃ (t ∈ T) (u ∈ U), y = t * u} = {y : A | ∃ (t ∈ U) (u ∈ U), y = t * u} ∧ 
+{y : A | ∃ (t ∈ U) (u ∈ U), y = t * u} ⊆ U) →
+(∃ (A₀ : set A) [h : is_subring A₀], by haveI := h; exact is_ring_of_definition A₀) :=
+begin
+ rintro ⟨U, T, Tsub, Tfin, hnhds, hTU, hU2⟩,
+ sorry
+end
+
 -- Wedhorn, lemma 6.1. (1) → (3)
 lemma tfae_1_to_3 (A₀ : set A) [is_subring A₀] : is_ring_of_definition A₀ → (is_open A₀ ∧ is_bounded A₀) :=
+begin
+  rintro ⟨hl, J, hJ, gen, hgen, h1, h2⟩,
+  split, exact hl,
+  intros U hU,
+  rw nhds_sets at hU,
+  rcases hU with ⟨U', U'_sub, ⟨U'_open, U'_0⟩⟩,
+  have H : (∃ (n : ℕ), pow_ideal J n ⊆ {a : ↥A₀ | a.val ∈ U'}) :=
+    h2 {a | a.val ∈ U'} U'_0 (continuous_subtype_val _ U'_open),
+  rcases H with ⟨n, hn⟩,
+  haveI := @pow_ideal.is_ideal _ _ J hJ n, -- so annoying
+  existsi subtype.val '' (pow_ideal J n),  -- the key step
+  split,
+  { apply mem_nhds_sets,
+    { refine embedding_open embedding_subtype_val _ (h1 n),
+      rw set.subtype_val_range,
+      exact hl },
+    have H := @is_submodule.zero _ _ _ _ (pow_ideal J n) _,
+    split, split, exact H, refl },
+  rintros a ⟨a₀, ha₀⟩ b hb,
+  apply U'_sub,
+  have : a₀.val * b ∈ U':= hn (is_ideal.mul_right ha₀.left : (a₀ * ⟨b,hb⟩) ∈ pow_ideal J n),
+  rwa ha₀.right at this
+end
+
+lemma tfae_3_to_1 (A₀ : set A) [is_subring A₀] : is_ring_of_definition A₀ → (is_open A₀ ∧ is_bounded A₀) :=
 begin
   rintro ⟨hl, J, hJ, gen, hgen, h1, h2⟩,
   split, exact hl,
