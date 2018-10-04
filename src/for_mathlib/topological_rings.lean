@@ -18,5 +18,7 @@ instance topological_subring (A₀ : set A) [is_subring A₀] : topological_ring
 def is_ideal_adic (J : set A) [is_ideal J] : Prop :=
 (∀ n, is_open (pow_ideal J n)) ∧ (∀ S : set A, (0 : A) ∈ S → is_open S → ∃ n, pow_ideal J n ⊆ S)
 
+notation `is-`J`-adic` := is_ideal_adic J
+
 def is_adic (A₀ : set A) [is_subring A₀] : Prop := ∃ (J : set A₀) [hJ : is_ideal J],
-(by haveI := topological_subring A₀; haveI := hJ; exact is_ideal_adic J)
+(by haveI := topological_subring A₀; haveI := hJ; exact is-J-adic)

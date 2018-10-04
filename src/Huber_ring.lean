@@ -16,7 +16,7 @@ variables {A : Type u} [comm_ring A] [topological_space A] [topological_ring A]
 
 def is_ring_of_definition (A₀ : set A) [is_subring A₀] : Prop :=
 is_open A₀ ∧ (∃ (J : set A₀) [hJ : is_ideal J] (gen : set A₀), (set.finite gen ∧ span gen = J) ∧
-(by haveI := topological_subring A₀; haveI := hJ; exact is_ideal_adic J))
+(by haveI := topological_subring A₀; haveI := hJ; exact is-J-adic))
 
 namespace is_ring_of_definition
 open list
