@@ -1,5 +1,6 @@
 import analysis.topology.topological_structures
 import ring_theory.subring
+import data.list.basic
 import for_mathlib.ideals
 import for_mathlib.bounded
 import for_mathlib.topological_rings
@@ -26,11 +27,13 @@ lemma tfae_i_to_ii : (∃ U T : set A, T ⊆ U ∧ set.finite T ∧
 (∃ (A₀ : set A) [h : is_subring A₀], by haveI := h; exact is_ring_of_definition A₀) :=
 begin
  rintro ⟨U, T, Tsub, Tfin, hnhds, hTU, hU2⟩,
+ let W := span U,
  sorry
 end
 
 -- Wedhorn, lemma 6.1. (1) → (3)
-lemma tfae_1_to_3 (A₀ : set A) [is_subring A₀] : is_ring_of_definition A₀ → (is_open A₀ ∧ is_bounded A₀) :=
+lemma tfae_1_to_3 (A₀ : set A) [is_subring A₀] :
+is_ring_of_definition A₀ → (is_open A₀ ∧ is_bounded A₀) :=
 begin
   rintro ⟨hl, J, hJ, gen, hgen, h1, h2⟩,
   split, exact hl,
