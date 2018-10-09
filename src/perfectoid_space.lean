@@ -17,5 +17,5 @@ class perfectoid_ring (R : Type*) extends Tate_ring R :=
 (Frob     : ∀ a : Rᵒ, ∃ b : Rᵒ, (p : R) ∣ (b^p - a))
 
 class perfectoid_space (X : Type*) extends adic_space X :=
-(perfectoid_cover : ∀ x : X, ∃ (U : opens X) (A : Huber_pair) [perfectoid_ring A.R],
+(perfectoid_cover : ∀ x : X, ∃ (U : opens X) (A : Huber_pair) [perfectoid_ring A],
   (x ∈ U) ∧ is_preadic_space_equiv U (Spa A))
