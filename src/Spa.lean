@@ -88,31 +88,109 @@ begin
     (finite_mem_finset finset.univ) (λ t ht, basic_open.is_open t s),
 end
 
-lemma rational_open_inter {s₁ s₂ : A} {T₁ T₂ : set A} {h₁ : s₁ ∈ T₁} {h₂ : s₂ ∈ T₂} [fintype T₁] [fintype T₂] :
-rational_open s₁ T₁ ∩ rational_open s₂ T₂ = rational_open (s₁ * s₂) {t | ∃ {t₁ ∈ T₁} {t₂ ∈ T₂}, t = t₁ * t₂} :=
+lemma rational_open_inter.aux1 {s₁ s₂ : A} {T₁ T₂ : set A} [fintype T₁] [fintype T₂] (h₁ : s₁ ∈ T₁) (h₂ : s₂ ∈ T₂) :
+rational_open s₁ T₁ ∩ rational_open s₂ T₂ ⊆ rational_open (s₁ * s₂) {t | ∃ {t₁ ∈ T₁} {t₂ ∈ T₂}, t = t₁ * t₂} :=
 begin
-  ext v, split; intro h; split,
+  intros v h,
+  have vmuls : v (s₁ * s₂) = v s₁ * v s₂ := valuation.map_mul _ _ _,
+  split,
   { intros t ht,
     rcases ht with ⟨t₁, ht₁, t₂, ht₂, ht⟩,
     rcases h with ⟨⟨hv₁, hs₁⟩, ⟨hv₂, hs₂⟩⟩,
     subst ht,
-    have vmuls : v (s₁ * s₂) = v s₁ * v s₂ := valuation.map_mul _ _ _,
     have vmult : v (t₁ * t₂) = v t₁ * v t₂ := valuation.map_mul _ _ _,
     rw [vmuls, vmult],
     refine le_trans (linear_ordered_comm_monoid.mul_le_mul_left (hv₂ _ ht₂) _)
                     (linear_ordered_comm_monoid.mul_le_mul_right (hv₁ _ ht₁) _ ) },
-  { sorry },
-  all_goals { rcases h with ⟨hv,hs⟩ },
-  { split, sorry, sorry },
-  { split, sorry, sorry }
+  { intro H,
+    rw vmuls at H,
+    cases H1 : v s₁ with γ₁, exact h.1.2 H1,
+    cases H2 : v s₂ with γ₂, exact h.2.2 H2,
+    rw [H1,H2] at H,
+    change some (γ₁ * γ₂) = none at H,
+    exact option.no_confusion H },
 end
 
-def basis (A : Huber_pair) : set (set (Spa A)) :=
+lemma rational_open_inter.aux2 {s₁ s₂ : A} {T₁ T₂ : set A} [fintype T₁] [fintype T₂] (h₁ : s₁ ∈ T₁) (h₂ : s₂ ∈ T₂) :
+rational_open (s₁ * s₂) {t | ∃ {t₁ ∈ T₁} {t₂ ∈ T₂}, t = t₁ * t₂} ⊆ rational_open s₁ T₁ ∩ rational_open s₂ T₂ :=
+begin
+  intros v h,
+  have vmuls : v (s₁ * s₂) = v s₁ * v s₂ := valuation.map_mul _ _ _,
+  split,
+  all_goals
+  { rcases h with ⟨hv,hs⟩,
+    have vs₁ne0 : v s₁ ≠ 0 :=
+    begin
+      intro H,
+      rw [vmuls,H] at hs, simp at hs,
+      exact hs
+    end,
+    have vs₂ne0 : v s₂ ≠ 0 :=
+    begin
+      intro H,
+      rw [vmuls,H] at hs, simp at hs,
+      exact hs
+    end,
+    split,
+  },
+  { intros t ht,
+    suffices H : v t * v s₂ ≤ v s₁ * v s₂,
+    { cases H' : v s₂ with γ, exfalso; exact vs₂ne0 H',
+      rw H' at H,
+      have := linear_ordered_comm_monoid.mul_le_mul_right H (some (γ⁻¹)),
+      conv at this { to_lhs, rw mul_assoc, congr, skip,
+        change some (γ * γ⁻¹) },
+      conv at this { to_rhs, rw mul_assoc, congr, skip,
+        change some (γ * γ⁻¹) },
+      simp only [mul_right_inv] at this,
+      change v t * 1 ≤ v s₁ * 1 at this,
+      rwa [mul_one,mul_one] at this },
+    { rw ←vmuls,
+      rw show v t * v s₂ = v (t * s₂), from (valuation.map_mul _ _ _).symm,
+      refine hv _ ⟨t, ht, s₂, h₂, rfl⟩ } },
+  { exact vs₁ne0 },  { intros t ht,
+    suffices H : v s₁ * v t ≤ v s₁ * v s₂,
+    { cases H' : v s₁ with γ, exfalso; exact vs₁ne0 H',
+      rw H' at H,
+      have := linear_ordered_comm_monoid.mul_le_mul_left H (some (γ⁻¹)),
+      conv at this { to_lhs, rw ← mul_assoc, congr, change some (γ⁻¹ * γ) },
+      conv at this { to_rhs, rw ← mul_assoc, congr, change some (γ⁻¹ * γ) },
+      simp only [mul_left_inv] at this,
+      change 1 * v t ≤ 1 * v s₂ at this,
+      rwa [one_mul,one_mul] at this },
+    { rw ←vmuls,
+      rw show v s₁ * v t = v (s₁ * t), from (valuation.map_mul _ _ _).symm,
+      refine hv _ ⟨s₁, h₁, t, ht, rfl⟩ } },
+  { exact vs₂ne0 }
+end
+
+lemma rational_open_inter {s₁ s₂ : A} {T₁ T₂ : set A} [fintype T₁] [fintype T₂] (h₁ : s₁ ∈ T₁) (h₂ : s₂ ∈ T₂) :
+rational_open s₁ T₁ ∩ rational_open s₂ T₂ = rational_open (s₁ * s₂) {t | ∃ {t₁ ∈ T₁} {t₂ ∈ T₂}, t = t₁ * t₂} :=
+begin
+  ext v, split; intro h,
+  exact rational_open_inter.aux1 h₁ h₂ h,
+  exact rational_open_inter.aux2 h₁ h₂ h
+end
+
+lemma basic_open_is_rational (r s : A) :
+basic_open r s = rational_open s {r} :=
+begin
+  ext v,
+  split; intro h; split,
+  { intros t ht,
+    rw mem_singleton_iff at ht, subst ht,
+    exact h.left },
+  { exact h.right },
+  { exact h.left r (mem_singleton_iff.mpr rfl) },
+  { exact h.right }
+end
+
+def rational_basis (A : Huber_pair) : set (set (Spa A)) :=
 {U : set (Spa A) | ∃ {s : A} {T : set A} {h : fintype T}, U = rational_open s T }
 
-set_option trace.simplify.rewrite true
+-- set_option trace.simplify.rewrite true
 
-lemma is_basis : topological_space.is_topological_basis (basis A) :=
+lemma is_basis : topological_space.is_topological_basis (rational_basis A) :=
 begin
 split,
 { intros U₁ hU₁ U₂ hU₂ v hv,
@@ -146,8 +224,21 @@ split,
     rw v1,
     intro h, exact option.no_confusion h },
   { exact subset_univ _ } },
-{ sorry }
+{ apply le_antisymm,
+  { unfold Spa.topological_space,
+    rw generate_from_le_iff_subset_is_open,
+    rintros U ⟨r, s, H⟩,
+    rw [H,basic_open_is_rational r s],
+    refine topological_space.generate_open.basic _ ⟨s, {r}, _, rfl⟩,
+    exact set.fintype_singleton _ },
+  { rw generate_from_le_iff_subset_is_open,
+    rintros U ⟨s, T, hT, H⟩,
+    subst H,
+    haveI := hT,
+    exact rational_open.is_open s T,
+  } }
 end
+
 
 end Spa
 
