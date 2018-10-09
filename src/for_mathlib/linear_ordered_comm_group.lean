@@ -12,6 +12,22 @@ class linear_ordered_comm_monoid (α : Type*) extends comm_monoid α, linear_ord
 class linear_ordered_comm_group (α : Type*) extends comm_group α, linear_order α :=
 (mul_le_mul_left : ∀ {a b : α}, a ≤ b → ∀ c : α, c * a ≤ c * b)
 
+namespace linear_ordered_comm_monoid
+
+variables {α : Type u} [linear_ordered_comm_monoid α] {x y z : α}
+variables {β : Type v} [linear_ordered_comm_monoid β]
+
+class is_hom (f : α → β) extends is_monoid_hom f : Prop :=
+(ord : ∀ {a b : α}, a ≤ b → f a ≤ f b)
+
+structure equiv extends equiv α β :=
+(is_hom : is_hom to_fun)
+
+lemma mul_le_mul_right (H : x ≤ y) : ∀ z : α, x * z ≤ y * z :=
+λ z, mul_comm z x ▸ mul_comm z y ▸ mul_le_mul_left H z
+
+end linear_ordered_comm_monoid
+
 namespace linear_ordered_comm_group
 
 variables {α : Type u} [linear_ordered_comm_group α] {x y z : α}
