@@ -5,7 +5,7 @@ universes u₁ u₂ u₃
 
 local attribute [instance] classical.prop_decidable
 
-open set Spv
+open set function Spv
 
 -- Wedhorn def 7.23.
 definition Spa (A : Huber_pair) : set (Spv A) :=
@@ -190,6 +190,8 @@ def rational_basis (A : Huber_pair) : set (set (Spa A)) :=
 
 -- set_option trace.simplify.rewrite true
 
+#print set.prod
+
 lemma is_basis : topological_space.is_topological_basis (rational_basis A) :=
 begin
 split,
@@ -204,7 +206,17 @@ split,
   { rw [H₁, H₂],
     existsi (s₁ * s₂),
     existsi {t | ∃ {t₁ ∈ (insert s₁ T₁)} {t₂ ∈ (insert s₂ T₂)}, t = t₁ * t₂},
-    split, sorry,
+    split,
+    { convert set.fintype_image
+        (set.prod (insert s₁ T₁) (insert s₂ T₂))
+        (λ p, p.1 * p.2),
+      funext t,
+      ext, split,
+      { rintros ⟨t₁, ht₁, t₂, ht₂, H⟩,
+        existsi (⟨t₁,t₂⟩ : A × A),
+        split, exact ⟨ht₁, ht₂⟩, exact H.symm },
+      { rintros ⟨p, ⟨h₁, h₂⟩⟩, dsimp at h₂,
+        exact ⟨(p.1 : A),h₁.left,(p.2 : A),h₁.right, h₂.symm⟩ } },
     apply rational_open_inter; simp },
   exact ⟨hv, subset.refl _⟩  },
 split,
