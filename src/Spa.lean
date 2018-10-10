@@ -89,9 +89,10 @@ begin
 end
 
 lemma rational_open_inter.aux1 {s₁ s₂ : A} {T₁ T₂ : set A} [fintype T₁] [fintype T₂] (h₁ : s₁ ∈ T₁) (h₂ : s₂ ∈ T₂) :
-rational_open s₁ T₁ ∩ rational_open s₂ T₂ ⊆ rational_open (s₁ * s₂) {t | ∃ {t₁ ∈ T₁} {t₂ ∈ T₂}, t = t₁ * t₂} :=
+let T := {t | ∃ {t₁ ∈ T₁} {t₂ ∈ T₂}, t = t₁ * t₂} in
+rational_open s₁ T₁ ∩ rational_open s₂ T₂ ⊆ rational_open (s₁ * s₂) T :=
 begin
-  intros v h,
+  intros T v h,
   have vmuls : v (s₁ * s₂) = v s₁ * v s₂ := valuation.map_mul _ _ _,
   split,
   { intros t ht,
@@ -112,9 +113,10 @@ begin
 end
 
 lemma rational_open_inter.aux2 {s₁ s₂ : A} {T₁ T₂ : set A} [fintype T₁] [fintype T₂] (h₁ : s₁ ∈ T₁) (h₂ : s₂ ∈ T₂) :
-rational_open (s₁ * s₂) {t | ∃ {t₁ ∈ T₁} {t₂ ∈ T₂}, t = t₁ * t₂} ⊆ rational_open s₁ T₁ ∩ rational_open s₂ T₂ :=
+let T := {t | ∃ {t₁ ∈ T₁} {t₂ ∈ T₂}, t = t₁ * t₂} in
+rational_open (s₁ * s₂) T ⊆ rational_open s₁ T₁ ∩ rational_open s₂ T₂ :=
 begin
-  intros v h,
+  intros T v h,
   have vmuls : v (s₁ * s₂) = v s₁ * v s₂ := valuation.map_mul _ _ _,
   split,
   all_goals
@@ -165,34 +167,31 @@ begin
 end
 
 lemma rational_open_inter {s₁ s₂ : A} {T₁ T₂ : set A} [fintype T₁] [fintype T₂] (h₁ : s₁ ∈ T₁) (h₂ : s₂ ∈ T₂) :
-rational_open s₁ T₁ ∩ rational_open s₂ T₂ = rational_open (s₁ * s₂) {t | ∃ {t₁ ∈ T₁} {t₂ ∈ T₂}, t = t₁ * t₂} :=
+let T := {t | ∃ {t₁ ∈ T₁} {t₂ ∈ T₂}, t = t₁ * t₂} in
+rational_open s₁ T₁ ∩ rational_open s₂ T₂ = rational_open (s₁ * s₂) T :=
 begin
+  intro T,
   ext v, split; intro h,
   exact rational_open_inter.aux1 h₁ h₂ h,
   exact rational_open_inter.aux2 h₁ h₂ h
 end
 
-lemma basic_open_is_rational (r s : A) :
+lemma basic_open_is_rational {r s : A} :
 basic_open r s = rational_open s {r} :=
-begin
-  ext v,
-  split; intro h; split,
-  { intros t ht,
-    rw mem_singleton_iff at ht, subst ht,
-    exact h.left },
-  { exact h.right },
-  { exact h.left r (mem_singleton_iff.mpr rfl) },
-  { exact h.right }
-end
+ext $ λ v,
+{ mp  := λ h, ⟨λ t ht,
+          begin
+            rw mem_singleton_iff at ht, subst ht,
+            exact h.left
+          end, h.right⟩,
+  mpr := λ h, ⟨h.left r (mem_singleton_iff.mpr rfl), h.right⟩ }
+
+#print basic_open_is_rational
 
 def rational_basis (A : Huber_pair) : set (set (Spa A)) :=
 {U : set (Spa A) | ∃ {s : A} {T : set A} {h : fintype T}, U = rational_open s T }
 
--- set_option trace.simplify.rewrite true
-
-#print set.prod
-
-lemma is_basis : topological_space.is_topological_basis (rational_basis A) :=
+lemma rational_basis.is_basis : topological_space.is_topological_basis (rational_basis A) :=
 begin
 split,
 { intros U₁ hU₁ U₂ hU₂ v hv,
@@ -240,7 +239,7 @@ split,
   { unfold Spa.topological_space,
     rw generate_from_le_iff_subset_is_open,
     rintros U ⟨r, s, H⟩,
-    rw [H,basic_open_is_rational r s],
+    rw [H,basic_open_is_rational],
     refine topological_space.generate_open.basic _ ⟨s, {r}, _, rfl⟩,
     exact set.fintype_singleton _ },
   { rw generate_from_le_iff_subset_is_open,
