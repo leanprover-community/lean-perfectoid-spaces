@@ -5,5 +5,5 @@ lean_version = "nightly-2018-06-21"
 path = "src"
 
 [dependencies]
-mathlib = {git = "https://github.com/leanprover/mathlib", rev = "ce43eae8ae5e274e6d56d524d9bb03f48604839d"}
+mathlib = {git = "https://github.com/leanprover/mathlib", rev = "979e23832296cea6daef46b6a68e93199afa4152"}
 lean-category-theory = {git = "https://github.com/semorrison/lean-category-theory", rev = "48f665b7890847aa2d13813751da179f679d9194"}
