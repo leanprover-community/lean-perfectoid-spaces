@@ -89,10 +89,9 @@ begin
 end
 
 lemma rational_open_inter.aux1 {s₁ s₂ : A} {T₁ T₂ : set A} [fintype T₁] [fintype T₂] (h₁ : s₁ ∈ T₁) (h₂ : s₂ ∈ T₂) :
-let T := (*) <$> T₁ <*> T₂ in
-rational_open s₁ T₁ ∩ rational_open s₂ T₂ ⊆ rational_open (s₁ * s₂) T :=
+rational_open s₁ T₁ ∩ rational_open s₂ T₂ ⊆ rational_open (s₁ * s₂) ((*) <$> T₁ <*> T₂) :=
 begin
-  rintros T v ⟨⟨hv₁, hs₁⟩, ⟨hv₂, hs₂⟩⟩,
+  rintros v ⟨⟨hv₁, hs₁⟩, ⟨hv₂, hs₂⟩⟩,
   have vmuls : v (s₁ * s₂) = v s₁ * v s₂ := valuation.map_mul _ _ _,
   split,
   { rintros t ⟨_, ⟨t₁, ht₁, rfl⟩, t₂, ht₂, ht⟩,
@@ -110,13 +109,10 @@ begin
     exact option.no_confusion H },
 end
 
-set_option trace.simplify.rewrite true
-
 lemma rational_open_inter.aux2 {s₁ s₂ : A} {T₁ T₂ : set A} [fintype T₁] [fintype T₂] (h₁ : s₁ ∈ T₁) (h₂ : s₂ ∈ T₂) :
-let T := (*) <$> T₁ <*> T₂ in
-rational_open (s₁ * s₂) T ⊆ rational_open s₁ T₁ ∩ rational_open s₂ T₂ :=
+rational_open (s₁ * s₂) ((*) <$> T₁ <*> T₂) ⊆ rational_open s₁ T₁ ∩ rational_open s₂ T₂ :=
 begin
-  rintros T v ⟨hv,hs⟩,
+  rintros v ⟨hv,hs⟩,
   have vmuls : v (s₁ * s₂) = v s₁ * v s₂ := valuation.map_mul _ _ _,
   have vs₁ne0 : v s₁ ≠ 0 := λ H, by simpa only [vmuls,H,zero_mul,ne.def,eq_self_iff_true,not_true] using hs,
   have vs₂ne0 : v s₂ ≠ 0 := λ H, by simpa only [vmuls,H,mul_zero,ne.def,eq_self_iff_true,not_true] using hs,
@@ -152,77 +148,65 @@ begin
 end
 
 lemma rational_open_inter {s₁ s₂ : A} {T₁ T₂ : set A} [fintype T₁] [fintype T₂] (h₁ : s₁ ∈ T₁) (h₂ : s₂ ∈ T₂) :
-let T := (*) <$> T₁ <*> T₂ in
-rational_open s₁ T₁ ∩ rational_open s₂ T₂ = rational_open (s₁ * s₂) T :=
+rational_open s₁ T₁ ∩ rational_open s₂ T₂ = rational_open (s₁ * s₂) ((*) <$> T₁ <*> T₂) :=
 begin
-  intro T,
   ext v, split; intro h,
   exact rational_open_inter.aux1 h₁ h₂ h,
   exact rational_open_inter.aux2 h₁ h₂ h
 end
 
-lemma basic_open_is_rational {r s : A} :
-basic_open r s = rational_open s {r} :=
+@[simp] lemma rational_open_singleton {r s : A} :
+rational_open s {r} = basic_open r s :=
 ext $ λ v,
-{ mp  := λ h, ⟨λ t ht,
+{ mp  := λ h, ⟨h.left r (mem_singleton_iff.mpr rfl), h.right⟩,
+  mpr := λ h, ⟨λ t ht,
           begin
             rw mem_singleton_iff at ht, subst ht,
             exact h.left
-          end, h.right⟩,
-  mpr := λ h, ⟨h.left r (mem_singleton_iff.mpr rfl), h.right⟩ }
+          end, h.right⟩ }
 
-def rational_basis (A : Huber_pair) : set (set (Spa A)) :=
-{U : set (Spa A) | ∃ {s : A} {T : set A} {h : fintype T}, U = rational_open s T }
-
-lemma rational_basis.is_basis : topological_space.is_topological_basis (rational_basis A) :=
+@[simp] lemma basic_open_eq_univ : basic_open (1 : A) (1 : A) = univ :=
 begin
-split,
-{ intros U₁ hU₁ U₂ hU₂ v hv,
-  existsi U₁ ∩ U₂,
-  rcases hU₁ with ⟨s₁, T₁, hfin₁, H₁⟩,
-  rcases hU₂ with ⟨s₂, T₂, hfin₂, H₂⟩,
-  haveI := hfin₁,
-  haveI := hfin₂,
-  rw rational_open_add_s at H₁ H₂,
-  split,
-  { rw [H₁, H₂],
-    existsi (s₁ * s₂),
-    existsi ((*) <$> (insert s₁ T₁) <*> (insert s₂ T₂)),
-    split,
-    { convert set.fintype_image
-        (set.prod (insert s₁ T₁) (insert s₂ T₂))
-        (λ p, p.1 * p.2),
-      funext t,
-      ext, split,
-      { rintros ⟨_, ⟨t₁,ht₁,rfl⟩, t₂, ht₂, H⟩,
-        existsi (⟨t₁,t₂⟩ : A × A),
-        split, exact ⟨ht₁, ht₂⟩, exact H.symm },
-      { rintros ⟨p, ⟨h₁, h₂⟩⟩, dsimp at h₂,
-        exact ⟨(p.1 : A),h₁.left,(p.2 : A),h₁.right, h₂.symm⟩ } },
-    apply rational_open_inter; simp },
-  exact ⟨hv, subset.refl _⟩  },
-split,
-{ apply le_antisymm,
-  { exact subset_univ _ },
-  apply subset_sUnion_of_mem,
-  existsi (1 : A),
-  existsi {(1 : A)},
-  split, exact set.fintype_singleton _,
   apply le_antisymm,
+  { exact subset_univ _ },
   { intros v h,
     split,
-    intros t ht,
-    rw mem_singleton_iff at ht, subst ht,
     exact le_refl _,
     have v1 : v 1 = 1 := valuation.map_one _,
     rw v1,
     intro h, exact option.no_confusion h },
-  { exact subset_univ _ } },
+end
+
+@[simp] lemma rational_open_eq_univ : rational_open (1 : A) {(1 : A)} = univ :=
+by simp
+
+def rational_basis (A : Huber_pair) : set (set (Spa A)) :=
+{U : set (Spa A) | ∃ {s : A} {T : set A} {h : fintype T}, U = rational_open s T }
+
+attribute [instance] set.fintype_seq -- should move to mathlib
+
+lemma rational_basis.is_basis : topological_space.is_topological_basis (rational_basis A) :=
+begin
+split,
+{ rintros U₁ ⟨s₁, T₁, hfin₁, H₁⟩ U₂ ⟨s₂, T₂, hfin₂, H₂⟩ v hv,
+  haveI := hfin₁,
+  haveI := hfin₂,
+  existsi U₁ ∩ U₂,
+  rw rational_open_add_s at H₁ H₂,
+  split,
+  { simp [H₁, H₂,rational_open_inter,-set.fmap_eq_image,-set.seq_eq_set_seq],
+    exact ⟨_,_,by apply_instance,rfl⟩ },
+  { exact ⟨hv, subset.refl _⟩ } },
+split,
+{ apply le_antisymm,
+  { exact subset_univ _ },
+  apply subset_sUnion_of_mem,
+  refine ⟨(1 : A), {(1 : A)}, by apply_instance, by simp⟩ },
 { apply le_antisymm,
   { unfold Spa.topological_space,
     rw generate_from_le_iff_subset_is_open,
     rintros U ⟨r, s, H⟩,
-    rw [H,basic_open_is_rational],
+    rw [H,←rational_open_singleton],
     refine topological_space.generate_open.basic _ ⟨s, {r}, _, rfl⟩,
     exact set.fintype_singleton _ },
   { rw generate_from_le_iff_subset_is_open,
@@ -232,7 +216,6 @@ split,
     exact rational_open.is_open s T,
   } }
 end
-
 
 end Spa
 
