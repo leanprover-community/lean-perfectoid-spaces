@@ -43,20 +43,11 @@ variables {B : set (open_set X)}
 
 def extend (F : presheaf B V) : presheaf (open_set X) V :=
 { obj  := λ U, limit ((under_set.embedding B U) ⋙ F),
-  map' := λ U₁ U₂ ι,
-    begin
-      rw show limit (under_set.embedding B U₂ ⋙ F) = limit (under_set.map B ι ⋙ under_set.embedding B U₁ ⋙ F),
-      by congr,
-      exact limit.pre ((under_set.embedding B U₁) ⋙ F) (under_set.map B ι),
-    end }
-
---
+  map' := λ U₁ U₂ ι, limit.pre ((under_set.embedding B U₁) ⋙ F) (under_set.map B ι) }
 
 def Γ {C : Type w₁} [category.{w₁ w₂} C] (U : C) (F : presheaf C V) : V := F.obj U
 
 lemma extend_val {F : presheaf B V} (U : open_set X) : Γ U (extend F) = limit ((under_set.embedding B U) ⋙ F) := rfl
-
-set_option profiler true
 
 lemma extend_val_basic_open {F : presheaf B V} (U : B) : Γ U.1 (extend F) ≅ Γ U F :=
 by rw extend_val; exact
@@ -65,11 +56,13 @@ by rw extend_val; exact
   { X := Γ U F,
     π := λ U', F.map (ulift.up (plift.up U'.2)) } }
 
-instance [has_products.{u v} V] {F : presheaf B V} : is_sheaf (extend F) :=
-{ sheaf_condition := λ cover,
-  { lift := λ s, begin
-    sorry
-  end
-  } }
+-- The following is very false and need some sort of sheaf condition for F on the basis
+-- 
+-- instance [has_products.{u v} V] {F : presheaf B V} : is_sheaf (extend F) :=
+-- { sheaf_condition := λ cover,
+--   { lift := λ s, begin
+--     sorry
+--   end
+--   } }
 
 end extend
