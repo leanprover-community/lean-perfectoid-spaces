@@ -1,7 +1,7 @@
 # lean-perfectoid-spaces
 A formalization of the concept of a perfectoid space in the Lean formal proof verification system.
 
-By By Johan Commelin, Patrick Massot and Kevin Buzzard
+By Johan Commelin, Patrick Massot and Kevin Buzzard
 
 ### Definition of a perfectoid space in the Lean Programming Language.
 
