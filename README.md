@@ -1,6 +1,8 @@
 # lean-perfectoid-spaces
 A formalization of the concept of a perfectoid space in the Lean formal proof verification system.
 
+By By Johan Commelin, Patrick Massot and Kevin Buzzard
+
 ### Definition of a perfectoid space in the Lean Programming Language.
 
 This is a project whose first goal is to create a type in a certain computer language. The language is Lean, which is some version of dependent type theory. Dependent type theory is another foundation for mathematics, and in this type theory you can do all the things that mathematicians are used to doing in ZFC set theory.
