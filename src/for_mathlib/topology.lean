@@ -26,5 +26,5 @@ definition is_hausdorff (α : Type*) [topological_space α] : Prop :=
   ∀ x y, x ≠ y → ∃ u v : opens α, x ∈ u ∧ y ∈ v ∧ u ∩ v = ∅
 
 -- Wedhorn Definition 5.31 page 38
-definition is_complete (α : Type*) [uniform_space α] := 
+definition is_complete_hausdorff (α : Type*) [uniform_space α] := 
   is_hausdorff α ∧ ∀ {f : filter α}, cauchy f → ∃ x, f ≤ nhds x

@@ -1,6 +1,6 @@
 import analysis.topology.topological_structures
 import ring_theory.subring
-import for_mathlib.ideals
+import ring_theory.ideal_operations
 
 universe u
 
@@ -15,10 +15,10 @@ instance topological_subring (A₀ : set A) [is_subring A₀] : topological_ring
   continuous_mul := sorry
 }
 
-def is_ideal_adic (J : set A) [is_ideal J] : Prop :=
-(∀ n, is_open (pow_ideal J n)) ∧ (∀ S : set A, (0 : A) ∈ S → is_open S → ∃ n, pow_ideal J n ⊆ S)
+def is_ideal_adic (J : ideal A) : Prop :=
+(∀ n : ℕ, is_open (J^n : ideal A).carrier) ∧ (∀ S : set A, (0 : A) ∈ S → is_open S → ∃ n : ℕ, (J^n : ideal A).carrier ⊆ S)
 
 notation `is-`J`-adic` := is_ideal_adic J
 
-def is_adic (A₀ : set A) [is_subring A₀] : Prop := ∃ (J : set A₀) [hJ : is_ideal J],
-(by haveI := topological_subring A₀; haveI := hJ; exact is-J-adic)
+def is_adic (A₀ : set A) [is_subring A₀] : Prop := ∃ (J : ideal A₀),
+(by haveI := topological_subring A₀; exact is-J-adic)

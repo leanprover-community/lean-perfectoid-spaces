@@ -68,7 +68,7 @@ definition mk (v : Valuation R) : Spv R := ⟨λ r s, v r ≤ v s, ⟨v, λ _ _,
 definition mk' {Γ : Type u₂} [linear_ordered_comm_group Γ] (v : valuation R Γ) : Spv R := mk (Valuation.of_valuation v)
 
 noncomputable definition out (v : Spv R) : Valuation R :=
-subtype.cases_on v (λ ineq hv, classical.rec_on hv (λ v h, v))
+subtype.cases_on v (λ ineq hv, classical.some hv)
 
 noncomputable definition lift {β : Type u₃}
 (f : Valuation R → β) (H : ∀ v₁ v₂ : Valuation R, v₁ ≈ v₂ → f v₁ = f v₂) : Spv R → β :=

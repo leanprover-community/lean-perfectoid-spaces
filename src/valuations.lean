@@ -4,8 +4,10 @@ import ring_theory.ideals
 import data.finsupp
 import group_theory.quotient_group
 import tactic.tidy
-import for_mathlib.ideals
 import for_mathlib.linear_ordered_comm_group
+
+local attribute [instance, priority 0] classical.prop_decidable
+noncomputable theory
 
 universes u₁ u₂ u₃ -- v is used for valuations
 
@@ -144,30 +146,31 @@ def map {S : Type u₃} [comm_ring S] (f : S → R) [is_ring_hom f] : valuation 
     map_add  := by simp [is_ring_hom.map_add f] } }
 
 section trivial
-variables (S : set R) [is_prime_ideal S] [decidable_pred S]
+variables (S : ideal R) [prime : ideal.is_prime S]
+include prime
 
 def trivial : valuation R Γ :=
 { val := λ x, if x ∈ S then 0 else 1,
   property :=
-  { map_zero := if_pos (is_submodule.zero_ R S),
-    map_one  := if_neg is_proper_ideal.one_not_mem,
+  { map_zero := if_pos S.zero_mem, 
+    map_one  := if_neg (assume h, prime.1 (S.eq_top_iff_one.2 h)),
     map_mul  := λ x y, begin
         split_ifs with hxy hx hy; try {simp}; exfalso,
-        { cases is_prime_ideal.mem_or_mem_of_mul_mem hxy with h' h',
+        { cases ideal.is_prime.mem_or_mem prime hxy with h' h',
           { exact hx h' },
           { exact h h' } },
-        { have H : x * y ∈ S, exact is_ideal.mul_right h,
+        { have H : x * y ∈ S, exact S.mul_mem_right h,
           exact hxy H },
-        { have H : x * y ∈ S, exact is_ideal.mul_right h,
+        { have H : x * y ∈ S, exact S.mul_mem_right h,
           exact hxy H },
-        { have H : x * y ∈ S, exact is_ideal.mul_left h_1,
+        { have H : x * y ∈ S, exact S.mul_mem_left h_1,
           exact hxy H }
       end,
     map_add  := λ x y, begin
         split_ifs with hxy hx hy; try {simp};
         try {left; exact le_refl _};
         try {right}; try {exact le_refl _},
-        { have hxy' : x + y ∈ S := is_submodule.add_ R h h_1,
+        { have hxy' : x + y ∈ S := S.add_mem h h_1,
           exfalso, exact hxy hxy' }
       end } }
 
@@ -177,27 +180,28 @@ end trivial
 
 section supp
 open with_zero
-
-def supp : set R := {x | v x = 0}
-
-instance : is_prime_ideal (supp v) :=
-{ zero_ := map_zero v,
-  add_  := λ x y hx hy, or.cases_on (map_add v x y)
+include v
+def supp : ideal R := 
+{ carrier := {x | v x = 0},
+  zero := map_zero v,
+  add  := λ x y hx hy, or.cases_on (map_add v x y)
     (λ hxy, le_antisymm (hx ▸ hxy) zero_le)
     (λ hxy, le_antisymm (hy ▸ hxy) zero_le),
   smul  := λ c x hx, calc v (c * x)
                         = v c * v x : map_mul v c x
                     ... = v c * 0 : congr_arg _ hx
-                    ... = 0 : mul_zero _,
-  ne_univ := λ h, have h1 : (1:R) ∈ supp v, by rw h; trivial,
+                    ... = 0 : mul_zero _ }
+omit v
+instance : ideal.is_prime (supp v) :=
+⟨λ h, have h1 : (1:R) ∈ supp v, by rw h; trivial,
     have h2 : v 1 = 0 := h1,
     by rw [map_one v] at h2; exact option.no_confusion h2,
-  mem_or_mem_of_mul_mem := λ x y hxy, begin
-      dsimp [supp] at hxy ⊢,
-      change v (x * y) = 0 at hxy,
-      rw [map_mul v x y] at hxy,
-      exact eq_zero_or_eq_zero_of_mul_eq_zero _ _ hxy
-    end }
+ λ x y hxy, begin
+    dsimp [supp] at hxy ⊢,
+    change v (x * y) = 0 at hxy,
+    rw [map_mul v x y] at hxy,
+    exact eq_zero_or_eq_zero_of_mul_eq_zero _ _ hxy
+  end⟩
 
 /-
 definition extension_to_integral_domain {α : Type} [linear_ordered_comm_group α]

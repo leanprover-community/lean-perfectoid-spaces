@@ -1,3 +1,5 @@
+import ring_theory.localization
+import ring_theory.subring
 import continuous_valuations
 import Huber_pair 
 
@@ -217,6 +219,24 @@ split,
   } }
 end
 
+namespace rational_open
+def presheaf.ring (s : A) := localization.away s
+ 
+instance (s : A) : comm_ring (presheaf.ring s) :=
+by dunfold presheaf.ring ; apply_instance
+ 
+def localize (s : A) : A → presheaf.ring s := localization.of_comm_ring A _
+
+-- Definition of A\left(\frac T s\right) as a topological ring 
+def presheaf.top_ring (s : A) (T : set A) (HfinT : fintype T) :
+   topological_space (presheaf.ring s) :=
+ let As := presheaf.ring s in sorry
+ /-let D := ring.closure ((localize s) '' A.RHuber.A₀ ∪ (((λ x, x*s⁻¹) ∘ localize s) '' T)) in
+ begin
+   let nhd := λ n : ℕ, mul_ideal (pow_ideal ((localize s) '' A.Rplus) n) D,
+  sorry
+end-/
+end rational_open
 end Spa
 
 -- goal now to define the 𝓞_X on *rational subsets* and then to extend.
