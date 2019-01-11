@@ -1,12 +1,16 @@
 import analysis.topology.topological_space
 import analysis.topology.topological_structures
+import for_mathlib.topological_structures
 import algebra.group_power
 import ring_theory.subring
-import for_mathlib.bounded
 
 universe u
 
 variables {R : Type u} [comm_ring R] [topological_space R] [topological_ring R]
+
+/-- Wedhorn Definition 5.27 page 36 -/
+definition is_bounded (B : set R) : Prop :=
+∀ U ∈ (nhds (0 : R)).sets, ∃ V ∈ (nhds (0 : R)).sets, ∀ v ∈ V, ∀ b ∈ B, v*b ∈ U
 
 definition is_power_bounded (r : R) : Prop := is_bounded (powers r)
 
@@ -15,7 +19,6 @@ definition power_bounded_subring := {r : R | is_power_bounded r}
 
 namespace power_bounded
 
-instance : is_subring (power_bounded_subring R) := sorry
 instance : has_coe (power_bounded_subring R) R := ⟨subtype.val⟩
 
 lemma zero_mem : (0 : R) ∈ power_bounded_subring R :=
@@ -93,6 +96,10 @@ end
 instance : is_submonoid (power_bounded_subring R) :=
 { one_mem := power_bounded.one_mem R,
 mul_mem := λ a b, power_bounded.mul_mem R }
+instance : is_subring (power_bounded_subring R) := sorry
+instance nat.power_bounded: has_coe ℕ (power_bounded_subring R) := ⟨nat.cast⟩
+
+instance int.power_bounded: has_coe ℤ (power_bounded_subring R) := ⟨int.cast⟩
 
 definition is_uniform : Prop := is_bounded (power_bounded_subring R)
 

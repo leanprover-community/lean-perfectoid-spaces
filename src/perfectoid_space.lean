@@ -1,5 +1,4 @@
 -- definitions of adic_space, preadic_space, Huber_pair etc
-import analysis.topology.topological_groups
 import adic_space
 import Tate_ring
 import power_bounded
@@ -12,11 +11,11 @@ variable [nat.Prime] -- fix a prime p
 
 /-- A perfectoid ring, following Fontaine Sem Bourb-/
 class perfectoid_ring (R : Type*) extends Tate_ring R :=
-(complete : @is_complete_hausdorff R (topological_add_group.to_uniform_space R))
+(complete : is_complete R)
 (uniform  : is_uniform R)
 (ramified : ∃ ϖ : units R, (is_pseudo_uniformizer ϖ) ∧ ((ϖ^p : R) ∣ p))
-(Frob     : ∀ a : Rᵒ, ∃ b : Rᵒ, (p : R) ∣ (b^p - a))
+(Frob     : ∀ a : Rᵒ, ∃ b : Rᵒ, (p : Rᵒ) ∣ (b^p - a : Rᵒ))
 
 class perfectoid_space (X : Type*) extends adic_space X :=
-(perfectoid_cover : ∀ x : X, ∃ (U : opens X) (A : Huber_pair) [perfectoid_ring A],
+(perfectoid_cover : ∀ x : X, ∃ (U : opens X) (A : Huber_pair) [perfectoid_ring A.R],
   (x ∈ U) ∧ is_preadic_space_equiv U (Spa A))
