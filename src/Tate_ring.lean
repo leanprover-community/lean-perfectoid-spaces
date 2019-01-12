@@ -2,6 +2,7 @@ import tactic.linarith
 import analysis.topology.topological_structures
 import ring_theory.subring
 import power_bounded
+import Huber_ring
 
 -- Scholze : "Recall that a topological ring R is Tate if it contains an
 -- open and bounded subring R₀ ⊂ R and a topologically nilpotent unit ϖ ∈ R; such elements are
@@ -64,4 +65,5 @@ class Tate_ring (R : Type*) extends comm_ring R, topological_space R, topologica
 (ϖ : units R)
 (ϖ_is_pseudo_uniformizer : is_pseudo_uniformizer ϖ)
 
--- need an instance from Tate to Huber
+instance tate_ring.to_huber_ring (R : Type*) [Tate_ring R] : Huber_ring R :=
+sorry

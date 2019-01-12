@@ -110,4 +110,19 @@ begin
       sorry } }
 end
 
+variables [Huber_ring A]
+
+instance power_bounded_add_subgroup : is_add_subgroup (power_bounded_subring A) := 
+{ zero_mem := power_bounded.zero_mem A,
+  add_mem := assume a b a_in b_in U U_nhds,begin
+    sorry
+  end,
+  neg_mem := λ a, power_bounded.neg_mem A }
+
+instance : is_subring (power_bounded_subring A) :=
+{..power_bounded.submonoid A, ..Huber_ring.power_bounded_add_subgroup}
+
+instance nat.power_bounded: has_coe ℕ (power_bounded_subring A) := ⟨nat.cast⟩
+
+instance int.power_bounded: has_coe ℤ (power_bounded_subring A) := ⟨int.cast⟩
 end Huber_ring

@@ -1,3 +1,4 @@
+import tactic.where
 import tactic.ring
 import analysis.topology.topological_space
 import analysis.topology.topological_structures
@@ -93,13 +94,9 @@ begin
       refl }
 end
 
-instance : is_submonoid (power_bounded_subring R) :=
+instance submonoid : is_submonoid (power_bounded_subring R) :=
 { one_mem := power_bounded.one_mem R,
-mul_mem := λ a b, power_bounded.mul_mem R }
-instance : is_subring (power_bounded_subring R) := sorry
-instance nat.power_bounded: has_coe ℕ (power_bounded_subring R) := ⟨nat.cast⟩
-
-instance int.power_bounded: has_coe ℤ (power_bounded_subring R) := ⟨int.cast⟩
+  mul_mem := λ a b, power_bounded.mul_mem R }
 
 definition is_uniform : Prop := is_bounded (power_bounded_subring R)
 
