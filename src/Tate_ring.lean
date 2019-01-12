@@ -13,7 +13,13 @@ variables {R : Type u} [comm_ring R] [topological_space R] [topological_ring R]
 def topologically_nilpotent (r : R) : Prop :=
 ∀ U ∈ (nhds (0 :R)).sets, ∃ N : ℕ, ∀ n : ℕ, n > N → r^n ∈ U
 
-definition is_pseudo_uniformizer (ϖ : units R) : Prop := topologically_nilpotent ϖ.val
+def is_pseudo_uniformizer (ϖ : units R) : Prop := topologically_nilpotent ϖ.val
+
+variable (R)
+def pseudo_uniformizer := { ϖ : units R // topologically_nilpotent ϖ.val}
+
+instance is_pseudo_uniformizer.power_bounded: has_coe (pseudo_uniformizer R) (power_bounded_subring R) := 
+⟨sorry⟩
 
 class Tate_ring (R : Type*) extends comm_ring R, topological_space R, topological_ring R :=
 (R₀ : set R)
