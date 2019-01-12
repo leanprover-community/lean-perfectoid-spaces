@@ -2,8 +2,8 @@ import analysis.topology.topological_structures
 import ring_theory.subring
 import tactic.tfae
 import data.list.basic
-import for_mathlib.bounded
 import for_mathlib.topological_rings
+import power_bounded
 
 -- f-adic rings are called Huber rings by Scholze.
 -- Topological ring A contains on open subring A0 such that the subspace topology on A0 is

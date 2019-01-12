@@ -1,6 +1,6 @@
 import analysis.topology.topological_structures
 import ring_theory.subring
-import for_mathlib.bounded
+import power_bounded
 
 -- Scholze : "Recall that a topological ring R is Tate if it contains an
 -- open and bounded subring R₀ ⊂ R and a topologically nilpotent unit ϖ ∈ R; such elements are
