@@ -1,5 +1,5 @@
-import analysis.topology.topological_space
-import analysis.topology.uniform_space
+import topology.basic
+import topology.uniform_space.basic
 
 section opens
 

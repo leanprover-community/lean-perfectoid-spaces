@@ -1,7 +1,7 @@
 import tactic.where
 import tactic.ring
-import analysis.topology.topological_space
-import analysis.topology.topological_structures
+import topology.basic
+import topology.algebra.topological_structures
 import algebra.group_power
 import ring_theory.subring
 

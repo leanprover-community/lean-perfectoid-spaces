@@ -1,4 +1,4 @@
-import analysis.topology.topological_structures
+import topology.algebra.topological_structures
 import ring_theory.subring
 import tactic.tfae
 import data.list.basic

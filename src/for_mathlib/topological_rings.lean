@@ -1,4 +1,4 @@
-import analysis.topology.topological_structures
+import topology.algebra.topological_structures
 import ring_theory.subring
 import ring_theory.ideal_operations
 

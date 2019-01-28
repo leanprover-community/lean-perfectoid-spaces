@@ -1,5 +1,5 @@
 import valuations 
-import analysis.topology.topological_space
+import topology.basic
 import data.finsupp
 import group_theory.quotient_group
 

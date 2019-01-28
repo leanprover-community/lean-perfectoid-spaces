@@ -1,4 +1,4 @@
-import analysis.topology.topological_space 
+import topology.basic
 
 definition is_cover {X γ : Type} (U : γ → set X) := ∀ x, ∃ i, x ∈ U i
 

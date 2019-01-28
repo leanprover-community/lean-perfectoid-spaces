@@ -1,5 +1,5 @@
 import tactic.linarith
-import analysis.topology.topological_structures
+import topology.algebra.topological_structures
 import ring_theory.subring
 import power_bounded
 import Huber_ring

@@ -1,5 +1,5 @@
 -- definitions of adic_space, preadic_space, Huber_pair etc
-import analysis.topology.topological_groups
+import topology.algebra.group
 import adic_space
 import Tate_ring
 import power_bounded

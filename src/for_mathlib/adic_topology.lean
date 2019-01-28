@@ -8,7 +8,7 @@ The end-product is `instance : topological_ring (adic_ring I)`.
 import tactic.ring
 import data.pnat
 import ring_theory.ideal_operations
-import analysis.topology.topological_groups
+import topology.algebra.group
 
 open filter set
 
