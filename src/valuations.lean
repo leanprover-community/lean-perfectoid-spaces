@@ -279,7 +279,7 @@ lemma mk_some {r : R} {g : Γ₂} (h : v₂ r = some g) :
 begin
   rw h,
   congr' 1,
-  dsimp[minimal_value_group, minimal_value_group.mk],
+  dsimp [minimal_value_group, minimal_value_group.mk],
   rw finsupp.prod_single_index ; finish
 end
 
@@ -346,9 +346,9 @@ le_of_le (minimal_valuation.map v₂) (λ g h, iff.refl _)
 
 end valuation
 
-/- quotes from mathlib (mostly Mario) (all 2018)
+/- quotes from zulip (mostly Mario) (all 2018)
 
-Jul03
+https://leanprover.zulipchat.com/#narrow/stream/116395-maths/topic/Perfectoid.20spaces/near/129009961
 
 class is_valuation {α : Type} [linear_ordered_comm_group α]
   {R : Type} [comm_ring R] (f : R → option α) : Prop :=
@@ -367,7 +367,7 @@ structure valuation (R : Type) [comm_ring R] (α : Type) [Hα : linear_ordered_c
 
 ...
 
-**All Jul03**
+**All 03 Jul 2018** Mario + comments from me
 
 MC: What's wrong, again, with defining Spv as the collection of all valuation relations?
 KB: All proofs need an actual valuation
