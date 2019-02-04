@@ -13,6 +13,7 @@ universes u₁ u₂ u₃ -- v is used for valuations
 
 namespace valuation
 
+-- Valuations on a commutative ring with values in {0} ∪ Γ
 class is_valuation {R : Type u₁} [comm_ring R] {Γ : Type u₂} [linear_ordered_comm_group Γ]
   (v : R → with_zero Γ) : Prop :=
 (map_zero : v 0 = 0)
@@ -27,6 +28,7 @@ def valuation (R : Type u₁) [comm_ring R] (Γ : Type u₂) [linear_ordered_com
 
 namespace valuation
 
+-- A valuation is coerced to the underlying function R → {0} ∪ Γ
 instance (R : Type u₁) [comm_ring R] (Γ : Type u₂) [linear_ordered_comm_group Γ] :
 has_coe_to_fun (valuation R Γ) := { F := λ _, R → with_zero Γ, coe := subtype.val}
 
@@ -41,6 +43,7 @@ instance : is_valuation v := v.property
 @[simp] lemma map_mul  : ∀ x y, v (x * y) = v x * v y := v.property.map_mul
 @[simp] lemma map_add  : ∀ x y, v (x + y) ≤ v x ∨ v (x + y) ≤ v y := v.property.map_add
 
+-- If x ∈ R is a unit then v x is non-zero
 theorem map_unit (h : x * y = 1) : option.is_some (v x) :=
 begin
   have h1 := v.map_mul x y,
@@ -79,6 +82,8 @@ variables {v₁ : R → with_zero Γ₁} {v₂ : R → with_zero Γ₂}
 variables {ψ : Γ₁ → Γ₂}
 variables (H12 : ∀ r, with_zero.map ψ (v₁ r) = v₂ r)
 variables (Hle : ∀ g h : Γ₁, g ≤ h ↔ ψ g ≤ ψ h)
+-- This include statement means that we have an underlying assumption
+-- that ψ : Γ₁ → Γ₂ is order-preserving, and that v₁ and v₂ are functions with ψ ∘ v₁ = v₂. 
 include H12 Hle
 
 theorem le_of_le (r s : R) : v₁ r ≤ v₁ s ↔ v₂ r ≤ v₂ s :=
@@ -89,6 +94,7 @@ begin
   { exact Hle g h }
 end 
 
+-- Restriction of a Γ₂-valued valuation to a subgroup Γ₁ is still a valuation 
 theorem valuation_of_valuation [is_group_hom ψ]
   (Hiψ : function.injective ψ)
   (H : is_valuation v₂) :
@@ -137,6 +143,7 @@ map_add := begin
 
 end
 
+-- f : S → R induces map valuation R Γ → valuation S Γ
 def map {S : Type u₃} [comm_ring S] (f : S → R) [is_ring_hom f] : valuation S Γ :=
 { val := v ∘ f,
   property :=
@@ -149,6 +156,7 @@ section trivial
 variables (S : ideal R) [prime : ideal.is_prime S]
 include prime
 
+-- trivial Γ-valued valuation associated to a prime ideal S
 def trivial : valuation R Γ :=
 { val := λ x, if x ∈ S then 0 else 1,
   property :=
@@ -181,6 +189,8 @@ end trivial
 section supp
 open with_zero
 include v
+
+-- support of a valuation v : R → {0} ∪ Γ
 def supp : ideal R := 
 { carrier := {x | v x = 0},
   zero := map_zero v,
@@ -191,7 +201,10 @@ def supp : ideal R :=
                         = v c * v x : map_mul v c x
                     ... = v c * 0 : congr_arg _ hx
                     ... = 0 : mul_zero _ }
+
 omit v
+
+-- support is a prime ideal.
 instance : ideal.is_prime (supp v) :=
 ⟨λ h, have h1 : (1:R) ∈ supp v, by rw h; trivial,
     have h2 : v 1 = 0 := h1,
@@ -203,6 +216,7 @@ instance : ideal.is_prime (supp v) :=
     exact eq_zero_or_eq_zero_of_mul_eq_zero _ _ hxy
   end⟩
 
+-- We have not yet extended a valuation v to a valuation on R/supp v or its field of fractions.
 /-
 definition extension_to_integral_domain {α : Type} [linear_ordered_comm_group α]
   {R : Type} [comm_ring R] (f : R → with_zero α) [H : is_valuation f] :
@@ -213,6 +227,8 @@ end supp
 
 variable (v)
 
+-- The value group of v is the smallest subgroup Γ_v of Γ for which v takes
+-- values in {0} ∪ Γ_v  
 definition value_group := group.closure {a : Γ | ∃ r : R, v r = some a}
 
 definition value_group_v (v : R → with_zero Γ) [is_valuation v] :=
@@ -231,6 +247,8 @@ open quotient_group
 
 variables {R : Type u₁} [comm_ring R] [decidable_eq R]
 
+-- This structure is scary because it has a random Γ : Type u₁ inside, but 
+-- we don't use it very often; it's an intermediate thing.
 structure minimal_valuation.parametrized_subgroup (Γ₂ : Type u₂) [linear_ordered_comm_group Γ₂] :=
 (Γ : Type u₁)
 [grp : comm_group Γ]
@@ -244,8 +262,16 @@ local attribute [instance] parametrized_subgroup.hom
 variables {Γ₂ : Type u₂} [linear_ordered_comm_group Γ₂]
 variables (v₂ : valuation R Γ₂)
 
-set_option class.instance_max_depth 41
 include R v₂
+
+-- Why do we need this?
+set_option class.instance_max_depth 41
+
+-- This definition helps resolve the set-theoretic issues caused by the
+-- fact that the adic spectrum of R is all equivalence classes of
+-- valuations, where the value group can vary arbitrarily. It shows
+-- that if v : R → {0} ∪ Γ₂ and if R has type Type u₁ then v is equivalent
+-- to a valuation taking values in {0} ∪ Γ₁ with Γ₁ also of type u₁.
 def minimal_value_group : minimal_valuation.parametrized_subgroup Γ₂ :=
 begin
   let FG : Type u₁ := multiplicative (R →₀ ℤ), -- free ab group on R
@@ -263,6 +289,9 @@ end
 
 namespace minimal_value_group
 
+-- This function eats an arbitrary valuation and returns an equivalent
+-- one which takes values in a group in the same universe as R. It's actually
+-- not quite this, it's an auxiliary function.
 def mk (r : R) : (minimal_value_group v₂).Γ :=
 begin
   let FG : Type u₁ := multiplicative (R →₀ ℤ), -- free ab group on R
@@ -303,6 +332,9 @@ end
 
 end minimal_value_group
 
+-- This is function takinv a valuation v to a u₁-universe-valued valuation equivalent to it.
+-- This is the final resolution of the set-theoretic issues caused by quantifying
+-- over all value groups.
 definition minimal_valuation.val (r : R) : with_zero ((minimal_value_group v₂).Γ) :=
 match v₂ r with 
 | some _ := some (minimal_value_group.mk v₂ r)
@@ -329,17 +361,20 @@ end
 
 end minimal_valuation
 
+-- the map from valuations to minimal valuations
 def minimal_valuation : valuation R (minimal_value_group v₂).Γ :=
 { val := minimal_valuation.val v₂,
   property := let Γ₁ := minimal_value_group v₂ in
     valuation_of_valuation (minimal_valuation.map v₂) (λ g h, iff.refl _) Γ₁.inj (v₂.property) }
 
+-- Definition of equivalence relation on valuations
 def is_equiv {R : Type u₁} [comm_ring R]
 {Γ₁ : Type u₂} [linear_ordered_comm_group Γ₁]
 {Γ₂ : Type u₃} [linear_ordered_comm_group Γ₂]
 (v₁ : valuation R Γ₁) (v₂ : valuation R Γ₂) : Prop :=
 ∀ r s, v₁ r ≤ v₁ s ↔ v₂ r ≤ v₂ s
 
+-- Theorem that valuation v₂ is equivalent to the associated minimal valuation.
 lemma minimal_valuation_equiv :
 is_equiv (v₂.minimal_valuation : valuation R (minimal_value_group v₂).Γ) v₂ :=
 le_of_le (minimal_valuation.map v₂) (λ g h, iff.refl _)
