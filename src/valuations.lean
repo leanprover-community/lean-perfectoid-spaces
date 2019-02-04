@@ -221,7 +221,7 @@ group.closure ({a : Γ | ∃ r : R, v r = some a})
 instance : group (value_group v) :=
 @subtype.group _ _ (value_group v) (group.closure.is_subgroup {a : Γ | ∃ r : R, v r = some a})
 
-instance valutaion.group_v (v : R → with_zero Γ) [is_valuation v] : group (value_group_v v) :=
+instance valuation.group_v (v : R → with_zero Γ) [is_valuation v] : group (value_group_v v) :=
   @subtype.group _ _ (value_group_v v) (group.closure.is_subgroup {a : Γ | ∃ r : R, v r = some a})
 
 end valuation
@@ -241,8 +241,8 @@ structure minimal_valuation.parametrized_subgroup (Γ₂ : Type u₂) [linear_or
 local attribute [instance] parametrized_subgroup.grp
 local attribute [instance] parametrized_subgroup.hom
 
-variables  {Γ₂ : Type u₂} [linear_ordered_comm_group Γ₂]
-variables (v₂ : valuation R  Γ₂)
+variables {Γ₂ : Type u₂} [linear_ordered_comm_group Γ₂]
+variables (v₂ : valuation R Γ₂)
 
 set_option class.instance_max_depth 41
 include R v₂
@@ -250,7 +250,7 @@ def minimal_value_group : minimal_valuation.parametrized_subgroup Γ₂ :=
 begin
   let FG : Type u₁ := multiplicative (R →₀ ℤ), -- free ab group on R
   let φ₀ : R → Γ₂ := λ r, option.get_or_else (v₂ r) 1,
-  let φ : FG → Γ₂ := λ f, finsupp.prod f (λ r n,(φ₀ r) ^ n),
+  let φ : FG → Γ₂ := λ f, finsupp.prod f (λ r n, (φ₀ r) ^ n),
   haveI : is_group_hom φ := 
     ⟨λ a b, finsupp.prod_add_index (λ a, rfl) (λ a b₁ b₂, gpow_add (φ₀ a) b₁ b₂)⟩,
   
