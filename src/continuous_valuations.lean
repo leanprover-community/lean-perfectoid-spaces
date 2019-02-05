@@ -7,9 +7,9 @@ namespace valuation
 variables {R : Type u₁} [comm_ring R] [topological_space R] [topological_ring R]
 variables {Γ : Type u₂} [linear_ordered_comm_group Γ]
 
--- this definition should only be applied to valuations such that Gamma is the value group;
--- without this assumption the definition is meaningless (e.g. one can have two equivalent
--- valuations, one continuous and one not).
+-- Note: Wedhorn only defines continuity for valuations for which Gamma is
+-- the value group. This definition seems to be the correct definition in general,
+-- meaning that it is constant on equivalence classes.
 def function_is_continuous (v : R → with_zero Γ) [is_valuation v] : Prop :=
 ∀ x : Γ, x ∈ value_group_v v → is_open {r : R | v r < x}
 
@@ -17,8 +17,11 @@ def function_is_continuous (v : R → with_zero Γ) [is_valuation v] : Prop :=
 -- across equivalence classes (although at the time of writing I've not proved this)
 def is_continuous (v : valuation R Γ) : Prop := function_is_continuous v
 
-lemma is_continuous_of_equiv_is_continuous {Γ₁ : Type u₂} [linear_ordered_comm_group Γ₁] {Γ₂ : Type u₃} [linear_ordered_comm_group Γ₂]
- {v₁ : valuation R Γ₁} {v₂ : valuation R Γ₂} (heq : valuation.is_equiv v₁ v₂) (H : v₁.is_continuous) : v₂.is_continuous :=
+-- We're not ready for this yet; we need more API for valuations.
+lemma is_continuous_of_equiv_is_continuous {Γ₁ : Type u₂} [linear_ordered_comm_group Γ₁]
+  {Γ₂ : Type u₃} [linear_ordered_comm_group Γ₂]
+  {v₁ : valuation R Γ₁} {v₂ : valuation R Γ₂} (heq : valuation.is_equiv v₁ v₂)
+  (H : v₁.is_continuous) : v₂.is_continuous :=
 begin
   dsimp [is_continuous,valuation.function_is_continuous] at H ⊢,
   intros x hx,

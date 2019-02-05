@@ -289,9 +289,11 @@ end
 
 namespace minimal_value_group
 
--- This function eats an arbitrary valuation and returns an equivalent
--- one which takes values in a group in the same universe as R. It's actually
--- not quite this, it's an auxiliary function.
+-- This function eats an arbitrary valuation and returns an auxiliary
+-- function from R to the minimal value group, a group in the same universe as R.
+-- Note that it is not a valuation, as the value 0 is not allowed; stuff in the
+-- support of v gets sent to 1 not 0. This is an auxiliary function which
+-- we probably won't be using outside this file if we get the API right.
 def mk (r : R) : (minimal_value_group v₂).Γ :=
 begin
   let FG : Type u₁ := multiplicative (R →₀ ℤ), -- free ab group on R
@@ -303,6 +305,7 @@ begin
   exact quotient_group.mk (finsupp.single r (1 : ℤ))
 end
 
+-- the auxiliary function agrees with v₂ away from the support.
 lemma mk_some {r : R} {g : Γ₂} (h : v₂ r = some g) : 
   v₂ r = some ((minimal_value_group v₂).inc (mk v₂ r)) :=
 begin
@@ -312,6 +315,7 @@ begin
   rw finsupp.prod_single_index ; finish
 end
 
+-- the minimal value group is isomorphic to a subgroup of Γ₂ so inherits an order.
 instance : linear_ordered_comm_group (minimal_value_group v₂).Γ :=
 begin
   cases minimal_value_group v₂ with Γ₁ _ ψ _ inj,
@@ -332,9 +336,9 @@ end
 
 end minimal_value_group
 
--- This is function takinv a valuation v to a u₁-universe-valued valuation equivalent to it.
+-- This is function taking a valuation v to a u₁-universe-valued valuation equivalent to it.
 -- This is the final resolution of the set-theoretic issues caused by quantifying
--- over all value groups.
+-- over all value groups. This function is also correct on the support.
 definition minimal_valuation.val (r : R) : with_zero ((minimal_value_group v₂).Γ) :=
 match v₂ r with 
 | some _ := some (minimal_value_group.mk v₂ r)
@@ -378,6 +382,42 @@ def is_equiv {R : Type u₁} [comm_ring R]
 lemma minimal_valuation_equiv :
 is_equiv (v₂.minimal_valuation : valuation R (minimal_value_group v₂).Γ) v₂ :=
 le_of_le (minimal_valuation.map v₂) (λ g h, iff.refl _)
+
+-- Notes: if v1 equiv v2 then we need a bijection from the image of v1 to the
+-- image of v2; we need that the supports are the same; we need that
+-- the minimal_value_group for v2 is isomorphic to the subgroup of Gamma_2 generated
+-- by the image of the stuff not in the support.
+-- More notes: https://leanprover.zulipchat.com/#narrow/stream/113488-general/topic/eq.2Erec.20goal
+
+-- Theorem we almost surely need -- two equivalence valuations have isomorphic
+-- value groups. But we're not ready for it yet.
+
+-- Idea: prove Wedhorn 1.27.
+lemma minimal_valuations_biject_of_equiv {R : Type u₁} [comm_ring R]
+{Γ₁ : Type u₂} [linear_ordered_comm_group Γ₁]
+{Γ₂ : Type u₃} [linear_ordered_comm_group Γ₂]
+(v₁ : valuation R Γ₁) (v₂ : valuation R Γ₂) (h : is_equiv v₁ v₂) :
+(minimal_value_group v₁).Γ  → (minimal_value_group v₂).Γ :=
+λ g, begin
+  induction g with g g₁ g₂ h12,
+    exact finsupp.prod g (λ r n,(minimal_value_group.mk v₂ r) ^ n),
+  cases h12 with h12 hoops,
+    swap,cases hoops,
+  -- If φ1 is the function from R to Γ1 which is v1 away from the support and
+  -- sends the support to 1, then φ1 extends to a group hom Z[R] -> Γ1 (free ab group on R)
+  -- and h12 is the hypothesis that g₁⁻¹g₂ is in the kernel, so g₁ and g₂ get sent to
+  -- the same element of Γ1. We need the analogous result for φ2.
+  convert rfl,
+  suffices : finsupp.prod g₁ (λ (r : R) (n : ℤ), minimal_value_group.mk v₂ r ^ n) = 
+             finsupp.prod g₂ (λ (r : R) (n : ℤ), minimal_value_group.mk v₂ r ^ n),
+   subst this,
+    swap,sorry,
+  simp,
+  dsimp,
+  -- I am in eq.rec hell
+end
+
+#check eq.rec 
 
 end valuation
 
