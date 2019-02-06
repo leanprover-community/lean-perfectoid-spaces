@@ -182,7 +182,8 @@ def trivial : valuation R Γ :=
           exfalso, exact hxy hxy' }
       end } }
 
-@[simp] lemma trivial_val : (trivial S).val = (λ x, if x ∈ S then 0 else 1 : R → (with_zero Γ)) := rfl
+@[simp] lemma trivial_val :
+(trivial S).val = (λ x, if x ∈ S then 0 else 1 : R → (with_zero Γ)) := rfl
 
 end trivial
 
@@ -216,12 +217,52 @@ instance : ideal.is_prime (supp v) :=
     exact eq_zero_or_eq_zero_of_mul_eq_zero _ _ hxy
   end⟩
 
--- We have not yet extended a valuation v to a valuation on R/supp v or its field of fractions.
-/-
-definition extension_to_integral_domain {α : Type} [linear_ordered_comm_group α]
-  {R : Type} [comm_ring R] (f : R → with_zero α) [H : is_valuation f] :
-  (comm_ring.quotient R (supp f)) → with_zero α := sorry
--/
+-- v(a)=v(a+s) if s in support. First an auxiliary lemma
+lemma val_add_supp_aux (a s : R) (h : s ∈ supp v) : v (a + s) ≤ v a :=
+begin
+  change v s = 0 at h,
+  cases map_add v a s with H H, exact H,
+  rw h at H,
+  have : v (a + s) = 0 := by simp [H],
+  simp [this]
+end
+
+lemma val_add_supp (a s : R) (h : s ∈ supp v) : v (a + s) = v a :=
+begin
+  apply le_antisymm (val_add_supp_aux v a s h),
+  convert val_add_supp_aux v (a + s) (-s) _, simp,
+  rwa ideal.neg_mem_iff,
+end
+
+-- We have not yet extended a valuation v to a valuation on R/supp v
+-- or its field of fractions.
+
+-- "Extension" of a valuation v from R to R/supp(v)
+definition extension_to_quot_supp {Γ : Type*} [linear_ordered_comm_group Γ]
+  {R : Type*} [comm_ring R] (v : valuation R Γ) :
+(supp v).quotient → with_zero Γ :=
+λ q, quotient.lift_on' q v $ λ a b h,
+begin
+  change a - b ∈ supp v at h,
+  convert val_add_supp v b (a - b) h,
+  simp,
+end
+
+-- If Lean says "this is already in mathlib" then it's because my PR got accepted
+-- and this decfinition can just be deleted.
+definition quotient.ind₂' :
+∀ {α : Sort*} {β : Sort*} {s₁ : setoid α} {s₂ : setoid β}
+{p : quotient s₁ → quotient s₂ → Prop}
+(h : ∀ (a₁ : α) (a₂ : β), p (quotient.mk' a₁) (quotient.mk' a₂))
+(q₁ : quotient s₁) (q₂ : quotient s₂), p q₁ q₂
+:= λ α β s₁ s₂ p h q₁ q₂, quotient.induction_on₂' q₁ q₂ h 
+
+instance extension_to_quot_supp.is_valuation : is_valuation (extension_to_quot_supp v) :=
+{ map_zero := map_zero v,
+  map_one := map_one v,
+  map_mul := quotient.ind₂' $ λ a b, map_mul _ _ _,
+  map_add := quotient.ind₂' $ λ a b, map_add _ _ _
+  }
 
 end supp
 
@@ -383,6 +424,19 @@ lemma minimal_valuation_equiv :
 is_equiv (v₂.minimal_valuation : valuation R (minimal_value_group v₂).Γ) v₂ :=
 le_of_le (minimal_valuation.map v₂) (λ g h, iff.refl _)
 
+-- Wedhorm 1.27
+-- iii -> ii
+def supp_sub_of_is_equiv {R : Type u₁} [comm_ring R]
+  {Γ₁ : Type u₂} [linear_ordered_comm_group Γ₁]
+  {Γ₂ : Type u₃} [linear_ordered_comm_group Γ₂]
+  (v₁ : valuation R Γ₁) (v₂ : valuation R Γ₂) :
+((supp v₁) : set R) ⊆ supp v₂ :=
+begin
+  intros r Hr,
+  sorry -- need extension of |.| to Frac(A/supp)
+end
+
+#check ideal
 -- Notes: if v1 equiv v2 then we need a bijection from the image of v1 to the
 -- image of v2; we need that the supports are the same; we need that
 -- the minimal_value_group for v2 is isomorphic to the subgroup of Gamma_2 generated
@@ -410,14 +464,13 @@ lemma minimal_valuations_biject_of_equiv {R : Type u₁} [comm_ring R]
   convert rfl,
   suffices : finsupp.prod g₁ (λ (r : R) (n : ℤ), minimal_value_group.mk v₂ r ^ n) = 
              finsupp.prod g₂ (λ (r : R) (n : ℤ), minimal_value_group.mk v₂ r ^ n),
-   subst this,
+   rw this,
     swap,sorry,
   simp,
   dsimp,
   -- I am in eq.rec hell
+  sorry
 end
-
-#check eq.rec 
 
 end valuation
 
@@ -425,8 +478,8 @@ end valuation
 
 https://leanprover.zulipchat.com/#narrow/stream/116395-maths/topic/Perfectoid.20spaces/near/129009961
 
-class is_valuation {α : Type} [linear_ordered_comm_group α]
-  {R : Type} [comm_ring R] (f : R → option α) : Prop :=
+class is_valuation {α : Type*} [linear_ordered_comm_group α]
+  {R : Type*} [comm_ring R] (f : R → option α) : Prop :=
 (map_zero : f 0 = 0)
 (map_one  : f 1 = 1)
 (map_mul  : ∀ x y, f (x * y) = f x * f y)
@@ -436,7 +489,7 @@ namespace is_valuation
 
 ...
 
-structure valuation (R : Type) [comm_ring R] (α : Type) [Hα : linear_ordered_comm_group α] :=
+structure valuation (R : Type*) [comm_ring R] (α : Type*) [Hα : linear_ordered_comm_group α] :=
 (f : R → option α)
 (Hf : is_valuation f)
 
