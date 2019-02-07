@@ -1,10 +1,12 @@
 import algebra.group_power
 import set_theory.cardinal
-import ring_theory.ideals
+import ring_theory.ideal_operations
 import data.finsupp
 import group_theory.quotient_group
 import tactic.tidy
 import for_mathlib.linear_ordered_comm_group
+import ring_theory.localization
+import tactic.abel
 
 local attribute [instance, priority 0] classical.prop_decidable
 noncomputable theory
@@ -203,6 +205,8 @@ def supp : ideal R :=
                     ... = v c * 0 : congr_arg _ hx
                     ... = 0 : mul_zero _ }
 
+@[simp] lemma mem_supp_iff (x : R) : x ∈ supp v ↔ v x = 0 := iff.rfl
+
 omit v
 
 -- support is a prime ideal.
@@ -237,14 +241,18 @@ end
 -- We have not yet extended a valuation v to a valuation on R/supp v
 -- or its field of fractions.
 
--- "Extension" of a valuation v from R to R/supp(v)
-definition extension_to_quot_supp {Γ : Type*} [linear_ordered_comm_group Γ]
-  {R : Type*} [comm_ring R] (v : valuation R Γ) :
-(supp v).quotient → with_zero Γ :=
+-- "Extension" of a valuation v from R to R/supp(v).
+-- Note: we could extend v from R to R/J where J is any
+-- subset of supp(v).
+
+-- First the function
+definition extension_to_quot_v {Γ : Type*} [linear_ordered_comm_group Γ]
+  {R : Type*} [comm_ring R] (v : valuation R Γ) {J : ideal R} (hJ : (J : set R) ⊆ supp v):
+J.quotient → with_zero Γ :=
 λ q, quotient.lift_on' q v $ λ a b h,
 begin
-  change a - b ∈ supp v at h,
-  convert val_add_supp v b (a - b) h,
+  have hsupp : a - b ∈ supp v := hJ h,
+  convert val_add_supp v b (a - b) hsupp,
   simp,
 end
 
@@ -257,14 +265,106 @@ definition quotient.ind₂' :
 (q₁ : quotient s₁) (q₂ : quotient s₂), p q₁ q₂
 := λ α β s₁ s₂ p h q₁ q₂, quotient.induction_on₂' q₁ q₂ h 
 
-instance extension_to_quot_supp.is_valuation : is_valuation (extension_to_quot_supp v) :=
+-- Proof that function is a valuation.
+variable {v}
+instance extension_to_quot_v.is_valuation {J : ideal R} (hJ : (J : set R) ⊆ supp v) :
+is_valuation (extension_to_quot_v v hJ) :=
 { map_zero := map_zero v,
   map_one := map_one v,
   map_mul := quotient.ind₂' $ λ a b, map_mul _ _ _,
   map_add := quotient.ind₂' $ λ a b, map_add _ _ _
   }
 
+-- Now the valuation
+definition extension_to_quot {Γ : Type*} [linear_ordered_comm_group Γ]
+  {R : Type*} [comm_ring R] (v : valuation R Γ) {J : ideal R} (hJ : (J : set R) ⊆ supp v):
+valuation J.quotient Γ := ⟨extension_to_quot_v v hJ,extension_to_quot_v.is_valuation hJ⟩
+
+
+-- quotient valuation on R/J has support supp(v)/J
+-- NB : this looks really sucky
+lemma supp_quot_supp {Γ : Type*} [linear_ordered_comm_group Γ]
+  {R : Type*} [comm_ring R] (v : valuation R Γ) {J : ideal R} (hJ : J ≤ supp v):
+supp (extension_to_quot v hJ) = ideal.map (ideal.quotient.mk J) (supp v) :=
+begin
+  apply le_antisymm,
+  { rintro ⟨x⟩ hx,
+    apply ideal.subset_span,
+    refine ⟨x, hx, rfl⟩, },
+  { rw ideal.map_le_iff_le_comap,
+    intros x hx, exact hx }
+end
+
 end supp
+
+end valuation
+
+-- this really shouldn't go here. I blame Chris and Kenny for this nonsense
+instance : monad with_zero := option.monad
+
+definition with_zero.inv {Γ : Type*} [has_inv Γ] (x : with_zero Γ) : with_zero Γ :=
+do a ← x, return a⁻¹
+
+instance {Γ : Type*} [has_inv Γ] : has_inv (with_zero Γ) := ⟨with_zero.inv⟩
+
+definition with_zero.div {Γ : Type*} [group Γ] (x y : with_zero Γ) : with_zero Γ :=
+x * y⁻¹
+
+instance {Γ : Type*} [group Γ] : has_div (with_zero Γ) := ⟨with_zero.div⟩
+
+lemma is_some_iff_ne_none {α : Type*} {x : option α} : x.is_some ↔ x ≠ none :=
+by cases x; simp
+
+lemma with_zero.div_eq_div {Γ : Type*} [comm_group Γ] {a b c d : with_zero Γ} (hb : b ≠ 0) (hd : d ≠ 0) :
+  a / b = c / d ↔ a * d = b * c :=
+begin
+  replace hb := is_some_iff_ne_none.2 hb,
+  replace hd := is_some_iff_ne_none.2 hd,
+  rw option.is_some_iff_exists at hb hd,
+  rcases hb with ⟨b, rfl⟩,
+  rcases hd with ⟨d, rfl⟩,
+  cases a; cases c,
+  { refl },
+  { change none = some _ ↔ none = some _, simp },
+  { change some _ = none ↔ some _ = none, simp },
+  change some (_ * _) = some (_ * _) ↔ some (_ * _) = some (_ * _),
+  rw [option.some_inj, option.some_inj], split; intro H,
+  { rw mul_inv_eq_iff_eq_mul at H,
+    rw [H, mul_right_comm, inv_mul_cancel_right, mul_comm] },
+  { rw [mul_inv_eq_iff_eq_mul, mul_right_comm, mul_comm c, ← H, mul_inv_cancel_right] }
+end
+
+namespace valuation
+
+section quotient_ring
+open localization
+
+definition extension_to_frac {Γ : Type*} [linear_ordered_comm_group Γ]
+  {R : Type*} [integral_domain R] (v : valuation R Γ) (hv : supp v = 0) :
+localization.quotient_ring R → with_zero Γ :=
+quotient.lift (λ rs, v rs.1 / v rs.2.1 : R × non_zero_divisors R → with_zero Γ)
+begin
+  intros a b hab,
+  rcases a with ⟨r,s,hs⟩,
+  rcases b with ⟨t,u,hu⟩, 
+  rcases hab with ⟨w,hw,h⟩, classical,
+  change v r / v s = v t / v u,
+  replace hs := ne_zero_of_mem_non_zero_divisors hs,
+  replace hu := ne_zero_of_mem_non_zero_divisors hu,
+  replace hw := ne_zero_of_mem_non_zero_divisors hw,
+  have hvs : v s ≠ 0 := λ H, hs $ (submodule.mem_bot R).1 (lattice.eq_bot_iff.1 hv H),
+  have hvu : v u ≠ 0 := λ H, hu $ (submodule.mem_bot R).1 (lattice.eq_bot_iff.1 hv H),
+  have hvw : v w ≠ 0 := λ H, hw $ (submodule.mem_bot R).1 (lattice.eq_bot_iff.1 hv H),
+  rw [with_zero.div_eq_div hvs hvu],
+  rw [sub_mul, sub_eq_zero] at h, replace h := congr_arg v h,
+  iterate 4 { rw map_mul at h },
+  cases option.is_some_iff_exists.1 (is_some_iff_ne_none.2 hvw) with w hvw, rw hvw at h, rw mul_comm,
+  cases v s * v t; cases v u * v r, { refl }, { simpa using h }, { simpa using h },
+  congr' 1, replace h := option.some.inj h, symmetry, exact mul_right_cancel h
+end
+
+end quotient_ring
+#exit
 
 variable (v)
 
