@@ -7,6 +7,7 @@ import tactic.tidy
 import for_mathlib.linear_ordered_comm_group
 import ring_theory.localization
 import tactic.abel
+import for_mathlib.with_zero
 
 local attribute [instance, priority 0] classical.prop_decidable
 noncomputable theory
@@ -282,7 +283,7 @@ valuation J.quotient Γ := ⟨extension_to_quot_v v hJ,extension_to_quot_v.is_va
 
 
 -- quotient valuation on R/J has support supp(v)/J
--- NB : this looks really sucky
+-- NB : statement looks really unreadable
 lemma supp_quot_supp {Γ : Type*} [linear_ordered_comm_group Γ]
   {R : Type*} [comm_ring R] (v : valuation R Γ) {J : ideal R} (hJ : J ≤ supp v):
 supp (extension_to_quot v hJ) = ideal.map (ideal.quotient.mk J) (supp v) :=
@@ -297,51 +298,16 @@ end
 
 end supp
 
-end valuation
-
--- this really shouldn't go here. I blame Chris and Kenny for this nonsense
-instance : monad with_zero := option.monad
-
-definition with_zero.inv {Γ : Type*} [has_inv Γ] (x : with_zero Γ) : with_zero Γ :=
-do a ← x, return a⁻¹
-
-instance {Γ : Type*} [has_inv Γ] : has_inv (with_zero Γ) := ⟨with_zero.inv⟩
-
-definition with_zero.div {Γ : Type*} [group Γ] (x y : with_zero Γ) : with_zero Γ :=
-x * y⁻¹
-
-instance {Γ : Type*} [group Γ] : has_div (with_zero Γ) := ⟨with_zero.div⟩
-
-lemma is_some_iff_ne_none {α : Type*} {x : option α} : x.is_some ↔ x ≠ none :=
-by cases x; simp
-
-lemma with_zero.div_eq_div {Γ : Type*} [comm_group Γ] {a b c d : with_zero Γ} (hb : b ≠ 0) (hd : d ≠ 0) :
-  a / b = c / d ↔ a * d = b * c :=
-begin
-  replace hb := is_some_iff_ne_none.2 hb,
-  replace hd := is_some_iff_ne_none.2 hd,
-  rw option.is_some_iff_exists at hb hd,
-  rcases hb with ⟨b, rfl⟩,
-  rcases hd with ⟨d, rfl⟩,
-  cases a; cases c,
-  { refl },
-  { change none = some _ ↔ none = some _, simp },
-  { change some _ = none ↔ some _ = none, simp },
-  change some (_ * _) = some (_ * _) ↔ some (_ * _) = some (_ * _),
-  rw [option.some_inj, option.some_inj], split; intro H,
-  { rw mul_inv_eq_iff_eq_mul at H,
-    rw [H, mul_right_comm, inv_mul_cancel_right, mul_comm] },
-  { rw [mul_inv_eq_iff_eq_mul, mul_right_comm, mul_comm c, ← H, mul_inv_cancel_right] }
-end
-
-namespace valuation
-
 section quotient_ring
 open localization
 
+-- Kenny says this should work for nonzero commrings
+-- ne_zero_of_mem_non_zero_divisors uses integral domain though -- maybe it shouldn't
+-- oh wait -- support is a prime ideal so if it's zero the ring is an ID anyway
+/-- extension of valuation on ID with support 0 to field of fractions -/
 definition extension_to_frac {Γ : Type*} [linear_ordered_comm_group Γ]
   {R : Type*} [integral_domain R] (v : valuation R Γ) (hv : supp v = 0) :
-localization.quotient_ring R → with_zero Γ :=
+quotient_ring R → with_zero Γ :=
 quotient.lift (λ rs, v rs.1 / v rs.2.1 : R × non_zero_divisors R → with_zero Γ)
 begin
   intros a b hab,
@@ -364,7 +330,6 @@ begin
 end
 
 end quotient_ring
-#exit
 
 variable (v)
 
