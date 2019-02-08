@@ -78,29 +78,20 @@ end
 
 lemma is_group_hom.unit_map : is_group_hom (unit_map v) :=
 ⟨λ a b, begin
-  unfold unit_map,
-  -- unfinished
+  apply option.some.inj, change _ = (some _ * some _ : with_zero Γ),
+  rw [unit_map_eq, unit_map_eq, unit_map_eq, units.coe_mul, v.map_mul]
 end⟩
 
 theorem map_neg_one : v (-1) = 1 :=
 begin
-  have h1 : (-1 : R) * (-1) = 1 := by simp,
-  have h2 := map_unit v h1,
-  have h3 := map_mul v (-1) (-1),
-  rw [option.is_some_iff_exists] at h2,
-  cases h2 with x h,
-  change v (-1) = some x at h,
-  show v (-1) = 1,
-  rw h at h3 ⊢,
-  congr,
-  rw [h1, map_one v] at h3,
-  replace h3 := eq.symm (option.some.inj h3),
-  have h4 : x^2 = 1 := by simpa [pow_two] using h3,
-  exact linear_ordered_comm_group.eq_one_of_pow_eq_one h4
+  change v (-1 : units R) = 1, rw ← unit_map_eq, congr' 1,
+  apply linear_ordered_comm_group.eq_one_of_pow_eq_one, change _ ^ 2 = _,
+  rw pow_two, apply option.some.inj, change (some _ * some _ : with_zero Γ) = _,
+  rw [unit_map_eq, ← v.map_mul, units.coe_neg, units.coe_one, neg_one_mul, neg_neg, v.map_one], refl
 end
 
 @[simp] theorem eq_zero_iff_le_zero {r : R} : v r = 0 ↔ v r ≤ v 0 :=
-by split; intro h; simpa using h
+v.map_zero.symm ▸ with_zero.le_zero_iff_eq_zero.symm
 
 section
 
