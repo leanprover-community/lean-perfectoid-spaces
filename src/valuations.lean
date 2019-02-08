@@ -8,6 +8,7 @@ import for_mathlib.linear_ordered_comm_group
 import ring_theory.localization
 import tactic.abel
 import for_mathlib.with_zero
+import data.option.basic
 
 local attribute [instance, priority 0] classical.prop_decidable
 noncomputable theory
@@ -57,6 +58,30 @@ begin
   { constructor }
 end
 
+definition unit_map : units R → Γ :=
+λ u, match v u with
+| some x := x
+| none := 1
+end
+
+theorem unit_map_eq (u : units R) : some (unit_map v u) = v u :=
+begin
+  unfold unit_map,
+  have h1 := v.map_mul u.1 u.2,
+  change _ = v u * _ at h1,
+  rw [u.3, map_one v] at h1,
+  cases h : (v u),
+    rw h at h1,
+    exfalso, exact option.no_confusion h1,
+  refl,
+end
+
+lemma is_group_hom.unit_map : is_group_hom (unit_map v) :=
+⟨λ a b, begin
+  unfold unit_map,
+  -- unfinished
+end⟩
+
 theorem map_neg_one : v (-1) = 1 :=
 begin
   have h1 : (-1 : R) * (-1) = 1 := by simp,
@@ -80,13 +105,13 @@ by split; intro h; simpa using h
 section
 
 variables {Γ₁ : Type u₂} [linear_ordered_comm_group Γ₁]
-variables {Γ₂ : Type u₃} [linear_ordered_comm_group Γ₂] 
+variables {Γ₂ : Type u₃} [linear_ordered_comm_group Γ₂]
 variables {v₁ : R → with_zero Γ₁} {v₂ : R → with_zero Γ₂}
 variables {ψ : Γ₁ → Γ₂}
 variables (H12 : ∀ r, with_zero.map ψ (v₁ r) = v₂ r)
 variables (Hle : ∀ g h : Γ₁, g ≤ h ↔ ψ g ≤ ψ h)
 -- This include statement means that we have an underlying assumption
--- that ψ : Γ₁ → Γ₂ is order-preserving, and that v₁ and v₂ are functions with ψ ∘ v₁ = v₂. 
+-- that ψ : Γ₁ → Γ₂ is order-preserving, and that v₁ and v₂ are functions with ψ ∘ v₁ = v₂.
 include H12 Hle
 
 theorem le_of_le (r s : R) : v₁ r ≤ v₁ s ↔ v₂ r ≤ v₂ s :=
@@ -95,9 +120,9 @@ begin
   cases hr : (v₁ r) with g; cases hs : (v₁ s) with h; try {simp},
   { intro oops, exact option.no_confusion oops },
   { exact Hle g h }
-end 
+end
 
--- Restriction of a Γ₂-valued valuation to a subgroup Γ₁ is still a valuation 
+-- Restriction of a Γ₂-valued valuation to a subgroup Γ₁ is still a valuation
 theorem valuation_of_valuation [is_group_hom ψ]
   (Hiψ : function.injective ψ)
   (H : is_valuation v₂) :
@@ -163,7 +188,7 @@ include prime
 def trivial : valuation R Γ :=
 { val := λ x, if x ∈ S then 0 else 1,
   property :=
-  { map_zero := if_pos S.zero_mem, 
+  { map_zero := if_pos S.zero_mem,
     map_one  := if_neg (assume h, prime.1 (S.eq_top_iff_one.2 h)),
     map_mul  := λ x y, begin
         split_ifs with hxy hx hy; try {simp}; exfalso,
@@ -195,7 +220,7 @@ open with_zero
 include v
 
 -- support of a valuation v : R → {0} ∪ Γ
-def supp : ideal R := 
+def supp : ideal R :=
 { carrier := {x | v x = 0},
   zero := map_zero v,
   add  := λ x y hx hy, or.cases_on (map_add v x y)
@@ -207,6 +232,7 @@ def supp : ideal R :=
                     ... = 0 : mul_zero _ }
 
 @[simp] lemma mem_supp_iff (x : R) : x ∈ supp v ↔ v x = 0 := iff.rfl
+@[simp] lemma mem_supp_iff' (x : R) : x ∈ (supp v : set R)↔ v x = 0 := iff.rfl
 
 omit v
 
@@ -264,7 +290,7 @@ definition quotient.ind₂' :
 {p : quotient s₁ → quotient s₂ → Prop}
 (h : ∀ (a₁ : α) (a₂ : β), p (quotient.mk' a₁) (quotient.mk' a₂))
 (q₁ : quotient s₁) (q₂ : quotient s₂), p q₁ q₂
-:= λ α β s₁ s₂ p h q₁ q₂, quotient.induction_on₂' q₁ q₂ h 
+:= λ α β s₁ s₂ p h q₁ q₂, quotient.induction_on₂' q₁ q₂ h
 
 -- Proof that function is a valuation.
 variable {v}
@@ -312,7 +338,7 @@ quotient.lift (λ rs, v rs.1 / v rs.2.1 : R × non_zero_divisors R → with_zero
 begin
   intros a b hab,
   rcases a with ⟨r,s,hs⟩,
-  rcases b with ⟨t,u,hu⟩, 
+  rcases b with ⟨t,u,hu⟩,
   rcases hab with ⟨w,hw,h⟩, classical,
   change v r / v s = v t / v u,
   replace hs := ne_zero_of_mem_non_zero_divisors hs,
@@ -329,12 +355,20 @@ begin
   congr' 1, replace h := option.some.inj h, symmetry, exact mul_right_cancel h
 end
 
+-- TODO Does this work yet?
+-- example (R : Type*) [integral_domain R] : discrete_field (quotient_ring R) := by apply_instance
+-- If it does, then mathlib fixed the problem and the next line can be removed
+instance (R : Type*) [integral_domain R] : discrete_field (quotient_ring R) := quotient_ring.field.of_integral_domain R
+
 end quotient_ring
+
+#exit
+--section discrete_field
 
 variable (v)
 
 -- The value group of v is the smallest subgroup Γ_v of Γ for which v takes
--- values in {0} ∪ Γ_v  
+-- values in {0} ∪ Γ_v
 definition value_group := group.closure {a : Γ | ∃ r : R, v r = some a}
 
 definition value_group_v (v : R → with_zero Γ) [is_valuation v] :=
@@ -353,7 +387,7 @@ open quotient_group
 
 variables {R : Type u₁} [comm_ring R] [decidable_eq R]
 
--- This structure is scary because it has a random Γ : Type u₁ inside, but 
+-- This structure is scary because it has a random Γ : Type u₁ inside, but
 -- we don't use it very often; it's an intermediate thing.
 structure minimal_valuation.parametrized_subgroup (Γ₂ : Type u₂) [linear_ordered_comm_group Γ₂] :=
 (Γ : Type u₁)
@@ -383,9 +417,9 @@ begin
   let FG : Type u₁ := multiplicative (R →₀ ℤ), -- free ab group on R
   let φ₀ : R → Γ₂ := λ r, option.get_or_else (v₂ r) 1,
   let φ : FG → Γ₂ := λ f, finsupp.prod f (λ r n, (φ₀ r) ^ n),
-  haveI : is_group_hom φ := 
+  haveI : is_group_hom φ :=
     ⟨λ a b, finsupp.prod_add_index (λ a, rfl) (λ a b₁ b₂, gpow_add (φ₀ a) b₁ b₂)⟩,
-  
+
   exact
   { Γ     :=  quotient (is_group_hom.ker φ),
     inc   :=  lift (is_group_hom.ker φ) φ (λ _,(is_group_hom.mem_ker φ).1),
@@ -405,14 +439,14 @@ begin
   let FG : Type u₁ := multiplicative (R →₀ ℤ), -- free ab group on R
   let φ₀ : R → Γ₂ := λ r, option.get_or_else (v₂ r) 1,
   let φ : FG → Γ₂ := λ f, finsupp.prod f (λ r n,(φ₀ r) ^ n),
-  haveI : is_group_hom φ := 
+  haveI : is_group_hom φ :=
     ⟨λ a b, finsupp.prod_add_index (λ a, rfl) (λ a b₁ b₂, gpow_add (φ₀ a) b₁ b₂)⟩,
 
   exact quotient_group.mk (finsupp.single r (1 : ℤ))
 end
 
 -- the auxiliary function agrees with v₂ away from the support.
-lemma mk_some {r : R} {g : Γ₂} (h : v₂ r = some g) : 
+lemma mk_some {r : R} {g : Γ₂} (h : v₂ r = some g) :
   v₂ r = some ((minimal_value_group v₂).inc (mk v₂ r)) :=
 begin
   rw h,
@@ -425,8 +459,8 @@ end
 instance : linear_ordered_comm_group (minimal_value_group v₂).Γ :=
 begin
   cases minimal_value_group v₂ with Γ₁ _ ψ _ inj,
-  
-  letI Γ₁linord : linear_order Γ₁ := 
+
+  letI Γ₁linord : linear_order Γ₁ :=
   { le := λ g h, ψ g ≤ ψ h,
     le_refl := λ _, le_refl _,
     le_trans := λ _ _ _ hab hbc, le_trans hab hbc,
@@ -446,7 +480,7 @@ end minimal_value_group
 -- This is the final resolution of the set-theoretic issues caused by quantifying
 -- over all value groups. This function is also correct on the support.
 definition minimal_valuation.val (r : R) : with_zero ((minimal_value_group v₂).Γ) :=
-match v₂ r with 
+match v₂ r with
 | some _ := some (minimal_value_group.mk v₂ r)
 | 0 := 0
 end
@@ -479,29 +513,40 @@ def minimal_valuation : valuation R (minimal_value_group v₂).Γ :=
 
 -- Definition of equivalence relation on valuations
 def is_equiv {R : Type u₁} [comm_ring R]
-{Γ₁ : Type u₂} [linear_ordered_comm_group Γ₁]
-{Γ₂ : Type u₃} [linear_ordered_comm_group Γ₂]
-(v₁ : valuation R Γ₁) (v₂ : valuation R Γ₂) : Prop :=
+  {Γ₁ : Type u₂} [linear_ordered_comm_group Γ₁]
+  {Γ₂ : Type u₃} [linear_ordered_comm_group Γ₂]
+  (v₁ : valuation R Γ₁) (v₂ : valuation R Γ₂) : Prop :=
 ∀ r s, v₁ r ≤ v₁ s ↔ v₂ r ≤ v₂ s
+
+def equiv_symm {R : Type u₁} [comm_ring R]
+  {Γ₁ : Type u₂} [linear_ordered_comm_group Γ₁]
+  {Γ₂ : Type u₃} [linear_ordered_comm_group Γ₂]
+  {v₁ : valuation R Γ₁} {v₂ : valuation R Γ₂} :
+is_equiv v₁ v₂ → is_equiv v₂ v₁ := λ h r s, iff.symm (h r s)
 
 -- Theorem that valuation v₂ is equivalent to the associated minimal valuation.
 lemma minimal_valuation_equiv :
 is_equiv (v₂.minimal_valuation : valuation R (minimal_value_group v₂).Γ) v₂ :=
 le_of_le (minimal_valuation.map v₂) (λ g h, iff.refl _)
 
--- Wedhorm 1.27
--- iii -> ii
+-- Wedhorm 1.27 iii -> ii prep
 def supp_sub_of_is_equiv {R : Type u₁} [comm_ring R]
   {Γ₁ : Type u₂} [linear_ordered_comm_group Γ₁]
   {Γ₂ : Type u₃} [linear_ordered_comm_group Γ₂]
-  (v₁ : valuation R Γ₁) (v₂ : valuation R Γ₂) :
+  {v₁ : valuation R Γ₁} {v₂ : valuation R Γ₂}
+  (h : is_equiv v₁ v₂) :
 ((supp v₁) : set R) ⊆ supp v₂ :=
-begin
-  intros r Hr,
-  sorry -- need extension of |.| to Frac(A/supp)
-end
+λ r Hr, by rwa [mem_supp_iff', eq_zero_iff_le_zero, ←(h r 0), ←eq_zero_iff_le_zero, ←mem_supp_iff']
 
-#check ideal
+/-- Wedhorm 1.27 iii -> ii -/
+def supp_eq_if_is_equiv {R : Type u₁} [comm_ring R]
+  {Γ₁ : Type u₂} [linear_ordered_comm_group Γ₁]
+  {Γ₂ : Type u₃} [linear_ordered_comm_group Γ₂]
+  {v₁ : valuation R Γ₁} {v₂ : valuation R Γ₂}
+  (h : is_equiv v₁ v₂) :
+supp v₁ = supp v₂ :=
+le_antisymm (supp_sub_of_is_equiv h) $ supp_sub_of_is_equiv $ equiv_symm h
+
 -- Notes: if v1 equiv v2 then we need a bijection from the image of v1 to the
 -- image of v2; we need that the supports are the same; we need that
 -- the minimal_value_group for v2 is isomorphic to the subgroup of Gamma_2 generated
@@ -512,7 +557,7 @@ end
 -- value groups. But we're not ready for it yet.
 
 -- Idea: prove Wedhorn 1.27.
-lemma minimal_valuations_biject_of_equiv {R : Type u₁} [comm_ring R]
+def minimal_valuations_biject_of_equiv {R : Type u₁} [comm_ring R]
 {Γ₁ : Type u₂} [linear_ordered_comm_group Γ₁]
 {Γ₂ : Type u₃} [linear_ordered_comm_group Γ₂]
 (v₁ : valuation R Γ₁) (v₂ : valuation R Γ₂) (h : is_equiv v₁ v₂) :
@@ -527,7 +572,7 @@ lemma minimal_valuations_biject_of_equiv {R : Type u₁} [comm_ring R]
   -- and h12 is the hypothesis that g₁⁻¹g₂ is in the kernel, so g₁ and g₂ get sent to
   -- the same element of Γ1. We need the analogous result for φ2.
   convert rfl,
-  suffices : finsupp.prod g₁ (λ (r : R) (n : ℤ), minimal_value_group.mk v₂ r ^ n) = 
+  suffices : finsupp.prod g₁ (λ (r : R) (n : ℤ), minimal_value_group.mk v₂ r ^ n) =
              finsupp.prod g₂ (λ (r : R) (n : ℤ), minimal_value_group.mk v₂ r ^ n),
    rw this,
     swap,sorry,
@@ -550,7 +595,7 @@ class is_valuation {α : Type*} [linear_ordered_comm_group α]
 (map_mul  : ∀ x y, f (x * y) = f x * f y)
 (map_add  : ∀ x y, f (x + y) ≤ f x ∨ f (x + y) ≤ f y)
 
-namespace is_valuation 
+namespace is_valuation
 
 ...
 
