@@ -9,6 +9,7 @@ import ring_theory.localization
 import tactic.abel
 import for_mathlib.with_zero
 import data.option.basic
+import for_mathlib.finsupp_prod_inv
 
 local attribute [instance, priority 0] classical.prop_decidable
 noncomputable theory
@@ -353,7 +354,6 @@ instance (R : Type*) [integral_domain R] : discrete_field (quotient_ring R) := q
 
 end quotient_ring
 
-#exit
 --section discrete_field
 
 variable (v)
@@ -546,15 +546,23 @@ le_antisymm (supp_sub_of_is_equiv h) $ supp_sub_of_is_equiv $ equiv_symm h
 
 -- Theorem we almost surely need -- two equivalence valuations have isomorphic
 -- value groups. But we're not ready for it yet.
-
+#check is_group_hom.mem_ker
+set_option pp.proofs true
 -- Idea: prove Wedhorn 1.27.
 def minimal_valuations_biject_of_equiv {R : Type u₁} [comm_ring R]
 {Γ₁ : Type u₂} [linear_ordered_comm_group Γ₁]
 {Γ₂ : Type u₃} [linear_ordered_comm_group Γ₂]
 (v₁ : valuation R Γ₁) (v₂ : valuation R Γ₂) (h : is_equiv v₁ v₂) :
 (minimal_value_group v₁).Γ  → (minimal_value_group v₂).Γ :=
-λ g, begin
-  induction g with g g₁ g₂ h12,
+λ g, quotient.lift_on' g (λ g, finsupp.prod g (λ r n,(minimal_value_group.mk v₂ r) ^ n)) $ λ g₁ g₂ h12, begin
+  change _ ∈ _ at h12, rw is_group_hom.mem_ker at h12,
+  change finsupp.prod (-_ + _) _ = _ at h12,
+  change finsupp.prod _ _ = finsupp.prod _ _,
+  rw [finsupp.prod_add_index, finsupp.prod_neg_index', mul_eq_one_iff_eq_inv, inv_inj'] at h12,
+  iterate 5 { sorry },
+--  cases h12 with h12 hoops,
+--    swap,cases hoops,
+/-  induction g with g g₁ g₂ h12,
     exact finsupp.prod g (λ r n,(minimal_value_group.mk v₂ r) ^ n),
   cases h12 with h12 hoops,
     swap,cases hoops,
@@ -567,10 +575,7 @@ def minimal_valuations_biject_of_equiv {R : Type u₁} [comm_ring R]
              finsupp.prod g₂ (λ (r : R) (n : ℤ), minimal_value_group.mk v₂ r ^ n),
    rw this,
     swap,sorry,
-  simp,
-  dsimp,
-  -- I am in eq.rec hell
-  sorry
+  generalize : quot.sound _ = h1,-/
 end
 
 end valuation
