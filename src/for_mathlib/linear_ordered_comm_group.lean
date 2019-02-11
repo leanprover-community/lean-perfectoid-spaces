@@ -3,6 +3,7 @@ import group_theory.subgroup
 import set_theory.cardinal
 import for_mathlib.subrel
 import for_mathlib.option_inj
+import for_mathlib.with_zero
 
 universes u v
 
@@ -226,5 +227,27 @@ theorem eq_zero_or_eq_zero_of_mul_eq_zero : ∀ x y : with_zero α, x * y = 0 �
 | (some x) (some y) hxy := false.elim $ option.no_confusion hxy
 | 0        _        hxy := or.inl rfl
 | _        0        hxy := or.inr rfl
+
+@[simp] lemma mul_inv_self [group α] (a : with_zero α) : a * a⁻¹ ≤ 1 :=
+begin
+  cases a,
+  { exact zero_le },
+  { apply le_of_eq _,
+    exact congr_arg some (mul_inv_self a) }
+end
+
+@[simp] lemma div_self [group α] (a : with_zero α) : a / a ≤ 1 := mul_inv_self a
+
+-- lemma div_le_div (a b c d : with_zero α) (hb : b ≠ 0) (hd : d ≠ 0) :
+--   a / b ≤ c / d ↔ a * d ≤ c * b :=
+-- begin
+--   replace hb := is_some_iff_ne_none.2 hb,
+--   replace hd := is_some_iff_ne_none.2 hd,
+--   rw option.is_some_iff_exists at hb hd,
+--   rcases hb with ⟨b, rfl⟩,
+--   rcases hd with ⟨d, rfl⟩,
+--   cases a; cases c; split; try {dsimp},
+--   have := mul_le_mul_right,
+-- end
 
 end with_zero

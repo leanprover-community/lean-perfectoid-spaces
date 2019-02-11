@@ -336,24 +336,31 @@ quotient_ring.field.of_integral_domain R
 def on_frac_val.is_valuation (hv : supp v = 0) : is_valuation (v.on_frac_val hv) :=
 { map_zero := show v.on_frac_val hv (quotient.mk' ⟨0,1⟩) = 0, by simp,
   map_one  := show v.on_frac_val hv (quotient.mk' ⟨_,1⟩) = 1, by simp,
-  map_mul  := quotient.ind₂' $ λ rs rs',
+  map_mul  := quotient.ind₂' $ λ x y,
   begin
-    change on_frac_val v hv (quotient.mk' (rs * rs')) = _,
-    dsimp [(/), with_zero.div],
-    erw [v.map_mul, v.map_mul, mul_assoc, mul_assoc],
-    congr' 1,
-    conv { to_rhs, rw ← mul_assoc, congr, rw mul_comm },
-    rw mul_assoc,
-    congr' 1,
-    rw mul_comm,
-    exact with_zero.mul_inv_rev _ _
+    change v(x.1 * y.1) * (v((x.2 * y.2).val))⁻¹ =
+      v(x.1) * (v(x.2.val))⁻¹ * (v(y.1) * (v(y.2.val))⁻¹),
+    erw [v.map_mul, v.map_mul, with_zero.mul_inv_rev],
+    simp [mul_assoc, mul_comm, mul_left_comm]
   end,
   map_add  := quotient.ind₂' $ λ x y,
   begin
-    let x_plus_y : quotient_ring R := ⟦⟨x.2 * y.1 + y.2 * x.1, _, is_submonoid.mul_mem x.2.2 y.2.2⟩⟧,
-    change on_frac_val v hv x_plus_y ≤ _ ∨ on_frac_val v hv x_plus_y ≤ _,
+    let x_plus_y : quotient_ring R :=
+      ⟦⟨x.2 * y.1 + y.2 * x.1, _, is_submonoid.mul_mem x.2.2 y.2.2⟩⟧,
+    change on_frac_val v hv x_plus_y ≤ _ * _ ∨ on_frac_val v hv x_plus_y ≤ _ * _,
     dsimp,
-    sorry
+    cases (is_valuation.map_add v (x.2 * y.1) (y.2 * x.1)) with h h;
+    [right, left];
+    refine le_trans (linear_ordered_comm_monoid.mul_le_mul_right h _) _;
+    erw [v.map_mul, v.map_mul, with_zero.mul_inv_rev];
+    simp only [mul_assoc, mul_comm];
+    apply with_zero.mul_le_mul_left;
+    refine le_trans (le_of_eq _)
+      (le_trans (linear_ordered_comm_monoid.mul_le_mul_right
+        (mul_inv_self $ v (_ : R × (non_zero_divisors R)).snd.val) _) $
+        le_of_eq $ one_mul _),
+    exact x, rw mul_assoc, refl,
+    exact y, conv { to_lhs, congr, skip, rw mul_comm }, rw mul_assoc, refl,
   end }
 
 end quotient_ring

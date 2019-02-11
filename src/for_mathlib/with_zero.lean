@@ -20,22 +20,26 @@ x * y⁻¹
 instance [group Γ] : has_div (with_zero Γ) := ⟨with_zero.div⟩
 
 @[simp] lemma zero_div [group Γ] (x : with_zero Γ) : 0 / x = 0 := rfl
+@[simp] lemma div_zero [group Γ] (x : with_zero Γ) : x / 0 = 0 := by change x * _ = _; simp
+
+lemma one_div_eq_inv [group Γ] (x : with_zero Γ) : 1 / x = x⁻¹ :=
+begin
+  cases x, refl,
+  show (_ * _) = _,
+  simp
+end
 
 @[simp] lemma div_one [group Γ] (x : with_zero Γ) : x / 1 = x :=
 begin
-  show x * (1 : Γ)⁻¹ = x,
   cases x, refl,
   show some (_ * _) = _,
-  congr,
   simp
 end
 
 @[simp] lemma mul_inv_rev [group Γ] (x y : with_zero Γ) : (x * y)⁻¹ = y⁻¹ * x⁻¹ :=
 begin
   cases x; cases y; try {refl},
-  change (↑((x * y)⁻¹) : with_zero Γ) = (y⁻¹) * (x⁻¹),
-  erw mul_inv_rev x y,
-  refl
+  calc (↑((x * y)⁻¹) : with_zero Γ) = ↑(y⁻¹ * x⁻¹) : by simp [mul_inv_rev]
 end
 
 end with_zero
