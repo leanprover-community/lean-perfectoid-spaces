@@ -19,9 +19,10 @@ noncomputable theory
 
 universes u u₀ u₁ u₂ u₃ -- v is used for valuations
 
-variables {R : Type u₀} [comm_ring R]
+variables {R : Type u₀}
 
 namespace valuation
+variables [comm_ring R]
 
 -- Valuations on a commutative ring with values in {0} ∪ Γ
 class is_valuation {Γ : Type u} [linear_ordered_comm_group Γ]
@@ -37,6 +38,7 @@ def valuation (R : Type u₀) [comm_ring R] (Γ : Type u) [linear_ordered_comm_g
 { v : R → with_zero Γ // valuation.is_valuation v }
 
 namespace valuation
+variables [comm_ring R]
 
 -- A valuation is coerced to the underlying function R → {0} ∪ Γ
 instance (R : Type u₀) [comm_ring R] (Γ : Type u) [linear_ordered_comm_group Γ] :
@@ -280,15 +282,22 @@ end
 
 end supp
 
+end valuation
+
+namespace valuation
+open with_zero
+
 section quotient_ring
+variables [integral_domain R]
+variables {Γ : Type u} [linear_ordered_comm_group Γ] (v : valuation R Γ)
+
 open localization
 
 -- Kenny says this should work for nonzero commrings
 -- ne_zero_of_mem_non_zero_divisors uses integral domain though -- maybe it shouldn't
 -- oh wait -- support is a prime ideal so if it's zero the ring is an ID anyway
 /-- extension of valuation on ID with support 0 to field of fractions -/
-definition on_frac_val {R : Type u₀} [integral_domain R] (v : valuation R Γ) (hv : supp v = 0) :
-  quotient_ring R → with_zero Γ :=
+definition on_frac_val (hv : supp v = 0) : quotient_ring R → with_zero Γ :=
 quotient.lift (λ rs, v rs.1 / v rs.2.1 : R × non_zero_divisors R → with_zero Γ)
 begin
   intros a b hab,
@@ -310,17 +319,49 @@ begin
   congr' 1, replace h := option.some.inj h, symmetry, exact mul_right_cancel h
 end
 
+@[simp] lemma on_frac_val_mk (hv : supp v = 0) (rs : R × non_zero_divisors R) :
+  v.on_frac_val hv (⟦rs⟧) = v rs.1 / v rs.2.1 := rfl
+
+@[simp] lemma on_frac_val_mk' (hv : supp v = 0) (rs : R × non_zero_divisors R) :
+  v.on_frac_val hv (quotient.mk' rs) = v rs.1 / v rs.2.1 := rfl
+
 -- TODO Does this work yet?
 -- example (R : Type*) [integral_domain R] : discrete_field (quotient_ring R) := by apply_instance
 -- If it does, then mathlib fixed the problem and the next two lines can be removed
 instance (R : Type*) [integral_domain R] : discrete_field (quotient_ring R) :=
 quotient_ring.field.of_integral_domain R
 
+@[simp] lemma non_zero_divisors_one_val : (1 : non_zero_divisors R).val = 1 := rfl
+
+def on_frac_val.is_valuation (hv : supp v = 0) : is_valuation (v.on_frac_val hv) :=
+{ map_zero := show v.on_frac_val hv (quotient.mk' ⟨0,1⟩) = 0, by simp,
+  map_one  := show v.on_frac_val hv (quotient.mk' ⟨_,1⟩) = 1, by simp,
+  map_mul  := quotient.ind₂' $ λ rs rs',
+  begin
+    change on_frac_val v hv (quotient.mk' (rs * rs')) = _,
+    dsimp [(/), with_zero.div],
+    erw [v.map_mul, v.map_mul, mul_assoc, mul_assoc],
+    congr' 1,
+    conv { to_rhs, rw ← mul_assoc, congr, rw mul_comm },
+    rw mul_assoc,
+    congr' 1,
+    rw mul_comm,
+    exact with_zero.mul_inv_rev _ _
+  end,
+  map_add  := quotient.ind₂' $ λ x y,
+  begin
+    let x_plus_y : quotient_ring R := ⟦⟨x.2 * y.1 + y.2 * x.1, _, is_submonoid.mul_mem x.2.2 y.2.2⟩⟧,
+    change on_frac_val v hv x_plus_y ≤ _ ∨ on_frac_val v hv x_plus_y ≤ _,
+    dsimp,
+    sorry
+  end }
+
 end quotient_ring
 
 --section discrete_field
 
-variable (v)
+variables [comm_ring R]
+variables {Γ : Type u} [linear_ordered_comm_group Γ] (v : valuation R Γ)
 
 -- The value group of v is the smallest subgroup Γ_v of Γ for which v takes
 -- values in {0} ∪ Γ_v
@@ -340,7 +381,7 @@ end valuation
 namespace valuation
 open quotient_group
 
-variables [decidable_eq R]
+variables [comm_ring R] [decidable_eq R]
 
 -- This structure is scary because it has a random Γ : Type u₀ inside, but
 -- we don't use it very often; it's an intermediate thing.
