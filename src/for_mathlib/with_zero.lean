@@ -16,7 +16,10 @@ instance {Γ : Type*} [group Γ] : has_div (with_zero Γ) := ⟨with_zero.div⟩
 lemma is_some_iff_ne_none {α : Type*} {x : option α} : x.is_some ↔ x ≠ none :=
 by cases x; simp
 
-lemma with_zero.div_eq_div {Γ : Type*} [comm_group Γ] {a b c d : with_zero Γ} (hb : b ≠ 0) (hd : d ≠ 0) :
+namespace with_zero
+variables {Γ : Type*} [comm_group Γ]
+
+lemma div_eq_div {a b c d : with_zero Γ} (hb : b ≠ 0) (hd : d ≠ 0) :
   a / b = c / d ↔ a * d = b * c :=
 begin
   replace hb := is_some_iff_ne_none.2 hb,
@@ -34,3 +37,11 @@ begin
     rw [H, mul_right_comm, inv_mul_cancel_right, mul_comm] },
   { rw [mul_inv_eq_iff_eq_mul, mul_right_comm, mul_comm c, ← H, mul_inv_cancel_right] }
 end
+
+@[simp] lemma zero_ne_some {a : Γ} : (0 : with_zero Γ) ≠ some a :=
+λ h, option.no_confusion h
+
+@[simp] lemma some_ne_zero {a : Γ} : (some a : with_zero Γ) ≠ (0 : with_zero Γ) :=
+λ h, option.no_confusion h
+
+end with_zero

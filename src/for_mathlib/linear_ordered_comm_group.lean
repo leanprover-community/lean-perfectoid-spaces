@@ -164,6 +164,7 @@ end
 @[simp] theorem not_some_le_none [partial_order α] {x : α} :
 ¬ @has_le.le (with_zero α) _ (some x) none :=
 λ h, option.no_confusion (le_antisymm h zero_le)
+
 def map (f : α → β) : with_zero α → with_zero β := option.map f
 
 @[simp] theorem le_zero_iff_eq_zero [partial_order α] {x : with_zero α} : x ≤ 0 ↔ x = 0 :=
@@ -173,6 +174,13 @@ by cases x; simp; try {refl}; {intro h, exact option.no_confusion h}
 @[simp] lemma map_none {f : α → β} : map f none = 0 := option.map_none'
 
 @[simp] lemma map_some {f : α → β} {a : α} : map f (some a) = some (f a) := option.map_some'
+
+lemma map_eq_zero_iff {f : α → β} {a : with_zero α} : map f a = 0 ↔ a = 0 :=
+begin
+  split; intro h,
+  { cases a, {refl}, rw map_some at h, revert h, exact dec_trivial },
+  { rw h, exact map_zero }
+end
 
 theorem map_inj {f : α → β} (H : function.injective f) :
 function.injective (map f) := option.map_inj H
@@ -196,7 +204,7 @@ begin
   show some (f (val * val_1)) = some ((f val) * (f val_1)),
   apply option.some_inj.2,
   exact is_group_hom.mul f val val_1
-end 
+end
 
 lemma mul_le_mul_left : ∀ a b : with_zero α, a ≤ b → ∀ c : with_zero α, c * a ≤ c * b
 | (some x) (some y) hxy (some z) := begin
