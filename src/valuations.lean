@@ -508,7 +508,8 @@ def minimal_valuation : valuation R (minimal_value_group v).Γ :=
 end valuation
 
 namespace valuation
-variables {Γ : Type u} [linear_ordered_comm_group Γ]
+variables [comm_ring R]
+variables {Γ : Type u}   [linear_ordered_comm_group Γ]
 variables {Γ₁ : Type u₁} [linear_ordered_comm_group Γ₁]
 variables {Γ₂ : Type u₂} [linear_ordered_comm_group Γ₂]
 variables {Γ₃ : Type u₃} [linear_ordered_comm_group Γ₃]
@@ -550,12 +551,12 @@ calc r ∈ supp v₁ ↔ v₁ r = 0    : mem_supp_iff' _ _
 
 open is_group_hom
 
-lemma ker_eq_ker_of_equiv (h : v₁.is_equiv v₂) :
-  ker (of_free_group v₁) = ker (of_free_group v₂) :=
-begin
-  ext f,
-  split; rw [mem_ker, mem_ker]; intro hf,
-end
+-- lemma ker_eq_ker_of_equiv (h : v₁.is_equiv v₂) :
+--   ker (of_free_group v₁) = ker (of_free_group v₂) :=
+-- begin
+--   ext f,
+--   split; rw [mem_ker, mem_ker]; intro hf,
+-- end
 
 end is_equiv
 
