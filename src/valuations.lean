@@ -20,6 +20,8 @@ noncomputable theory
 
 universes u u₀ u₁ u₂ u₃ -- v is used for valuations
 
+open function
+
 variables {R : Type u₀}
 
 namespace valuation
@@ -691,6 +693,54 @@ calc r ∈ supp v₁ ↔ v₁ r = 0    : mem_supp_iff' _ _
 
 open is_group_hom
 
+def quot_of_quot_of_equiv (h : v₁.is_equiv v₂) : (supp v₁).quotient → (supp v₂).quotient :=
+ideal.quotient.lift _ (ideal.quotient.mk _)
+begin
+  intros r hr,
+  rwa [ideal.quotient.eq_zero_iff_mem, ←h.supp_eq]
+end
+
+instance (h : v₁.is_equiv v₂) : is_ring_hom (h.quot_of_quot_of_equiv) :=
+by delta quot_of_quot_of_equiv; apply_instance
+
+lemma quot_of_quot_of_equiv_inj (h : v₁.is_equiv v₂) : injective h.quot_of_quot_of_equiv :=
+begin
+  apply injective_of_has_left_inverse,
+  use h.symm.quot_of_quot_of_equiv,
+  rintro ⟨q⟩,
+  delta quot_of_quot_of_equiv,
+  erw ideal.quotient.lift_mk,
+  refl
+end
+
+-- This should be moved elsewhere
+def localization.r_iff {S : set R} [is_submonoid S] :
+  ∀ x y, localization.r R S x y ↔ ∃ t ∈ S, (x.2.1 * y.1 - y.2.1 * x.1) * t = 0
+| ⟨r₁, s₁, hs₁⟩ ⟨r₂, s₂, hs₂⟩ := iff.rfl
+
+-- This should be moved elsewhere
+def frac_map {R : Type u₁} [integral_domain R] {S : Type u₂} [integral_domain S]
+(f : R → S) [is_ring_hom f] (hf : injective f) :
+  quotient_ring R → quotient_ring S :=
+quotient.lift (λ rs : R × (non_zero_divisors R),
+let mk : S → quotient_ring S := of_comm_ring _ _ in
+(mk $ f rs.1) / (mk $ f rs.2.val))
+begin
+  intros x y hxy,
+  dsimp,
+  rw div_eq_div_iff,
+  refine quotient.sound _,
+  dsimp [(≈), setoid.r] at hxy ⊢,
+  erw localization.r_iff at hxy ⊢,
+  rcases hxy with ⟨t, ht, ht'⟩,
+  use f t,
+end
+
+def frac_of_frac_of_equiv (h : v₁.is_equiv v₂) :
+  valuation_field v₁ → valuation_field v₂ :=
+frac_map h.quot_of_quot_of_equiv h.quot_of_quot_of_equiv_inj
+
+
 -- lemma ker_eq_ker_of_equiv (h : v₁.is_equiv v₂) :
 --   ker (of_free_group v₁) = ker (of_free_group v₂) :=
 -- begin
@@ -701,6 +751,8 @@ open is_group_hom
 end is_equiv
 
 section
+variables {v : valuation R Γ} {v₁ : valuation R Γ₁} {v₂ : valuation R Γ₂} {v₃ : valuation R Γ₃}
+
 open is_group_hom quotient_group function
 
 -- Notes: if v1 equiv v2 then we need a bijection from the image of v1 to the
