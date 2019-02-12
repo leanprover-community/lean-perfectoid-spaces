@@ -11,6 +11,7 @@ import for_mathlib.with_zero
 import data.option.basic
 import for_mathlib.finsupp_prod_inv
 import for_mathlib.quotient_group
+import ring_theory.subring
 
 import tactic.where
 
@@ -89,7 +90,7 @@ lemma is_group_hom.unit_map : is_group_hom (unit_map v) :=
   show _ = (some _ * some _ : with_zero Γ),
   by simp⟩
 
-theorem map_neg_one : v (-1) = 1 :=
+@[simp] theorem map_neg_one : v (-1) = 1 :=
 begin
   change v (-1 : units R) = 1,
   rw ← unit_map_eq,
@@ -101,6 +102,11 @@ begin
   rw [unit_map_eq, ← v.map_mul, units.coe_neg, units.coe_one, neg_one_mul, neg_neg, v.map_one],
   refl
 end
+
+@[simp] lemma map_neg (x : R) : v (-x) = v x :=
+calc v (-x) = v (-1 * x)   : by simp
+        ... = v (-1) * v x : map_mul _ _ _
+        ... = v x          : by simp
 
 @[simp] theorem eq_zero_iff_le_zero {r : R} : v r = 0 ↔ v r ≤ v 0 :=
 v.map_zero.symm ▸ with_zero.le_zero_iff_eq_zero.symm
@@ -336,7 +342,7 @@ end
 -- TODO Does this work yet?
 -- example (R : Type*) [integral_domain R] : discrete_field (quotient_ring R) := by apply_instance
 -- If it does, then mathlib fixed the problem and the next two lines can be removed
-instance (R : Type*) [integral_domain R] : discrete_field (quotient_ring R) :=
+instance foobar (R : Type*) [integral_domain R] : discrete_field (quotient_ring R) :=
 quotient_ring.field.of_integral_domain R
 
 @[simp] lemma non_zero_divisors_one_val : (1 : non_zero_divisors R).val = 1 := rfl
@@ -377,7 +383,7 @@ def on_frac (hv : supp v = 0) : valuation (quotient_ring R) Γ :=
 
 @[simp] lemma on_frac_comap_eq (hv : supp v = 0) :
   (v.on_frac hv).comap (of_comm_ring R (non_zero_divisors R)) = v :=
-subtype.ext.mpr $ funext $ λ r, show _ / _ = _, by simp; refl
+subtype.ext.mpr $ funext $ λ r, show v r / v 1 = v r, by simp
 
 end quotient_ring
 
@@ -385,6 +391,108 @@ end quotient_ring
 
 variables [comm_ring R]
 variables {Γ : Type u} [linear_ordered_comm_group Γ] (v : valuation R Γ)
+
+definition valuation_field_aux := (supp v).quotient
+
+instance : integral_domain (valuation_field_aux v) := by delta valuation_field_aux; apply_instance
+
+definition valuation_field := localization.quotient_ring (valuation_field_aux v)
+
+instance : discrete_field (valuation_field v) := by delta valuation_field; apply_instance
+
+section
+open ideal
+
+definition on_valuation_field : valuation (valuation_field v) Γ :=
+on_frac (v.on_quot (set.subset.refl _))
+begin
+  rw [supp_quot_supp],
+  -- from here it should be a 1-liner
+  rw zero_eq_bot,
+  apply lattice.eq_bot_iff.2,
+  apply map_le_iff_le_comap.2,
+  intros x hx,
+  erw submodule.mem_bot,
+  exact ideal.quotient.eq_zero_iff_mem.2 hx
+end
+
+end
+
+definition valuation_ring := {x | v.on_valuation_field x ≤ 1}
+
+instance : is_subring (valuation_ring v) :=
+{ zero_mem := show v.on_valuation_field 0 ≤ 1, by simp,
+  add_mem := λ x y hx hy,
+  by cases (v.on_valuation_field.map_add x y) with h h;
+    exact le_trans h (by assumption),
+  neg_mem := by simp [valuation_ring],
+  one_mem := by simp [valuation_ring, le_refl],
+  mul_mem := λ x y (hx : _ ≤ _) (hy : _ ≤ _), show v.on_valuation_field _ ≤ 1,
+  by convert le_trans (linear_ordered_comm_monoid.mul_le_mul_left hy _) _; simp [hx] }
+
+#print lt_of_le_of_ne
+-- theorem lt_of_le_of_ne : ∀ {α : Type u} [_inst_1 : partial_order α] {a b : α},
+-- a ≤ b → a ≠ b → a < b := _
+#print lt_of_le_of_ne'
+-- theorem lt_of_le_of_ne' : ∀ {α : Type u} [_inst_1 : partial_order α] {a b : α},
+-- a ≤ b → a ≠ b → a < b := _
+
+definition max_ideal : ideal (valuation_ring v) :=
+{ carrier := { r | v.on_valuation_field r < 1 },
+  zero := show v.on_valuation_field 0 < 1, by apply lt_of_le_of_ne; simp,
+  add := λ x y (hx : _ < 1) (hy : _ < 1),
+  show v.on_valuation_field _ < 1,
+    by cases (v.on_valuation_field.map_add x y) with h h;
+      exact lt_of_le_of_lt h (by assumption),
+  smul := λ c x (hx : _ < 1),
+  show v.on_valuation_field _ < 1,
+  begin
+    refine lt_of_le_of_lt _ _,
+    swap,
+    convert (linear_ordered_comm_monoid.mul_le_mul_right _ _),
+    exact map_mul _ _ _,
+    swap,
+    convert c.property,
+    simpa using hx
+  end }
+
+instance max_ideal_is_maximal : (max_ideal v).is_maximal :=
+begin
+  rw ideal.is_maximal_iff,
+  split,
+  { show (1 : valuation_ring v) ∉ max_ideal v,
+    exact λ (H : _ < _), ne_of_lt H (map_one _) },
+  { show ∀ (J : ideal (valuation_ring v)) (x : valuation_ring v),
+      max_ideal v ≤ J → x ∉ max_ideal v → x ∈ J → (1 : valuation_ring v) ∈ J,
+    intros J x hJ hxni hxinJ,
+    cases x with x hx,
+    have vx : v.on_valuation_field x = 1 :=
+    begin
+      rw eq_iff_le_not_lt,
+      split; assumption
+    end,
+    have xinv_mul_x : (x : valuation_field v)⁻¹ * x = 1 :=
+    begin
+      apply inv_mul_cancel,
+      intro hxeq0,
+      simpa [hxeq0] using vx
+    end,
+    have hxinv : v.on_valuation_field x⁻¹ ≤ 1 :=
+    begin
+      refine le_of_eq _,
+      symmetry,
+      simpa [xinv_mul_x, vx] using v.on_valuation_field.map_mul x⁻¹ x
+    end,
+    convert J.smul_mem ⟨x⁻¹, hxinv⟩ hxinJ,
+    symmetry,
+    apply subtype.val_injective,
+    exact xinv_mul_x }
+end
+
+definition residue_field := (max_ideal v).quotient
+
+-- this should be a discrete field, I think
+instance : field (residue_field v) := ideal.quotient.field _
 
 -- The value group of v is the smallest subgroup Γ_v of Γ for which v takes
 -- values in {0} ∪ Γ_v
@@ -573,14 +681,13 @@ of_eq (on_frac_comap_eq v hv)
 -- λ r Hr, by rwa [mem_supp_iff', eq_zero_iff_le_zero, ←(h r 0), ←eq_zero_iff_le_zero, ←mem_supp_iff']
 
 /-- Wedhorm 1.27 iii -> ii (part a) -/
-lemma supp_eq_if_is_equiv (h : v₁.is_equiv v₂) : supp v₁ = supp v₂ :=
+lemma supp_eq (h : v₁.is_equiv v₂) : supp v₁ = supp v₂ :=
 ideal.ext $ λ r,
 calc r ∈ supp v₁ ↔ v₁ r = 0    : mem_supp_iff' _ _
              ... ↔ v₁ r ≤ v₁ 0 : eq_zero_iff_le_zero _
              ... ↔ v₂ r ≤ v₂ 0 : h r 0
              ... ↔ v₂ r = 0    : (eq_zero_iff_le_zero _).symm
              ... ↔ r ∈ supp v₂ : (mem_supp_iff' _ _).symm
-
 
 open is_group_hom
 

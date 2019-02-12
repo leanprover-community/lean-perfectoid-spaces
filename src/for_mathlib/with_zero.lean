@@ -6,13 +6,19 @@ instance : monad with_zero := option.monad
 namespace with_zero
 variables {Γ : Type*}
 
+instance : has_zero (with_zero Γ) := ⟨none⟩
+
+instance [one : has_one Γ] : zero_ne_one_class (with_zero Γ) :=
+{ zero_ne_one := λ h, option.no_confusion h,
+  .. with_zero.has_zero, .. one }
+
 definition inv [has_inv Γ] (x : with_zero Γ) : with_zero Γ :=
 do a ← x, return a⁻¹
 
 instance [has_inv Γ] : has_inv (with_zero Γ) := ⟨with_zero.inv⟩
 
 @[simp] lemma inv_coe [has_inv Γ] (x : Γ) : (x : with_zero Γ)⁻¹ = (x⁻¹ : Γ) := rfl
-@[simp] lemma inv_zero [group Γ] : (0 : with_zero Γ)⁻¹ = 0 := rfl
+@[simp] lemma inv_zero [has_inv Γ] : (0 : with_zero Γ)⁻¹ = 0 := rfl
 
 definition with_zero.div [group Γ] (x y : with_zero Γ) : with_zero Γ :=
 x * y⁻¹
