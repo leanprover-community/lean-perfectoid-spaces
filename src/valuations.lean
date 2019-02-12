@@ -14,7 +14,7 @@ import for_mathlib.quotient_group
 
 import tactic.where
 
-local attribute [instance, priority 0] classical.prop_decidable
+local attribute [instance] classical.prop_decidable
 noncomputable theory
 
 universes u u₀ u₁ u₂ u₃ -- v is used for valuations
@@ -142,7 +142,7 @@ theorem valuation_of_valuation [is_group_hom ψ] (Hiψ : function.injective ψ) 
 end
 
 -- f : S → R induces map valuation R Γ → valuation S Γ
-def map {S : Type u₁} [comm_ring S] (f : S → R) [is_ring_hom f] : valuation S Γ :=
+def comap {S : Type u₁} [comm_ring S] (f : S → R) [is_ring_hom f] : valuation S Γ :=
 { val := v ∘ f,
   property := by constructor;
     simp [is_ring_hom.map_zero f, is_ring_hom.map_one f, is_ring_hom.map_mul f, is_ring_hom.map_add f] }
@@ -267,6 +267,14 @@ definition on_quot {J : ideal R} (hJ : (J : set R) ⊆ supp v) :
 { val := v.on_quot_val hJ,
   property := on_quot_val.is_valuation hJ }
 
+@[simp] lemma on_quot_comap_eq {J : ideal R} (hJ : (J : set R) ⊆ supp v) :
+  (v.on_quot hJ).comap (ideal.quotient.mk J) = v :=
+subtype.ext.mpr $ funext $
+  λ r, @quotient.lift_on_beta _ _ (J.quotient_rel) v
+  (λ a b h, have hsupp : a - b ∈ supp v := hJ h,
+    by convert val_add_supp v b (a - b) hsupp; simp) _
+-- The above proof is ugly.
+
 -- quotient valuation on R/J has support supp(v)/J
 -- NB : statement looks really unreadable
 lemma supp_quot_supp {J : ideal R} (hJ : J ≤ supp v) :
@@ -362,6 +370,14 @@ def on_frac_val.is_valuation (hv : supp v = 0) : is_valuation (v.on_frac_val hv)
     exact x, rw mul_assoc, refl,
     exact y, conv { to_lhs, congr, skip, rw mul_comm }, rw mul_assoc, refl,
   end }
+
+def on_frac (hv : supp v = 0) : valuation (quotient_ring R) Γ :=
+{ val := on_frac_val v hv,
+  property := on_frac_val.is_valuation v hv }
+
+@[simp] lemma on_frac_comap_eq (hv : supp v = 0) :
+  (v.on_frac hv).comap (of_comm_ring R (non_zero_divisors R)) = v :=
+subtype.ext.mpr $ funext $ λ r, show _ / _ = _, by simp; refl
 
 end quotient_ring
 
@@ -535,6 +551,23 @@ variables {v : valuation R Γ} {v₁ : valuation R Γ₁} {v₂ : valuation R Γ
 @[trans] lemma trans (h₁₂ : v₁.is_equiv v₂) (h₂₃ : v₂.is_equiv v₃) : v₁.is_equiv v₃ :=
 λ _ _, iff.trans (h₁₂ _ _) (h₂₃ _ _)
 
+lemma of_eq {v' : valuation R Γ} (h : v = v') : v.is_equiv v' :=
+by subst h; refl
+
+lemma comap {S : Type u₃} [comm_ring S] (f : S → R) [is_ring_hom f] (h : v₁.is_equiv v₂) :
+  (v₁.comap f).is_equiv (v₂.comap f) :=
+λ r s, h (f r) (f s)
+
+lemma on_quot {J : ideal R} (hJ : (J : set R) ⊆ supp v) :
+  is_equiv ((v.on_quot hJ).comap (ideal.quotient.mk J)) v :=
+of_eq (on_quot_comap_eq _ _)
+
+open localization
+
+lemma on_frac {R : Type u₀} [integral_domain R] (v : valuation R Γ) (hv : supp v = 0) :
+  is_equiv ((v.on_frac hv).comap (of_comm_ring R (non_zero_divisors R))) v :=
+of_eq (on_frac_comap_eq v hv)
+
 -- -- Wedhorm 1.27 iii -> ii prep
 -- lemma supp_sub_of_is_equiv (h : is_equiv v₁ v₂) : ((supp v₁) : set R) ⊆ supp v₂ :=
 -- λ r Hr, by rwa [mem_supp_iff', eq_zero_iff_le_zero, ←(h r 0), ←eq_zero_iff_le_zero, ←mem_supp_iff']
@@ -581,17 +614,7 @@ set_option class.instance_max_depth 50
 -- Idea: prove Wedhorn 1.27.
 def minimal_valuations_biject_of_equiv (v₁ : valuation R Γ₁) (v₂ : valuation R Γ₂) (h : is_equiv v₁ v₂) :
   (minimal_value_group v₁).Γ → (minimal_value_group v₂).Γ :=
-begin
-  refine quotient_group.lift _ _ _,
-  { exact quotient_group.mk },
-  { apply_instance },
-  { intros f hf,
-    suffices : f ∈ ker (of_free_group v₂),
-    { apply inc_injective _,
-      rw inc_mk',
-      exact (mem_ker (of_free_group v₂)).mp this },
-     }
-end
+@quotient_group.map _ _ _ _ _ _ _ _ id is_group_hom.id _
 
 end
 -- λ g, quotient.lift_on' g (λ g, finsupp.prod g (λ r n, (minimal_value_group.mk v₂ r) ^ n)) $
