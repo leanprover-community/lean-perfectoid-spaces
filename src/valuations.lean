@@ -432,13 +432,6 @@ instance : is_subring (valuation_ring v) :=
   mul_mem := λ x y (hx : _ ≤ _) (hy : _ ≤ _), show v.on_valuation_field _ ≤ 1,
   by convert le_trans (linear_ordered_comm_monoid.mul_le_mul_left hy _) _; simp [hx] }
 
-#print lt_of_le_of_ne
--- theorem lt_of_le_of_ne : ∀ {α : Type u} [_inst_1 : partial_order α] {a b : α},
--- a ≤ b → a ≠ b → a < b := _
-#print lt_of_le_of_ne'
--- theorem lt_of_le_of_ne' : ∀ {α : Type u} [_inst_1 : partial_order α] {a b : α},
--- a ≤ b → a ≠ b → a < b := _
-
 definition max_ideal : ideal (valuation_ring v) :=
 { carrier := { r | v.on_valuation_field r < 1 },
   zero := show v.on_valuation_field 0 < 1, by apply lt_of_le_of_ne; simp,
@@ -719,27 +712,86 @@ def localization.r_iff {S : set R} [is_submonoid S] :
 | ⟨r₁, s₁, hs₁⟩ ⟨r₂, s₂, hs₂⟩ := iff.rfl
 
 -- This should be moved elsewhere
-def frac_map {R : Type u₁} [integral_domain R] {S : Type u₂} [integral_domain S]
-(f : R → S) [is_ring_hom f] (hf : injective f) :
-  quotient_ring R → quotient_ring S :=
-quotient.lift (λ rs : R × (non_zero_divisors R),
-let mk : S → quotient_ring S := of_comm_ring _ _ in
+lemma eq_zero_of {R : Type u₁} [integral_domain R] (r : R)
+(hr : of_comm_ring R (non_zero_divisors R) r = 0) : r = 0 :=
+begin
+  replace hr := quotient.exact hr,
+  dsimp [(≈), setoid.r] at hr,
+  erw localization.r_iff at hr,
+  rcases hr with ⟨t, ht, ht'⟩,
+  replace ht := localization.ne_zero_of_mem_non_zero_divisors ht,
+  simpa [ht] using ht'
+end
+
+-- This should be moved elsewhere
+lemma of_comm_ring_inj {R : Type u₁} [integral_domain R] :
+  injective (of_comm_ring R (non_zero_divisors R) : R → quotient_ring R) :=
+(is_add_group_hom.injective_iff _).mpr eq_zero_of
+
+-- This should be moved elsewhere
+@[simp] lemma val_prop {X : Type u} {S : set X} (x : S) : x.val ∈ S := x.property
+
+-- This should be moved elsewhere
+section
+variables {A : Type u₁} [integral_domain A] {B : Type u₂} [integral_domain B]
+(f : A → B) [is_ring_hom f] (hf : injective f)
+include hf
+
+-- This should be moved elsewhere
+def frac_map : quotient_ring A → quotient_ring B :=
+quotient.lift (λ rs : A × (non_zero_divisors A),
+let mk : B → quotient_ring B := of_comm_ring _ _ in
 (mk $ f rs.1) / (mk $ f rs.2.val))
 begin
   intros x y hxy,
   dsimp,
   rw div_eq_div_iff,
-  refine quotient.sound _,
-  dsimp [(≈), setoid.r] at hxy ⊢,
-  erw localization.r_iff at hxy ⊢,
-  rcases hxy with ⟨t, ht, ht'⟩,
-  use f t,
+  { refine quotient.sound _,
+    dsimp [(≈), setoid.r] at hxy ⊢,
+    erw localization.r_iff at hxy ⊢,
+    rcases hxy with ⟨t, ht, ht'⟩,
+    use f t,
+    fsplit,
+    { apply localization.mem_non_zero_divisors_of_ne_zero,
+      replace ht := localization.ne_zero_of_mem_non_zero_divisors ht,
+      convert ht ∘ (@hf t 0),
+      simp [is_ring_hom.map_zero f] },
+    { have := congr_arg f ht',
+      simp only [is_ring_hom.map_zero f, is_ring_hom.map_mul f, is_ring_hom.map_neg f,
+        is_ring_hom.map_add f, is_ring_hom.map_sub f] at this,
+      rw ← this,
+      ring, -- TODO: why does ring not close this goal?
+      simp [mul_comm] } },
+  all_goals { intro h,
+    replace h := eq_zero_of _ h,
+    rw ← is_ring_hom.map_zero f at h,
+    replace h := hf h,
+    refine localization.ne_zero_of_mem_non_zero_divisors _ h,
+    simp }
+end
+
+lemma frac_map_of_comm_ring (a : A) :
+  frac_map f hf (of_comm_ring A _ a) = of_comm_ring B _ (f a) :=
+begin
+  dsimp [frac_map],
+  erw quotient.lift_beta,
+  simp [is_ring_hom.map_one f],
+  exact div_one _,
+end
+
+instance foo : is_field_hom (frac_map f hf) :=
+{ map_one := by simpa [is_ring_hom.map_one f] using frac_map_of_comm_ring f hf 1,
+  map_mul := _,
+  map_add := _ }
+
 end
 
 def frac_of_frac_of_equiv (h : v₁.is_equiv v₂) :
   valuation_field v₁ → valuation_field v₂ :=
 frac_map h.quot_of_quot_of_equiv h.quot_of_quot_of_equiv_inj
 
+instance bar (h : v₁.is_equiv v₂) : is_field_hom (h.frac_of_frac_of_equiv) :=
+by delta frac_of_frac_of_equiv; apply_instance
 
 -- lemma ker_eq_ker_of_equiv (h : v₁.is_equiv v₂) :
 --   ker (of_free_group v₁) = ker (of_free_group v₂) :=
