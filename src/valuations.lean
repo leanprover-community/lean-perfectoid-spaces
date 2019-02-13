@@ -155,6 +155,20 @@ def comap {S : Type u₁} [comm_ring S] (f : S → R) [is_ring_hom f] : valuatio
   property := by constructor;
     simp [is_ring_hom.map_zero f, is_ring_hom.map_one f, is_ring_hom.map_mul f, is_ring_hom.map_add f] }
 
+def map {Γ₁ : Type u₁} [linear_ordered_comm_group Γ₁] (f : Γ → Γ₁) [is_group_hom f] :
+  valuation R Γ₁ :=
+{ val := with_zero.map f ∘ v,
+  property :=
+  { map_zero := by simp [with_zero.map_zero],
+    map_one :=
+    begin
+      show with_zero.map f (_) = 1,
+      erw [v.map_one, with_zero.map_some, is_group_hom.one f],
+      refl
+    end,
+    map_mul := _,
+    map_add := _ } }
+
 section trivial
 variables (S : ideal R) [prime : ideal.is_prime S]
 include prime
