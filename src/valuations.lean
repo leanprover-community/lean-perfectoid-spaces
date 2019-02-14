@@ -710,42 +710,44 @@ calc r ∈ supp v₁ ↔ v₁ r = 0    : mem_supp_iff' _ _
 
 open is_group_hom
 
-def quot_of_quot_of_equiv (h : v₁.is_equiv v₂) : (supp v₁).quotient → (supp v₂).quotient :=
+-- All of the stuff that takes (h : supp v₁ = supp v₂) as argument
+-- is in the wrong namespace.
+def quot_of_quot_of_eq_supp (h : supp v₁ = supp v₂) : (supp v₁).quotient → (supp v₂).quotient :=
 ideal.quotient.lift _ (ideal.quotient.mk _)
 begin
   intros r hr,
-  rwa [ideal.quotient.eq_zero_iff_mem, ←h.supp_eq]
+  rwa [ideal.quotient.eq_zero_iff_mem, ←h]
 end
 
-instance (h : v₁.is_equiv v₂) : is_ring_hom (h.quot_of_quot_of_equiv) :=
-by delta quot_of_quot_of_equiv; apply_instance
+instance (h : supp v₁ = supp v₂) : is_ring_hom (quot_of_quot_of_eq_supp h) :=
+by delta quot_of_quot_of_eq_supp; apply_instance
 
-def quot_equiv_quot_of_equiv (h : v₁.is_equiv v₂) : (supp v₁).quotient ≃ (supp v₂).quotient :=
-{ to_fun := h.quot_of_quot_of_equiv,
-  inv_fun := h.symm.quot_of_quot_of_equiv,
+def quot_equiv_quot_of_eq_supp (h : supp v₁ = supp v₂) : (supp v₁).quotient ≃ (supp v₂).quotient :=
+{ to_fun := quot_of_quot_of_eq_supp h,
+  inv_fun := quot_of_quot_of_eq_supp h.symm,
   left_inv :=
   begin
     rintro ⟨q⟩,
-    delta quot_of_quot_of_equiv,
+    delta quot_of_quot_of_eq_supp,
     erw ideal.quotient.lift_mk,
     refl
   end,
   right_inv :=
   begin
     rintro ⟨q⟩,
-    delta quot_of_quot_of_equiv,
+    delta quot_of_quot_of_eq_supp,
     erw ideal.quotient.lift_mk,
     refl
   end }
 
-@[simp] lemma quot_equiv_quot_of_equiv_coe (h : v₁.is_equiv v₂) :
-  (h.quot_equiv_quot_of_equiv : (supp v₁).quotient → (supp v₂).quotient) = h.quot_of_quot_of_equiv := rfl
+@[simp] lemma quot_equiv_quot_of_eq_supp_coe (h : supp v₁ = supp v₂) :
+  (quot_equiv_quot_of_eq_supp h : (supp v₁).quotient → (supp v₂).quotient) = quot_of_quot_of_eq_supp h := rfl
 
-instance grmbl (h : v₁.is_equiv v₂) : is_ring_hom (h.quot_equiv_quot_of_equiv) :=
+instance grmbl (h : supp v₁ = supp v₂) : is_ring_hom (quot_equiv_quot_of_eq_supp h) :=
 by simp; apply_instance
 
-lemma quot_of_quot_of_equiv_inj (h : v₁.is_equiv v₂) : injective h.quot_of_quot_of_equiv :=
-injective_of_left_inverse h.quot_equiv_quot_of_equiv.left_inv
+lemma quot_of_quot_of_eq_supp_inj (h : supp v₁ = supp v₂) : injective (quot_of_quot_of_eq_supp h) :=
+injective_of_left_inverse (quot_equiv_quot_of_eq_supp h).left_inv
 
 -- This should be moved elsewhere
 def localization.r_iff {S : set R} [is_submonoid S] :
@@ -911,15 +913,15 @@ def frac_equiv_frac_of_equiv (h : A ≃ B) [is_ring_hom h] : quotient_ring A ≃
 
 end
 
-def valfield_of_valfield_of_equiv (h : v₁.is_equiv v₂) :
+def valfield_of_valfield_of_eq_supp (h : supp v₁ = supp v₂) :
   valuation_field v₁ → valuation_field v₂ :=
-frac_map h.quot_of_quot_of_equiv h.quot_of_quot_of_equiv_inj
+frac_map (quot_of_quot_of_eq_supp h) (quot_of_quot_of_eq_supp_inj h)
 
-instance bar (h : v₁.is_equiv v₂) : is_field_hom (h.valfield_of_valfield_of_equiv) :=
-by delta valfield_of_valfield_of_equiv; apply_instance
+instance bar (h : supp v₁ = supp v₂) : is_field_hom (valfield_of_valfield_of_eq_supp h) :=
+by delta valfield_of_valfield_of_eq_supp; apply_instance
 
-def valfield_equiv_valfield_of_equiv (h : v₁.is_equiv v₂) : valuation_field v₁ ≃ valuation_field v₂ :=
-frac_equiv_frac_of_equiv h.quot_equiv_quot_of_equiv
+def valfield_equiv_valfield_of_equiv (h : supp v₁ = supp v₂) : valuation_field v₁ ≃ valuation_field v₂ :=
+frac_equiv_frac_of_equiv (quot_equiv_quot_of_eq_supp h)
 
 -- lemma ker_eq_ker_of_equiv (h : v₁.is_equiv v₂) :
 --   ker (of_free_group v₁) = ker (of_free_group v₂) :=
