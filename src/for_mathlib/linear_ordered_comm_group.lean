@@ -146,14 +146,16 @@ namespace with_zero
 
 variables {α : Type u} {β : Type v}
 
-instance : has_zero (with_zero α) := ⟨none⟩
-
 @[simp] theorem zero_le [partial_order α] {x : with_zero α} : 0 ≤ x :=
 begin
   cases x,
   exact le_refl 0,
   exact le_of_lt (with_bot.bot_lt_some x)
 end
+
+@[simp] theorem zero_lt_some [partial_order α] {a : α} :
+  @has_lt.lt (with_zero α) _ 0 (some a : with_zero α) :=
+with_bot.bot_lt_some _
 
 @[simp] theorem none_le [partial_order α] {x : with_zero α} :
 @has_le.le (with_zero α) _ none x := zero_le
@@ -185,6 +187,22 @@ end
 
 theorem map_inj {f : α → β} (H : function.injective f) :
 function.injective (map f) := option.map_inj H
+
+theorem map_monotone [partial_order α] [partial_order β] {f : α → β} (H : monotone f) :
+  monotone (map f) :=
+begin
+  intros x y,
+  cases x; cases y; try {simp},
+  { intro h, exact H h }
+end
+
+theorem map_strict_mono [linear_order α] [partial_order β] {f : α → β} (H : ∀ a b, a < b → f a < f b) :
+  ∀ a b, a < b → (map f) a < (map f) b :=
+begin
+  intros x y,
+  cases x; cases y; try {simp},
+  { exact H _ _ }
+end
 
 @[simp] theorem map_le [partial_order α] [partial_order β] {f : α → β}
 (H : ∀ a b : α, a ≤ b ↔ f a ≤ f b) :

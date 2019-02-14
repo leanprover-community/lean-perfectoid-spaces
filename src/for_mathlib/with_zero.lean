@@ -1,4 +1,4 @@
-import algebra.group data.option.basic
+import algebra.group data.option.basic order.basic
 
 -- this really shouldn't go here. I blame Chris and Kenny for this nonsense
 instance : monad with_zero := option.monad

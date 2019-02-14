@@ -155,7 +155,7 @@ def comap {S : Type u₁} [comm_ring S] (f : S → R) [is_ring_hom f] : valuatio
   property := by constructor;
     simp [is_ring_hom.map_zero f, is_ring_hom.map_one f, is_ring_hom.map_mul f, is_ring_hom.map_add f] }
 
-def map {Γ₁ : Type u₁} [linear_ordered_comm_group Γ₁] (f : Γ → Γ₁) [is_group_hom f] :
+def map {Γ₁ : Type u₁} [linear_ordered_comm_group Γ₁] (f : Γ → Γ₁) [is_group_hom f] (hf : monotone f) :
   valuation R Γ₁ :=
 { val := with_zero.map f ∘ v,
   property :=
@@ -166,8 +166,18 @@ def map {Γ₁ : Type u₁} [linear_ordered_comm_group Γ₁] (f : Γ → Γ₁)
       erw [v.map_one, with_zero.map_some, is_group_hom.one f],
       refl
     end,
-    map_mul := _,
-    map_add := _ } }
+    map_mul := λ x y,
+    begin
+      delta function.comp,
+      erw [v.map_mul, with_zero.map_mul f],
+      refl
+    end,
+    map_add := λ x y,
+    begin
+      delta function.comp,
+      apply (v.map_add x y).imp _ _;
+      exact λ h, with_zero.map_monotone hf h,
+    end } }
 
 section trivial
 variables (S : ideal R) [prime : ideal.is_prime S]
@@ -917,6 +927,41 @@ frac_equiv_frac_of_equiv h.quot_equiv_quot_of_equiv
 --   ext f,
 --   split; rw [mem_ker, mem_ker]; intro hf,
 -- end
+
+-- why is this not in the library???
+-- there are other theorems about strict monos!!!
+lemma monotone_of_strict_mono {α β} [linear_order α] [preorder β]
+{f : α → β} (H : ∀ a b, a < b → f a < f b) :
+  monotone f :=
+λ a b, iff.mpr $ le_iff_le_of_strict_mono _ H
+
+lemma of_map_of_strict_mono {Γ₁ : Type u₁} [linear_ordered_comm_group Γ₁] (f : Γ → Γ₁) [is_group_hom f]
+-- for some reason there is no definition of strict monos. But there are theorems about them.
+(H : ∀ a b, a < b → f a < f b) :
+  is_equiv (v.map f (monotone_of_strict_mono H)) v :=
+begin
+  intros x y,
+  split,
+  swap,
+  intro h,
+  exact with_zero.map_monotone (monotone_of_strict_mono H) h,
+  change with_zero.map f _ ≤ with_zero.map f _ → _,
+  refine (le_iff_le_of_strict_mono _ _).mp,
+  exact with_zero.map_strict_mono H
+end
+
+-- Wedhorn 1.27 (i) => (iii)
+lemma of_inj_value_group (f : v₁.minimal_value_group.Γ → v₂.minimal_value_group.Γ)
+[is_group_hom f] (H : ∀ a b, a < b → f a < f b)
+(H : v₂.minimal_valuation = v₁.minimal_valuation.map f (monotone_of_strict_mono H)) :
+  v₁.is_equiv v₂ :=
+begin
+  refine trans _ (v₂.minimal_valuation_is_equiv),
+  refine trans (v₁.minimal_valuation_is_equiv.symm) _,
+  rw H,
+  symmetry,
+  exact of_map_of_strict_mono _ _
+end
 
 end is_equiv
 
