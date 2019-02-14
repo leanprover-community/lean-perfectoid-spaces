@@ -38,8 +38,8 @@ open function
 lattice.eq_bot_iff.2 $ ideal.map_le_iff_le_comap.2 $
 begin
   intros x hx,
-  erw submodule.mem_bot,
-  exact ideal.quotient.eq_zero_iff_mem.2 hx
+  erw submodule.mem_bot I.quotient,
+  exact ideal.quotient.eq_zero_iff_mem.2 hx, apply_instance
 end
 
 lemma eq_bot_or_top {K : Type u} [discrete_field K] (I : ideal K) :
