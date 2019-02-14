@@ -3,6 +3,7 @@ import group_theory.subgroup
 import set_theory.cardinal
 import for_mathlib.subrel
 import for_mathlib.option_inj
+import for_mathlib.with_zero
 
 universes u v
 
@@ -145,14 +146,16 @@ namespace with_zero
 
 variables {α : Type u} {β : Type v}
 
-instance : has_zero (with_zero α) := ⟨none⟩
-
 @[simp] theorem zero_le [partial_order α] {x : with_zero α} : 0 ≤ x :=
 begin
   cases x,
   exact le_refl 0,
   exact le_of_lt (with_bot.bot_lt_some x)
 end
+
+@[simp] theorem zero_lt_some [partial_order α] {a : α} :
+  @has_lt.lt (with_zero α) _ 0 (some a : with_zero α) :=
+with_bot.bot_lt_some _
 
 @[simp] theorem none_le [partial_order α] {x : with_zero α} :
 @has_le.le (with_zero α) _ none x := zero_le
@@ -164,6 +167,7 @@ end
 @[simp] theorem not_some_le_none [partial_order α] {x : α} :
 ¬ @has_le.le (with_zero α) _ (some x) none :=
 λ h, option.no_confusion (le_antisymm h zero_le)
+
 def map (f : α → β) : with_zero α → with_zero β := option.map f
 
 @[simp] theorem le_zero_iff_eq_zero [partial_order α] {x : with_zero α} : x ≤ 0 ↔ x = 0 :=
@@ -174,8 +178,31 @@ by cases x; simp; try {refl}; {intro h, exact option.no_confusion h}
 
 @[simp] lemma map_some {f : α → β} {a : α} : map f (some a) = some (f a) := option.map_some'
 
+lemma map_eq_zero_iff {f : α → β} {a : with_zero α} : map f a = 0 ↔ a = 0 :=
+begin
+  split; intro h,
+  { cases a, {refl}, rw map_some at h, revert h, exact dec_trivial },
+  { rw h, exact map_zero }
+end
+
 theorem map_inj {f : α → β} (H : function.injective f) :
 function.injective (map f) := option.map_inj H
+
+theorem map_monotone [partial_order α] [partial_order β] {f : α → β} (H : monotone f) :
+  monotone (map f) :=
+begin
+  intros x y,
+  cases x; cases y; try {simp},
+  { intro h, exact H h }
+end
+
+theorem map_strict_mono [linear_order α] [partial_order β] {f : α → β} (H : ∀ a b, a < b → f a < f b) :
+  ∀ a b, a < b → (map f) a < (map f) b :=
+begin
+  intros x y,
+  cases x; cases y; try {simp},
+  { exact H _ _ }
+end
 
 @[simp] theorem map_le [partial_order α] [partial_order β] {f : α → β}
 (H : ∀ a b : α, a ≤ b ↔ f a ≤ f b) :
@@ -196,7 +223,7 @@ begin
   show some (f (val * val_1)) = some ((f val) * (f val_1)),
   apply option.some_inj.2,
   exact is_group_hom.mul f val val_1
-end 
+end
 
 lemma mul_le_mul_left : ∀ a b : with_zero α, a ≤ b → ∀ c : with_zero α, c * a ≤ c * b
 | (some x) (some y) hxy (some z) := begin
@@ -218,5 +245,27 @@ theorem eq_zero_or_eq_zero_of_mul_eq_zero : ∀ x y : with_zero α, x * y = 0 �
 | (some x) (some y) hxy := false.elim $ option.no_confusion hxy
 | 0        _        hxy := or.inl rfl
 | _        0        hxy := or.inr rfl
+
+@[simp] lemma mul_inv_self [group α] (a : with_zero α) : a * a⁻¹ ≤ 1 :=
+begin
+  cases a,
+  { exact zero_le },
+  { apply le_of_eq _,
+    exact congr_arg some (mul_inv_self a) }
+end
+
+@[simp] lemma div_self [group α] (a : with_zero α) : a / a ≤ 1 := mul_inv_self a
+
+-- lemma div_le_div (a b c d : with_zero α) (hb : b ≠ 0) (hd : d ≠ 0) :
+--   a / b ≤ c / d ↔ a * d ≤ c * b :=
+-- begin
+--   replace hb := is_some_iff_ne_none.2 hb,
+--   replace hd := is_some_iff_ne_none.2 hd,
+--   rw option.is_some_iff_exists at hb hd,
+--   rcases hb with ⟨b, rfl⟩,
+--   rcases hd with ⟨d, rfl⟩,
+--   cases a; cases c; split; try {dsimp},
+--   have := mul_le_mul_right,
+-- end
 
 end with_zero
