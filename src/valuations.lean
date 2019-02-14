@@ -12,6 +12,8 @@ import data.option.basic
 import for_mathlib.finsupp_prod_inv
 import for_mathlib.quotient_group
 import ring_theory.subring
+import for_mathlib.equiv
+import for_mathlib.rings
 
 import tactic.where
 
@@ -155,6 +157,11 @@ def comap {S : Type u₁} [comm_ring S] (f : S → R) [is_ring_hom f] : valuatio
   property := by constructor;
     simp [is_ring_hom.map_zero f, is_ring_hom.map_one f, is_ring_hom.map_mul f, is_ring_hom.map_add f] }
 
+lemma comap_comp {S₁ : Type u₁} [comm_ring S₁] {S₂ : Type u₂} [comm_ring S₂]
+(f : S₁ → S₂) [is_ring_hom f] (g : S₂ → R) [is_ring_hom g] :
+  v.comap (g ∘ f) = (v.comap g).comap f :=
+subtype.ext.mpr $ rfl
+
 def map {Γ₁ : Type u₁} [linear_ordered_comm_group Γ₁] (f : Γ → Γ₁) [is_group_hom f] (hf : monotone f) :
   valuation R Γ₁ :=
 { val := with_zero.map f ∘ v,
@@ -227,7 +234,7 @@ def supp : ideal R :=
                     ... = 0 : mul_zero _ }
 
 @[simp] lemma mem_supp_iff (x : R) : x ∈ supp v ↔ v x = 0 := iff.rfl
-@[simp] lemma mem_supp_iff' (x : R) : x ∈ (supp v : set R)↔ v x = 0 := iff.rfl
+@[simp] lemma mem_supp_iff' (x : R) : x ∈ (supp v : set R) ↔ v x = 0 := iff.rfl
 
 -- support is a prime ideal.
 instance : ideal.is_prime (supp v) :=
@@ -265,7 +272,7 @@ end
 -- subset of supp(v).
 
 -- First the function
-definition on_quot_val {J : ideal R} (hJ : (J : set R) ⊆ supp v) :
+definition on_quot_val {J : ideal R} (hJ : J ≤ supp v) :
   J.quotient → with_zero Γ :=
 λ q, quotient.lift_on' q v $ λ a b h,
 begin
@@ -285,7 +292,7 @@ definition quotient.ind₂' :
 
 -- Proof that function is a valuation.
 variable {v}
-instance on_quot_val.is_valuation {J : ideal R} (hJ : (J : set R) ⊆ supp v) :
+instance on_quot_val.is_valuation {J : ideal R} (hJ : J ≤ supp v) :
 is_valuation (on_quot_val v hJ) :=
 { map_zero := v.map_zero,
   map_one  := v.map_one,
@@ -294,18 +301,39 @@ is_valuation (on_quot_val v hJ) :=
 
 -- Now the valuation
 variable (v)
-definition on_quot {J : ideal R} (hJ : (J : set R) ⊆ supp v) :
+definition on_quot {J : ideal R} (hJ : J ≤ supp v) :
   valuation J.quotient Γ :=
 { val := v.on_quot_val hJ,
   property := on_quot_val.is_valuation hJ }
 
-@[simp] lemma on_quot_comap_eq {J : ideal R} (hJ : (J : set R) ⊆ supp v) :
+@[simp] lemma on_quot_comap_eq {J : ideal R} (hJ : J ≤ supp v) :
   (v.on_quot hJ).comap (ideal.quotient.mk J) = v :=
 subtype.ext.mpr $ funext $
   λ r, @quotient.lift_on_beta _ _ (J.quotient_rel) v
   (λ a b h, have hsupp : a - b ∈ supp v := hJ h,
     by convert val_add_supp v b (a - b) hsupp; simp) _
 -- The above proof is ugly.
+
+lemma comap_supp {S : Type u₁} [comm_ring S] (f : S → R) [is_ring_hom f] :
+  supp (v.comap f) = ideal.comap f v.supp :=
+ideal.ext $ λ x,
+begin
+  rw [mem_supp_iff, ideal.mem_comap, mem_supp_iff],
+  refl,
+end
+
+@[simp] lemma comap_on_quot_eq (J : ideal R) (v : valuation J.quotient Γ) :
+  (v.comap (ideal.quotient.mk J)).on_quot
+  (by rw [comap_supp, ← ideal.map_le_iff_le_comap]; simp)
+  = v :=
+subtype.ext.mpr $ funext $
+begin
+  rintro ⟨x⟩,
+  dsimp [on_quot, on_quot_val, comap, function.comp],
+  show quotient.lift_on _ _ _ = _,
+  erw quotient.lift_on_beta,
+  refl,
+end
 
 -- quotient valuation on R/J has support supp(v)/J
 -- NB : statement looks really unreadable
@@ -328,10 +356,10 @@ namespace valuation
 open with_zero
 
 section quotient_ring
+open localization
+
 variables [integral_domain R]
 variables {Γ : Type u} [linear_ordered_comm_group Γ] (v : valuation R Γ)
-
-open localization
 
 -- Kenny says this should work for nonzero commrings
 -- ne_zero_of_mem_non_zero_divisors uses integral domain though -- maybe it shouldn't
@@ -407,9 +435,42 @@ def on_frac (hv : supp v = 0) : valuation (quotient_ring R) Γ :=
 { val := on_frac_val v hv,
   property := on_frac_val.is_valuation v hv }
 
+lemma on_frac_val' (hv : supp v = 0) (q : quotient_ring R) :
+  v.on_frac hv q = v.on_frac_val hv q := rfl
+
 @[simp] lemma on_frac_comap_eq (hv : supp v = 0) :
   (v.on_frac hv).comap (of_comm_ring R (non_zero_divisors R)) = v :=
 subtype.ext.mpr $ funext $ λ r, show v r / v 1 = v r, by simp
+
+@[simp] lemma comap_on_frac_eq (v : valuation (quotient_ring R) Γ) :
+  (v.comap (of_comm_ring R (non_zero_divisors R))).on_frac
+  (by {rw [comap_supp, ideal.zero_eq_bot, (supp v).eq_bot_of_prime],
+    apply ideal.comap_bot_of_inj, apply of_comm_ring.injective })
+  = v :=
+subtype.ext.mpr $ funext $
+begin
+  rintro ⟨x⟩,
+  dsimp [on_frac, on_frac_val, comap, function.comp],
+  erw quotient.lift_beta,
+  change v (of_comm_ring R (non_zero_divisors R) x.1) /
+         v (of_comm_ring R (non_zero_divisors R) x.2.val) = _,
+  rw with_zero.div_eq_iff_mul_eq,
+  erw ← v.map_mul,
+  apply congr_arg,
+  change ⟦_⟧ = ⟦_⟧,
+  apply quotient.sound,
+  dsimp [(≈), setoid.r],
+  erw localization.r_iff _ _,
+  use 1,
+  split, swap, dsimp, ring,
+  apply mem_non_zero_divisors_of_ne_zero, simp,
+  intro h,
+  rw [← mem_supp_iff, (supp v).eq_bot_of_prime] at h,
+  simp at h,
+  replace h := eq_zero_of _ h,
+  refine localization.ne_zero_of_mem_non_zero_divisors _ h,
+  exact x.2.2
+end
 
 end quotient_ring
 
@@ -435,11 +496,7 @@ begin
   rw [supp_quot_supp],
   -- from here it should be a 1-liner
   rw zero_eq_bot,
-  apply lattice.eq_bot_iff.2,
-  apply map_le_iff_le_comap.2,
-  intros x hx,
-  erw submodule.mem_bot,
-  exact ideal.quotient.eq_zero_iff_mem.2 hx
+  apply ideal.map_quotient_self,
 end
 
 end
@@ -685,15 +742,37 @@ lemma comap {S : Type u₃} [comm_ring S] (f : S → R) [is_ring_hom f] (h : v�
   (v₁.comap f).is_equiv (v₂.comap f) :=
 λ r s, h (f r) (f s)
 
-lemma on_quot {J : ideal R} (hJ : (J : set R) ⊆ supp v) :
+lemma on_quot_comap_self {J : ideal R} (hJ : J ≤ supp v) :
   is_equiv ((v.on_quot hJ).comap (ideal.quotient.mk J)) v :=
 of_eq (on_quot_comap_eq _ _)
 
+lemma comap_on_quot (J : ideal R) (v₁ : valuation J.quotient Γ₁) (v₂ : valuation J.quotient Γ₂) :
+  (v₁.comap (ideal.quotient.mk J)).is_equiv (v₂.comap (ideal.quotient.mk J)) ↔ v₁.is_equiv v₂ :=
+{ mp  := begin rintros h ⟨x⟩ ⟨y⟩, exact h x y end,
+  mpr := λ h, comap _ h }
+
 open localization
 
-lemma on_frac {R : Type u₀} [integral_domain R] (v : valuation R Γ) (hv : supp v = 0) :
+lemma on_frac_comap_self {R : Type u₀} [integral_domain R] (v : valuation R Γ) (hv : supp v = 0) :
   is_equiv ((v.on_frac hv).comap (of_comm_ring R (non_zero_divisors R))) v :=
 of_eq (on_frac_comap_eq v hv)
+
+lemma comap_on_frac {R : Type u₀} [integral_domain R]
+(v₁ : valuation (quotient_ring R) Γ₁) (v₂ : valuation (quotient_ring R) Γ₂) :
+  is_equiv (v₁.comap (of_comm_ring R (non_zero_divisors R)))
+           (v₂.comap (of_comm_ring R (non_zero_divisors R))) ↔
+  is_equiv v₁ v₂ :=
+{ mp  := begin
+    rintros h ⟨x⟩ ⟨y⟩,
+    erw ← comap_on_frac_eq v₁,
+    erw ← comap_on_frac_eq v₂,
+    dsimp [comap],
+    repeat {erw on_frac_val'},
+    change on_frac_val _ _ ≤ on_frac_val _ _ ↔ _,
+    erw on_frac_val_mk,
+    simp,
+  end,
+  mpr := λ h, comap _ h }
 
 -- -- Wedhorm 1.27 iii -> ii prep
 -- lemma supp_sub_of_is_equiv (h : is_equiv v₁ v₂) : ((supp v₁) : set R) ⊆ supp v₂ :=
@@ -710,14 +789,23 @@ calc r ∈ supp v₁ ↔ v₁ r = 0    : mem_supp_iff' _ _
 
 open is_group_hom
 
--- All of the stuff that takes (h : supp v₁ = supp v₂) as argument
--- is in the wrong namespace.
+end is_equiv
+
+section
+variables {v : valuation R Γ} {v₁ : valuation R Γ₁} {v₂ : valuation R Γ₂} {v₃ : valuation R Γ₃}
+
+open is_group_hom quotient_group function
+
 def quot_of_quot_of_eq_supp (h : supp v₁ = supp v₂) : (supp v₁).quotient → (supp v₂).quotient :=
 ideal.quotient.lift _ (ideal.quotient.mk _)
 begin
   intros r hr,
   rwa [ideal.quotient.eq_zero_iff_mem, ←h]
 end
+
+@[simp] lemma quot_of_quot_of_eq_supp_quotient_mk (h : supp v₁ = supp v₂) :
+  quot_of_quot_of_eq_supp h ∘ ideal.quotient.mk _ = ideal.quotient.mk _ :=
+funext $ λ x, ideal.quotient.lift_mk
 
 instance (h : supp v₁ = supp v₂) : is_ring_hom (quot_of_quot_of_eq_supp h) :=
 by delta quot_of_quot_of_eq_supp; apply_instance
@@ -749,27 +837,8 @@ by simp; apply_instance
 lemma quot_of_quot_of_eq_supp_inj (h : supp v₁ = supp v₂) : injective (quot_of_quot_of_eq_supp h) :=
 injective_of_left_inverse (quot_equiv_quot_of_eq_supp h).left_inv
 
--- This should be moved elsewhere
-def localization.r_iff {S : set R} [is_submonoid S] :
-  ∀ x y, localization.r R S x y ↔ ∃ t ∈ S, (x.2.1 * y.1 - y.2.1 * x.1) * t = 0
-| ⟨r₁, s₁, hs₁⟩ ⟨r₂, s₂, hs₂⟩ := iff.rfl
-
--- This should be moved elsewhere
-lemma eq_zero_of {R : Type u₁} [integral_domain R] (r : R)
-(hr : of_comm_ring R (non_zero_divisors R) r = 0) : r = 0 :=
-begin
-  replace hr := quotient.exact hr,
-  dsimp [(≈), setoid.r] at hr,
-  erw localization.r_iff at hr,
-  rcases hr with ⟨t, ht, ht'⟩,
-  replace ht := localization.ne_zero_of_mem_non_zero_divisors ht,
-  simpa [ht] using ht'
-end
-
--- This should be moved elsewhere
-lemma of_comm_ring_inj {R : Type u₁} [integral_domain R] :
-  injective (of_comm_ring R (non_zero_divisors R) : R → quotient_ring R) :=
-(is_add_group_hom.injective_iff _).mpr eq_zero_of
+section
+open localization
 
 -- This should be moved elsewhere
 @[simp] lemma val_prop {X : Type u} {S : set X} (x : S) : x.val ∈ S := x.property
@@ -896,7 +965,7 @@ def frac_equiv_frac_of_equiv (h : A ≃ B) [is_ring_hom h] : quotient_ring A ≃
   begin
     rintro ⟨x⟩,
     erw frac_map_mk,
-    rw @is_field_hom.map_div _ _ _ _ (frac_map _ _) (valuation.is_equiv.foo _ _),
+    rw @is_field_hom.map_div _ _ _ _ (frac_map _ _) (valuation.foo _ _),
     symmetry,
     simp [frac_map_of_comm_ring],
     exact quotient_ring_mk x
@@ -905,7 +974,7 @@ def frac_equiv_frac_of_equiv (h : A ≃ B) [is_ring_hom h] : quotient_ring A ≃
   begin
     rintro ⟨x⟩,
     erw frac_map_mk,
-    rw @is_field_hom.map_div _ _ _ _ (frac_map _ _) (valuation.is_equiv.foo _ _),
+    rw @is_field_hom.map_div _ _ _ _ (frac_map _ _) (valuation.foo _ _),
     symmetry,
     simp [frac_map_of_comm_ring],
     exact quotient_ring_mk x
@@ -920,8 +989,13 @@ frac_map (quot_of_quot_of_eq_supp h) (quot_of_quot_of_eq_supp_inj h)
 instance bar (h : supp v₁ = supp v₂) : is_field_hom (valfield_of_valfield_of_eq_supp h) :=
 by delta valfield_of_valfield_of_eq_supp; apply_instance
 
-def valfield_equiv_valfield_of_equiv (h : supp v₁ = supp v₂) : valuation_field v₁ ≃ valuation_field v₂ :=
+def valfield_equiv_valfield_of_eq_supp (h : supp v₁ = supp v₂) : valuation_field v₁ ≃ valuation_field v₂ :=
 frac_equiv_frac_of_equiv (quot_equiv_quot_of_eq_supp h)
+
+instance barz (h : supp v₁ = supp v₂) :
+  is_field_hom (valfield_equiv_valfield_of_eq_supp h) := valuation.bar h
+
+end
 
 -- lemma ker_eq_ker_of_equiv (h : v₁.is_equiv v₂) :
 --   ker (of_free_group v₁) = ker (of_free_group v₂) :=
@@ -958,23 +1032,40 @@ lemma of_inj_value_group (f : v₁.minimal_value_group.Γ → v₂.minimal_value
 (H : v₂.minimal_valuation = v₁.minimal_valuation.map f (monotone_of_strict_mono H)) :
   v₁.is_equiv v₂ :=
 begin
-  refine trans _ (v₂.minimal_valuation_is_equiv),
-  refine trans (v₁.minimal_valuation_is_equiv.symm) _,
+  refine is_equiv.trans _ (v₂.minimal_valuation_is_equiv),
+  refine is_equiv.trans (v₁.minimal_valuation_is_equiv.symm) _,
   rw H,
   symmetry,
   exact of_map_of_strict_mono _ _
 end
 
-end is_equiv
+lemma is_equiv.comap_quot_of_quot (h : v₁.is_equiv v₂) :
+  (v₁.on_quot (set.subset.refl _)).is_equiv
+  (comap (v₂.on_quot (set.subset.refl _)) (quot_of_quot_of_eq_supp h.supp_eq)) :=
+begin
+  rw [← is_equiv.comap_on_quot, ← comap_comp],
+  simp [h],
+end
 
-section
-variables {v : valuation R Γ} {v₁ : valuation R Γ₁} {v₂ : valuation R Γ₂} {v₃ : valuation R Γ₃}
+lemma is_equiv.on_valuation_field_is_equiv (h : v₁.is_equiv v₂) :
+  v₁.on_valuation_field.is_equiv
+  (comap v₂.on_valuation_field (valfield_of_valfield_of_eq_supp h.supp_eq)) :=
+begin
+  intros x y,
+  show _ ≤ _ ↔ _ ≤ _,
+  dsimp [valfield_of_valfield_of_eq_supp],
+end
 
-open is_group_hom quotient_group function
+def val_ring_equiv_of_is_equiv (h : v₁.is_equiv v₂) : v₁.valuation_ring ≃ v₂.valuation_ring :=
+subtype_equiv_of_subtype' (valfield_equiv_valfield_of_eq_supp h.supp_eq)
+begin
+  intro x,
+  show _ ≤ _ ↔ _ ≤ _,
+end
 
 -- Notes: if v1 equiv v2 then we need a bijection from the image of v1 to the
 -- image of v2; we need that the supports are the same; we need that
--- the minimal_value_group for v2 is isomorphic to the subgroup of Gamma_2 generated
+-- the minimal_value_group for v2 is isomorphic to the subgroup of Γ₂ generated
 -- by the image of the stuff not in the support.
 -- More notes: https://leanprover.zulipchat.com/#narrow/stream/113488-general/topic/eq.2Erec.20goal
 

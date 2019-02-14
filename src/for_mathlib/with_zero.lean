@@ -42,6 +42,22 @@ begin
   simp
 end
 
+@[simp] lemma mul_right_inv [group Γ] (x : with_zero Γ) (h : x ≠ 0) : x * x⁻¹ = 1 :=
+begin
+  cases x,
+  exfalso, exact h rfl,
+  show some (_ * _) = _,
+  simpa,
+end
+
+@[simp] lemma mul_left_inv [group Γ] (x : with_zero Γ) (h : x ≠ 0) : x⁻¹ * x = 1 :=
+begin
+  cases x,
+  exfalso, exact h rfl,
+  show some (_ * _) = _,
+  simpa,
+end
+
 @[simp] lemma mul_inv_rev [group Γ] (x y : with_zero Γ) : (x * y)⁻¹ = y⁻¹ * x⁻¹ :=
 begin
   cases x; cases y; try {refl},
@@ -54,10 +70,9 @@ lemma is_some_iff_ne_none {α : Type*} {x : option α} : x.is_some ↔ x ≠ non
 by cases x; simp
 
 namespace with_zero
-variables {Γ : Type*} [comm_group Γ]
+variables {Γ : Type*} [comm_group Γ] {a b c d : with_zero Γ}
 
-lemma div_eq_div {a b c d : with_zero Γ} (hb : b ≠ 0) (hd : d ≠ 0) :
-  a / b = c / d ↔ a * d = b * c :=
+lemma div_eq_div (hb : b ≠ 0) (hd : d ≠ 0) : a / b = c / d ↔ a * d = b * c :=
 begin
   replace hb := is_some_iff_ne_none.2 hb,
   replace hd := is_some_iff_ne_none.2 hd,
@@ -74,6 +89,26 @@ begin
     rw [H, mul_right_comm, inv_mul_cancel_right, mul_comm] },
   { rw [mul_inv_eq_iff_eq_mul, mul_right_comm, mul_comm c, ← H, mul_inv_cancel_right] }
 end
+
+variable (a)
+
+lemma mul_div_cancel (hb : b ≠ 0) : a * b / b = a :=
+begin
+  show _ * _ * _ = _,
+  simp [mul_assoc, hb],
+end
+
+lemma div_mul_cancel (hb : b ≠ 0) : a / b * b = a :=
+begin
+  show _ * _ * _ = _,
+  simp [mul_assoc, hb],
+end
+
+variable {a}
+
+lemma div_eq_iff_mul_eq (hb : b ≠ 0) : a / b = c ↔ c * b = a :=
+⟨λ h, by rw [← h, div_mul_cancel _ hb],
+ λ h, by rw [← h, mul_div_cancel _ hb]⟩
 
 @[simp] lemma zero_ne_some {a : Γ} : (0 : with_zero Γ) ≠ some a :=
 λ h, option.no_confusion h
