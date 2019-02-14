@@ -400,9 +400,9 @@ set_option class.instance_max_depth 41
 
 -- This definition helps resolve the set-theoretic issues caused by the
 -- fact that the adic spectrum of R is all equivalence classes of
--- valuations, where the value group can vary arbitrarily. It shows
--- that if v : R → {0} ∪ Γ₂ and if R has type Type u₁ then v is equivalent
--- to a valuation taking values in {0} ∪ Γ₁ with Γ₁ also of type u₁.
+-- valuations, where the value group can vary arbitrarily. This next bit
+-- of code shows that if v : R → {0} ∪ Γ₂ and if R has type Type u₁ then v is
+-- equivalent to a valuation taking values in {0} ∪ Γ₁ with Γ₁ also of type u₁.
 def minimal_value_group : minimal_valuation.parametrized_subgroup Γ₂ :=
 begin
   let FG : Type u₁ := multiplicative (R →₀ ℤ), -- free ab group on R
