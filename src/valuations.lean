@@ -39,6 +39,7 @@ class is_valuation {Γ : Type u} [linear_ordered_comm_group Γ]
 
 end valuation
 
+/-- Γ-valued valuations on R -/
 def valuation (R : Type u₀) [comm_ring R] (Γ : Type u) [linear_ordered_comm_group Γ] :=
 { v : R → with_zero Γ // valuation.is_valuation v }
 
@@ -69,8 +70,13 @@ begin
     exact option.no_confusion h1 },
   { constructor }
 end
-
--- We have just proven that (v x) is_some. Shouldn't we use option.get here?
+-- (Johan) We have just proven that (v x) is_some. Shouldn't we use option.get here?
+-- (Kevin) I tried option.get and things seemed to
+-- be worse. If you can prove unit_map_eq with option.get then feel free
+-- to edit. The problem I had was that option.get eats option.is_some, which is a proof
+-- and not data: map_unit is a theorem not data. So map_unit seems to
+-- forget everything about v x other than the fact that it's some (something)
+-- and as a result it's useless for proving unit_map is a group hom.
 definition unit_map : units R → Γ :=
 λ u, match v u with
 | some x := x
@@ -197,19 +203,19 @@ def trivial : valuation R Γ :=
   { map_zero := if_pos S.zero_mem,
     map_one  := if_neg (assume h, prime.1 (S.eq_top_iff_one.2 h)),
     map_mul  := λ x y, begin
-        split_ifs with hxy hx hy; try {simp}; exfalso,
+        split_ifs with hxy hx hy hy hx hy hy; try {simp}; exfalso,
         { cases ideal.is_prime.mem_or_mem prime hxy with h' h',
           { exact hx h' },
-          { exact h h' } },
-        { exact hxy (S.mul_mem_right h) },
-        { exact hxy (S.mul_mem_right h) },
-        { exact hxy (S.mul_mem_left h_1) }
+          { exact hy h' } },
+        { exact hxy (S.mul_mem_right hx) },
+        { exact hxy (S.mul_mem_right hx) },
+        { exact hxy (S.mul_mem_left hy) }
       end,
     map_add  := λ x y, begin
-        split_ifs with hxy hx hy; try {simp};
+        split_ifs with hxy hx hy _ hx hy; try {simp};
         try {left; exact le_refl _};
         try {right}; try {exact le_refl _},
-        { have hxy' : x + y ∈ S := S.add_mem h h_1,
+        { have hxy' : x + y ∈ S := S.add_mem hx hy,
           exfalso, exact hxy hxy' }
       end } }
 
@@ -421,7 +427,7 @@ def on_frac_val.is_valuation (hv : supp v = 0) : is_valuation (v.on_frac_val hv)
     [right, left];
     refine le_trans (linear_ordered_comm_monoid.mul_le_mul_right h _) _;
     erw [v.map_mul, v.map_mul, with_zero.mul_inv_rev];
-    simp only [mul_assoc, mul_comm];
+    simp only [mul_assoc, mul_comm],
     apply with_zero.mul_le_mul_left;
     refine le_trans (le_of_eq _)
       (le_trans (linear_ordered_comm_monoid.mul_le_mul_right
