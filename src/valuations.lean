@@ -12,7 +12,7 @@ import data.option.basic
 import for_mathlib.finsupp_prod_inv
 import for_mathlib.quotient_group
 import ring_theory.subring
-import for_mathlib.equiv
+import data.equiv.basic
 import for_mathlib.rings
 
 import tactic.where
@@ -923,7 +923,7 @@ begin
 end
 
 def val_ring_equiv_of_is_equiv (h : v₁.is_equiv v₂) : v₁.valuation_ring ≃ v₂.valuation_ring :=
-subtype_equiv_of_subtype' (valfield_equiv_valfield_of_eq_supp h.supp_eq)
+equiv.subtype_congr (valfield_equiv_valfield_of_eq_supp h.supp_eq)
 begin
   intro x,
   show _ ≤ _ ↔ _ ≤ _,
