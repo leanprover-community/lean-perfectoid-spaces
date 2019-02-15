@@ -399,13 +399,6 @@ end
 @[simp] lemma on_frac_val_mk' (hv : supp v = 0) (rs : R × non_zero_divisors R) :
   v.on_frac_val hv (quotient.mk' rs) = v rs.1 / v rs.2.1 := rfl
 
--- TODO Does this work yet?
--- example (R : Type*) [integral_domain R] : discrete_field (quotient_ring R) := by apply_instance
--- If it does, then mathlib fixed the problem and the next two lines can be removed
-instance foobar (R : Type*) [integral_domain R] : discrete_field (quotient_ring R) :=
-quotient_ring.field.of_integral_domain R
-
-@[simp] lemma non_zero_divisors_one_val : (1 : non_zero_divisors R).val = 1 := rfl
 
 def on_frac_val.is_valuation (hv : supp v = 0) : is_valuation (v.on_frac_val hv) :=
 { map_zero := show v.on_frac_val hv (quotient.mk' ⟨0,1⟩) = 0, by simp,
@@ -427,14 +420,16 @@ def on_frac_val.is_valuation (hv : supp v = 0) : is_valuation (v.on_frac_val hv)
     [right, left];
     refine le_trans (linear_ordered_comm_monoid.mul_le_mul_right h _) _;
     erw [v.map_mul, v.map_mul, with_zero.mul_inv_rev];
-    simp only [mul_assoc, mul_comm],
-    apply with_zero.mul_le_mul_left;
     refine le_trans (le_of_eq _)
       (le_trans (linear_ordered_comm_monoid.mul_le_mul_right
         (mul_inv_self $ v (_ : R × (non_zero_divisors R)).snd.val) _) $
         le_of_eq $ one_mul _),
-    exact x, rw mul_assoc, refl,
-    exact y, conv { to_lhs, congr, skip, rw mul_comm }, rw mul_assoc, refl,
+    { exact x },
+    { repeat {rw [mul_assoc]}, congr' 1,
+      rw [← mul_assoc, mul_comm], },
+    { exact y },
+    { repeat {rw [mul_assoc]}, congr' 1,
+      rw mul_left_comm, },
   end }
 
 def on_frac (hv : supp v = 0) : valuation (quotient_ring R) Γ :=
@@ -445,21 +440,21 @@ lemma on_frac_val' (hv : supp v = 0) (q : quotient_ring R) :
   v.on_frac hv q = v.on_frac_val hv q := rfl
 
 @[simp] lemma on_frac_comap_eq (hv : supp v = 0) :
-  (v.on_frac hv).comap (of_comm_ring R (non_zero_divisors R)) = v :=
+  (v.on_frac hv).comap (quotient_ring.inc R) = v :=
 subtype.ext.mpr $ funext $ λ r, show v r / v 1 = v r, by simp
 
 @[simp] lemma comap_on_frac_eq (v : valuation (quotient_ring R) Γ) :
-  (v.comap (of_comm_ring R (non_zero_divisors R))).on_frac
+  (v.comap (quotient_ring.inc R)).on_frac
   (by {rw [comap_supp, ideal.zero_eq_bot, (supp v).eq_bot_of_prime],
-    apply ideal.comap_bot_of_inj, apply of_comm_ring.injective })
+    apply ideal.comap_bot_of_inj, apply quotient_ring.inc.injective })
   = v :=
 subtype.ext.mpr $ funext $
 begin
   rintro ⟨x⟩,
   dsimp [on_frac, on_frac_val, comap, function.comp],
   erw quotient.lift_beta,
-  change v (of_comm_ring R (non_zero_divisors R) x.1) /
-         v (of_comm_ring R (non_zero_divisors R) x.2.val) = _,
+  change v (quotient_ring.inc R x.1) /
+         v (quotient_ring.inc R x.2.val) = _,
   rw with_zero.div_eq_iff_mul_eq,
   erw ← v.map_mul,
   apply congr_arg,
@@ -542,12 +537,8 @@ instance max_ideal_is_maximal : (max_ideal v).is_maximal :=
 begin
   rw ideal.is_maximal_iff,
   split,
-  { show (1 : valuation_ring v) ∉ max_ideal v,
-    exact λ (H : _ < _), ne_of_lt H (map_one _) },
-  { show ∀ (J : ideal (valuation_ring v)) (x : valuation_ring v),
-      max_ideal v ≤ J → x ∉ max_ideal v → x ∈ J → (1 : valuation_ring v) ∈ J,
-    intros J x hJ hxni hxinJ,
-    cases x with x hx,
+  { exact λ (H : _ < _), ne_of_lt H (map_one _) },
+  { rintros J ⟨x,hx⟩ hJ hxni hxinJ,
     have vx : v.on_valuation_field x = 1 :=
     begin
       rw eq_iff_le_not_lt,
@@ -760,13 +751,13 @@ lemma comap_on_quot (J : ideal R) (v₁ : valuation J.quotient Γ₁) (v₂ : va
 open localization
 
 lemma on_frac_comap_self {R : Type u₀} [integral_domain R] (v : valuation R Γ) (hv : supp v = 0) :
-  is_equiv ((v.on_frac hv).comap (of_comm_ring R (non_zero_divisors R))) v :=
+  is_equiv ((v.on_frac hv).comap (quotient_ring.inc R)) v :=
 of_eq (on_frac_comap_eq v hv)
 
 lemma comap_on_frac {R : Type u₀} [integral_domain R]
 (v₁ : valuation (quotient_ring R) Γ₁) (v₂ : valuation (quotient_ring R) Γ₂) :
-  is_equiv (v₁.comap (of_comm_ring R (non_zero_divisors R)))
-           (v₂.comap (of_comm_ring R (non_zero_divisors R))) ↔
+  is_equiv (v₁.comap (quotient_ring.inc R))
+           (v₂.comap (quotient_ring.inc R)) ↔
   is_equiv v₁ v₂ :=
 { mp  := begin
     rintros h ⟨x⟩ ⟨y⟩,
@@ -774,9 +765,17 @@ lemma comap_on_frac {R : Type u₀} [integral_domain R]
     erw ← comap_on_frac_eq v₂,
     dsimp [comap],
     repeat {erw on_frac_val'},
-    change on_frac_val _ _ ≤ on_frac_val _ _ ↔ _,
-    erw on_frac_val_mk,
-    simp,
+    repeat {erw on_frac_val_mk},
+    repeat {erw with_zero.div_le_div},
+    repeat {erw ← valuation.map_mul},
+    exact h _ _,
+    all_goals { intro H,
+      erw [← mem_supp_iff, comap_supp, (supp _).eq_bot_of_prime] at H,
+      simp at H,
+      replace H := eq_zero_of _ H,
+      refine localization.ne_zero_of_mem_non_zero_divisors _ H,
+      apply val_prop _,
+      apply_instance },
   end,
   mpr := λ h, comap _ h }
 
@@ -846,147 +845,6 @@ injective_of_left_inverse (quot_equiv_quot_of_eq_supp h).left_inv
 section
 open localization
 
--- This should be moved elsewhere
-@[simp] lemma val_prop {X : Type u} {S : set X} (x : S) : x.val ∈ S := x.property
-
--- This should be moved elsewhere
-section
-variables {A : Type u₁} [integral_domain A] {B : Type u₂} [integral_domain B]
-(f : A → B) [is_ring_hom f] (hf : injective f)
-include hf
-
--- This should be moved elsewhere
-def frac_map : quotient_ring A → quotient_ring B :=
-quotient.lift (λ rs : A × (non_zero_divisors A),
-let mk : B → quotient_ring B := of_comm_ring _ _ in
-(mk $ f rs.1) / (mk $ f rs.2.val))
-begin
-  intros x y hxy,
-  dsimp,
-  rw div_eq_div_iff,
-  { refine quotient.sound _,
-    dsimp [(≈), setoid.r] at hxy ⊢,
-    erw localization.r_iff at hxy ⊢,
-    rcases hxy with ⟨t, ht, ht'⟩,
-    use f t,
-    fsplit,
-    { apply localization.mem_non_zero_divisors_of_ne_zero,
-      replace ht := localization.ne_zero_of_mem_non_zero_divisors ht,
-      convert ht ∘ (@hf t 0),
-      simp [is_ring_hom.map_zero f] },
-    { have := congr_arg f ht',
-      simp only [is_ring_hom.map_zero f, is_ring_hom.map_mul f, is_ring_hom.map_neg f,
-        is_ring_hom.map_add f, is_ring_hom.map_sub f] at this,
-      rw ← this,
-      ring, -- TODO: why does ring not close this goal?
-      simp [mul_comm] } },
-  all_goals { intro h,
-    replace h := eq_zero_of _ h,
-    rw ← is_ring_hom.map_zero f at h,
-    replace h := hf h,
-    refine localization.ne_zero_of_mem_non_zero_divisors _ h,
-    simp }
-end
-
--- This should be moved elsewhere
-lemma frac_map_of_comm_ring (a : A) :
-  frac_map f hf (of_comm_ring A _ a) = of_comm_ring B _ (f a) :=
-begin
-  dsimp [frac_map],
-  erw quotient.lift_beta,
-  simp [is_ring_hom.map_one f],
-  exact div_one _,
-end
-
--- This should be moved elsewhere
-@[simp] lemma frac_map_mk (x : A × (non_zero_divisors A)) :
-  frac_map f hf ⟦x⟧ = (of_comm_ring B _ $ f x.1) / (of_comm_ring B _ $ f x.2.val) :=
-rfl
-
--- This should be moved elsewhere -- and give it a good name
-instance foo : is_field_hom (frac_map f hf) :=
-{ map_one := by simpa [is_ring_hom.map_one f] using frac_map_of_comm_ring f hf 1,
-  map_mul :=
-  begin
-    rintros ⟨x⟩ ⟨y⟩,
-    repeat {erw frac_map_mk},
-    simp [div_mul_div,
-          is_ring_hom.map_mul (of_comm_ring B (non_zero_divisors B)),
-          is_ring_hom.map_mul f],
-  end,
-  map_add :=
-  begin
-    rintros ⟨x⟩ ⟨y⟩,
-    repeat {erw frac_map_mk},
-    rw div_add_div,
-    simp [is_ring_hom.map_add (of_comm_ring B (non_zero_divisors B)),
-          is_ring_hom.map_add f,
-          is_ring_hom.map_mul (of_comm_ring B (non_zero_divisors B)),
-          is_ring_hom.map_mul f],
-    erw [add_comm, mul_comm]; refl,
-    all_goals { intro h,
-      replace h := eq_zero_of _ h,
-      rw ← is_ring_hom.map_zero f at h,
-      replace h := hf h,
-      refine localization.ne_zero_of_mem_non_zero_divisors _ h,
-      simp }
-  end }
-
-omit hf
-
-def blah (h : A ≃ B) [is_ring_hom h] : is_ring_hom (h.symm) :=
-{ map_one := by simp [(is_ring_hom.map_one h).symm],
-  map_mul := λ x y,
-  begin apply injective_of_left_inverse h.left_inv,
-    change h _ = h _,
-    simp [is_ring_hom.map_mul h],
-  end,
-  map_add := λ x y,
-  begin apply injective_of_left_inverse h.left_inv,
-    change h _ = h _,
-    simp [is_ring_hom.map_add h],
-  end }
-
-local attribute [instance] blah
-
-lemma quotient_ring_mk_inv : ∀ (x : A × (non_zero_divisors A)),
-  @eq (quotient_ring A)
-  ⟦x⟧⁻¹ $ if h : x.1 = 0 then 0 else ⟦⟨x.2.val, x.1, mem_non_zero_divisors_of_ne_zero h⟩⟧
-| ⟨r,s,hs⟩ := rfl
-
-@[simp] lemma quotient_ring_mk (x : A × (non_zero_divisors A)) :
-  @eq (quotient_ring A)
-  ⟦x⟧ $ of_comm_ring A (non_zero_divisors A) (x.1) / of_comm_ring A (non_zero_divisors A) ((x.2).val) :=
-begin
-  simp [of_comm_ring, (/), algebra.div, quotient_ring_mk_inv],
-  rw dif_neg (ne_zero_of_mem_non_zero_divisors x.2.property),
-  cases x,
-  congr; simp
-end
-
-def frac_equiv_frac_of_equiv (h : A ≃ B) [is_ring_hom h] : quotient_ring A ≃ quotient_ring B :=
-{ to_fun := frac_map h (injective_of_left_inverse h.left_inv),
-  inv_fun := frac_map h.symm (injective_of_left_inverse h.symm.left_inv),
-  left_inv :=
-  begin
-    rintro ⟨x⟩,
-    erw frac_map_mk,
-    rw @is_field_hom.map_div _ _ _ _ (frac_map _ _) (valuation.foo _ _),
-    symmetry,
-    simp [frac_map_of_comm_ring],
-    exact quotient_ring_mk x
-  end,
-  right_inv :=
-  begin
-    rintro ⟨x⟩,
-    erw frac_map_mk,
-    rw @is_field_hom.map_div _ _ _ _ (frac_map _ _) (valuation.foo _ _),
-    symmetry,
-    simp [frac_map_of_comm_ring],
-    exact quotient_ring_mk x
-  end }
-
-end
 
 def valfield_of_valfield_of_eq_supp (h : supp v₁ = supp v₂) :
   valuation_field v₁ → valuation_field v₂ :=
@@ -1057,9 +915,11 @@ lemma is_equiv.on_valuation_field_is_equiv (h : v₁.is_equiv v₂) :
   v₁.on_valuation_field.is_equiv
   (comap v₂.on_valuation_field (valfield_of_valfield_of_eq_supp h.supp_eq)) :=
 begin
-  intros x y,
-  show _ ≤ _ ↔ _ ≤ _,
-  dsimp [valfield_of_valfield_of_eq_supp],
+  -- intros x y,
+  -- show _ ≤ _ ↔ _ ≤ _,
+  dsimp [valfield_of_valfield_of_eq_supp, on_valuation_field],
+  erw [← is_equiv.comap_on_frac, ← comap_comp],
+  squeeze_simp,
 end
 
 def val_ring_equiv_of_is_equiv (h : v₁.is_equiv v₂) : v₁.valuation_ring ≃ v₂.valuation_ring :=
