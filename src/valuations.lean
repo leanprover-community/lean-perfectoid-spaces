@@ -934,13 +934,12 @@ end
 -- Wedhorn 1.27 (iii) => (ii)b
 instance xyzzy (h : v₁.is_equiv v₂) : is_ring_hom (val_ring_equiv_of_is_equiv h) :=
 begin
-  cases (by apply_instance : is_ring_hom (valfield_equiv_valfield_of_eq_supp h.supp_eq :
-      v₁.valuation_field → v₂.valuation_field)),
+  cases (by apply_instance : is_ring_hom (valfield_equiv_valfield_of_eq_supp h.supp_eq)),
   constructor,
   all_goals {
     intros,
     apply subtype.val_injective,
-    assumption <|> apply_assumption, },
+    apply_assumption, },
 end
 
 -- Notes: if v1 equiv v2 then we need a bijection from the image of v1 to the
