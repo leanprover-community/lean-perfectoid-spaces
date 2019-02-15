@@ -915,11 +915,9 @@ lemma is_equiv.on_valuation_field_is_equiv (h : v₁.is_equiv v₂) :
   v₁.on_valuation_field.is_equiv
   (comap v₂.on_valuation_field (valfield_of_valfield_of_eq_supp h.supp_eq)) :=
 begin
-  -- intros x y,
-  -- show _ ≤ _ ↔ _ ≤ _,
-  dsimp [valfield_of_valfield_of_eq_supp, on_valuation_field],
-  erw [← is_equiv.comap_on_frac, ← comap_comp],
-  squeeze_simp,
+  delta valfield_of_valfield_of_eq_supp, delta on_valuation_field,
+  erw [← is_equiv.comap_on_frac, ← comap_comp, on_frac_comap_eq],
+  simp [comap_comp, h.comap_quot_of_quot],
 end
 
 def val_ring_equiv_of_is_equiv (h : v₁.is_equiv v₂) : v₁.valuation_ring ≃ v₂.valuation_ring :=
@@ -927,6 +925,22 @@ equiv.subtype_congr (valfield_equiv_valfield_of_eq_supp h.supp_eq)
 begin
   intro x,
   show _ ≤ _ ↔ _ ≤ _,
+  erw [← v₁.on_valuation_field.map_one, h.on_valuation_field_is_equiv],
+  convert iff.refl _,
+  symmetry,
+  exact valuation.map_one _,
+end
+
+-- Wedhorn 1.27 (iii) => (ii)b
+instance xyzzy (h : v₁.is_equiv v₂) : is_ring_hom (val_ring_equiv_of_is_equiv h) :=
+begin
+  cases (by apply_instance : is_ring_hom (valfield_equiv_valfield_of_eq_supp h.supp_eq :
+      v₁.valuation_field → v₂.valuation_field)),
+  constructor,
+  all_goals {
+    intros,
+    apply subtype.val_injective,
+    assumption <|> apply_assumption, },
 end
 
 -- Notes: if v1 equiv v2 then we need a bijection from the image of v1 to the
