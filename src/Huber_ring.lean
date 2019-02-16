@@ -37,17 +37,17 @@ begin
     have H : (∃ (n : ℕ), (J^n).carrier ⊆ {a : A₀ | a.val ∈ U'}) :=
       h2 {a | a.val ∈ U'} U'_0 (continuous_subtype_val _ U'_open),
     rcases H with ⟨n, hn⟩,
-    existsi subtype.val '' (J^n).carrier,  -- the key step
+    use coe '' (J^n).carrier,  -- the key step
     split,
     { apply mem_nhds_sets,
       { refine embedding_open embedding_subtype_val _ (h1 n),
-        rw set.subtype_val_range,
+        rw set.range_coe_subtype,
         exact hl },
       simp [(is_subring.to_is_add_subgroup A₀).zero_mem], 
       exact (J^n).zero_mem },
     rintros a ⟨a₀, ha₀⟩ b hb,
     apply U'_sub,
-    have : a₀.val * b ∈ U':= hn ((J^n).mul_mem_right ha₀.left : (a₀ * ⟨b,hb⟩) ∈ J^n),
+    have : ↑a₀ * b ∈ U':= hn ((J^n).mul_mem_right ha₀.left : (a₀ * ⟨b,hb⟩) ∈ J^n),
     rwa ha₀.right at this },
   tfae_have : 3 → 1,
   { rintro ⟨hl, hr⟩,

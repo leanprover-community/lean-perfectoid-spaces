@@ -109,8 +109,9 @@ end
 
 -- This is the second mathematical key fact: multiplication is continuous in I-adic topology
 lemma continuous_mul' : continuous (λ (p : adic_ring I × adic_ring I), p.fst * p.snd) :=
-continuous_iff_tendsto.2 $ assume ⟨x₀, y₀⟩,
+continuous_iff_continuous_at.2 $ assume ⟨x₀, y₀⟩,
 begin
+  unfold continuous_at,
   rw nhds_prod_eq,
   rw tendsto_prod_iff,
   simp [adic_ring.nhds_eq I] at *,
