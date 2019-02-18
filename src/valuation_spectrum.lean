@@ -3,14 +3,14 @@ import topology.basic
 import data.finsupp
 import group_theory.quotient_group
 
-universes u₁ u₂ u₃
+universes u u₀ u₁ u₂ u₃
 
 local attribute [instance] classical.prop_decidable
 
-variables {R : Type u₁} [comm_ring R] [decidable_eq R]
+variables {R : Type u₀} [comm_ring R] [decidable_eq R]
 
-structure Valuation (R : Type u₁) [comm_ring R] :=
-(Γ   : Type u₁)
+structure Valuation (R : Type u₀) [comm_ring R] :=
+(Γ   : Type u)
 (grp : linear_ordered_comm_group Γ)
 (val : @valuation R _ Γ grp)
 
@@ -22,41 +22,46 @@ instance : has_coe_to_fun (Valuation R) :=
 
 instance linear_ordered_value_group {v : Valuation R} : linear_ordered_comm_group v.Γ := v.grp
 
-def of_valuation {Γ : Type u₂} [linear_ordered_comm_group Γ] (v : valuation R Γ) : Valuation R :=
-{ Γ   := (minimal_value_group v).Γ,
-  grp := minimal_value_group.linear_ordered_comm_group v,
-  val := v.minimal_valuation }
+def of_valuation {Γ : Type u} [linear_ordered_comm_group Γ] (v : valuation R Γ) : Valuation R :=
+{ Γ   := Γ,
+  grp := by apply_instance,
+  val := v }
 
 section
 variables (R)
 
-instance : setoid (Valuation R) :=
-{ r := λ v₁ v₂, ∀ r s, v₁ r ≤ v₁ s ↔ v₂ r ≤ v₂ s,
-  iseqv := begin
-    split,
-    { intros v r s, refl },
-    split,
-    { intros v₁ v₂ h r s, symmetry, exact h r s },
-    { intros v₁ v₂ v₃ h₁ h₂ r s,
-      exact iff.trans (h₁ r s) (h₂ r s) }
-  end }
+instance equiv : setoid (Valuation R) :=
+{ r := λ v₁ v₂, v₁.val.is_equiv v₂.val,
+  iseqv :=
+  ⟨λ _,     valuation.is_equiv.refl,
+   λ _ _,   valuation.is_equiv.symm,
+   λ _ _ _, valuation.is_equiv.trans ⟩}
 
 end
 
-lemma ne_zero_of_equiv_ne_zero {Γ₁ : Type u₂} [linear_ordered_comm_group Γ₁] {Γ₂ : Type u₃} [linear_ordered_comm_group Γ₂]
-{v₁ : valuation R Γ₁} {v₂ : valuation R Γ₂} {r : R} (heq : valuation.is_equiv v₁ v₂) (H : v₁ r ≠ 0) : v₂ r ≠ 0 :=
-begin
-  intro h,
-  rw [eq_zero_iff_le_zero, ← heq r 0, ← eq_zero_iff_le_zero] at h,
-  exact H h
-end
+@[simp] lemma equiv_eq {v₁ v₂ : Valuation R} : (v₁ ≈ v₂) = (v₁.val.is_equiv v₂.val) := rfl
+
+-- -- If we need this, it should go to the valuations.lean file
+-- lemma ne_zero_of_equiv_ne_zero {Γ₁ : Type u₂} [linear_ordered_comm_group Γ₁] {Γ₂ : Type u₃} [linear_ordered_comm_group Γ₂]
+-- {v₁ : valuation R Γ₁} {v₂ : valuation R Γ₂} {r : R} (heq : valuation.is_equiv v₁ v₂) (H : v₁ r ≠ 0) : v₂ r ≠ 0 :=
+-- begin
+--   intro h,
+--   rw [eq_zero_iff_le_zero, ← heq r 0, ← eq_zero_iff_le_zero] at h,
+--   exact H h
+-- end
 
 end Valuation
 
 section
 variables (R)
 
+definition large_Spv := quotient (Valuation.equiv R)
+
 definition Spv := {ineq : R → R → Prop // ∃ (v : Valuation R), ∀ r s : R, v r ≤ v s ↔ ineq r s}
+
+variable {v : Spv R}
+
+notation r `≤[`v`]` s := v.1 r s
 
 end
 
@@ -65,7 +70,58 @@ open valuation
 
 definition mk (v : Valuation R) : Spv R := ⟨λ r s, v r ≤ v s, ⟨v, λ _ _, iff.rfl⟩⟩
 
-definition mk' {Γ : Type u₂} [linear_ordered_comm_group Γ] (v : valuation R Γ) : Spv R := mk (Valuation.of_valuation v)
+definition mk' {Γ : Type u₂} [linear_ordered_comm_group Γ] (v : valuation R Γ) :
+  Spv R :=
+mk (Valuation.of_valuation v)
+
+definition mk'' : large_Spv R → Spv R :=
+quotient.lift mk $ λ (v₁ v₂ : Valuation R) h, subtype.ext.mpr $
+begin
+  ext r s,
+  exact h r s,
+end
+
+section ineq
+
+variables {v : Spv R}
+
+-- @[refl] -- gives a weird error
+lemma refl : reflexive v.1 := λ r,
+begin
+  cases v.2,
+  erw ← h at *,
+  exact le_refl _,
+end
+
+-- @[trans]
+lemma trans : transitive v.1 := λ r s t hrs hst,
+begin
+  cases v.2,
+  erw ← h at *,
+  exact le_trans hrs hst,
+end
+
+@[simp] lemma zero_le (r : R) : 0 ≤[v] r :=
+begin
+  cases v.2,
+  erw [← h, w.val.map_zero],
+  simp,
+end
+
+@[simp] lemma add_le (r s : R) : ((r + s) ≤[v] r) ∨ ((r + s) ≤[v] s) :=
+begin
+  cases v.2,
+  erw [← h, ← h],
+  exact (w.val.map_add r s).imp id id,
+end
+
+end ineq
+
+def supp (v : Spv R) : ideal R :=
+{ carrier := {r | r ≤[v] 0},
+  zero := refl _,
+  add := λ r s hr hs, by cases (add_le r s) with h h; refine trans h _; assumption,
+  smul := _ }
 
 noncomputable definition out (v : Spv R) : Valuation R :=
 subtype.cases_on v (λ ineq hv, classical.some hv)
