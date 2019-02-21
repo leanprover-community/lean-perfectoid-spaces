@@ -255,7 +255,7 @@ instance : ideal.is_prime (supp v) :=
   end⟩
 
 -- v(a)=v(a+s) if s in support. First an auxiliary lemma
-lemma val_add_supp_aux (a s : R) (h : s ∈ supp v) : v (a + s) ≤ v a :=
+lemma val_add_supp_aux (a s : R) (h : v s = 0) : v (a + s) ≤ v a :=
 begin
   cases map_add v a s with H H, exact H,
   change v s = 0 at h,
@@ -267,7 +267,7 @@ lemma val_add_supp (a s : R) (h : s ∈ supp v) : v (a + s) = v a :=
 begin
   apply le_antisymm (val_add_supp_aux v a s h),
   convert val_add_supp_aux v (a + s) (-s) _, simp,
-  rwa ideal.neg_mem_iff,
+  rwa ←ideal.neg_mem_iff at h,
 end
 
 -- We have not yet extended a valuation v to a valuation on R/supp v

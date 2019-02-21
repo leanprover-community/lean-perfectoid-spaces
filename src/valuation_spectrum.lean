@@ -1,4 +1,4 @@
-import valuations 
+import valuations
 import topology.basic
 import data.finsupp
 import group_theory.quotient_group
@@ -88,7 +88,7 @@ variables {v : Spv R}
 -- @[refl] -- gives a weird error
 lemma refl : reflexive v.1 := λ r,
 begin
-  cases v.2,
+  cases v.2 with _ h,
   erw ← h at *,
   exact le_refl _,
 end
@@ -96,23 +96,55 @@ end
 -- @[trans]
 lemma trans : transitive v.1 := λ r s t hrs hst,
 begin
-  cases v.2,
+  cases v.2 with _ h,
   erw ← h at *,
   exact le_trans hrs hst,
 end
 
 @[simp] lemma zero_le (r : R) : 0 ≤[v] r :=
 begin
-  cases v.2,
+  cases v.2 with w h,
   erw [← h, w.val.map_zero],
   simp,
 end
 
 @[simp] lemma add_le (r s : R) : ((r + s) ≤[v] r) ∨ ((r + s) ≤[v] s) :=
 begin
-  cases v.2,
+  cases v.2 with w h,
   erw [← h, ← h],
   exact (w.val.map_add r s).imp id id,
+end
+
+@[simp] lemma mul_le_mul_left {r s : R} : (r ≤[v] s) → (∀ t, (t * r) ≤[v] (t * s)) :=
+begin
+  cases v.2 with w h,
+  erw [← h],
+  intros H t,
+  erw [← h, w.val.map_mul, w.val.map_mul],
+  exact linear_ordered_comm_monoid.mul_le_mul_left H _,
+end
+
+@[simp] lemma mul_le_mul_right {r s : R} : (r ≤[v] s) → (∀ t, (r * t) ≤[v] (s * t)) :=
+begin
+  cases v.2 with w h,
+  erw [← h],
+  intros H t,
+  erw [← h, w.val.map_mul, w.val.map_mul],
+  exact linear_ordered_comm_monoid.mul_le_mul_right H _,
+end
+
+@[simp] lemma not_one_le_zero : ¬ (1 ≤[v] 0) :=
+begin
+  cases v.2 with w h,
+  erw [← h, w.val.map_one, w.val.map_zero],
+  simp,
+end
+
+lemma mul_le_zero (r s : R) : (r * s ≤[v] 0) → (r ≤[v] 0) ∨ (s ≤[v] 0) :=
+begin
+  cases v.2 with w h,
+  erw [← h, ← h, ← h, w.val.map_mul, w.val.map_zero],
+  simpa using with_zero.eq_zero_or_eq_zero_of_mul_eq_zero _ _,
 end
 
 end ineq
@@ -121,7 +153,36 @@ def supp (v : Spv R) : ideal R :=
 { carrier := {r | r ≤[v] 0},
   zero := refl _,
   add := λ r s hr hs, by cases (add_le r s) with h h; refine trans h _; assumption,
-  smul := _ }
+  smul := λ t r h, by simpa using mul_le_mul_left h t }
+
+instance supp_is_prime (v : Spv R) : (supp v).is_prime :=
+begin
+  split,
+  { rw ideal.ne_top_iff_one,
+    exact not_one_le_zero, },
+  { intros r s,
+    exact mul_le_zero _ _, }
+end
+
+@[simp] lemma le_add_right {v : Spv R} (r s : R) (H : s ≤[v] 0) : r ≤[v] r + s :=
+begin
+  cases v.2 with w h,
+  erw [← h] at ⊢ H,
+  convert val_add_supp_aux w.val (r + s) (-s) _,
+  { simpa using (rfl : w r = w r) },
+  { rw [w.val.map_neg],
+    erw [w.val.map_zero] at H, }
+end
+
+def on_quot (v : Spv R) : Spv (supp v).quotient :=
+{ val := @quotient.lift₂ _ _ _ ((supp v).quotient_rel) ((supp v).quotient_rel) v.1 $
+    λ r₁ s₁ r₂ s₂ hr hs,
+    begin
+      have hr' : r₁ - r₂ ∈ supp v := hr,
+      have hs' : s₁ - s₂ ∈ supp v := hs,
+    end,
+  property := _ }
+
 
 noncomputable definition out (v : Spv R) : Valuation R :=
 subtype.cases_on v (λ ineq hv, classical.some hv)
@@ -158,7 +219,7 @@ end
 
 noncomputable instance : has_coe (Spv R) (Valuation R) := ⟨out⟩
 
-end Spv 
+end Spv
 
 -- TODO:
 -- Also might need a variant of  Wedhorn 1.27 (ii) -/
@@ -175,13 +236,13 @@ begin
     dsimp at Hg,
     induction Hg,
   },
-  {sorry 
+  {sorry
 
   }
-end 
+end
 -/
 
-namespace Spv 
+namespace Spv
 
 variables {A : Type u₁} [comm_ring A] [decidable_eq A]
 
@@ -200,4 +261,4 @@ end
 instance : topological_space (Spv A) :=
 topological_space.generate_from {U : set (Spv A) | ∃ r s : A, U = basic_open r s}
 
-end Spv 
+end Spv
