@@ -2,8 +2,6 @@ import data.finsupp
 
 universes u v w
 
-#check @finsupp.prod_neg_index
-
 namespace finsupp
 
 variables {α : Type u} {β : Type v} {γ : Type w}

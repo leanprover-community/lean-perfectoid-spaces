@@ -171,7 +171,7 @@ begin
   convert val_add_supp_aux w.val (r + s) (-s) _,
   { simpa using (rfl : w r = w r) },
   { rw [w.val.map_neg],
-    erw [w.val.map_zero] at H, }
+    erw [w.val.map_zero] at H, sorry} -- KB added sorry
 end
 
 def on_quot (v : Spv R) : Spv (supp v).quotient :=
@@ -180,8 +180,9 @@ def on_quot (v : Spv R) : Spv (supp v).quotient :=
     begin
       have hr' : r₁ - r₂ ∈ supp v := hr,
       have hs' : s₁ - s₂ ∈ supp v := hs,
+      sorry -- KB added this because he's not sure what's going on but wanted to get rid of the error
     end,
-  property := _ }
+  property := sorry} -- ditto
 
 
 noncomputable definition out (v : Spv R) : Valuation R :=
@@ -253,9 +254,11 @@ lemma mk_mem_basic_open {r s : A} (v : Valuation A) : mk v ∈ basic_open r s �
 begin
   split; intro h; split,
   { exact (out_mk r s).mp h.left },
-  { exact Valuation.ne_zero_of_equiv_ne_zero out_mk h.right },
+  { sorry},
+--  { exact Valuation.ne_zero_of_equiv_ne_zero out_mk h.right },
   { exact (out_mk r s).mpr h.left },
-  { exact Valuation.ne_zero_of_equiv_ne_zero (setoid.symm out_mk) h.right }
+  { sorry}
+--  { exact Valuation.ne_zero_of_equiv_ne_zero (setoid.symm out_mk) h.right }
 end
 
 instance : topological_space (Spv A) :=

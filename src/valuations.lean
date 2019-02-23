@@ -14,6 +14,7 @@ import for_mathlib.quotient_group
 import ring_theory.subring
 import data.equiv.basic
 import for_mathlib.rings
+import data.quot
 
 import tactic.where
 
@@ -70,13 +71,7 @@ begin
     exact option.no_confusion h1 },
   { constructor }
 end
--- (Johan) We have just proven that (v x) is_some. Shouldn't we use option.get here?
--- (Kevin) I tried option.get and things seemed to
--- be worse. If you can prove unit_map_eq with option.get then feel free
--- to edit. The problem I had was that option.get eats option.is_some, which is a proof
--- and not data: map_unit is a theorem not data. So map_unit seems to
--- forget everything about v x other than the fact that it's some (something)
--- and as a result it's useless for proving unit_map is a group hom.
+
 definition unit_map : units R → Γ :=
 λ u, match v u with
 | some x := x
@@ -141,7 +136,7 @@ end
 
 -- Restriction of a Γ₂-valued valuation to a subgroup Γ₁ is still a valuation
 theorem valuation_of_valuation [is_group_hom ψ] (Hiψ : function.injective ψ) (H : is_valuation v₂) :
-  is_valuation v₁ :=
+is_valuation v₁ :=
 { map_zero := with_zero.map_inj Hiψ $
     by erw [H12, H.map_zero, ← with_zero.map_zero],
   map_one := with_zero.map_inj Hiψ $
@@ -155,21 +150,25 @@ theorem valuation_of_valuation [is_group_hom ψ] (Hiψ : function.injective ψ) 
     exact id
   end }
 
-end
+end -- section
 
--- f : S → R induces map valuation R Γ → valuation S Γ
+/-- f : S → R induces map valuation R Γ → valuation S Γ -/
 def comap {S : Type u₁} [comm_ring S] (f : S → R) [is_ring_hom f] : valuation S Γ :=
 { val := v ∘ f,
   property := by constructor;
-    simp [is_ring_hom.map_zero f, is_ring_hom.map_one f, is_ring_hom.map_mul f, is_ring_hom.map_add f] }
+    simp [is_ring_hom.map_zero f, is_ring_hom.map_one f,
+      is_ring_hom.map_mul f, is_ring_hom.map_add f] }
+
+lemma comap_id : v.comap (id : R → R) = v := subtype.eq rfl
 
 lemma comap_comp {S₁ : Type u₁} [comm_ring S₁] {S₂ : Type u₂} [comm_ring S₂]
 (f : S₁ → S₂) [is_ring_hom f] (g : S₂ → R) [is_ring_hom g] :
   v.comap (g ∘ f) = (v.comap g).comap f :=
 subtype.ext.mpr $ rfl
 
-def map {Γ₁ : Type u₁} [linear_ordered_comm_group Γ₁] (f : Γ → Γ₁) [is_group_hom f] (hf : monotone f) :
-  valuation R Γ₁ :=
+def map {Γ₁ : Type u₁} [linear_ordered_comm_group Γ₁]
+  (f : Γ → Γ₁) [is_group_hom f] (hf : monotone f) :
+valuation R Γ₁ :=
 { val := with_zero.map f ∘ v,
   property :=
   { map_zero := by simp [with_zero.map_zero],
@@ -203,13 +202,17 @@ def trivial : valuation R Γ :=
   { map_zero := if_pos S.zero_mem,
     map_one  := if_neg (assume h, prime.1 (S.eq_top_iff_one.2 h)),
     map_mul  := λ x y, begin
-        split_ifs with hxy hx hy hy hx hy hy; try {simp}; exfalso,
-        { cases ideal.is_prime.mem_or_mem prime hxy with h' h',
+        split_ifs with hxy hx hy hy hx hy hy,
+        { simp },
+        { simp },
+        { simp },
+        { exfalso, cases ideal.is_prime.mem_or_mem prime hxy with h' h',
           { exact hx h' },
           { exact hy h' } },
-        { exact hxy (S.mul_mem_right hx) },
-        { exact hxy (S.mul_mem_right hx) },
-        { exact hxy (S.mul_mem_left hy) }
+        { exfalso, exact hxy (S.mul_mem_right hx) },
+        { exfalso, exact hxy (S.mul_mem_right hx) },
+        { exfalso, exact hxy (S.mul_mem_left hy) },
+        { simp },
       end,
     map_add  := λ x y, begin
         split_ifs with hxy hx hy _ hx hy; try {simp};
@@ -270,14 +273,7 @@ begin
   rwa ←ideal.neg_mem_iff at h,
 end
 
--- We have not yet extended a valuation v to a valuation on R/supp v
--- or its field of fractions.
-
--- "Extension" of a valuation v from R to R/supp(v).
--- Note: we could extend v from R to R/J where J is any
--- subset of supp(v).
-
--- First the function
+/-- Extension of a valuation on R to a valuation on R / J if J is in the support -/
 definition on_quot_val {J : ideal R} (hJ : J ≤ supp v) :
   J.quotient → with_zero Γ :=
 λ q, quotient.lift_on' q v $ λ a b h,
@@ -287,23 +283,14 @@ begin
   simp,
 end
 
--- If Lean says "this is already in mathlib" then it's because my PR got accepted
--- and this decfinition can just be deleted.
-definition quotient.ind₂' :
-∀ {α : Sort*} {β : Sort*} {s₁ : setoid α} {s₂ : setoid β}
-{p : quotient s₁ → quotient s₂ → Prop}
-(h : ∀ (a₁ : α) (a₂ : β), p (quotient.mk' a₁) (quotient.mk' a₂))
-(q₁ : quotient s₁) (q₂ : quotient s₂), p q₁ q₂
-:= λ α β s₁ s₂ p h q₁ q₂, quotient.induction_on₂' q₁ q₂ h
-
 -- Proof that function is a valuation.
 variable {v}
 instance on_quot_val.is_valuation {J : ideal R} (hJ : J ≤ supp v) :
 is_valuation (on_quot_val v hJ) :=
 { map_zero := v.map_zero,
   map_one  := v.map_one,
-  map_mul  := quotient.ind₂' $ v.map_mul,
-  map_add  := quotient.ind₂' $ v.map_add }
+  map_mul  := λ xbar ybar, quotient.ind₂' v.map_mul xbar ybar,
+  map_add  := λ xbar ybar, quotient.ind₂' v.map_add xbar ybar }
 
 -- Now the valuation
 variable (v)
@@ -367,9 +354,6 @@ open localization
 variables [integral_domain R]
 variables {Γ : Type u} [linear_ordered_comm_group Γ] (v : valuation R Γ)
 
--- Kenny says this should work for nonzero commrings
--- ne_zero_of_mem_non_zero_divisors uses integral domain though -- maybe it shouldn't
--- oh wait -- support is a prime ideal so if it's zero the ring is an ID anyway
 /-- extension of valuation on ID with support 0 to field of fractions -/
 definition on_frac_val (hv : supp v = 0) : fraction_ring R → with_zero Γ :=
 quotient.lift (λ rs, v rs.1 / v rs.2.1 : R × non_zero_divisors R → with_zero Γ)
@@ -404,14 +388,14 @@ end
 def on_frac_val.is_valuation (hv : supp v = 0) : is_valuation (v.on_frac_val hv) :=
 { map_zero := show v.on_frac_val hv (quotient.mk' ⟨0,1⟩) = 0, by simp,
   map_one  := show v.on_frac_val hv (quotient.mk' ⟨_,1⟩) = 1, by simp,
-  map_mul  := quotient.ind₂' $ λ x y,
+  map_mul  := λ xbar ybar, quotient.ind₂' (λ x y,
   begin
     change v(x.1 * y.1) * (v((x.2 * y.2).val))⁻¹ =
       v(x.1) * (v(x.2.val))⁻¹ * (v(y.1) * (v(y.2.val))⁻¹),
     erw [v.map_mul, v.map_mul, with_zero.mul_inv_rev],
     simp [mul_assoc, mul_comm, mul_left_comm]
-  end,
-  map_add  := quotient.ind₂' $ λ x y,
+  end) xbar ybar,
+  map_add  := λ xbar ybar, quotient.ind₂' (λ x y,
   begin
     let x_plus_y : fraction_ring R :=
       ⟦⟨x.2 * y.1 + y.2 * x.1, _, is_submonoid.mul_mem x.2.2 y.2.2⟩⟧,
@@ -431,7 +415,7 @@ def on_frac_val.is_valuation (hv : supp v = 0) : is_valuation (v.on_frac_val hv)
     { exact y },
     { repeat {rw [mul_assoc]}, congr' 1,
       rw mul_left_comm, },
-  end }
+  end) xbar ybar }
 
 def on_frac (hv : supp v = 0) : valuation (fraction_ring R) Γ :=
 { val := on_frac_val v hv,
@@ -476,8 +460,6 @@ end
 
 end fraction_ring
 
---section discrete_field
-
 variables [comm_ring R]
 variables {Γ : Type u} [linear_ordered_comm_group Γ] (v : valuation R Γ)
 
@@ -496,7 +478,6 @@ definition on_valuation_field : valuation (valuation_field v) Γ :=
 on_frac (v.on_quot (set.subset.refl _))
 begin
   rw [supp_quot_supp],
-  -- from here it should be a 1-liner
   rw zero_eq_bot,
   apply ideal.map_quotient_self,
 end
@@ -566,6 +547,7 @@ end
 definition residue_field := (max_ideal v).quotient
 
 -- this should be a discrete field, I think
+-- (Kevin says: *who* thinks? [git blame -- it's Johan])
 instance : field (residue_field v) := ideal.quotient.field _
 
 -- The value group of v is the smallest subgroup Γ_v of Γ for which v takes
@@ -618,7 +600,7 @@ instance : is_group_hom (of_free_group v) :=
 
 -- This definition helps resolve the set-theoretic issues caused by the
 -- fact that the adic spectrum of R is all equivalence classes of
--- valuations, where the value group can vary arbitrarily. It shows
+-- valuations, where the value group can vary in an arbitrary universe. It shows
 -- that if v : R → {0} ∪ Γ and if R has type Type u₀ then v is equivalent
 -- to a valuation taking values in {0} ∪ Γ₀ with Γ₀ also of type u₀.
 def minimal_value_group : minimal_valuation.parametrized_subgroup Γ :=
@@ -780,10 +762,6 @@ lemma comap_on_frac {R : Type u₀} [integral_domain R]
   end,
   mpr := λ h, comap _ h }
 
--- -- Wedhorm 1.27 iii -> ii prep
--- lemma supp_sub_of_is_equiv (h : is_equiv v₁ v₂) : ((supp v₁) : set R) ⊆ supp v₂ :=
--- λ r Hr, by rwa [mem_supp_iff', eq_zero_iff_le_zero, ←(h r 0), ←eq_zero_iff_le_zero, ←mem_supp_iff']
-
 /-- Wedhorm 1.27 iii -> ii (part a) -/
 lemma supp_eq (h : v₁.is_equiv v₂) : supp v₁ = supp v₂ :=
 ideal.ext $ λ r,
@@ -792,8 +770,6 @@ calc r ∈ supp v₁ ↔ v₁ r = 0    : mem_supp_iff' _ _
              ... ↔ v₂ r ≤ v₂ 0 : h r 0
              ... ↔ v₂ r = 0    : (eq_zero_iff_le_zero _).symm
              ... ↔ r ∈ supp v₂ : (mem_supp_iff' _ _).symm
-
-open is_group_hom
 
 end is_equiv
 
@@ -845,7 +821,6 @@ injective_of_left_inverse (quot_equiv_quot_of_eq_supp h).left_inv
 
 section
 open localization
-
 
 def valfield_of_valfield_of_eq_supp (h : supp v₁ = supp v₂) :
   valuation_field v₁ → valuation_field v₂ :=
@@ -952,17 +927,10 @@ end
 -- Theorem we almost surely need -- two equivalence valuations have isomorphic
 -- value groups. But we're not ready for it yet.
 
-#check is_group_hom.mem_ker
-set_option pp.proofs true
-
--- set_option trace.class_instances true
-
-set_option class.instance_max_depth 50
--- Idea: prove Wedhorn 1.27.
 def minimal_valuations_biject_of_equiv (v₁ : valuation R Γ₁) (v₂ : valuation R Γ₂) (h : is_equiv v₁ v₂) :
   (minimal_value_group v₁).Γ → (minimal_value_group v₂).Γ :=
-@quotient_group.map _ _ _ _ _ _ _ _ id is_group_hom.id _
-
+@quotient_group.map _ _ _ _ _ _ _ _ id is_group_hom.id sorry
+-- KB added sorry, I have no idea whether this used to compile or not.
 end
 -- λ g, quotient.lift_on' g (λ g, finsupp.prod g (λ r n, (minimal_value_group.mk v₂ r) ^ n)) $
 -- λ g₁ g₂ h12,
@@ -992,6 +960,10 @@ end
 -- end
 
 end valuation
+
+#exit
+
+File ends here. Below are some comments, mostly dealt with now.
 
 /- quotes from zulip (mostly Mario) (all 2018)
 
