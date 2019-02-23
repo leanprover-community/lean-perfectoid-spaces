@@ -361,7 +361,7 @@ end valuation
 namespace valuation
 open with_zero
 
-section quotient_ring
+section fraction_ring
 open localization
 
 variables [integral_domain R]
@@ -371,7 +371,7 @@ variables {Γ : Type u} [linear_ordered_comm_group Γ] (v : valuation R Γ)
 -- ne_zero_of_mem_non_zero_divisors uses integral domain though -- maybe it shouldn't
 -- oh wait -- support is a prime ideal so if it's zero the ring is an ID anyway
 /-- extension of valuation on ID with support 0 to field of fractions -/
-definition on_frac_val (hv : supp v = 0) : quotient_ring R → with_zero Γ :=
+definition on_frac_val (hv : supp v = 0) : fraction_ring R → with_zero Γ :=
 quotient.lift (λ rs, v rs.1 / v rs.2.1 : R × non_zero_divisors R → with_zero Γ)
 begin
   intros a b hab,
@@ -379,6 +379,7 @@ begin
   rcases b with ⟨t,u,hu⟩,
   rcases hab with ⟨w,hw,h⟩, classical,
   change v r / v s = v t / v u,
+  change (s * t - (u * r)) * w = 0 at h,
   replace hs := ne_zero_of_mem_non_zero_divisors hs,
   replace hu := ne_zero_of_mem_non_zero_divisors hu,
   replace hw := ne_zero_of_mem_non_zero_divisors hw,
@@ -412,7 +413,7 @@ def on_frac_val.is_valuation (hv : supp v = 0) : is_valuation (v.on_frac_val hv)
   end,
   map_add  := quotient.ind₂' $ λ x y,
   begin
-    let x_plus_y : quotient_ring R :=
+    let x_plus_y : fraction_ring R :=
       ⟦⟨x.2 * y.1 + y.2 * x.1, _, is_submonoid.mul_mem x.2.2 y.2.2⟩⟧,
     change on_frac_val v hv x_plus_y ≤ _ * _ ∨ on_frac_val v hv x_plus_y ≤ _ * _,
     dsimp,
@@ -432,39 +433,39 @@ def on_frac_val.is_valuation (hv : supp v = 0) : is_valuation (v.on_frac_val hv)
       rw mul_left_comm, },
   end }
 
-def on_frac (hv : supp v = 0) : valuation (quotient_ring R) Γ :=
+def on_frac (hv : supp v = 0) : valuation (fraction_ring R) Γ :=
 { val := on_frac_val v hv,
   property := on_frac_val.is_valuation v hv }
 
-lemma on_frac_val' (hv : supp v = 0) (q : quotient_ring R) :
+lemma on_frac_val' (hv : supp v = 0) (q : fraction_ring R) :
   v.on_frac hv q = v.on_frac_val hv q := rfl
 
 @[simp] lemma on_frac_comap_eq (hv : supp v = 0) :
-  (v.on_frac hv).comap (quotient_ring.inc R) = v :=
+  (v.on_frac hv).comap (fraction_ring.inc R) = v :=
 subtype.ext.mpr $ funext $ λ r, show v r / v 1 = v r, by simp
 
-@[simp] lemma comap_on_frac_eq (v : valuation (quotient_ring R) Γ) :
-  (v.comap (quotient_ring.inc R)).on_frac
+@[simp] lemma comap_on_frac_eq (v : valuation (fraction_ring R) Γ) :
+  (v.comap (fraction_ring.inc R)).on_frac
   (by {rw [comap_supp, ideal.zero_eq_bot, (supp v).eq_bot_of_prime],
-    apply ideal.comap_bot_of_inj, apply quotient_ring.inc.injective })
+    apply ideal.comap_bot_of_inj, apply fraction_ring.inc.injective })
   = v :=
 subtype.ext.mpr $ funext $
 begin
   rintro ⟨x⟩,
   dsimp [on_frac, on_frac_val, comap, function.comp],
   erw quotient.lift_beta,
-  change v (quotient_ring.inc R x.1) /
-         v (quotient_ring.inc R x.2.val) = _,
+  change v (fraction_ring.inc R x.1) /
+         v (fraction_ring.inc R x.2.val) = _,
   rw with_zero.div_eq_iff_mul_eq,
-  erw ← v.map_mul,
-  apply congr_arg,
-  change ⟦_⟧ = ⟦_⟧,
-  apply quotient.sound,
-  dsimp [(≈), setoid.r],
-  erw localization.r_iff _ _,
-  use 1,
-  split, swap, dsimp, ring,
-  apply mem_non_zero_divisors_of_ne_zero, simp,
+  { erw ← v.map_mul,
+    apply congr_arg,
+    change ⟦_⟧ = ⟦_⟧,
+    apply quotient.sound,
+    dsimp [(≈), setoid.r],
+    erw localization.r_iff _ _,
+    use 1,
+    split, swap, dsimp, rw [mul_one, mul_one], ring,
+    apply mem_non_zero_divisors_of_ne_zero, simp},
   intro h,
   rw [← mem_supp_iff, (supp v).eq_bot_of_prime] at h,
   simp at h,
@@ -473,7 +474,7 @@ begin
   exact x.2.2
 end
 
-end quotient_ring
+end fraction_ring
 
 --section discrete_field
 
@@ -484,7 +485,7 @@ definition valuation_field_aux := (supp v).quotient
 
 instance : integral_domain (valuation_field_aux v) := by delta valuation_field_aux; apply_instance
 
-definition valuation_field := localization.quotient_ring (valuation_field_aux v)
+definition valuation_field := localization.fraction_ring (valuation_field_aux v)
 
 instance : discrete_field (valuation_field v) := by delta valuation_field; apply_instance
 
@@ -751,13 +752,13 @@ lemma comap_on_quot (J : ideal R) (v₁ : valuation J.quotient Γ₁) (v₂ : va
 open localization
 
 lemma on_frac_comap_self {R : Type u₀} [integral_domain R] (v : valuation R Γ) (hv : supp v = 0) :
-  is_equiv ((v.on_frac hv).comap (quotient_ring.inc R)) v :=
+  is_equiv ((v.on_frac hv).comap (fraction_ring.inc R)) v :=
 of_eq (on_frac_comap_eq v hv)
 
 lemma comap_on_frac {R : Type u₀} [integral_domain R]
-(v₁ : valuation (quotient_ring R) Γ₁) (v₂ : valuation (quotient_ring R) Γ₂) :
-  is_equiv (v₁.comap (quotient_ring.inc R))
-           (v₂.comap (quotient_ring.inc R)) ↔
+(v₁ : valuation (fraction_ring R) Γ₁) (v₂ : valuation (fraction_ring R) Γ₂) :
+  is_equiv (v₁.comap (fraction_ring.inc R))
+           (v₂.comap (fraction_ring.inc R)) ↔
   is_equiv v₁ v₂ :=
 { mp  := begin
     rintros h ⟨x⟩ ⟨y⟩,

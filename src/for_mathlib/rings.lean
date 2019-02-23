@@ -14,25 +14,27 @@ local attribute [instance] classical.prop_decidable
 
 variables (R : Type u) [integral_domain R]
 
-def quotient_ring.inc : R → quotient_ring R := of_comm_ring R (non_zero_divisors R)
+def fraction_ring.inc : R → fraction_ring R := λ r, of r (1 : non_zero_divisors R)
 variable {R}
 
-instance quotient_ring.inc_is_ring_hom : is_ring_hom (quotient_ring.inc R) :=
-by delta quotient_ring.inc; apply_instance
+instance fraction_ring.inc_is_ring_hom : is_ring_hom (fraction_ring.inc R) :=
+by delta fraction_ring.inc; apply_instance
 
-lemma eq_zero_of (r : R) (hr : quotient_ring.inc R r = 0) : r = 0 :=
+lemma eq_zero_of (r : R) (hr : fraction_ring.inc R r = 0) : r = 0 :=
 begin
   replace hr := quotient.exact hr,
   dsimp [(≈), setoid.r] at hr,
   erw r_iff at hr,
   rcases hr with ⟨t, ht, ht'⟩,
   replace ht := ne_zero_of_mem_non_zero_divisors ht,
+  change (1 * 0 - (1 * r)) * t = 0 at ht',
+  dsimp at ht',
   simpa [ht] using ht'
 end
 
 variable (R)
-lemma quotient_ring.inc.injective :
-  injective (quotient_ring.inc R) :=
+lemma fraction_ring.inc.injective :
+  injective (fraction_ring.inc R) :=
 (is_add_group_hom.injective_iff _).mpr eq_zero_of
 
 end localization
@@ -91,12 +93,6 @@ open function localization
 local attribute [instance] classical.prop_decidable
 noncomputable theory
 
--- TODO Does this work yet?
--- example (R : Type*) [integral_domain R] : discrete_field (quotient_ring R) := by apply_instance
--- If it does, then mathlib fixed the problem and the next two lines can be removed
-instance foobar (R : Type*) [integral_domain R] : discrete_field (quotient_ring R) :=
-quotient_ring.field.of_integral_domain R
-
 @[simp] lemma non_zero_divisors_one_val (R : Type*) [integral_domain R] :
   (1 : non_zero_divisors R).val = 1 := rfl
 
@@ -104,9 +100,9 @@ variables {A : Type u₁} [integral_domain A] {B : Type u₂} [integral_domain B
 (f : A → B) [is_ring_hom f] (hf : injective f)
 include hf
 
-def frac_map : quotient_ring A → quotient_ring B :=
+def frac_map : fraction_ring A → fraction_ring B :=
 quotient.lift (λ rs : A × (non_zero_divisors A),
-(quotient_ring.inc B $ f rs.1) / (quotient_ring.inc B $ f rs.2.val))
+(fraction_ring.inc B $ f rs.1) / (fraction_ring.inc B $ f rs.2.val))
 begin
   intros x y hxy,
   dsimp,
@@ -135,8 +131,8 @@ begin
     simp }
 end
 
-@[simp] lemma frac_map_quotient_ring_inc (a : A) :
-  frac_map f hf (quotient_ring.inc A a) = quotient_ring.inc B (f a) :=
+@[simp] lemma frac_map_fraction_ring_inc (a : A) :
+  frac_map f hf (fraction_ring.inc A a) = fraction_ring.inc B (f a) :=
 begin
   dsimp [frac_map],
   erw quotient.lift_beta,
@@ -146,40 +142,62 @@ end
 
 -- set_option trace.class_instances true
 
-@[simp] lemma frac_map_circ_quotient_ring_inc :
-  frac_map f hf ∘ (quotient_ring.inc A) = quotient_ring.inc B ∘ f :=
-funext $ λ a, frac_map_quotient_ring_inc f hf a
+@[simp] lemma frac_map_circ_fraction_ring_inc :
+  frac_map f hf ∘ (fraction_ring.inc A) = fraction_ring.inc B ∘ f :=
+funext $ λ a, frac_map_fraction_ring_inc f hf a
 
 @[simp] lemma frac_map_mk (x : A × (non_zero_divisors A)) :
-  frac_map f hf ⟦x⟧ = (quotient_ring.inc B $ f x.1) / (quotient_ring.inc B $ f x.2.val) :=
+  frac_map f hf ⟦x⟧ = (fraction_ring.inc B $ f x.1) / (fraction_ring.inc B $ f x.2.val) :=
 rfl
 
 instance : is_field_hom (frac_map f hf) :=
-{ map_one := by erw [frac_map_quotient_ring_inc f hf 1, is_ring_hom.map_one f]; refl,
+{ map_one := by erw [frac_map_fraction_ring_inc f hf 1, is_ring_hom.map_one f]; refl,
   map_mul :=
   begin
     rintros ⟨x⟩ ⟨y⟩,
     repeat {erw frac_map_mk},
-    simp [div_mul_div,
-          is_ring_hom.map_mul (quotient_ring.inc B),
-          is_ring_hom.map_mul f],
+    rw div_mul_div,
+--    congr,
+    rw is_ring_hom.map_mul f,
+    rw is_ring_hom.map_mul (fraction_ring.inc B),
+    convert rfl,
+    rw ←is_ring_hom.map_mul (fraction_ring.inc B),
+    rw ←is_ring_hom.map_mul f,
+    refl,
   end,
   map_add :=
   begin
     rintros ⟨x⟩ ⟨y⟩,
     repeat {erw frac_map_mk},
     rw div_add_div,
-    simp [is_ring_hom.map_add (quotient_ring.inc B),
-          is_ring_hom.map_add f,
-          is_ring_hom.map_mul (quotient_ring.inc B),
-          is_ring_hom.map_mul f],
-    erw [add_comm, mul_comm]; refl,
+    { /-rw ←is_ring_hom.map_mul (fraction_ring.inc B),
+      rw ←is_ring_hom.map_mul (fraction_ring.inc B),
+      rw ←is_ring_hom.map_add (fraction_ring.inc B),
+      rw is_ring_hom.map_add f,
+      convert rfl, -/
+      congr' 1,
+      { rw [←is_ring_hom.map_mul (fraction_ring.inc B),
+        ←is_ring_hom.map_mul (fraction_ring.inc B),
+        ←is_ring_hom.map_add (fraction_ring.inc B)],
+        congr' 1,
+        rw [←is_ring_hom.map_mul f,
+        ←is_ring_hom.map_mul f,
+        ←is_ring_hom.map_add f],
+        congr' 1,
+        change (x.snd).val * y.fst + (y.snd).val * x.fst = x.fst * (y.snd).val + (x.snd).val * y.fst,
+        simp [add_comm,mul_comm]
+      },
+      rw ←is_ring_hom.map_mul (fraction_ring.inc B),
+      congr' 1,
+      rw ←is_ring_hom.map_mul f,
+      refl,
+    },
     all_goals { intro h,
       replace h := eq_zero_of _ h,
-      rw ← is_ring_hom.map_zero f at h,
+      rw ←is_ring_hom.map_zero f at h,
       replace h := hf h,
-      refine localization.ne_zero_of_mem_non_zero_divisors _ h,
-      simp }
+      exact localization.ne_zero_of_mem_non_zero_divisors (by simp) h,
+    },
   end }
 
 omit hf
@@ -199,22 +217,22 @@ def blah (h : A ≃ B) [is_ring_hom h] : is_ring_hom (h.symm) :=
 
 local attribute [instance] blah
 
-lemma quotient_ring_mk_inv : ∀ (x : A × (non_zero_divisors A)),
-  @eq (quotient_ring A)
+lemma fraction_ring_mk_inv : ∀ (x : A × (non_zero_divisors A)),
+  @eq (fraction_ring A)
   ⟦x⟧⁻¹ $ if h : x.1 = 0 then 0 else ⟦⟨x.2.val, x.1, mem_non_zero_divisors_of_ne_zero h⟩⟧
 | ⟨r,s,hs⟩ := rfl
 
-@[simp] lemma quotient_ring_mk (x : A × (non_zero_divisors A)) :
-  @eq (quotient_ring A)
-  ⟦x⟧ $ quotient_ring.inc A (x.1) / quotient_ring.inc A ((x.2).val) :=
+@[simp] lemma fraction_ring_mk (x : A × (non_zero_divisors A)) :
+  @eq (fraction_ring A)
+  ⟦x⟧ $ fraction_ring.inc A (x.1) / fraction_ring.inc A ((x.2).val) :=
 begin
-  simp [quotient_ring.inc, of_comm_ring, (/), algebra.div, quotient_ring_mk_inv],
+  simp [fraction_ring.inc, of, (/), algebra.div, fraction_ring_mk_inv],
   rw dif_neg (ne_zero_of_mem_non_zero_divisors x.2.property),
   cases x,
   congr; simp
 end
 
-def frac_equiv_frac_of_equiv (h : A ≃ B) [is_ring_hom h] : quotient_ring A ≃ quotient_ring B :=
+def frac_equiv_frac_of_equiv (h : A ≃ B) [is_ring_hom h] : fraction_ring A ≃ fraction_ring B :=
 { to_fun := frac_map h (injective_of_left_inverse h.left_inv),
   inv_fun := frac_map h.symm (injective_of_left_inverse h.symm.left_inv),
   left_inv :=
@@ -223,8 +241,8 @@ def frac_equiv_frac_of_equiv (h : A ≃ B) [is_ring_hom h] : quotient_ring A ≃
     erw frac_map_mk,
     rw is_field_hom.map_div (frac_map _ _),
     symmetry,
-    simp [frac_map_quotient_ring_inc],
-    exact quotient_ring_mk x,
+    simp [frac_map_fraction_ring_inc],
+    exact fraction_ring_mk x,
     apply_instance
   end,
   right_inv :=
@@ -233,10 +251,9 @@ def frac_equiv_frac_of_equiv (h : A ≃ B) [is_ring_hom h] : quotient_ring A ≃
     erw frac_map_mk,
     rw is_field_hom.map_div (frac_map _ _),
     symmetry,
-    simp [frac_map_quotient_ring_inc],
-    exact quotient_ring_mk x,
+    simp [frac_map_fraction_ring_inc],
+    exact fraction_ring_mk x,
     apply_instance
   end }
 
 end
-
