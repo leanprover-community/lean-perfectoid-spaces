@@ -3,7 +3,7 @@ import valuation.basic
 /-
 
 The purpose of this file is to define a "canonical" valuation equivalent to
-a given valuation. If v : R → Γ ∪ {0} is an arbitray valuation,
+a given valuation. If v : R → Γ ∪ {0} is an arbitrary valuation,
 then v extends to a valuation on K = Frac(R/supp(v)) and hence to a group
 homomorphism K^* → Γ, whose kernel is A^*, the units in the valuation ring
 (or equivalently the things in K^* of norm at most 1). This embeds K^*/A^*
@@ -143,14 +143,17 @@ instance valuation_field.canonical_valuation_v.is_valuation : is_valuation (valu
       exact v.on_valuation_field.map_add _ _ }
   end }
 
+/-- The canonical valuation on Frac(R/supp(v)) -/
 def valuation_field.canonical_valuation :
 valuation (valuation_field v) (canonical_ordered_group v) :=
 ⟨valuation_field.canonical_valuation_v v, valuation_field.canonical_valuation_v.is_valuation v⟩
 
+/-- The canonical valuation on R/supp(v) -/
 definition quotient.canonical_valuation (v : valuation R Γ) :
 valuation (ideal.quotient (supp v)) (canonical_ordered_group v) :=
 comap (valuation_field.canonical_valuation v) (localization.fraction_ring.inc _)
 
+/-- The canonical valuation on R -/
 definition canonical_valuation (v : valuation R Γ) :
 valuation R (canonical_ordered_group v) :=
 comap (quotient.canonical_valuation v) (ideal.quotient.mk (supp v))
@@ -159,12 +162,37 @@ end canonical_equivalent_valuation
 
 namespace canonical_valuation
 
---lemma map (r : R) :
---with_zero.map (
+lemma map (r : R) :
+with_zero.map (canonical_ordered_group.toΓ v) (canonical_valuation v r) = v r :=
+begin
+  destruct (v r),
+  { intro h,
+    rw h,
+    change r ∈ supp v at h,
+    suffices : canonical_valuation v r = 0,
+      rw this, refl,
+    show valuation_field.canonical_valuation_v v
+      (localization.fraction_ring.inc (ideal.quotient (supp v))
+        (ideal.quotient.mk (supp v) r)) = 0,
+    rw ideal.quotient.eq_zero_iff_mem.2 h,
+    convert (valuation_field.canonical_valuation v).map_zero,
+  },
+  {
+    sorry
+  }
+end
+/-
+lemma map (r : R) :
+with_zero.map (minimal_value_group v).inc (val v r) = v r :=
+begin
+  destruct (v r),
+  { intro h, change v r = 0 at h,
+    simp [zero v h, h], },
+  { intros g h,
+    rw [minimal_value_group.mk_some v h, some v h, with_zero.map_some] },
+end
+-/
 
-
---lemma map (r : R) :
---with_zero.map (minimal_value_group v).inc (val v r) = v r :=
 
 end canonical_valuation
 
