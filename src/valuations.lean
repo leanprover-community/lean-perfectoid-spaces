@@ -15,6 +15,7 @@ import ring_theory.subring
 import data.equiv.basic
 import for_mathlib.rings
 import data.quot
+import group_theory.quotient_group
 
 import tactic.where
 
@@ -90,7 +91,7 @@ begin
   refl,
 end
 
-lemma is_group_hom.unit_map : is_group_hom (unit_map v) :=
+instance is_group_hom.unit_map : is_group_hom (unit_map v) :=
 ⟨λ a b, option.some.inj $
   show _ = (some _ * some _ : with_zero Γ),
   by simp⟩
@@ -273,7 +274,7 @@ begin
   rwa ←ideal.neg_mem_iff at h,
 end
 
-/-- Extension of a valuation on R to a valuation on R / J if J is in the support -/
+-- Function corresponding to extension of a valuation on R to a valuation on R / J if J is in the support -/
 definition on_quot_val {J : ideal R} (hJ : J ≤ supp v) :
   J.quotient → with_zero Γ :=
 λ q, quotient.lift_on' q v $ λ a b h,
@@ -294,6 +295,7 @@ is_valuation (on_quot_val v hJ) :=
 
 -- Now the valuation
 variable (v)
+/-- Extension of valuation v on R to valuation on R/J if J ⊆ supp v -/
 definition on_quot {J : ideal R} (hJ : J ≤ supp v) :
   valuation J.quotient Γ :=
 { val := v.on_quot_val hJ,
@@ -305,7 +307,6 @@ subtype.ext.mpr $ funext $
   λ r, @quotient.lift_on_beta _ _ (J.quotient_rel) v
   (λ a b h, have hsupp : a - b ∈ supp v := hJ h,
     by convert val_add_supp v b (a - b) hsupp; simp) _
--- The above proof is ugly.
 
 lemma comap_supp {S : Type u₁} [comm_ring S] (f : S → R) [is_ring_hom f] :
   supp (v.comap f) = ideal.comap f v.supp :=
@@ -328,8 +329,7 @@ begin
   refl,
 end
 
--- quotient valuation on R/J has support supp(v)/J
--- NB : statement looks really unreadable
+/-- quotient valuation on R/J has support supp(v)/J if J ⊆ supp v-/
 lemma supp_quot_supp {J : ideal R} (hJ : J ≤ supp v) :
 supp (v.on_quot hJ) = (supp v).map (ideal.quotient.mk J) :=
 begin
@@ -354,7 +354,8 @@ open localization
 variables [integral_domain R]
 variables {Γ : Type u} [linear_ordered_comm_group Γ] (v : valuation R Γ)
 
-/-- extension of valuation on ID with support 0 to field of fractions -/
+-- function corresponding to extension of valuation on ID with support 0
+-- to valuation on field of fractions
 definition on_frac_val (hv : supp v = 0) : fraction_ring R → with_zero Γ :=
 quotient.lift (λ rs, v rs.1 / v rs.2.1 : R × non_zero_divisors R → with_zero Γ)
 begin
@@ -383,7 +384,6 @@ end
 
 @[simp] lemma on_frac_val_mk' (hv : supp v = 0) (rs : R × non_zero_divisors R) :
   v.on_frac_val hv (quotient.mk' rs) = v rs.1 / v rs.2.1 := rfl
-
 
 def on_frac_val.is_valuation (hv : supp v = 0) : is_valuation (v.on_frac_val hv) :=
 { map_zero := show v.on_frac_val hv (quotient.mk' ⟨0,1⟩) = 0, by simp,
@@ -417,6 +417,7 @@ def on_frac_val.is_valuation (hv : supp v = 0) : is_valuation (v.on_frac_val hv)
       rw mul_left_comm, },
   end) xbar ybar }
 
+/-- Extension of valuation on R with supp 0 to valuation on field of fractions -/
 def on_frac (hv : supp v = 0) : valuation (fraction_ring R) Γ :=
 { val := on_frac_val v hv,
   property := on_frac_val.is_valuation v hv }
@@ -546,9 +547,78 @@ end
 
 definition residue_field := (max_ideal v).quotient
 
--- this should be a discrete field, I think
--- (Kevin says: *who* thinks? [git blame -- it's Johan])
+-- Johan: this should be a discrete field, I think
+-- Kevin doesn't really know the difference between a field and a discrete field :-/
 instance : field (residue_field v) := ideal.quotient.field _
+
+section canonical_equivalent_valuation
+
+definition valuation_field_units := is_group_hom.ker v.on_valuation_field.unit_map
+
+instance (v : valuation R Γ) : is_subgroup (valuation_field_units v) :=
+by unfold valuation_field_units; apply_instance
+
+instance : comm_group (units (valuation_field v)) := by apply_instance
+
+def canonical_ordered_group (v : valuation R Γ) : Type u₀ :=
+quotient_group.quotient (valuation_field_units v)
+
+def canonical_ordered_group_quotient (v : valuation R Γ) :
+units (valuation_field v) → canonical_ordered_group v :=
+quotient.mk'
+
+instance canonical_ordered_group.comm_group : comm_group (canonical_ordered_group v) :=
+by unfold canonical_ordered_group; apply_instance
+
+instance canonical_ordered_group_quotient.is_group_hom :
+is_group_hom (canonical_ordered_group_quotient v) := ⟨λ _ _, rfl⟩
+
+instance : linear_order (canonical_ordered_group v) :=
+{ le := λ a' b', quotient.lift_on₂' a' b' (λ s t, v.on_valuation_field s ≤ v.on_valuation_field t) $
+    λ a b c d hac hbd, begin
+      change a⁻¹ * c ∈ is_group_hom.ker v.on_valuation_field.unit_map at hac,
+      change b⁻¹ * d ∈ is_group_hom.ker v.on_valuation_field.unit_map at hbd,
+      rw [is_group_hom.mem_ker, mul_comm, ←is_group_hom.one_iff_ker_inv] at hac hbd,
+      show (on_valuation_field v) a ≤ (on_valuation_field v) b =
+    ((on_valuation_field v) c ≤ (on_valuation_field v) d),
+      rw [←unit_map_eq, ←unit_map_eq, ←unit_map_eq, ←unit_map_eq, hbd, hac]
+    end,
+  le_refl := λ abar, quotient.induction_on' abar $ λ a, le_refl ((on_valuation_field v) a),
+  le_trans := λ abar bbar cbar, quotient.induction_on₃' abar bbar cbar $ λ a b c,
+    @le_trans _ _ ((on_valuation_field v) a) ((on_valuation_field v) b) ((on_valuation_field v) c),
+  le_antisymm := λ abar bbar, quotient.induction_on₂' abar bbar $ λ a b hab hba, begin
+    have h :=  @le_antisymm _ _ ((on_valuation_field v) a) ((on_valuation_field v) b) hab hba,
+    apply quotient.sound,
+    change a⁻¹ * b ∈ is_group_hom.ker v.on_valuation_field.unit_map,
+    rw [is_group_hom.mem_ker, mul_comm, ←is_group_hom.one_iff_ker_inv],
+    rw [←unit_map_eq, ←unit_map_eq] at h,
+    replace h := option.injective_some _ h,
+    rw h,
+  end,
+  le_total := λ abar bbar, quotient.induction_on₂' abar bbar $ λ a b,
+    le_total ((on_valuation_field v) a) ((on_valuation_field v) b),
+}
+
+instance : linear_ordered_comm_group (canonical_ordered_group v) :=
+{ mul_le_mul_left := begin rintro ⟨a⟩ ⟨b⟩ h ⟨c⟩,
+    change v.on_valuation_field a ≤ v.on_valuation_field b at h,
+    change canonical_ordered_group_quotient v c * canonical_ordered_group_quotient v a
+    ≤ canonical_ordered_group_quotient v c * canonical_ordered_group_quotient v b,
+    rw ←is_group_hom.mul (canonical_ordered_group_quotient v),
+    rw ←is_group_hom.mul (canonical_ordered_group_quotient v),
+    change v.on_valuation_field (c * a) ≤ v.on_valuation_field (c * b),
+    rw v.on_valuation_field.map_mul,
+    rw v.on_valuation_field.map_mul,
+    exact with_zero.mul_le_mul_left _ _ h _
+end}
+
+-- up to here
+definition canonical_equivalent_valuation (v : valuation R Γ) :
+valuation R (canonical_ordered_group v) :=
+{ val := λ r, dite (r ∈ supp v) (λ h, 0) sorry,--(λ h, some (canonical_ordered_group_quotient v r)),
+  property := sorry }
+
+end canonical_equivalent_valuation
 
 -- The value group of v is the smallest subgroup Γ_v of Γ for which v takes
 -- values in {0} ∪ Γ_v
