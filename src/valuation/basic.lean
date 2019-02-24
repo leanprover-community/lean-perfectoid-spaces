@@ -612,11 +612,65 @@ instance : linear_ordered_comm_group (canonical_ordered_group v) :=
     exact with_zero.mul_le_mul_left _ _ h _
 end}
 
--- up to here
-definition canonical_equivalent_valuation (v : valuation R Γ) :
+-- Tbe canonical valuation associated to v is the obvious map
+-- from R to canonical_ordered_group v := Frac(R/supp(v)) / A^*
+-- (thought of as K^*/A^* union 0)
+
+-- First define a valuation on K
+definition valuation_field.canonical_valuation_v : valuation_field v → with_zero (canonical_ordered_group v) :=
+λ k, dite (k = 0) (λ _, 0)
+  (λ h, canonical_ordered_group_quotient v ⟨k,k⁻¹,mul_inv_cancel h, inv_mul_cancel h⟩)
+
+instance valuation_field.canonical_valuation_v.is_valuation : is_valuation (valuation_field.canonical_valuation_v v) :=
+{ map_zero := dif_pos rfl,
+  map_one := begin unfold valuation_field.canonical_valuation_v, rw dif_neg zero_ne_one.symm,
+    apply option.some_inj.2,
+    convert is_group_hom.one (canonical_ordered_group_quotient v),
+    exact inv_one
+  end,
+  map_mul := λ x y, begin
+    unfold valuation_field.canonical_valuation_v,
+    split_ifs with hxy hx hy hy hx hy hy EEE FFF GGG HHH,
+    { simp },
+    { simp },
+    { simp },
+    { exfalso, exact or.elim (mul_eq_zero.1 hxy) hx hy},
+    { exfalso, exact hxy (hx.symm ▸ zero_mul y)},
+    { exfalso, exact hxy (hx.symm ▸ zero_mul y)},
+    { exfalso, exact hxy (hy.symm ▸ mul_zero x)},
+--    show some _ = some _,
+    apply option.some_inj.2,
+    show canonical_ordered_group_quotient v {val := x * y, inv := (x * y)⁻¹, val_inv := _, inv_val := _} =
+    canonical_ordered_group_quotient v {val := x * y, inv := _, val_inv := _, inv_val := _},
+    apply congr_arg,
+    apply units.ext,
+    refl,
+  end,
+  map_add := λ x y, begin
+    unfold valuation_field.canonical_valuation_v,
+    split_ifs with hxy hx hy hy hx hy hy EEE FFF GGG HHH,
+    { left, exact le_refl _ },
+    { left, exact le_refl _ },
+    { right, exact le_refl _ },
+    { left, exact zero_le },
+    { exfalso, exact hxy (hx.symm ▸ hy.symm ▸ add_zero _)},
+    { right, convert le_refl _; rw hx; exact (zero_add y).symm },
+    { left, convert le_refl _; rw hy; exact (add_zero x).symm },
+    { rw [with_bot.coe_le_coe,with_bot.coe_le_coe],
+      exact v.on_valuation_field.map_add _ _ }
+  end }
+
+def valuation_field.canonical_valuation :
+valuation (valuation_field v) (canonical_ordered_group v) :=
+⟨valuation_field.canonical_valuation_v v, valuation_field.canonical_valuation_v.is_valuation v⟩
+
+definition quotient.canonical_valuation (v : valuation R Γ) :
+valuation (ideal.quotient (supp v)) (canonical_ordered_group v) :=
+comap (valuation_field.canonical_valuation v) (localization.fraction_ring.inc _)
+
+definition canonical_valuation (v : valuation R Γ) :
 valuation R (canonical_ordered_group v) :=
-{ val := λ r, dite (r ∈ supp v) (λ h, 0) sorry,--(λ h, some (canonical_ordered_group_quotient v r)),
-  property := sorry }
+comap (quotient.canonical_valuation v) (ideal.quotient.mk (supp v))
 
 end canonical_equivalent_valuation
 
