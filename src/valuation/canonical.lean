@@ -30,7 +30,7 @@ section canonical_equivalent_valuation
 
 definition valuation_field_units := is_group_hom.ker v.on_valuation_field.unit_map
 
-instance (v : valuation R Γ) : is_subgroup (valuation_field_units v) :=
+instance (v : valuation R Γ) : normal_subgroup (valuation_field_units v) :=
 by unfold valuation_field_units; apply_instance
 
 instance : comm_group (units (valuation_field v)) := by apply_instance
@@ -44,6 +44,14 @@ quotient.mk'
 
 instance canonical_ordered_group.comm_group : comm_group (canonical_ordered_group v) :=
 by unfold canonical_ordered_group; apply_instance
+
+def canonical_ordered_group.toΓ (v : valuation R Γ) :
+canonical_ordered_group v → Γ :=
+quotient_group.lift (valuation_field_units v) v.on_valuation_field.unit_map $
+  λ x, (is_group_hom.mem_ker _).1
+
+instance : is_group_hom (canonical_ordered_group.toΓ v) :=
+by unfold canonical_ordered_group.toΓ; apply_instance
 
 instance canonical_ordered_group_quotient.is_group_hom :
 is_group_hom (canonical_ordered_group_quotient v) := ⟨λ _ _, rfl⟩
@@ -149,6 +157,18 @@ comap (quotient.canonical_valuation v) (ideal.quotient.mk (supp v))
 
 end canonical_equivalent_valuation
 
+namespace canonical_valuation
+
+lemma map (r : R) :
+with_zero.map (
+
+
+lemma map (r : R) :
+with_zero.map (minimal_value_group v).inc (val v r) = v r :=
+
+end canonical_valuation
+
+
 -- The value group of v is the smallest subgroup Γ_v of Γ for which v takes
 -- values in {0} ∪ Γ_v
 definition value_group := group.closure {a : Γ | ∃ r : R, v r = some a}
@@ -166,8 +186,6 @@ end valuation
 
 namespace valuation
 open quotient_group
-
-variables [decidable_eq R]
 
 -- This structure is scary because it has a random Γ : Type u₀ inside, but
 -- we don't use it very often; it's an intermediate thing.
@@ -295,6 +313,10 @@ variables {Γ₃ : Type u₃} [linear_ordered_comm_group Γ₃]
 -- Definition of equivalence relation on valuations
 def is_equiv (v₁ : valuation R Γ₁) (v₂ : valuation R Γ₂) : Prop :=
 ∀ r s, v₁ r ≤ v₁ s ↔ v₂ r ≤ v₂ s
+
+/-- A valuation is equivalent to its canonical valuation -/
+lemma canonical_valuation_is_equiv (v : valuation R Γ) :
+  v.canonical_valuation.is_equiv v := sorry
 
 -- Theorem that valuation v is equivalent to the associated minimal valuation.
 lemma minimal_valuation_is_equiv (v : valuation R Γ) :
