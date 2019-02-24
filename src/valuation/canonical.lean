@@ -167,7 +167,7 @@ end valuation
 namespace valuation
 open quotient_group
 
-variables [comm_ring R] [decidable_eq R]
+variables [decidable_eq R]
 
 -- This structure is scary because it has a random Γ : Type u₀ inside, but
 -- we don't use it very often; it's an intermediate thing.
@@ -287,7 +287,6 @@ def minimal_valuation : valuation R (minimal_value_group v).Γ :=
 end valuation
 
 namespace valuation
-variables [comm_ring R]
 variables {Γ : Type u}   [linear_ordered_comm_group Γ]
 variables {Γ₁ : Type u₁} [linear_ordered_comm_group Γ₁]
 variables {Γ₂ : Type u₂} [linear_ordered_comm_group Γ₂]
