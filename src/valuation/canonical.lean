@@ -159,12 +159,12 @@ end canonical_equivalent_valuation
 
 namespace canonical_valuation
 
-lemma map (r : R) :
-with_zero.map (
+--lemma map (r : R) :
+--with_zero.map (
 
 
-lemma map (r : R) :
-with_zero.map (minimal_value_group v).inc (val v r) = v r :=
+--lemma map (r : R) :
+--with_zero.map (minimal_value_group v).inc (val v r) = v r :=
 
 end canonical_valuation
 
@@ -212,7 +212,7 @@ def of_free_group_aux (r : R) : Γ := option.get_or_else (v r) 1
 def of_free_group : multiplicative (R →₀ ℤ) → Γ :=
 λ f, finsupp.prod f (λ r n, (of_free_group_aux v r) ^ n)
 
-instance : is_group_hom (of_free_group v) :=
+instance of_free_group.is_group_hom : is_group_hom (of_free_group v) :=
 ⟨λ f₁ f₂, finsupp.prod_add_index (λ _, rfl) $ λ _ _ _, gpow_add _ _ _⟩
 
 -- This definition helps resolve the set-theoretic issues caused by the
