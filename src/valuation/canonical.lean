@@ -177,10 +177,44 @@ begin
     rw ideal.quotient.eq_zero_iff_mem.2 h,
     convert (valuation_field.canonical_valuation v).map_zero,
   },
-  {
+  { intro g,
+    intro hr,
+    rw hr,
+    have h2 : v r ≠ none,
+      rw hr, simp,
+    change r ∉ supp v at h2,
+    let r' := (ideal.quotient.mk (supp v) r),
+    have hr' : r' ≠ 0,
+      intro hr', apply h2, exact (submodule.quotient.mk_eq_zero _).1 hr',
+    let r'' := localization.fraction_ring.inc (ideal.quotient (supp v)) r',
+    have hr'' : r'' ≠ 0,
+      intro hr'', apply hr', exact localization.eq_zero_of r' hr'',
+    show with_zero.map (canonical_ordered_group.toΓ v)
+      (valuation_field.canonical_valuation_v v
+         (r'')) = some g,
+    unfold valuation_field.canonical_valuation_v,
+    split_ifs with h1,
+      contradiction,
+    show some
+      (canonical_ordered_group.toΓ v
+         (canonical_ordered_group_quotient v {val := r'', inv := r''⁻¹, val_inv := _, inv_val := _})) =
+    some g,
+ --   apply congr_arg,
+    show some (v.on_valuation_field.unit_map ⟨r'',r''⁻¹,_,_⟩) = some g,
+    rw unit_map_eq,
+    rw ←hr,
+    show (on_valuation_field v).val (r'') = v r,
+    unfold on_valuation_field,
+
+    -- I'm nearly there!
     sorry
   }
 end
+
+#check @int.coe_nat_add
+/-
+int.cast_add : ∀ {α : Type u_1} [_inst_1 : add_group α] [_inst_2 : has_one α] (m n : ℤ), ↑(m + n) = ↑m + ↑n
+-/
 /-
 lemma map (r : R) :
 with_zero.map (minimal_value_group v).inc (val v r) = v r :=
