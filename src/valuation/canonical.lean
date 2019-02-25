@@ -162,6 +162,8 @@ end canonical_equivalent_valuation
 
 namespace canonical_valuation
 
+-- This lemma shows that
+-- the valuation v can be reconstructed from its associated canonical valuation
 lemma map (r : R) :
 with_zero.map (canonical_ordered_group.toΓ v) (canonical_valuation v r) = v r :=
 begin
@@ -199,34 +201,23 @@ begin
       (canonical_ordered_group.toΓ v
          (canonical_ordered_group_quotient v {val := r'', inv := r''⁻¹, val_inv := _, inv_val := _})) =
     some g,
- --   apply congr_arg,
     show some (v.on_valuation_field.unit_map ⟨r'',r''⁻¹,_,_⟩) = some g,
     rw unit_map_eq,
     rw ←hr,
-    show (on_valuation_field v).val (r'') = v r,
-    unfold on_valuation_field,
-
-    -- I'm nearly there!
-    sorry
+    show (on_valuation_field v) (r'') = v r,
+    let v' := on_quot v (le_refl _),
+    have hv' : supp v' = 0,
+      rw supp_quot_supp,
+      simp,
+    show v'.on_frac_val hv' ⟦⟨r',1⟩⟧ = v r,
+    rw on_frac_val_mk,
+    dsimp,
+    rw v'.map_one,
+    suffices : v' r' = v r,
+      simpa using this,
+    refl,
   }
 end
-
-#check @int.coe_nat_add
-/-
-int.cast_add : ∀ {α : Type u_1} [_inst_1 : add_group α] [_inst_2 : has_one α] (m n : ℤ), ↑(m + n) = ↑m + ↑n
--/
-/-
-lemma map (r : R) :
-with_zero.map (minimal_value_group v).inc (val v r) = v r :=
-begin
-  destruct (v r),
-  { intro h, change v r = 0 at h,
-    simp [zero v h, h], },
-  { intros g h,
-    rw [minimal_value_group.mk_some v h, some v h, with_zero.map_some] },
-end
--/
-
 
 end canonical_valuation
 
