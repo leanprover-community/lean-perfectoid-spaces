@@ -3,13 +3,14 @@ import topology.algebra.group
 import adic_space
 import Tate_ring
 import power_bounded
+import for_mathlib.topology -- for the predicate is_complete_hausdorff
 
 --notation
 postfix `ᵒ` : 66 := power_bounded_subring
 
 local attribute [instance] topological_add_group.to_uniform_space
 
-open nat.Prime power_bounded
+open nat.Prime power_bounded topological_space
 variable [nat.Prime] -- fix a prime p
 
 /-- A perfectoid ring, following Fontaine Sem Bourb-/

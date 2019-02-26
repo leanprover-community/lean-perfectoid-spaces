@@ -4,7 +4,7 @@ import topology.uniform_space.basic
 open topological_space
 
 section opens
-
+-- This section is being PR'd to mathlib (#763)
 variables (X : Type*) [topological_space X]
 
 instance : has_inter (opens X) := ⟨λ U V, ⟨U.1 ∩ V.1, is_open_inter U.2 V.2⟩⟩
@@ -12,6 +12,7 @@ instance : has_inter (opens X) := ⟨λ U V, ⟨U.1 ∩ V.1, is_open_inter U.2 V
 instance : has_union (opens X) := ⟨λ U V, ⟨U.1 ∪ V.1, is_open_union U.2 V.2⟩⟩
 
 instance : has_emptyc (opens X) := ⟨⟨∅, is_open_empty⟩⟩
+-- End of PR #763
 end opens
 
 -- peredicates we need for topological rings

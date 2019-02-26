@@ -1,5 +1,7 @@
 import valuation.basic
 
+import for_mathlib.quotient_group
+
 /-
 
 The purpose of this file is to define a "canonical" valuation equivalent to
@@ -275,9 +277,9 @@ instance of_free_group.is_group_hom : is_group_hom (of_free_group v) :=
 -- to a valuation taking values in {0} ∪ Γ₀ with Γ₀ also of type u₀.
 def minimal_value_group : minimal_valuation.parametrized_subgroup Γ :=
 { Γ     := quotient (is_group_hom.ker (of_free_group v)),
-  inc   := inc (of_free_group v),
+  inc   := ker_lift (of_free_group v),
   hom   := by apply_instance,
-  inj   := inc_injective (of_free_group v) }
+  inj   := injective_ker_lift (of_free_group v) }
 
 namespace minimal_value_group
 
@@ -295,7 +297,7 @@ lemma mk_some {r : R} {g : Γ} (h : v r = some g) :
 begin
   rw h,
   congr' 1,
-  dsimp [inc, minimal_value_group, minimal_value_group.mk, of_free_group, of_free_group_aux],
+  dsimp [ker_lift, minimal_value_group, minimal_value_group.mk, of_free_group, of_free_group_aux],
   erw finsupp.prod_single_index; finish
 end
 

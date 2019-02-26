@@ -1,7 +1,7 @@
 import ring_theory.localization
 import ring_theory.subring
 import continuous_valuations
-import Huber_pair 
+import Huber_pair
 
 universes u₁ u₂ u₃
 
@@ -13,7 +13,8 @@ open set function Spv
 definition Spa (A : Huber_pair) : set (Spv A) :=
 {v | (v ∈ Cont A) ∧ ∀ r, r ∈ A⁺ → v r ≤ 1}
 
-lemma mk_mem_Spa {A : Huber_pair} {v : Valuation A} : mk v ∈ Spa A ↔ (mk v ∈ Cont A) ∧ ∀ r, r ∈ A⁺ → v r ≤ 1 :=
+lemma mk_mem_Spa {A : Huber_pair} {v : Valuation A} :
+  mk v ∈ Spa A ↔ (mk v ∈ Cont A) ∧ ∀ r, r ∈ A⁺ → v r ≤ 1 :=
 begin
   split; intro h; split; try { exact h.left };
   intros r hr,
@@ -86,7 +87,7 @@ is_open (rational_open s T) :=
 begin
   rw rational_open_Inter,
   apply is_open_inter, swap, rw ← basic_open_eq s, exact basic_open.is_open s s,
-  simpa using @is_open_bInter _ _ _ _ (λ t : T, basic_open t.1 s) 
+  simpa using @is_open_bInter _ _ _ _ (λ t : T, basic_open t.1 s)
     (finite_mem_finset finset.univ) (λ t ht, basic_open.is_open t s),
 end
 
@@ -221,13 +222,13 @@ end
 
 namespace rational_open
 def presheaf.ring (s : A) := localization.away s
- 
+
 instance (s : A) : comm_ring (presheaf.ring s) :=
 by dunfold presheaf.ring ; apply_instance
- 
-def localize (s : A) : A → presheaf.ring s := localization.of_comm_ring A _
 
--- Definition of A\left(\frac T s\right) as a topological ring 
+def localize (s : A) : A → presheaf.ring s := λ a, localization.of a 1
+
+-- Definition of A\left(\frac T s\right) as a topological ring
 def presheaf.top_ring (s : A) (T : set A) (HfinT : fintype T) :
    topological_space (presheaf.ring s) :=
  let As := presheaf.ring s in sorry
