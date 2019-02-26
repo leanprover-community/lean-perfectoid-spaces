@@ -1,19 +1,21 @@
 import for_mathlib.prime
-import for_mathlib.is_cover 
+import for_mathlib.is_cover
 import topology.algebra.topological_structures
-import data.nat.prime 
+import data.nat.prime
 import algebra.group_power
 -- import for_mathlib.presheaves
-import for_mathlib.topology
+-- import for_mathlib.topology
+import topology.basic
 import continuous_valuations
 import Spa
 import Huber_pair
 
-universe u 
+universe u
 
 open nat function
+open topological_space
 
---definition 𝓞_X (A : Huber_pair) : presheaf_of_rings (Spa A) := sorry 
+--definition 𝓞_X (A : Huber_pair) : presheaf_of_rings (Spa A) := sorry
 -- it's a presheaf of complete topological rings on all opens (defined on rational opens
 -- first and then extended to all via proj limits) -- Wedhorn p75
 -- most of that would not be in the adic_space file.
@@ -37,17 +39,17 @@ Wedhorn p76 shows how Spa(A) gives an object of this for A a Huber pair
 --definition affinoid_adic_space (A : Huber_pair) : 𝓥pre := sorry
 
 -- unwritten -- it's a full subcat of 𝓥pre
-class preadic_space (X : Type) extends topological_space X 
+class preadic_space (X : Type) extends topological_space X
 
 -- not logically necessary but should be easy
-instance (A : Huber_pair) : preadic_space (Spa A) := sorry 
+instance (A : Huber_pair) : preadic_space (Spa A) := sorry
 
--- attribute [class] _root_.is_open 
+-- attribute [class] _root_.is_open
 
 instance preadic_space_restriction {X : Type} [preadic_space X] {U : opens X} :
   preadic_space U := sorry
 
--- unwritten 
+-- unwritten
 class adic_space (X : Type) extends preadic_space X
 
 -- a preadic_space_equiv is just an isom in 𝓥pre, or an isomorphism of preadic spaces.
@@ -55,11 +57,11 @@ class adic_space (X : Type) extends preadic_space X
 -- unwritten
 structure preadic_space_equiv (X Y : Type) [AX : preadic_space X] [AY : preadic_space Y] extends equiv X Y
 
-definition is_preadic_space_equiv (X Y : Type) [AX : preadic_space X] [AY : preadic_space Y] := 
+definition is_preadic_space_equiv (X Y : Type) [AX : preadic_space X] [AY : preadic_space Y] :=
   nonempty (preadic_space_equiv X Y)
 
 definition preadic_space_pullback {X : Type} [preadic_space X] (U : set X) := {x : X // x ∈ U}
 
-instance pullback_is_preadic_space {X : Type} [preadic_space X] (U : set X) : preadic_space (preadic_space_pullback U) := sorry 
+instance pullback_is_preadic_space {X : Type} [preadic_space X] (U : set X) : preadic_space (preadic_space_pullback U) := sorry
 
 -- notation `is_open` := _root_.is_open
