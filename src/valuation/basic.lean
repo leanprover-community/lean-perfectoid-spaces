@@ -1,22 +1,21 @@
-import algebra.group_power
-import set_theory.cardinal
-import ring_theory.ideal_operations
 import data.finsupp
-import group_theory.quotient_group
-import tactic.tidy
-import for_mathlib.linear_ordered_comm_group
-import ring_theory.localization
-import tactic.abel
-import for_mathlib.with_zero
 import data.option.basic
+import data.equiv.basic
+import data.quot
+import set_theory.cardinal
+import algebra.group_power
+import group_theory.quotient_group
+import ring_theory.ideal_operations
+import ring_theory.localization
+import ring_theory.subring
+import for_mathlib.rings
 import for_mathlib.finsupp_prod_inv
 import for_mathlib.quotient_group
-import ring_theory.subring
-import data.equiv.basic
-import for_mathlib.rings
-import data.quot
-import group_theory.quotient_group
+import for_mathlib.with_zero
+import for_mathlib.linear_ordered_comm_group
 
+import tactic.tidy
+import tactic.abel
 import tactic.where
 
 local attribute [instance] classical.prop_decidable
