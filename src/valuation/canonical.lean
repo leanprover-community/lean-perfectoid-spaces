@@ -1,6 +1,7 @@
 import valuation.basic
 
 import for_mathlib.quotient_group
+import for_mathlib.monotone
 
 /-
 
@@ -84,6 +85,10 @@ instance : linear_order (canonical_ordered_group v) :=
     le_total ((on_valuation_field v) a) ((on_valuation_field v) b),
 }
 
+lemma mk_le_mk_iff (x y : units (valuation_field v)) :
+  v.canonical_ordered_group_quotient x ≤ v.canonical_ordered_group_quotient y ↔
+  v.on_valuation_field x ≤ v.on_valuation_field y := iff.rfl
+
 instance : linear_ordered_comm_group (canonical_ordered_group v) :=
 { mul_le_mul_left := begin rintro ⟨a⟩ ⟨b⟩ h ⟨c⟩,
     change v.on_valuation_field a ≤ v.on_valuation_field b at h,
@@ -97,7 +102,25 @@ instance : linear_ordered_comm_group (canonical_ordered_group v) :=
     exact with_zero.mul_le_mul_left _ _ h _
 end}
 
--- Tbe canonical valuation associated to v is the obvious map
+lemma canonical_ordered_group.toΓ_monotone :
+  monotone (canonical_ordered_group.toΓ v) :=
+begin
+  rintros ⟨x⟩ ⟨y⟩,
+  erw [mk_le_mk_iff, ← unit_map_eq, ← unit_map_eq, with_bot.some_le_some],
+  exact id,
+end
+
+lemma canonical_ordered_group.toΓ_injective :
+  function.injective (canonical_ordered_group.toΓ v) :=
+quotient_group.injective_ker_lift _
+
+lemma canonical_ordered_group.toΓ_strict_mono :
+  strict_mono (canonical_ordered_group.toΓ v) :=
+strict_mono_of_monotone_of_injective
+  (canonical_ordered_group.toΓ_monotone _)
+  (canonical_ordered_group.toΓ_injective _)
+
+-- The canonical valuation associated to v is the obvious map
 -- from R to canonical_ordered_group v := Frac(R/supp(v)) / A^*
 -- (thought of as K^*/A^* union 0)
 
@@ -166,9 +189,13 @@ namespace canonical_valuation
 
 -- This lemma shows that
 -- the valuation v can be reconstructed from its associated canonical valuation
-lemma map (r : R) :
-with_zero.map (canonical_ordered_group.toΓ v) (canonical_valuation v r) = v r :=
+lemma map :
+(canonical_valuation v).map (canonical_ordered_group.toΓ v)
+  (canonical_ordered_group.toΓ_monotone _) = v :=
 begin
+  rw valuation.ext,
+  intro r,
+  change with_zero.map _ _ = _,
   destruct (v r),
   { intro h,
     rw h,
@@ -369,15 +396,6 @@ variables {Γ₃ : Type u₃} [linear_ordered_comm_group Γ₃]
 def is_equiv (v₁ : valuation R Γ₁) (v₂ : valuation R Γ₂) : Prop :=
 ∀ r s, v₁ r ≤ v₁ s ↔ v₂ r ≤ v₂ s
 
-/-- A valuation is equivalent to its canonical valuation -/
-lemma canonical_valuation_is_equiv (v : valuation R Γ) :
-  v.canonical_valuation.is_equiv v := sorry
-
--- Theorem that valuation v is equivalent to the associated minimal valuation.
-lemma minimal_valuation_is_equiv (v : valuation R Γ) :
-  v.minimal_valuation.is_equiv v :=
-le_of_le (minimal_valuation.map v) (λ g h, iff.refl _)
-
 namespace is_equiv
 variables {v : valuation R Γ} {v₁ : valuation R Γ₁} {v₂ : valuation R Γ₂} {v₃ : valuation R Γ₃}
 
@@ -392,6 +410,42 @@ variables {v : valuation R Γ} {v₁ : valuation R Γ₁} {v₂ : valuation R Γ
 
 lemma of_eq {v' : valuation R Γ} (h : v = v') : v.is_equiv v' :=
 by subst h; refl
+
+end is_equiv
+
+lemma is_equiv_of_map_of_strict_mono {v : valuation R Γ} {Γ₁ : Type u₁} [linear_ordered_comm_group Γ₁]
+  (f : Γ → Γ₁) [is_group_hom f] (H : strict_mono f) :
+  is_equiv (v.map f (H.monotone)) v :=
+begin
+  intros x y,
+  split,
+  swap,
+  intro h,
+  exact with_zero.map_monotone (H.monotone) h,
+  change with_zero.map f _ ≤ with_zero.map f _ → _,
+  refine (le_iff_le_of_strict_mono _ _).mp,
+  exact with_zero.map_strict_mono H
+end
+
+/-- A valuation is equivalent to its canonical valuation -/
+lemma canonical_valuation_is_equiv (v : valuation R Γ) :
+  v.canonical_valuation.is_equiv v :=
+begin
+  symmetry,
+  convert is_equiv_of_map_of_strict_mono
+    (canonical_ordered_group.toΓ v)
+    (canonical_ordered_group.toΓ_strict_mono _),
+  symmetry,
+  exact canonical_valuation.map v,
+end
+
+-- Theorem that valuation v is equivalent to the associated minimal valuation.
+lemma minimal_valuation_is_equiv (v : valuation R Γ) :
+  v.minimal_valuation.is_equiv v :=
+le_of_le (minimal_valuation.map v) (λ g h, iff.refl _)
+
+namespace is_equiv
+variables {v : valuation R Γ} {v₁ : valuation R Γ₁} {v₂ : valuation R Γ₂} {v₃ : valuation R Γ₃}
 
 lemma comap {S : Type u₃} [comm_ring S] (f : S → R) [is_ring_hom f] (h : v₁.is_equiv v₂) :
   (v₁.comap f).is_equiv (v₂.comap f) :=
@@ -519,39 +573,18 @@ end
 --   split; rw [mem_ker, mem_ker]; intro hf,
 -- end
 
--- why is this not in the library???
--- there are other theorems about strict monos!!!
-lemma monotone_of_strict_mono {α β} [linear_order α] [preorder β]
-{f : α → β} (H : ∀ a b, a < b → f a < f b) :
-  monotone f :=
-λ a b, iff.mpr $ le_iff_le_of_strict_mono _ H
-
-lemma of_map_of_strict_mono {Γ₁ : Type u₁} [linear_ordered_comm_group Γ₁] (f : Γ → Γ₁) [is_group_hom f]
--- for some reason there is no definition of strict monos. But there are theorems about them.
-(H : ∀ a b, a < b → f a < f b) :
-  is_equiv (v.map f (monotone_of_strict_mono H)) v :=
-begin
-  intros x y,
-  split,
-  swap,
-  intro h,
-  exact with_zero.map_monotone (monotone_of_strict_mono H) h,
-  change with_zero.map f _ ≤ with_zero.map f _ → _,
-  refine (le_iff_le_of_strict_mono _ _).mp,
-  exact with_zero.map_strict_mono H
-end
 
 -- Wedhorn 1.27 (i) => (iii)
 lemma of_inj_value_group (f : v₁.minimal_value_group.Γ → v₂.minimal_value_group.Γ)
-[is_group_hom f] (H : ∀ a b, a < b → f a < f b)
-(H : v₂.minimal_valuation = v₁.minimal_valuation.map f (monotone_of_strict_mono H)) :
+[is_group_hom f] (H : strict_mono f)
+(H : v₂.minimal_valuation = v₁.minimal_valuation.map f (H.monotone)) :
   v₁.is_equiv v₂ :=
 begin
   refine is_equiv.trans _ (v₂.minimal_valuation_is_equiv),
   refine is_equiv.trans (v₁.minimal_valuation_is_equiv.symm) _,
   rw H,
   symmetry,
-  exact of_map_of_strict_mono _ _
+  exact is_equiv_of_map_of_strict_mono _ _
 end
 
 lemma is_equiv.comap_quot_of_quot (h : v₁.is_equiv v₂) :

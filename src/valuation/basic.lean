@@ -46,6 +46,10 @@ variables [comm_ring R]
 instance (R : Type u₀) [comm_ring R] (Γ : Type u) [linear_ordered_comm_group Γ] :
 has_coe_to_fun (valuation R Γ) := { F := λ _, R → with_zero Γ, coe := subtype.val}
 
+@[extensionality] lemma ext {Γ : Type u} [linear_ordered_comm_group Γ] (v₁ v₂ : valuation R Γ) :
+  v₁ = v₂ ↔ ∀ r, v₁ r = v₂ r :=
+subtype.ext.trans ⟨λ h r, congr h rfl, funext⟩
+
 variables {Γ : Type u} [linear_ordered_comm_group Γ]
 variables (v : valuation R Γ) {x y z : R}
 
