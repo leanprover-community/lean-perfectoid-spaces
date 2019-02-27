@@ -1,7 +1,8 @@
+import data.list.basic
 import topology.algebra.topological_structures
 import ring_theory.subring
 import tactic.tfae
-import data.list.basic
+
 import for_mathlib.topological_rings
 import power_bounded
 
@@ -43,7 +44,7 @@ begin
       { refine embedding_open embedding_subtype_val _ (h1 n),
         rw set.range_coe_subtype,
         exact hl },
-      simp [(is_subring.to_is_add_subgroup A₀).zero_mem], 
+      simp [(is_subring.to_is_add_subgroup A₀).zero_mem],
       exact (J^n).zero_mem },
     rintros a ⟨a₀, ha₀⟩ b hb,
     apply U'_sub,
@@ -68,7 +69,7 @@ namespace Huber_ring
 -- Wedhorn, lemma 6.1.
 lemma tfae : (∃ U T : set A, T ⊆ U ∧ set.finite T ∧
 (filter.generate {U' : set A | ∃ n : pnat, U' = {x | ∃ y ∈ U, y^(n:ℕ) = x}} = (nhds 0)) ∧
-{y : A | ∃ (t ∈ T) (u ∈ U), y = t * u} = {y : A | ∃ (t ∈ U) (u ∈ U), y = t * u} ∧ 
+{y : A | ∃ (t ∈ T) (u ∈ U), y = t * u} = {y : A | ∃ (t ∈ U) (u ∈ U), y = t * u} ∧
 {y : A | ∃ (t ∈ U) (u ∈ U), y = t * u} ⊆ U) ↔
 (∃ (A₀ : set A) [h : is_subring A₀], by haveI := h; exact is_ring_of_definition A₀) :=
 begin
@@ -112,7 +113,7 @@ end
 
 variables [Huber_ring A]
 
-instance power_bounded_add_subgroup : is_add_subgroup (power_bounded_subring A) := 
+instance power_bounded_add_subgroup : is_add_subgroup (power_bounded_subring A) :=
 { zero_mem := power_bounded.zero_mem A,
   add_mem := assume a b a_in b_in U U_nhds,begin
     sorry

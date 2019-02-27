@@ -1,6 +1,5 @@
 
 import algebra.group_power
-import group_theory.quotient_group
 import ring_theory.ideal_operations
 import ring_theory.localization
 import ring_theory.subring
