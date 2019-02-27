@@ -5,6 +5,7 @@ import ring_theory.ideal_operations
 import ring_theory.localization
 import ring_theory.subring
 
+import for_mathlib.monotone
 import for_mathlib.rings
 import for_mathlib.with_zero
 import for_mathlib.linear_ordered_comm_group
@@ -189,6 +190,57 @@ valuation R Γ₁ :=
       apply (v.map_add x y).imp _ _;
       exact λ h, with_zero.map_monotone hf h,
     end } }
+
+section
+variables {Γ₁ : Type u₁} [linear_ordered_comm_group Γ₁]
+variables {Γ₂ : Type u₂} [linear_ordered_comm_group Γ₂]
+
+-- Definition of equivalence relation on valuations
+def is_equiv (v₁ : valuation R Γ₁) (v₂ : valuation R Γ₂) : Prop :=
+∀ r s, v₁ r ≤ v₁ s ↔ v₂ r ≤ v₂ s
+
+end
+
+namespace is_equiv
+variables {v}
+variables {Γ₁ : Type u₁} [linear_ordered_comm_group Γ₁]
+variables {Γ₂ : Type u₂} [linear_ordered_comm_group Γ₂]
+variables {Γ₃ : Type u₃} [linear_ordered_comm_group Γ₃]
+variables {v₁ : valuation R Γ₁} {v₂ : valuation R Γ₂} {v₃ : valuation R Γ₃}
+
+@[refl] lemma refl : v.is_equiv v :=
+λ _ _, iff.refl _
+
+@[symm] lemma symm (h : v₁.is_equiv v₂) : v₂.is_equiv v₁ :=
+λ _ _, iff.symm (h _ _)
+
+@[trans] lemma trans (h₁₂ : v₁.is_equiv v₂) (h₂₃ : v₂.is_equiv v₃) : v₁.is_equiv v₃ :=
+λ _ _, iff.trans (h₁₂ _ _) (h₂₃ _ _)
+
+lemma of_eq {v' : valuation R Γ} (h : v = v') : v.is_equiv v' :=
+by subst h; refl
+
+lemma comap {S : Type u₃} [comm_ring S] (f : S → R) [is_ring_hom f] (h : v₁.is_equiv v₂) :
+  (v₁.comap f).is_equiv (v₂.comap f) :=
+λ r s, h (f r) (f s)
+
+end is_equiv
+
+variable {v}
+lemma is_equiv_of_map_of_strict_mono {Γ₁ : Type u₁} [linear_ordered_comm_group Γ₁]
+(f : Γ → Γ₁) [is_group_hom f] (H : strict_mono f) :
+  is_equiv (v.map f (H.monotone)) v :=
+begin
+  intros x y,
+  split,
+  swap,
+  intro h,
+  exact with_zero.map_monotone (H.monotone) h,
+  change with_zero.map f _ ≤ with_zero.map f _ → _,
+  refine (le_iff_le_of_strict_mono _ _).mp,
+  exact with_zero.map_strict_mono H
+end
+variable (v)
 
 section trivial
 variables (S : ideal R) [prime : ideal.is_prime S]
