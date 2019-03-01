@@ -1,9 +1,8 @@
-import tactic.where
-import tactic.ring
 import topology.basic
 import topology.algebra.topological_structures
 import algebra.group_power
 import ring_theory.subring
+import tactic.ring
 
 universe u
 

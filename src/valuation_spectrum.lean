@@ -1,7 +1,6 @@
-import valuation.canonical
 import topology.basic
-import data.finsupp
 import group_theory.quotient_group
+import valuation.canonical
 
 universes u u₀ u₁ u₂ u₃
 

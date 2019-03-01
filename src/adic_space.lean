@@ -1,8 +1,10 @@
-import for_mathlib.prime
-import for_mathlib.is_cover
-import topology.algebra.topological_structures
+
 import data.nat.prime
 import algebra.group_power
+import topology.algebra.topological_structures
+
+import for_mathlib.prime
+import for_mathlib.is_cover
 -- import for_mathlib.presheaves
 -- import for_mathlib.topology
 import topology.basic

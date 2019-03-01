@@ -1,7 +1,6 @@
 import valuation.basic
 
 import for_mathlib.quotient_group
-import for_mathlib.monotone
 
 /-
 
@@ -391,41 +390,6 @@ variables {Γ₁ : Type u₁} [linear_ordered_comm_group Γ₁]
 variables {Γ₂ : Type u₂} [linear_ordered_comm_group Γ₂]
 variables {Γ₃ : Type u₃} [linear_ordered_comm_group Γ₃]
 
--- Definition of equivalence relation on valuations
-def is_equiv (v₁ : valuation R Γ₁) (v₂ : valuation R Γ₂) : Prop :=
-∀ r s, v₁ r ≤ v₁ s ↔ v₂ r ≤ v₂ s
-
-namespace is_equiv
-variables {v : valuation R Γ} {v₁ : valuation R Γ₁} {v₂ : valuation R Γ₂} {v₃ : valuation R Γ₃}
-
-@[refl] lemma refl : v.is_equiv v :=
-λ _ _, iff.refl _
-
-@[symm] lemma symm (h : v₁.is_equiv v₂) : v₂.is_equiv v₁ :=
-λ _ _, iff.symm (h _ _)
-
-@[trans] lemma trans (h₁₂ : v₁.is_equiv v₂) (h₂₃ : v₂.is_equiv v₃) : v₁.is_equiv v₃ :=
-λ _ _, iff.trans (h₁₂ _ _) (h₂₃ _ _)
-
-lemma of_eq {v' : valuation R Γ} (h : v = v') : v.is_equiv v' :=
-by subst h; refl
-
-end is_equiv
-
-lemma is_equiv_of_map_of_strict_mono {v : valuation R Γ} {Γ₁ : Type u₁} [linear_ordered_comm_group Γ₁]
-  (f : Γ → Γ₁) [is_group_hom f] (H : strict_mono f) :
-  is_equiv (v.map f (H.monotone)) v :=
-begin
-  intros x y,
-  split,
-  swap,
-  intro h,
-  exact with_zero.map_monotone (H.monotone) h,
-  change with_zero.map f _ ≤ with_zero.map f _ → _,
-  refine (le_iff_le_of_strict_mono _ _).mp,
-  exact with_zero.map_strict_mono H
-end
-
 /-- A valuation is equivalent to its canonical valuation -/
 lemma canonical_valuation_is_equiv (v : valuation R Γ) :
   v.canonical_valuation.is_equiv v :=
@@ -445,10 +409,6 @@ le_of_le (minimal_valuation.map v) (λ g h, iff.refl _)
 
 namespace is_equiv
 variables {v : valuation R Γ} {v₁ : valuation R Γ₁} {v₂ : valuation R Γ₂} {v₃ : valuation R Γ₃}
-
-lemma comap {S : Type u₃} [comm_ring S] (f : S → R) [is_ring_hom f] (h : v₁.is_equiv v₂) :
-  (v₁.comap f).is_equiv (v₂.comap f) :=
-λ r s, h (f r) (f s)
 
 lemma on_quot_comap_self {J : ideal R} (hJ : J ≤ supp v) :
   is_equiv ((v.on_quot hJ).comap (ideal.quotient.mk J)) v :=
@@ -565,15 +525,14 @@ end
 --   split; rw [mem_ker, mem_ker]; intro hf,
 -- end
 
-
 -- Wedhorn 1.27 (i) => (iii)
 lemma of_inj_value_group (f : v₁.minimal_value_group.Γ → v₂.minimal_value_group.Γ)
-[is_group_hom f] (H : strict_mono f)
-(H : v₂.minimal_valuation = v₁.minimal_valuation.map f (H.monotone)) :
+[is_group_hom f] (hf : strict_mono f)
+(H : v₂.minimal_valuation = v₁.minimal_valuation.map f (hf.monotone)) :
   v₁.is_equiv v₂ :=
 begin
-  refine is_equiv.trans _ (v₂.minimal_valuation_is_equiv),
-  refine is_equiv.trans (v₁.minimal_valuation_is_equiv.symm) _,
+  refine (v₁.minimal_valuation_is_equiv.symm).trans _,
+  refine (is_equiv.trans _ (v₂.minimal_valuation_is_equiv)),
   rw H,
   symmetry,
   exact is_equiv_of_map_of_strict_mono _ _
