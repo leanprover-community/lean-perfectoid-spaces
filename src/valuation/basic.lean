@@ -11,7 +11,7 @@ import for_mathlib.linear_ordered_comm_group
 
 import tactic.tidy
 import tactic.abel
-import tactic.where
+import tactic.ring
 
 local attribute [instance] classical.prop_decidable
 noncomputable theory
@@ -130,7 +130,9 @@ include H12 Hle
 theorem le_of_le (r s : R) : v₁ r ≤ v₁ s ↔ v₂ r ≤ v₂ s :=
 begin
   rw ←H12 r, rw ←H12 s,
-  cases v₁ r; cases v₁ s; simp [Hle]
+  cases v₁ r; cases v₁ s,
+  swap 3,{ simpa [Hle] using @with_zero.coe_ne_zero _ (ψ val), },
+  all_goals { simp [Hle] },
 end
 
 -- Restriction of a Γ₂-valued valuation to a subgroup Γ₁ is still a valuation
@@ -372,7 +374,9 @@ begin
   rw [with_zero.div_eq_div hvs hvu],
   rw [sub_mul, sub_eq_zero] at h, replace h := congr_arg v h,
   iterate 4 { rw map_mul at h },
-  cases option.is_some_iff_exists.1 (is_some_iff_ne_none.2 hvw) with w hvw, rw hvw at h, rw mul_comm,
+  cases v w with w hvw,
+  { exact false.elim (hvw rfl), },
+  rw mul_comm,
   cases v s * v t; cases v u * v r, { refl }, { simpa using h }, { simpa using h },
   congr' 1, replace h := option.some.inj h, symmetry, exact mul_right_cancel h
 end
@@ -424,31 +428,32 @@ lemma on_frac_val' (hv : supp v = 0) (q : fraction_ring R) :
   v.on_frac hv q = v.on_frac_val hv q := rfl
 
 @[simp] lemma on_frac_comap_eq (hv : supp v = 0) :
-  (v.on_frac hv).comap (fraction_ring.inc R) = v :=
+  (v.on_frac hv).comap of = v :=
 subtype.ext.mpr $ funext $ λ r, show v r / v 1 = v r, by simp
 
 @[simp] lemma comap_on_frac_eq (v : valuation (fraction_ring R) Γ) :
-  (v.comap (fraction_ring.inc R)).on_frac
+  (v.comap of).on_frac
   (by {rw [comap_supp, ideal.zero_eq_bot, (supp v).eq_bot_of_prime],
-    apply ideal.comap_bot_of_inj, apply fraction_ring.inc.injective })
+    apply ideal.comap_bot_of_inj, apply of.injective })
   = v :=
 subtype.ext.mpr $ funext $
 begin
   rintro ⟨x⟩,
   dsimp [on_frac, on_frac_val, comap, function.comp],
   erw quotient.lift_beta,
-  change v (fraction_ring.inc R x.1) /
-         v (fraction_ring.inc R x.2.val) = _,
+  change v (x.1) / v (x.2.val) = _,
   rw with_zero.div_eq_iff_mul_eq,
   { erw ← v.map_mul,
     apply congr_arg,
     change ⟦_⟧ = ⟦_⟧,
     apply quotient.sound,
-    dsimp [(≈), setoid.r],
-    erw localization.r_iff _ _,
     use 1,
-    split, swap, dsimp, rw [mul_one, mul_one], ring,
-    apply mem_non_zero_divisors_of_ne_zero, simp},
+    split,
+    { exact is_submonoid.one_mem _ },
+    { unfold_coes,
+      simp only [mul_one, one_mul, non_zero_divisors_one_val],
+      ring,
+      simp, } },
   intro h,
   rw [← mem_supp_iff, (supp v).eq_bot_of_prime] at h,
   simp at h,
@@ -545,8 +550,6 @@ end
 
 definition residue_field := (max_ideal v).quotient
 
--- Johan: this should be a discrete field, I think
--- Kevin doesn't really know the difference between a field and a discrete field :-/
-instance : field (residue_field v) := ideal.quotient.field _
+instance rasidue_field.discrete_field : discrete_field (residue_field v) := ideal.quotient.field _
 
 end valuation

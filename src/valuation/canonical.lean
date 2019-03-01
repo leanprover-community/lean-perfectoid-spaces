@@ -176,7 +176,8 @@ valuation (valuation_field v) (canonical_ordered_group v) :=
 /-- The canonical valuation on R/supp(v) -/
 definition quotient.canonical_valuation (v : valuation R Γ) :
 valuation (ideal.quotient (supp v)) (canonical_ordered_group v) :=
-comap (valuation_field.canonical_valuation v) (localization.fraction_ring.inc _)
+@comap _ _ _ _ (valuation_field.canonical_valuation v) _ _ (localization.of)
+  (by apply_instance)
 
 /-- The canonical valuation on R -/
 definition canonical_valuation (v : valuation R Γ) :
@@ -202,9 +203,7 @@ begin
     change r ∈ supp v at h,
     suffices : canonical_valuation v r = 0,
       rw this, refl,
-    show valuation_field.canonical_valuation_v v
-      (localization.fraction_ring.inc (ideal.quotient (supp v))
-        (ideal.quotient.mk (supp v) r)) = 0,
+    show valuation_field.canonical_valuation_v v _ = 0,
     rw ideal.quotient.eq_zero_iff_mem.2 h,
     convert (valuation_field.canonical_valuation v).map_zero,
   },
@@ -217,7 +216,7 @@ begin
     let r' := (ideal.quotient.mk (supp v) r),
     have hr' : r' ≠ 0,
       intro hr', apply h2, exact (submodule.quotient.mk_eq_zero _).1 hr',
-    let r'' := localization.fraction_ring.inc (ideal.quotient (supp v)) r',
+    let r'' := localization.of r',
     have hr'' : r'' ≠ 0,
       intro hr'', apply hr', exact localization.eq_zero_of r' hr'',
     show with_zero.map (canonical_ordered_group.toΓ v)
@@ -463,14 +462,12 @@ lemma comap_on_quot (J : ideal R) (v₁ : valuation J.quotient Γ₁) (v₂ : va
 open localization
 
 lemma on_frac_comap_self {R : Type u₀} [integral_domain R] (v : valuation R Γ) (hv : supp v = 0) :
-  is_equiv ((v.on_frac hv).comap (fraction_ring.inc R)) v :=
+  is_equiv ((v.on_frac hv).comap of) v :=
 of_eq (on_frac_comap_eq v hv)
 
 lemma comap_on_frac {R : Type u₀} [integral_domain R]
 (v₁ : valuation (fraction_ring R) Γ₁) (v₂ : valuation (fraction_ring R) Γ₂) :
-  is_equiv (v₁.comap (fraction_ring.inc R))
-           (v₂.comap (fraction_ring.inc R)) ↔
-  is_equiv v₁ v₂ :=
+  (v₁.comap of).is_equiv (v₂.comap of) ↔ is_equiv v₁ v₂ :=
 { mp  := begin
     rintros h ⟨x⟩ ⟨y⟩,
     erw ← comap_on_frac_eq v₁,
@@ -521,8 +518,9 @@ funext $ λ x, ideal.quotient.lift_mk
 instance (h : supp v₁ = supp v₂) : is_ring_hom (quot_of_quot_of_eq_supp h) :=
 by delta quot_of_quot_of_eq_supp; apply_instance
 
-def quot_equiv_quot_of_eq_supp (h : supp v₁ = supp v₂) : (supp v₁).quotient ≃ (supp v₂).quotient :=
-{ to_fun := quot_of_quot_of_eq_supp h,
+def quot_equiv_quot_of_eq_supp (h : supp v₁ = supp v₂) : (supp v₁).quotient ≃r (supp v₂).quotient :=
+{ hom := by delta quot_of_quot_of_eq_supp; apply_instance,
+  to_fun := quot_of_quot_of_eq_supp h,
   inv_fun := quot_of_quot_of_eq_supp h.symm,
   left_inv :=
   begin
@@ -539,12 +537,6 @@ def quot_equiv_quot_of_eq_supp (h : supp v₁ = supp v₂) : (supp v₁).quotien
     refl
   end }
 
-@[simp] lemma quot_equiv_quot_of_eq_supp_coe (h : supp v₁ = supp v₂) :
-  (quot_equiv_quot_of_eq_supp h : (supp v₁).quotient → (supp v₂).quotient) = quot_of_quot_of_eq_supp h := rfl
-
-instance grmbl (h : supp v₁ = supp v₂) : is_ring_hom (quot_equiv_quot_of_eq_supp h) :=
-by simp; apply_instance
-
 lemma quot_of_quot_of_eq_supp_inj (h : supp v₁ = supp v₂) : injective (quot_of_quot_of_eq_supp h) :=
 injective_of_left_inverse (quot_equiv_quot_of_eq_supp h).left_inv
 
@@ -553,16 +545,16 @@ open localization
 
 def valfield_of_valfield_of_eq_supp (h : supp v₁ = supp v₂) :
   valuation_field v₁ → valuation_field v₂ :=
-frac_map (quot_of_quot_of_eq_supp h) (quot_of_quot_of_eq_supp_inj h)
+localization.map (quot_of_quot_of_eq_supp h) (quot_of_quot_of_eq_supp_inj h)
 
 instance bar (h : supp v₁ = supp v₂) : is_field_hom (valfield_of_valfield_of_eq_supp h) :=
 by delta valfield_of_valfield_of_eq_supp; apply_instance
 
-def valfield_equiv_valfield_of_eq_supp (h : supp v₁ = supp v₂) : valuation_field v₁ ≃ valuation_field v₂ :=
-frac_equiv_frac_of_equiv (quot_equiv_quot_of_eq_supp h)
+def valfield_equiv_valfield_of_eq_supp (h : supp v₁ = supp v₂) : valuation_field v₁ ≃r valuation_field v₂ :=
+localization.equiv_of_equiv (quot_equiv_quot_of_eq_supp h)
 
 instance barz (h : supp v₁ = supp v₂) :
-  is_field_hom (valfield_equiv_valfield_of_eq_supp h) := valuation.bar h
+  is_field_hom (valfield_equiv_valfield_of_eq_supp h).to_fun := valuation.bar h
 
 end
 
@@ -604,26 +596,26 @@ begin
   simp [comap_comp, h.comap_quot_of_quot],
 end
 
-def val_ring_equiv_of_is_equiv (h : v₁.is_equiv v₂) : v₁.valuation_ring ≃ v₂.valuation_ring :=
-equiv.subtype_congr (valfield_equiv_valfield_of_eq_supp h.supp_eq)
+-- jmc: Currently using tactic mode for this definition. Don't know how to cleanly avoid it.
+def val_ring_equiv_of_is_equiv (h : v₁.is_equiv v₂) : v₁.valuation_ring ≃r v₂.valuation_ring :=
 begin
-  intro x,
-  show _ ≤ _ ↔ _ ≤ _,
-  erw [← v₁.on_valuation_field.map_one, h.on_valuation_field_is_equiv],
-  convert iff.refl _,
-  symmetry,
-  exact valuation.map_one _,
-end
-
--- Wedhorn 1.27 (iii) => (ii)b
-instance xyzzy (h : v₁.is_equiv v₂) : is_ring_hom (val_ring_equiv_of_is_equiv h) :=
-begin
-  cases (by apply_instance : is_ring_hom (valfield_equiv_valfield_of_eq_supp h.supp_eq)),
   constructor,
-  all_goals {
-    intros,
-    apply subtype.val_injective,
-    apply_assumption, },
+  swap,
+  { exact equiv.subtype_congr (valfield_equiv_valfield_of_eq_supp h.supp_eq).to_equiv
+    begin
+      intro x,
+      show _ ≤ _ ↔ _ ≤ _,
+      erw [← v₁.on_valuation_field.map_one, h.on_valuation_field_is_equiv],
+      convert iff.refl _,
+      symmetry,
+      exact valuation.map_one _,
+    end },
+  { cases (valfield_equiv_valfield_of_eq_supp h.supp_eq).hom,
+    constructor,
+    all_goals {
+      intros,
+      apply subtype.val_injective,
+      apply_assumption, } }
 end
 
 -- Notes: if v1 equiv v2 then we need a bijection from the image of v1 to the

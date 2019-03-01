@@ -260,9 +260,7 @@ end
 lemma div_le_div (a b c d : with_zero α) (hb : b ≠ 0) (hd : d ≠ 0) :
   a / b ≤ c / d ↔ a * d ≤ c * b :=
 begin
-  replace hb := is_some_iff_ne_none.2 hb,
-  replace hd := is_some_iff_ne_none.2 hd,
-  rw option.is_some_iff_exists at hb hd,
+  rw ne_zero_iff_exists at hb hd,
   rcases hb with ⟨b, rfl⟩,
   rcases hd with ⟨d, rfl⟩,
   cases a; cases c; split;
