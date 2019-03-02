@@ -102,6 +102,8 @@ begin
   { constructor }
 end
 
+lemma map_unit' (x : units R) : (v x).is_some := map_unit v x.val_inv
+
 definition unit_map : units R → Γ :=
 λ u, match v u with
 | some x := x
@@ -340,6 +342,8 @@ instance : ideal.is_prime (supp v) :=
     rw [map_mul v x y] at hxy,
     exact eq_zero_or_eq_zero_of_mul_eq_zero _ _ hxy
   end⟩
+
+lemma v_nonzero_of_not_in_supp (a : R) (h : a ∉ supp v) : v a ≠ 0 := λ h2, h h2
 
 -- v(a)=v(a+s) if s in support. First an auxiliary lemma
 lemma val_add_supp_aux (a s : R) (h : v s = 0) : v (a + s) ≤ v a :=
