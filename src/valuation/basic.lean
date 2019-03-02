@@ -35,7 +35,7 @@ The trivial valuation associated to a prime ideal P is
 The support of a valuation v : valuation R Γ is `supp v`. The induced valuation
 on R / J = ideal.quotient J if h : J ⊆ supp v is on_quot v h.
 
-If v is a valuation on an integral domain R and h : supp v = 0, then
+If v is a valuation on an integral domain R and hv : supp v = 0, then
 `on_frac v hv` is the extension of v to fraction_ring R, the field of
 fractions of R.
 
