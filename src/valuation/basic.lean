@@ -224,6 +224,7 @@ valuation R Γ₁ :=
     end } }
 
 section
+
 variables {Γ₁ : Type u₁} [linear_ordered_comm_group Γ₁]
 variables {Γ₂ : Type u₂} [linear_ordered_comm_group Γ₂]
 
