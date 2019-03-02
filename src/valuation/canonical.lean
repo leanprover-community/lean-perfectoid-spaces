@@ -25,8 +25,9 @@ same universe.
 
 All of the below names are in the `valuation` namepsace.
 
-`canonical_ordered_group v` is the totally ordered group $K^*/A^*, and
-`canonical_ordered_group.toΓ` is the group homomorphism to \Gamma.
+`value_group v` is the totally ordered group $K^*/A^* (note that it is
+isomorphic to the subgroup of Γ which Wedhorn calls the value group), and
+`value_group.to_Γ` is the group homomorphism to \Gamma.
 `canonical_valuation v` is the canonical valuation.
 `canonical_valuation.to_\Gamma v` is the lemma that says that we can
 recover v from the canonical valuation using the group homomorphism
@@ -34,11 +35,12 @@ from K^*/A^* to Gamma.
 
 We then prove some of Proposition-and-Definition 1.27 of Wedhorn,
 where we note that we used (iii) for the definition, and
-we're now using canonical_ordered_group v for the value group
+we're now using a different definition to Wedhorn for the value group
 (because it's isomorphic so no mathematician will care, and
-it's easier for us).
+it's easier for us because it's in a smaller universe).
 
 TODO: Do we ever actually use 1.27 now? KMB has left part of it sorried.
+
 TODO: Do we need any of the dead code after #exit? KMB suspects not.
 This dead code is all about the workaround we had for getting down
 to R's universe from Gamma's universe before Johan's idea of using
@@ -68,28 +70,28 @@ by unfold valuation_field_units; apply_instance
 
 instance : comm_group (units (valuation_field v)) := by apply_instance
 
-def canonical_ordered_group (v : valuation R Γ) : Type u₀ :=
+def value_group (v : valuation R Γ) : Type u₀ :=
 quotient_group.quotient (valuation_field_units v)
 
-def canonical_ordered_group_quotient (v : valuation R Γ) :
-units (valuation_field v) → canonical_ordered_group v :=
+def value_group_quotient (v : valuation R Γ) :
+units (valuation_field v) → value_group v :=
 quotient.mk'
 
-instance canonical_ordered_group.comm_group : comm_group (canonical_ordered_group v) :=
-by unfold canonical_ordered_group; apply_instance
+instance value_group.comm_group : comm_group (value_group v) :=
+by unfold value_group; apply_instance
 
-def canonical_ordered_group.toΓ (v : valuation R Γ) :
-canonical_ordered_group v → Γ :=
+def value_group.to_Γ (v : valuation R Γ) :
+value_group v → Γ :=
 quotient_group.lift (valuation_field_units v) v.on_valuation_field.unit_map $
   λ x, (is_group_hom.mem_ker _).1
 
-instance : is_group_hom (canonical_ordered_group.toΓ v) :=
-by unfold canonical_ordered_group.toΓ; apply_instance
+instance : is_group_hom (value_group.to_Γ v) :=
+by unfold value_group.to_Γ; apply_instance
 
-instance canonical_ordered_group_quotient.is_group_hom :
-is_group_hom (canonical_ordered_group_quotient v) := ⟨λ _ _, rfl⟩
+instance value_group_quotient.is_group_hom :
+is_group_hom (value_group_quotient v) := ⟨λ _ _, rfl⟩
 
-instance : linear_order (canonical_ordered_group v) :=
+instance : linear_order (value_group v) :=
 { le := λ a' b', quotient.lift_on₂' a' b' (λ s t, v.on_valuation_field s ≤ v.on_valuation_field t) $
     λ a b c d hac hbd, begin
       change a⁻¹ * c ∈ is_group_hom.ker v.on_valuation_field.unit_map at hac,
@@ -116,56 +118,56 @@ instance : linear_order (canonical_ordered_group v) :=
 }
 
 lemma mk_le_mk_iff (x y : units (valuation_field v)) :
-  v.canonical_ordered_group_quotient x ≤ v.canonical_ordered_group_quotient y ↔
+  v.value_group_quotient x ≤ v.value_group_quotient y ↔
   v.on_valuation_field x ≤ v.on_valuation_field y := iff.rfl
 
-instance : linear_ordered_comm_group (canonical_ordered_group v) :=
+instance : linear_ordered_comm_group (value_group v) :=
 { mul_le_mul_left := begin rintro ⟨a⟩ ⟨b⟩ h ⟨c⟩,
     change v.on_valuation_field a ≤ v.on_valuation_field b at h,
-    change canonical_ordered_group_quotient v c * canonical_ordered_group_quotient v a
-    ≤ canonical_ordered_group_quotient v c * canonical_ordered_group_quotient v b,
-    rw ←is_group_hom.mul (canonical_ordered_group_quotient v),
-    rw ←is_group_hom.mul (canonical_ordered_group_quotient v),
+    change value_group_quotient v c * value_group_quotient v a
+    ≤ value_group_quotient v c * value_group_quotient v b,
+    rw ←is_group_hom.mul (value_group_quotient v),
+    rw ←is_group_hom.mul (value_group_quotient v),
     change v.on_valuation_field (c * a) ≤ v.on_valuation_field (c * b),
     rw v.on_valuation_field.map_mul,
     rw v.on_valuation_field.map_mul,
     exact with_zero.mul_le_mul_left _ _ h _
 end}
 
-lemma canonical_ordered_group.toΓ_monotone :
-  monotone (canonical_ordered_group.toΓ v) :=
+lemma value_group.to_Γ_monotone :
+  monotone (value_group.to_Γ v) :=
 begin
   rintros ⟨x⟩ ⟨y⟩,
   erw [mk_le_mk_iff, ← unit_map_eq, ← unit_map_eq, with_bot.some_le_some],
   exact id,
 end
 
-lemma canonical_ordered_group.toΓ_injective :
-  function.injective (canonical_ordered_group.toΓ v) :=
+lemma value_group.to_Γ_injective :
+  function.injective (value_group.to_Γ v) :=
 quotient_group.injective_ker_lift _
 
-lemma canonical_ordered_group.toΓ_strict_mono :
-  strict_mono (canonical_ordered_group.toΓ v) :=
+lemma value_group.to_Γ_strict_mono :
+  strict_mono (value_group.to_Γ v) :=
 strict_mono_of_monotone_of_injective
-  (canonical_ordered_group.toΓ_monotone _)
-  (canonical_ordered_group.toΓ_injective _)
+  (value_group.to_Γ_monotone _)
+  (value_group.to_Γ_injective _)
 
 -- The canonical valuation associated to v is the obvious map
--- from R to canonical_ordered_group v := Frac(R/supp(v)) / A^*
+-- from R to value_group v := Frac(R/supp(v)) / A^*
 -- (thought of as K^*/A^* union 0)
 
 -- First define a valuation on K
 definition valuation_field.canonical_valuation_v :
-valuation_field v → with_zero (canonical_ordered_group v) :=
+valuation_field v → with_zero (value_group v) :=
 λ k, dite (k = 0) (λ _, 0)
-  (λ h, canonical_ordered_group_quotient v ⟨k,k⁻¹,mul_inv_cancel h, inv_mul_cancel h⟩)
+  (λ h, value_group_quotient v ⟨k,k⁻¹,mul_inv_cancel h, inv_mul_cancel h⟩)
 
 instance valuation_field.canonical_valuation_v.is_valuation :
 is_valuation (valuation_field.canonical_valuation_v v) :=
 { map_zero := dif_pos rfl,
   map_one := begin unfold valuation_field.canonical_valuation_v, rw dif_neg zero_ne_one.symm,
     apply option.some_inj.2,
-    convert is_group_hom.one (canonical_ordered_group_quotient v),
+    convert is_group_hom.one (value_group_quotient v),
     exact inv_one
   end,
   map_mul := λ x y, begin
@@ -179,9 +181,9 @@ is_valuation (valuation_field.canonical_valuation_v v) :=
     { exfalso, exact hxy (hx.symm ▸ zero_mul y)},
     { exfalso, exact hxy (hy.symm ▸ mul_zero x)},
     apply option.some_inj.2,
-    show canonical_ordered_group_quotient v
+    show value_group_quotient v
       {val := x * y, inv := (x * y)⁻¹, val_inv := _, inv_val := _} =
-      canonical_ordered_group_quotient v
+      value_group_quotient v
       {val := x * y, inv := _, val_inv := _, inv_val := _},
     apply congr_arg,
     apply units.ext,
@@ -203,18 +205,18 @@ is_valuation (valuation_field.canonical_valuation_v v) :=
 
 /-- The canonical valuation on Frac(R/supp(v)) -/
 def valuation_field.canonical_valuation :
-valuation (valuation_field v) (canonical_ordered_group v) :=
+valuation (valuation_field v) (value_group v) :=
 ⟨valuation_field.canonical_valuation_v v, valuation_field.canonical_valuation_v.is_valuation v⟩
 
 /-- The canonical valuation on R/supp(v) -/
 definition quotient.canonical_valuation (v : valuation R Γ) :
-valuation (ideal.quotient (supp v)) (canonical_ordered_group v) :=
+valuation (ideal.quotient (supp v)) (value_group v) :=
 @comap _ _ _ _ (valuation_field.canonical_valuation v) _ _ (localization.of)
   (by apply_instance)
 
 /-- The canonical valuation on R -/
 definition canonical_valuation (v : valuation R Γ) :
-valuation R (canonical_ordered_group v) :=
+valuation R (value_group v) :=
 comap (quotient.canonical_valuation v) (ideal.quotient.mk (supp v))
 
 end canonical_equivalent_valuation
@@ -224,8 +226,8 @@ namespace canonical_valuation
 -- This lemma shows that
 -- the valuation v can be reconstructed from its associated canonical valuation
 lemma to_Γ :
-(canonical_valuation v).map (canonical_ordered_group.toΓ v)
-  (canonical_ordered_group.toΓ_monotone _) = v :=
+(canonical_valuation v).map (value_group.to_Γ v)
+  (value_group.to_Γ_monotone _) = v :=
 begin
   rw valuation.ext,
   intro r,
@@ -252,15 +254,15 @@ begin
     let r'' := localization.of r',
     have hr'' : r'' ≠ 0,
       intro hr'', apply hr', exact localization.eq_zero_of r' hr'',
-    show with_zero.map (canonical_ordered_group.toΓ v)
+    show with_zero.map (value_group.to_Γ v)
       (valuation_field.canonical_valuation_v v
          (r'')) = some g,
     unfold valuation_field.canonical_valuation_v,
     split_ifs with h1,
       contradiction,
     show some
-      (canonical_ordered_group.toΓ v
-         (canonical_ordered_group_quotient v {val := r'', inv := r''⁻¹, val_inv := _, inv_val := _})) =
+      (value_group.to_Γ v
+         (value_group_quotient v {val := r'', inv := r''⁻¹, val_inv := _, inv_val := _})) =
     some g,
     show some (v.on_valuation_field.unit_map ⟨r'',r''⁻¹,_,_⟩) = some g,
     rw unit_map_eq,
@@ -296,8 +298,8 @@ lemma canonical_valuation_is_equiv (v : valuation R Γ) :
 begin
   symmetry,
   convert is_equiv_of_map_of_strict_mono
-    (canonical_ordered_group.toΓ v)
-    (canonical_ordered_group.toΓ_strict_mono _),
+    (value_group.to_Γ v)
+    (value_group.to_Γ_strict_mono _),
   symmetry,
   exact canonical_valuation.to_Γ v,
 end
@@ -420,7 +422,7 @@ instance valfield_equiv.is_field_hom (h : supp v₁ = supp v₂) :
 end
 
 -- Wedhorn 1.27 (i) => (iii)
-lemma of_inj_value_group (f : v₁.canonical_ordered_group → v₂.canonical_ordered_group)
+lemma of_inj_value_group (f : v₁.value_group → v₂.value_group)
 [is_group_hom f] (hf : strict_mono f)
 (H : v₂.canonical_valuation = v₁.canonical_valuation.map f (hf.monotone)) :
   v₁.is_equiv v₂ :=
@@ -477,7 +479,7 @@ cases (valfield_equiv_valfield_of_eq_supp h.supp_eq).hom,
 -- TODO KMB sorried this because he has no idea whether we need it.
 -- Note that this means we do not have a complete proof of Wedhorn 1.27 yet.
 def canonical_valuations_biject_of_equiv (v₁ : valuation R Γ₁) (v₂ : valuation R Γ₂) (h : is_equiv v₁ v₂) :
-  (canonical_ordered_group v₁) → (canonical_ordered_group v₂) := sorry
+  (value_group v₁) → (value_group v₂) := sorry
 
 end
 
