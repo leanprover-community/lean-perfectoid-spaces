@@ -1,4 +1,3 @@
-
 import algebra.group_power
 import ring_theory.ideal_operations
 import ring_theory.localization
@@ -12,6 +11,38 @@ import for_mathlib.linear_ordered_comm_group
 import tactic.tidy
 import tactic.abel
 import tactic.ring
+
+/- valuations.basic
+
+The basic theory of valuations (non-archimedean norms) on a commutative ring,
+following Wedhorn's unpublished notes on adic spaces.
+
+The definition of a valuation is Definition 1.22 of Wedhorn. `valuation R Γ`
+is the type of valuations R → Γ ∪ {0}, with a coercion to the underlying
+function. If v is a valuation from R to Γ ∪ {0} then the induced group
+homomorphism units(R) → Γ is called `unit_map v`.
+
+The equivalence "relation" `is_equiv v₁ v₂ : Prop` is not strictly speaking a
+relation, because v₁ : valuation R Γ₁ and v₂ : valuation R Γ₂ might
+not have the same type. This corresponds in ZFC to the set-theoretic difficulty
+that the class of all valuations (as Γ varies) on a ring R is not a set.
+The "relation" is however reflexive, symmetric and transitive in the obvious
+sense.
+
+The trivial valuation associated to a prime ideal P is
+`trivial P : valuation R Γ`.
+
+The support of a valuation v : valuation R Γ is `supp v`. The induced valuation
+on R / J = ideal.quotient J if h : J ⊆ supp v is on_quot v h.
+
+If v is a valuation on an integral domain R and h : supp v = 0, then
+`on_frac v hv` is the extension of v to fraction_ring R, the field of
+fractions of R.
+
+`valuation_field v`, `valuation_ring v`, `max_ideal v` and `residue_field v`
+are the valuation field, valuation ring, maximal ideal and residue field
+of v. See Definition 1.26 of Wedhorn.
+-/
 
 local attribute [instance] classical.prop_decidable
 noncomputable theory
@@ -601,6 +632,6 @@ end
 
 definition residue_field := (max_ideal v).quotient
 
-instance rasidue_field.discrete_field : discrete_field (residue_field v) := ideal.quotient.field _
+instance residue_field.discrete_field : discrete_field (residue_field v) := ideal.quotient.field _
 
 end valuation
