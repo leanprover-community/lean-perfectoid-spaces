@@ -1,7 +1,7 @@
 import algebra.group data.equiv.basic
 
-variables (G : Type*) (H : Type*) [group G] [group H]
-variables (M : Type*) (N : Type*) [monoid M] [monoid N]
+variables (G : Type*) [group G] (H : Type*) [group H]
+variables (M : Type*) [monoid M] (N : Type*) [monoid N]
 
 structure group_equiv extends G ≃ H :=
 { hom : is_group_hom to_fun}
@@ -19,28 +19,53 @@ instance : has_coe_to_fun (monoid_equiv M N) :=
 
 variables {G} {H} {M} {N}
 
-def monoid_equiv.symm (h : monoid_equiv M N) : monoid_equiv N M :=
+namespace monoid_equiv
+
+instance is_monoid_hom' (h : monoid_equiv M N) :
+is_monoid_hom h := h.hom
+
+def refl : monoid_equiv M M :=
+{ hom := is_monoid_hom.id,
+..equiv.refl _}
+
+def symm (h : monoid_equiv M N) : monoid_equiv N M :=
 { hom := { map_one := by rw ←h.hom.map_one; exact (h.left_inv 1),
   map_mul := λ n₁ n₂, function.injective_of_left_inverse h.left_inv begin
    rw h.hom.map_mul, unfold equiv.symm, rw [h.right_inv, h.right_inv, h.right_inv], end }
  ..h.to_equiv.symm}
 
- def group_equiv.symm (h : group_equiv G H) : group_equiv H G :=
- { hom := { mul := λ n₁ n₂, function.injective_of_left_inverse h.left_inv begin
-   rw h.hom.mul, unfold equiv.symm, rw [h.right_inv, h.right_inv, h.right_inv], end }
-  ..h.to_equiv.symm}
+def trans {P : Type*} [monoid P] (h1 : monoid_equiv N M) (h2 : monoid_equiv M P) :
+monoid_equiv N P := {
+  hom := is_monoid_hom.comp _ _,
+  ..equiv.trans h1.to_equiv h2.to_equiv }
 
-instance group_equiv.is_group_hom (h : group_equiv G H) :
+instance symm.is_monoid_hom (h : monoid_equiv M N) :
+is_monoid_hom h.symm := h.symm.hom
+
+end monoid_equiv
+
+namespace group_equiv
+
+instance is_group_hom (h : group_equiv G H) :
 is_group_hom h := h.hom
 
-instance group_equiv.is_group_hom.symm (h : group_equiv G H) :
+def refl : group_equiv G G :=
+{ hom := is_group_hom.id, ..equiv.refl _}
+
+def symm (h : group_equiv G H) : group_equiv H G :=
+{ hom := { mul := λ n₁ n₂, function.injective_of_left_inverse h.left_inv begin
+  rw h.hom.mul, unfold equiv.symm, rw [h.right_inv, h.right_inv, h.right_inv], end }
+  ..h.to_equiv.symm}
+
+def trans {K : Type*} [group K] (h1 : group_equiv G H) (h2 : group_equiv H K) :
+group_equiv G K := {
+  hom := is_group_hom.comp _ _,
+  ..equiv.trans h1.to_equiv h2.to_equiv }
+
+instance symm.is_group_hom (h : group_equiv G H) :
 is_group_hom h.symm := h.symm.hom
 
-instance monoid_equiv.is_monoid_hom' (h : monoid_equiv M N) :
-is_monoid_hom h := h.hom
-
-instance monoid_equiv.is_monoid_hom.symm (h : monoid_equiv M N) :
-is_monoid_hom h.symm := h.symm.hom
+end group_equiv
 
 namespace units
 
