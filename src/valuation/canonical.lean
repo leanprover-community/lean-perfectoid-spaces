@@ -386,6 +386,16 @@ calc r ∈ supp v₁ ↔ v₁ r = 0    : mem_supp_iff' _ _
              ... ↔ v₂ r = 0    : (eq_zero_iff_le_zero _).symm
              ... ↔ r ∈ supp v₂ : (mem_supp_iff' _ _).symm
 
+lemma v_eq_one_of_v_eq_one (h : v₁.is_equiv v₂) {r : R} : v₁ r = 1 → v₂ r = 1 :=
+begin
+  rw [←v₁.map_one, ←v₂.map_one],
+  intro hr,
+  exact le_antisymm ((h r 1).1 (le_of_eq hr)) ((h 1 r).1 (le_of_eq hr.symm)),
+end
+
+lemma v_eq_one (h : v₁.is_equiv v₂) (r : R) : v₁ r = 1 ↔ v₂ r = 1 :=
+⟨v_eq_one_of_v_eq_one h,v_eq_one_of_v_eq_one h.symm⟩
+
 end is_equiv
 
 section
@@ -529,136 +539,59 @@ def val_ring_equiv_of_is_equiv (h : v₁.is_equiv v₂) : v₁.valuation_ring �
 } end,
 ..val_ring_equiv_of_is_equiv_aux h }
 
-set_option class.instance_max_depth 100
 
-example : group (value_group v₁) := by apply_instance
+-- This explicit instance helps type class inference; it's a shortcut.
+-- The "by apply_instance" proof needs
+-- set_option class.instance_max_depth 35
+instance (h : is_equiv v₁ v₂) :
+is_subgroup ((valfield_units_of_valfield_units_of_eq_supp (is_equiv.supp_eq h)) ⁻¹'
+  (valuation_field_norm_one v₂)) :=
+normal_subgroup.to_is_subgroup _
 
-def Y (h : is_equiv v₁ v₂) := ((valfield_units_of_valfield_units_of_eq_supp (is_equiv.supp_eq h)) ⁻¹'
-      (valuation_field_norm_one v₂))
+-- Same here -- the `by apply_instance` proof needs max_depth 35
+instance (h : is_equiv v₁ v₂) : group (quotient_group.quotient
+  ((valfield_units_of_valfield_units_of_eq_supp (is_equiv.supp_eq h)) ⁻¹'
+    (valuation_field_norm_one v₂))) :=
+quotient_group.group
+  ((valfield_units_of_valfield_units_of_eq_supp (is_equiv.supp_eq h)) ⁻¹'
+    (valuation_field_norm_one v₂))
 
-instance (h : is_equiv v₁ v₂) : is_subgroup (Y h) := by unfold Y; apply_instance
+lemma val_one_iff_unit_val_one (x : units (valuation_field v))
+: x ∈ valuation_field_norm_one v ↔ ((on_valuation_field v) ↑x = 1) :=
+begin
+  unfold valuation_field_norm_one,
+  rw [mem_ker, ←option.some_inj, unit_map_eq],
+  refl,
+end
 
-instance foo (h : is_equiv v₁ v₂) : is_group_hom
- (valfield_units_of_valfield_units_of_eq_supp (is_equiv.supp_eq h))
-:= by apply_instance
+--set_option pp.notation false
+lemma norm_one_eq_norm_one (h : is_equiv v₁ v₂) : valuation_field_norm_one v₁ =
+  valfield_units_of_valfield_units_of_eq_supp (is_equiv.supp_eq h) ⁻¹'
+  valuation_field_norm_one v₂ :=
+begin
+  ext x,
+  rw [set.mem_preimage_eq, val_one_iff_unit_val_one x,
+    is_equiv.v_eq_one (is_equiv.on_valuation_field_is_equiv h) x, val_one_iff_unit_val_one],
+  refl,
+end
 
-def Z (h : is_equiv v₁ v₂) := quotient_group.quotient (Y h)
-
-def X (h : is_equiv v₁ v₂) : group_equiv (value_group v₁)
+def value_group_equiv_of_equiv_aux (h : is_equiv v₁ v₂) : group_equiv (value_group v₁)
   (quotient_group.quotient
     ((valfield_units_of_valfield_units_of_eq_supp (is_equiv.supp_eq h)) ⁻¹'
       (valuation_field_norm_one v₂))) :=
-sorry
+group_equiv.quot_eq_of_eq $ norm_one_eq_norm_one h
 
 def value_group_equiv_of_equiv (h : is_equiv v₁ v₂) :
 group_equiv (value_group v₁) (value_group v₂) :=
-group_equiv.trans (X h) $
+group_equiv.trans (value_group_equiv_of_equiv_aux h) $
   group_equiv.quotient
     (valfield_units_equiv_units_of_eq_supp (is_equiv.supp_eq h)) (valuation_field_norm_one v₂)
 
-#exit
-def value_group_map_of_equiv_aux
-  (h : is_equiv v₁ v₂) (u : units (valuation_field v₁)) : value_group v₂ :=
-value_group_quotient v₂ $ valfield_units_of_valfield_units_of_eq_supp (is_equiv.supp_eq h) u
+end -- some random section I guess?
 
-def value_group_map_of_equiv (h : is_equiv v₁ v₂) :
-(value_group v₁) → (value_group v₂) := λ x,
-quotient.lift_on' x (value_group_map_of_equiv_aux h) begin
-  intros a b hab,
-  change a⁻¹ * b ∈ valuation_field_norm_one v₁ at hab,
-  unfold value_group_map_of_equiv_aux,
-  /-
-  hab : a⁻¹ * b ∈ valuation_field_norm_one v₁
-⊢ value_group_quotient v₂ (valfield_units_of_valfield_units_of_eq_supp _ a) =
-    value_group_quotient v₂ (valfield_units_of_valfield_units_of_eq_supp _ b)
-  -/
-  change a⁻¹ * b ∈ ker v₁.on_valuation_field.unit_map at hab,
-  rw [mem_ker, ←one_iff_ker_inv'] at hab,
+end valuation
 
-  have eq1 : on_valuation_field v₁ a = on_valuation_field v₁ b,
-    rw [←unit_map_eq,←unit_map_eq, hab], clear hab,
-  change on_valuation_field v₁ a.val = on_valuation_field v₁ b.val at eq1,
-  -- OK up to here. Know v1 a = v1 b.
-  rw [←valuation_field.canonical_valuation_unit, ←option.some_inj, unit_map_eq, unit_map_eq],
-  -- Goal: v2 (id a) = v2 (id b).
-  unfold valfield_units_of_valfield_units_of_eq_supp,
-  show (valuation_field.canonical_valuation v₂) (valfield_of_valfield_of_eq_supp _ a.val) =
-    (valuation_field.canonical_valuation v₂) (valfield_of_valfield_of_eq_supp _ b.val),
-  -- both eq1 and the goal now only mention a.val and b.val
-  have ha : (↑a : valuation_field v₁) ≠ 0 := by simp,
-  have hb : (↑b : valuation_field v₁) ≠ 0 := by simp,
-  change a.val ≠ 0 at ha,
-  change b.val ≠ 0 at hb,
-  generalize ha' : a.val = A,
-  rw ha' at ha eq1,
-  generalize hb' : b.val = B,
-  rw hb' at hb eq1,
-  clear ha' hb' a b,
-  let w₁ := on_quot v₁ (le_refl _),
-  let And := quotient.out A,
-  have HA : ⟦And⟧ = A := quotient.out_eq A,
-  have HA2 : on_valuation_field v₁ ⟦And⟧ =
-    (w₁ And.1) / (w₁ And.2.1) := rfl,
-  rw HA at HA2,
-  rw HA2 at eq1,
-  let Bnd := quotient.out B,
-  have HB : ⟦Bnd⟧ = B := quotient.out_eq B,
-  have HB2 : on_valuation_field v₁ ⟦Bnd⟧ =
-    (w₁ Bnd.1) / (w₁ Bnd.2.1) := rfl,
-  rw HB at HB2,
-  rw HB2 at eq1,
-  have HAd : And.2.1 ≠ 0 := localization.ne_zero_of_mem_non_zero_divisors And.2.2,
-  have Hsupp : supp w₁ = 0,
-    rw supp_quot_supp, simp,
-  have HBd : Bnd.2.1 ≠ 0 := localization.ne_zero_of_mem_non_zero_divisors Bnd.2.2,
-  rw with_zero.div_eq_div at eq1,
-    swap, intro H, change And.2.1 ∈ supp w₁ at H, apply HAd, rw Hsupp at H, exact (submodule.mem_bot _).1 H,
-    swap, intro H, change Bnd.2.1 ∈ supp w₁ at H, apply HBd, rw Hsupp at H, exact (submodule.mem_bot _).1 H,
-  rw [←w₁.map_mul, ←w₁.map_mul] at eq1,
-  let C1 := And.fst * (Bnd.snd).val,
-  let C2 := (And.snd).val * Bnd.fst,
-  change w₁ C1 = w₁ C2 at eq1,
-  let D1 : R := quotient.out' C1,
-  let D2 : R := quotient.out' C2,
-  have HD1 : quotient.mk' D1 = C1 := quotient.out_eq' C1,
-  have HD2 : quotient.mk' D2 = C2 := quotient.out_eq' C2,
-  rw ←HD1 at eq1, rw ←HD2 at eq1,
-  change v₁ D1 = v₁ D2 at eq1,
-  -- half way there!
-  have eq2 : v₂ D1 = v₂ D2 := valuation.is_equiv.val_eq_of_val_eq h eq1,
-  -- we want to turn the goal into this.
-  let w₂ := on_quot v₂ (le_refl _),
-  have hsupp : supp v₁ = supp v₂ := is_equiv.supp_eq h,
-  have HE1 : quot_of_quot_of_eq_supp hsupp (quotient.mk' D1) = ideal.quotient.mk (supp v₂) D1
-    := quot_of_quot_of_eq_supp_quotient_mk' hsupp D1,
-  rw HD1 at HE1,
-  change quot_of_quot_of_eq_supp hsupp C1 = quotient.mk' D1 at HE1,
-    have HE2 : quot_of_quot_of_eq_supp hsupp (quotient.mk' D2) = ideal.quotient.mk (supp v₂) D2
-    := quot_of_quot_of_eq_supp_quotient_mk' hsupp D2,
-  rw HD2 at HE2,
-  change quot_of_quot_of_eq_supp hsupp C2 = quotient.mk' D2 at HE2,
-  have HE3 : w₂ (quotient.mk' D1) = v₂ D1 := rfl,
-  have HE4 : w₂ (quotient.mk' D2) = v₂ D2 := rfl,
-  rw [←HE3, ←HE4, ←HE1, ←HE2] at eq2,
-  change w₂ (quot_of_quot_of_eq_supp hsupp (And.1 * Bnd.2.1)) =
-    w₂ (quot_of_quot_of_eq_supp hsupp (And.2.1 * Bnd.1)) at eq2,
-  let X : (valuation_field.canonical_valuation v₂)
-             ((valfield_of_valfield_of_eq_supp hsupp) (localization.of (And.1 * Bnd.2.1))) =
-          (valuation_field.canonical_valuation v₂)
-             ((valfield_of_valfield_of_eq_supp hsupp) (localization.of (And.2.1 * Bnd.1))) :=
-               sorry,
-
-
-  rw ←HA, rw ←HB,
-  let w₃ := valuation_field.canonical_valuation v₂,
-  show w₃ ((localization.of (quot_of_quot_of_eq_supp hsupp And.1) : valuation_field v₂) /
-     localization.of (quot_of_quot_of_eq_supp hsupp And.2.1))
-    = w₃ ((localization.of (quot_of_quot_of_eq_supp hsupp Bnd.1)) /
-      localization.of (quot_of_quot_of_eq_supp hsupp Bnd.2.1)),
-  sorry,
-end
-
-#exit
+/-
 
 File ends here. Below are some comments, mostly dealt with now.
 
@@ -885,3 +818,5 @@ le_of_le (minimal_valuation.map v) (λ g h, iff.refl _)
 --   ext f,
 --   split; rw [mem_ker, mem_ker]; intro hf,
 -- end
+
+-/
