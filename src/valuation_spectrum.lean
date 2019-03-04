@@ -7,7 +7,8 @@ universes u u₀ u₁ u₂ u₃
 local attribute [instance] classical.prop_decidable
 
 variables {R : Type u₀} [comm_ring R] [decidable_eq R]
-
+{Γ : Type u₁} [linear_ordered_comm_group Γ]
+/- this structure is evil
 structure Valuation (R : Type u₀) [comm_ring R] :=
 (Γ   : Type u)
 (grp : linear_ordered_comm_group Γ)
@@ -55,20 +56,25 @@ section
 variables (R)
 
 definition large_Spv := quotient (Valuation.equiv R)
+-/
 
-definition Spv := {ineq : R → R → Prop // ∃ (v : Valuation R), ∀ r s : R, v r ≤ v s ↔ ineq r s}
+definition Spv (R : Type u₀) [comm_ring R] :=
+{ineq : R → R → Prop // ∃ {Γ : Type u₀} [h : linear_ordered_comm_group Γ],
+ by haveI := h; exact ∃ (v : valuation R Γ), ∀ r s : R, v r ≤ v s ↔ ineq r s}
 
 variable {v : Spv R}
 
 notation r `≤[`v`]` s := v.1 r s
 
-end
-
 namespace Spv
 open valuation
 
-definition mk (v : Valuation R) : Spv R := ⟨λ r s, v r ≤ v s, ⟨v, λ _ _, iff.rfl⟩⟩
+definition mk (v : valuation R Γ) : Spv R :=
+⟨λ r s, v r ≤ v s,
+  ⟨value_group v, by apply_instance, canonical_valuation v, canonical_valuation_is_equiv v⟩⟩
 
+#exit
+/-
 definition mk' {Γ : Type u₂} [linear_ordered_comm_group Γ] (v : valuation R Γ) :
   Spv R :=
 mk (Valuation.of_valuation v)
@@ -79,7 +85,7 @@ begin
   ext r s,
   exact h r s,
 end
-
+-/
 section ineq
 
 variables {v : Spv R}
