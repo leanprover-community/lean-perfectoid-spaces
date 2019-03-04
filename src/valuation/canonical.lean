@@ -289,10 +289,6 @@ begin
     unfold valuation_field.canonical_valuation_v,
     split_ifs with h1,
       contradiction,
-    show some
-      (value_group.to_Γ v
-         (value_group_quotient v {val := r'', inv := r''⁻¹, val_inv := _, inv_val := _})) =
-    some g,
     show some (v.on_valuation_field.unit_map ⟨r'',r''⁻¹,_,_⟩) = some g,
     rw unit_map_eq,
     rw ←hr,
@@ -581,6 +577,7 @@ def value_group_equiv_of_equiv_aux (h : is_equiv v₁ v₂) : group_equiv (value
       (valuation_field_norm_one v₂))) :=
 group_equiv.quot_eq_of_eq $ norm_one_eq_norm_one h
 
+-- most of Wedhorn 1.27 (iii) -> (i)
 def value_group_equiv_of_equiv (h : is_equiv v₁ v₂) :
 group_equiv (value_group v₁) (value_group v₂) :=
 group_equiv.trans (value_group_equiv_of_equiv_aux h) $
