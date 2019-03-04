@@ -1,4 +1,6 @@
 import algebra.group data.equiv.basic
+import group_theory.subgroup
+import group_theory.quotient_group
 
 variables (G : Type*) [group G] (H : Type*) [group H]
 variables (M : Type*) [monoid M] (N : Type*) [monoid N]
@@ -64,6 +66,33 @@ group_equiv G K := {
 
 instance symm.is_group_hom (h : group_equiv G H) :
 is_group_hom h.symm := h.symm.hom
+
+open quotient_group
+
+@[simp] lemma quotient_group.ker (N : set G) [normal_subgroup N] :
+is_group_hom.ker (quotient_group.mk : G → quotient_group.quotient N) = N :=
+begin
+  ext g,
+  rw [is_group_hom.mem_ker, eq_comm],
+  show (((1 : G) : quotient_group.quotient N)) = g ↔ _,
+  rw quotient_group.eq,
+  simp,
+end
+
+def quot_eq_of_eq {G1 : set G} [normal_subgroup G1] {G2 : set G} [normal_subgroup G2]
+(h : G1 = G2) : group_equiv (quotient G1) (quotient G2) :=
+{ to_fun := λ q, quotient.lift_on' q (quotient_group.mk : G → quotient G2) $ λ a b hab, quotient.sound'
+  begin
+    change a⁻¹ * b ∈ G1 at hab, rwa h at hab
+  end,
+  inv_fun := λ q, quotient.lift_on' q (quotient_group.mk : G → quotient G1) $ λ a b hab, quotient.sound'
+  begin
+    change a⁻¹ * b ∈ G2 at hab, rwa ←h at hab,
+  end,
+  left_inv := λ x, by induction x; refl,
+  right_inv := λ x, by induction x; refl,
+  hom := quotient_group.is_group_hom_quotient_lift
+    G1 _ $ λ x hx, by rwa [h, ←quotient_group.ker G2, is_group_hom.mem_ker] at hx}
 
 end group_equiv
 
