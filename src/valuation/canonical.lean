@@ -2,7 +2,7 @@ import valuation.basic
 
 import for_mathlib.quotient_group
 import for_mathlib.subgroup
-
+import for_mathlib.group -- group_equiv
 /-
 
 The purpose of this file is to define a "canonical" valuation equivalent to
@@ -64,15 +64,15 @@ variables (v : valuation R Γ)
 
 section canonical_equivalent_valuation
 
-definition valuation_field_units := is_group_hom.ker v.on_valuation_field.unit_map
-
-instance (v : valuation R Γ) : normal_subgroup (valuation_field_units v) :=
-by unfold valuation_field_units; apply_instance
-
 instance : comm_group (units (valuation_field v)) := by apply_instance
 
+definition valuation_field_norm_one := is_group_hom.ker v.on_valuation_field.unit_map
+
+instance (v : valuation R Γ) : normal_subgroup (valuation_field_norm_one v) :=
+by unfold valuation_field_norm_one; apply_instance
+
 def value_group (v : valuation R Γ) : Type u₀ :=
-quotient_group.quotient (valuation_field_units v)
+quotient_group.quotient (valuation_field_norm_one v)
 
 def value_group_quotient (v : valuation R Γ) :
 units (valuation_field v) → value_group v :=
@@ -83,7 +83,7 @@ by unfold value_group; apply_instance
 
 def value_group.to_Γ (v : valuation R Γ) :
 value_group v → Γ :=
-quotient_group.lift (valuation_field_units v) v.on_valuation_field.unit_map $
+quotient_group.lift (valuation_field_norm_one v) v.on_valuation_field.unit_map $
   λ x, (is_group_hom.mem_ker _).1
 
 instance : is_group_hom (value_group.to_Γ v) :=
@@ -218,9 +218,12 @@ begin
   ext x,
   rw ←option.some_inj,
   rw unit_map_eq,
-  unfold coe_fn has_coe_to_fun.coe,
-  dsimp,
-  split_ifs with h, -- at last!
+  show dite (x.val = 0) (λ (_x : x.val = 0), (0 : with_zero (value_group v)))
+      (λ (h : ¬x.val = 0),
+        (value_group_quotient v {val := ↑x, inv := (↑x)⁻¹, val_inv := _, inv_val := _})) =
+    some (value_group_quotient v x),
+  -- at last!
+  split_ifs with h,
   { change x.val = 0 at h,
     have h2 := x.val_inv,
     rw [h, zero_mul] at h2,
@@ -300,7 +303,7 @@ begin
       simp,
     show v'.on_frac_val hv' ⟦⟨r',1⟩⟧ = v r,
     rw on_frac_val_mk,
-    dsimp,
+    show v' r' / v' 1 = v r,
     rw v'.map_one,
     suffices : v' r' = v r,
       simpa using this,
@@ -386,9 +389,25 @@ calc r ∈ supp v₁ ↔ v₁ r = 0    : mem_supp_iff' _ _
 end is_equiv
 
 section
+
 variables {v : valuation R Γ} {v₁ : valuation R Γ₁} {v₂ : valuation R Γ₂} {v₃ : valuation R Γ₃}
 
 open is_group_hom quotient_group function
+
+-- We now start on the equivalences of Wedhorn 1.27. This one is easy.
+
+-- Wedhorn 1.27 (i) => (iii)
+lemma of_inj_value_group (f : v₁.value_group → v₂.value_group)
+[is_group_hom f] (hf : strict_mono f)
+(H : v₂.canonical_valuation = v₁.canonical_valuation.map f (hf.monotone)) :
+  v₁.is_equiv v₂ :=
+begin
+  refine (v₁.canonical_valuation_is_equiv.symm).trans _,
+  refine (is_equiv.trans _ (v₂.canonical_valuation_is_equiv)),
+  rw H,
+  symmetry,
+  exact is_equiv_of_map_of_strict_mono _ _
+end
 
 def quot_of_quot_of_eq_supp (h : supp v₁ = supp v₂) : (supp v₁).quotient → (supp v₂).quotient :=
 ideal.quotient.lift _ (ideal.quotient.mk _)
@@ -458,19 +477,14 @@ def valfield_units_of_valfield_units_of_eq_supp (h : supp v₁ = supp v₂) :
   units (valuation_field v₁) → units (valuation_field v₂) :=
 units.map $ valfield_of_valfield_of_eq_supp h
 
-end
+instance valfield_units.is_group_hom (h : supp v₁ = supp v₂) :
+is_group_hom (valfield_units_of_valfield_units_of_eq_supp h) :=
+by unfold valfield_units_of_valfield_units_of_eq_supp; apply_instance
 
--- Wedhorn 1.27 (i) => (iii)
-lemma of_inj_value_group (f : v₁.value_group → v₂.value_group)
-[is_group_hom f] (hf : strict_mono f)
-(H : v₂.canonical_valuation = v₁.canonical_valuation.map f (hf.monotone)) :
-  v₁.is_equiv v₂ :=
-begin
-  refine (v₁.canonical_valuation_is_equiv.symm).trans _,
-  refine (is_equiv.trans _ (v₂.canonical_valuation_is_equiv)),
-  rw H,
-  symmetry,
-  exact is_equiv_of_map_of_strict_mono _ _
+def valfield_units_equiv_units_of_eq_supp (h : supp v₁ = supp v₂) :
+group_equiv (units (valuation_field v₁)) (units (valuation_field v₂)) :=
+let h' := valfield_equiv_valfield_of_eq_supp h in
+by letI := h'.hom; exact units.map_equiv {hom := by apply_instance, ..h'}
 end
 
 lemma is_equiv.comap_quot_of_quot (h : v₁.is_equiv v₂) :
@@ -506,15 +520,43 @@ end
 -- KMB : fixed?
 def val_ring_equiv_of_is_equiv (h : v₁.is_equiv v₂) : v₁.valuation_ring ≃r v₂.valuation_ring :=
 { hom := begin
-cases (valfield_equiv_valfield_of_eq_supp h.supp_eq).hom,
+  cases (valfield_equiv_valfield_of_eq_supp h.supp_eq).hom,
     constructor,
     all_goals {
       intros,
       apply subtype.val_injective,
       apply_assumption,
 } end,
-..val_ring_equiv_of_is_equiv_aux h}
+..val_ring_equiv_of_is_equiv_aux h }
 
+set_option class.instance_max_depth 100
+
+example : group (value_group v₁) := by apply_instance
+
+def Y (h : is_equiv v₁ v₂) := ((valfield_units_of_valfield_units_of_eq_supp (is_equiv.supp_eq h)) ⁻¹'
+      (valuation_field_norm_one v₂))
+
+instance (h : is_equiv v₁ v₂) : is_subgroup (Y h) := by unfold Y; apply_instance
+
+instance foo (h : is_equiv v₁ v₂) : is_group_hom
+ (valfield_units_of_valfield_units_of_eq_supp (is_equiv.supp_eq h))
+:= by apply_instance
+
+def Z (h : is_equiv v₁ v₂) := quotient_group.quotient (Y h)
+
+def X (h : is_equiv v₁ v₂) : group_equiv (value_group v₁)
+  (quotient_group.quotient
+    ((valfield_units_of_valfield_units_of_eq_supp (is_equiv.supp_eq h)) ⁻¹'
+      (valuation_field_norm_one v₂))) :=
+sorry
+
+def value_group_equiv_of_equiv (h : is_equiv v₁ v₂) :
+group_equiv (value_group v₁) (value_group v₂) :=
+group_equiv.trans (X h) $
+  group_equiv.quotient
+    (valfield_units_equiv_units_of_eq_supp (is_equiv.supp_eq h)) (valuation_field_norm_one v₂)
+
+#exit
 def value_group_map_of_equiv_aux
   (h : is_equiv v₁ v₂) (u : units (valuation_field v₁)) : value_group v₂ :=
 value_group_quotient v₂ $ valfield_units_of_valfield_units_of_eq_supp (is_equiv.supp_eq h) u
@@ -523,14 +565,20 @@ def value_group_map_of_equiv (h : is_equiv v₁ v₂) :
 (value_group v₁) → (value_group v₂) := λ x,
 quotient.lift_on' x (value_group_map_of_equiv_aux h) begin
   intros a b hab,
-  change a⁻¹ * b ∈ valuation_field_units v₁ at hab,
+  change a⁻¹ * b ∈ valuation_field_norm_one v₁ at hab,
+  unfold value_group_map_of_equiv_aux,
+  /-
+  hab : a⁻¹ * b ∈ valuation_field_norm_one v₁
+⊢ value_group_quotient v₂ (valfield_units_of_valfield_units_of_eq_supp _ a) =
+    value_group_quotient v₂ (valfield_units_of_valfield_units_of_eq_supp _ b)
+  -/
   change a⁻¹ * b ∈ ker v₁.on_valuation_field.unit_map at hab,
   rw [mem_ker, ←one_iff_ker_inv'] at hab,
+
   have eq1 : on_valuation_field v₁ a = on_valuation_field v₁ b,
     rw [←unit_map_eq,←unit_map_eq, hab], clear hab,
   change on_valuation_field v₁ a.val = on_valuation_field v₁ b.val at eq1,
   -- OK up to here. Know v1 a = v1 b.
-  unfold value_group_map_of_equiv_aux,
   rw [←valuation_field.canonical_valuation_unit, ←option.some_inj, unit_map_eq, unit_map_eq],
   -- Goal: v2 (id a) = v2 (id b).
   unfold valfield_units_of_valfield_units_of_eq_supp,
@@ -567,15 +615,47 @@ quotient.lift_on' x (value_group_map_of_equiv_aux h) begin
     swap, intro H, change And.2.1 ∈ supp w₁ at H, apply HAd, rw Hsupp at H, exact (submodule.mem_bot _).1 H,
     swap, intro H, change Bnd.2.1 ∈ supp w₁ at H, apply HBd, rw Hsupp at H, exact (submodule.mem_bot _).1 H,
   rw [←w₁.map_mul, ←w₁.map_mul] at eq1,
+  let C1 := And.fst * (Bnd.snd).val,
+  let C2 := (And.snd).val * Bnd.fst,
+  change w₁ C1 = w₁ C2 at eq1,
+  let D1 : R := quotient.out' C1,
+  let D2 : R := quotient.out' C2,
+  have HD1 : quotient.mk' D1 = C1 := quotient.out_eq' C1,
+  have HD2 : quotient.mk' D2 = C2 := quotient.out_eq' C2,
+  rw ←HD1 at eq1, rw ←HD2 at eq1,
+  change v₁ D1 = v₁ D2 at eq1,
+  -- half way there!
+  have eq2 : v₂ D1 = v₂ D2 := valuation.is_equiv.val_eq_of_val_eq h eq1,
+  -- we want to turn the goal into this.
+  let w₂ := on_quot v₂ (le_refl _),
+  have hsupp : supp v₁ = supp v₂ := is_equiv.supp_eq h,
+  have HE1 : quot_of_quot_of_eq_supp hsupp (quotient.mk' D1) = ideal.quotient.mk (supp v₂) D1
+    := quot_of_quot_of_eq_supp_quotient_mk' hsupp D1,
+  rw HD1 at HE1,
+  change quot_of_quot_of_eq_supp hsupp C1 = quotient.mk' D1 at HE1,
+    have HE2 : quot_of_quot_of_eq_supp hsupp (quotient.mk' D2) = ideal.quotient.mk (supp v₂) D2
+    := quot_of_quot_of_eq_supp_quotient_mk' hsupp D2,
+  rw HD2 at HE2,
+  change quot_of_quot_of_eq_supp hsupp C2 = quotient.mk' D2 at HE2,
+  have HE3 : w₂ (quotient.mk' D1) = v₂ D1 := rfl,
+  have HE4 : w₂ (quotient.mk' D2) = v₂ D2 := rfl,
+  rw [←HE3, ←HE4, ←HE1, ←HE2] at eq2,
+  change w₂ (quot_of_quot_of_eq_supp hsupp (And.1 * Bnd.2.1)) =
+    w₂ (quot_of_quot_of_eq_supp hsupp (And.2.1 * Bnd.1)) at eq2,
+  let X : (valuation_field.canonical_valuation v₂)
+             ((valfield_of_valfield_of_eq_supp hsupp) (localization.of (And.1 * Bnd.2.1))) =
+          (valuation_field.canonical_valuation v₂)
+             ((valfield_of_valfield_of_eq_supp hsupp) (localization.of (And.2.1 * Bnd.1))) :=
+               sorry,
 
-  -- We are ready to state and prove an intermediate goal
-  have eq2 :
-    w₁ (And.1 * Bnd.2.1) = w₁ (Bnd.1 * And.2.1),
-  { rw w₁.map_mul,
 
-
-  },
-  sorry
+  rw ←HA, rw ←HB,
+  let w₃ := valuation_field.canonical_valuation v₂,
+  show w₃ ((localization.of (quot_of_quot_of_eq_supp hsupp And.1) : valuation_field v₂) /
+     localization.of (quot_of_quot_of_eq_supp hsupp And.2.1))
+    = w₃ ((localization.of (quot_of_quot_of_eq_supp hsupp Bnd.1)) /
+      localization.of (quot_of_quot_of_eq_supp hsupp Bnd.2.1)),
+  sorry,
 end
 
 #exit
