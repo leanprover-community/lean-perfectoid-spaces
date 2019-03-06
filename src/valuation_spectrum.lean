@@ -183,8 +183,6 @@ begin
   { rwa [v0.map_neg, eq_zero_iff_le_zero] }
 end
 
-#check quot.sound
-
 /- Here is a roadmap for a computable quotient API for Spv.
 Let me first say that I have only
 now realised that this needs some work (I think Johan realised a while ago)
