@@ -4,72 +4,20 @@ import valuation.canonical
 
 universes u u₀ u₁ u₂ u₃
 
---local attribute [instance, priority 0] classical.prop_decidable
-
-variables {R : Type u₀} [comm_ring R] --[decidable_eq R]
-variables {Γ : Type u} [linear_ordered_comm_group Γ]
-variables {Γ₁ : Type u₁} [linear_ordered_comm_group Γ₁]
-variables {Γ₂ : Type u₂} [linear_ordered_comm_group Γ₂]
-/- this structure is evil
-structure Valuation (R : Type u₀) [comm_ring R] :=
-(Γ   : Type u)
-(grp : linear_ordered_comm_group Γ)
-(val : @valuation R _ Γ grp)
-
-namespace Valuation
-open valuation
-
-instance : has_coe_to_fun (Valuation R) :=
-{ F := λ v, R → with_zero v.Γ, coe := λ v, v.val.val }
-
-instance linear_ordered_value_group {v : Valuation R} : linear_ordered_comm_group v.Γ := v.grp
-
-def of_valuation {Γ : Type u} [linear_ordered_comm_group Γ] (v : valuation R Γ) : Valuation R :=
-{ Γ   := Γ,
-  grp := by apply_instance,
-  val := v }
-
-section
-variables (R)
-
-instance equiv : setoid (Valuation R) :=
-{ r := λ v₁ v₂, v₁.val.is_equiv v₂.val,
-  iseqv :=
-  ⟨λ _,     valuation.is_equiv.refl,
-   λ _ _,   valuation.is_equiv.symm,
-   λ _ _ _, valuation.is_equiv.trans ⟩}
-
-end
-
-@[simp] lemma equiv_eq {v₁ v₂ : Valuation R} : (v₁ ≈ v₂) = (v₁.val.is_equiv v₂.val) := rfl
-
--- -- If we need this, it should go to the valuations.lean file
--- lemma ne_zero_of_equiv_ne_zero {Γ₁ : Type u₂} [linear_ordered_comm_group Γ₁] {Γ₂ : Type u₃} [linear_ordered_comm_group Γ₂]
--- {v₁ : valuation R Γ₁} {v₂ : valuation R Γ₂} {r : R} (heq : valuation.is_equiv v₁ v₂) (H : v₁ r ≠ 0) : v₂ r ≠ 0 :=
--- begin
---   intro h,
---   rw [eq_zero_iff_le_zero, ← heq r 0, ← eq_zero_iff_le_zero] at h,
---   exact H h
--- end
-
-end Valuation
-
-section
-variables (R)
-
-definition large_Spv := quotient (Valuation.equiv R)
--/
-
 definition Spv (R : Type u₀) [comm_ring R] :=
 {ineq : R → R → Prop // ∃ {Γ₀ : Type u₀} [linear_ordered_comm_group Γ₀],
  by exactI ∃ (v : valuation R Γ₀), ∀ r s : R, v r ≤ v s ↔ ineq r s}
 
-variable {v : Spv R}
+variables {R : Type u₀} [comm_ring R] {v : Spv R}
 
 local notation r `≤[`v`]` s := v.1 r s
 
 namespace Spv
 open valuation
+
+variables {Γ  : Type u}  [linear_ordered_comm_group Γ]
+variables {Γ₁ : Type u₁} [linear_ordered_comm_group Γ₁]
+variables {Γ₂ : Type u₂} [linear_ordered_comm_group Γ₂]
 
 definition mk (v : valuation R Γ) : Spv R :=
 ⟨λ r s, v r ≤ v s,
@@ -120,18 +68,31 @@ begin
   apply h,
 end
 
-/-
-definition mk' {Γ : Type u₂} [linear_ordered_comm_group Γ] (v : valuation R Γ) :
-  Spv R :=
-mk (Valuation.of_valuation v)
+noncomputable instance : has_coe_to_fun (Spv R) :=
+{ F := λ v, R → with_zero (out_Γ v),
+  coe := λ v, (out v).val }
 
-definition mk'' : large_Spv R → Spv R :=
-quotient.lift mk $ λ (v₁ v₂ : Valuation R) h, subtype.ext.mpr $
+definition basic_open (r s : R) : set (Spv R) :=
+{v | v r ≤ v s ∧ v s ≠ 0}
+
+instance : topological_space (Spv R) :=
+topological_space.generate_from {U : set (Spv R) | ∃ r s : R, U = basic_open r s}
+
+lemma mk_mem_basic_open {r s : R} (v : valuation R Γ) :
+  mk v ∈ basic_open r s ↔ v r ≤ v s ∧ v s ≠ 0 :=
 begin
-  ext r s,
-  exact h r s,
+  apply and_congr,
+  { apply out_mk, },
+  { apply (out_mk v).ne_zero, },
 end
--/
+
+end Spv
+
+
+
+
+
+#exit
 
 -- jmc: I now think the following section is basically useless.
 -- Mario clearly said that computable out is not really worth anything.
@@ -281,9 +242,6 @@ and the proof comes from h.
 -/
 
 
-#exit
-
-
 def on_quot (v : Spv R) : Spv (supp v).quotient :=
 { val := @quotient.lift₂ _ _ _ ((supp v).quotient_rel) ((supp v).quotient_rel) v.1 $
     λ r₁ s₁ r₂ s₂ hr hs,
@@ -293,24 +251,6 @@ def on_quot (v : Spv R) : Spv (supp v).quotient :=
       sorry -- KB added this because he's not sure what's going on but wanted to get rid of the error
     end,
   property := sorry} -- ditto
-
-
-
-
-lemma exists_rep (v : Spv R) : ∃ v' : Valuation R, mk v' = v := ⟨out v, mk_out⟩
-
-lemma ind {f : Spv R → Prop} (H : ∀ v, f (mk v)) : ∀ v, f v :=
-λ v, by simpa using H (out v)
-
-lemma sound {v₁ v₂ : Valuation R} (heq : v₁ ≈ v₂) : mk v₁ = mk v₂ :=
-begin
-  rw subtype.ext,
-  funext,
-  ext,
-  exact heq _ _
-end
-
-noncomputable instance : has_coe (Spv R) (Valuation R) := ⟨out⟩
 
 end Spv
 
@@ -334,26 +274,3 @@ begin
   }
 end
 -/
-
-namespace Spv
-
-variables {A : Type u₁} [comm_ring A] [decidable_eq A]
-
-definition basic_open (r s : A) : set (Spv A) :=
-{v | v r ≤ v s ∧ v s ≠ 0}
-
-lemma mk_mem_basic_open {r s : A} (v : Valuation A) : mk v ∈ basic_open r s ↔ v r ≤ v s ∧ v s ≠ 0 :=
-begin
-  split; intro h; split,
-  { exact (out_mk r s).mp h.left },
-  { sorry},
---  { exact Valuation.ne_zero_of_equiv_ne_zero out_mk h.right },
-  { exact (out_mk r s).mpr h.left },
-  { sorry}
---  { exact Valuation.ne_zero_of_equiv_ne_zero (setoid.symm out_mk) h.right }
-end
-
-instance : topological_space (Spv A) :=
-topological_space.generate_from {U : set (Spv A) | ∃ r s : A, U = basic_open r s}
-
-end Spv

@@ -259,8 +259,17 @@ lemma comap {S : Type u₃} [comm_ring S] (f : S → R) [is_ring_hom f] (h : v�
   (v₁.comap f).is_equiv (v₂.comap f) :=
 λ r s, h (f r) (f s)
 
-lemma val_eq_of_val_eq (h : v₁.is_equiv v₂) {r s : R} (h1 : v₁ r = v₁ s) : v₂ r = v₂ s :=
-le_antisymm ((h _ _).1 (le_of_eq h1)) ((h _ _).1 (le_of_eq h1.symm))
+lemma val_eq (h : v₁.is_equiv v₂) {r s : R} :
+  v₁ r = v₁ s ↔ v₂ r = v₂ s :=
+⟨λ H, le_antisymm ((h _ _).1 (le_of_eq H)) ((h _ _).1 (le_of_eq H.symm)),
+ λ H, le_antisymm ((h.symm _ _).1 (le_of_eq H)) ((h.symm _ _).1 (le_of_eq H.symm)) ⟩
+
+lemma ne_zero (h : v₁.is_equiv v₂) {r : R} :
+  v₁ r ≠ 0 ↔ v₂ r ≠ 0 :=
+begin
+  have : v₁ r ≠ v₁ 0 ↔ v₂ r ≠ v₂ 0 := not_iff_not_of_iff h.val_eq,
+  rwa [v₁.map_zero, v₂.map_zero] at this,
+end
 
 end is_equiv
 
