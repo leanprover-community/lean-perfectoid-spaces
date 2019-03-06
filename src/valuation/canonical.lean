@@ -71,6 +71,7 @@ definition valuation_field_norm_one := is_group_hom.ker v.on_valuation_field.uni
 instance (v : valuation R Γ) : normal_subgroup (valuation_field_norm_one v) :=
 by unfold valuation_field_norm_one; apply_instance
 
+/-- The value group of the canonical valuation.-/
 def value_group (v : valuation R Γ) : Type u₀ :=
 quotient_group.quotient (valuation_field_norm_one v)
 

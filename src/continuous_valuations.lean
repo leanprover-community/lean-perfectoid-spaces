@@ -1,19 +1,20 @@
 import topology.algebra.topological_structures
 import valuation_spectrum
 
-universes u₁ u₂ u₃
+universes u u₀ u₁ u₂ u₃
 
 namespace valuation
-variables {R : Type u₁} [comm_ring R] [topological_space R] [topological_ring R]
-variables {Γ : Type u₂} [linear_ordered_comm_group Γ]
+variables {R : Type u₀} [comm_ring R] [topological_space R] [topological_ring R]
+variables {Γ : Type u} [linear_ordered_comm_group Γ]
+variables {Γ₁ : Type u₁} [linear_ordered_comm_group Γ₁]
+variables {Γ₂ : Type u₂} [linear_ordered_comm_group Γ₂]
 
 /-- Continuity of a valuation. -/
 def is_continuous (v : valuation R Γ) : Prop :=
-∀ x : value_group v, is_open {r : R | canonical_valuation v r < x}
+∀ g : value_group v, is_open {r : R | canonical_valuation v r < g}
 
 -- We could probably prove this now, but I didn't do it yet.
-lemma is_continuous_of_equiv_is_continuous {Γ₁ : Type u₂} [linear_ordered_comm_group Γ₁]
-  {Γ₂ : Type u₃} [linear_ordered_comm_group Γ₂]
+lemma is_continuous_of_equiv_is_continuous
   {v₁ : valuation R Γ₁} {v₂ : valuation R Γ₂} (heq : valuation.is_equiv v₁ v₂)
   (H : v₁.is_continuous) : v₂.is_continuous :=
 begin

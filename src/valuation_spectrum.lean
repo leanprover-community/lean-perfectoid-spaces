@@ -7,7 +7,9 @@ universes u u₀ u₁ u₂ u₃
 --local attribute [instance, priority 0] classical.prop_decidable
 
 variables {R : Type u₀} [comm_ring R] --[decidable_eq R]
-{Γ : Type u₁} [linear_ordered_comm_group Γ]
+variables {Γ : Type u} [linear_ordered_comm_group Γ]
+variables {Γ₁ : Type u₁} [linear_ordered_comm_group Γ₁]
+variables {Γ₂ : Type u₂} [linear_ordered_comm_group Γ₂]
 /- this structure is evil
 structure Valuation (R : Type u₀) [comm_ring R] :=
 (Γ   : Type u)
@@ -59,8 +61,8 @@ definition large_Spv := quotient (Valuation.equiv R)
 -/
 
 definition Spv (R : Type u₀) [comm_ring R] :=
-{ineq : R → R → Prop // ∃ {Γ : Type u₀} [h : linear_ordered_comm_group Γ],
- by exactI ∃ (v : valuation R Γ), ∀ r s : R, v r ≤ v s ↔ ineq r s}
+{ineq : R → R → Prop // ∃ {Γ₀ : Type u₀} [linear_ordered_comm_group Γ₀],
+ by exactI ∃ (v : valuation R Γ₀), ∀ r s : R, v r ≤ v s ↔ ineq r s}
 
 variable {v : Spv R}
 
@@ -72,6 +74,51 @@ open valuation
 definition mk (v : valuation R Γ) : Spv R :=
 ⟨λ r s, v r ≤ v s,
   ⟨value_group v, by apply_instance, canonical_valuation v, canonical_valuation_is_equiv v⟩⟩
+
+@[simp] lemma mk_val (v : valuation R Γ) : (mk v).val = λ r s, v r ≤ v s := rfl
+
+definition out_Γ (v : Spv R) : Type u₀ := classical.some v.2
+
+noncomputable instance (v : Spv R) : linear_ordered_comm_group (out_Γ v) :=
+classical.some $ classical.some_spec v.2
+
+noncomputable definition out (v : Spv R) : valuation R (out_Γ v) :=
+classical.some $ classical.some_spec $ classical.some_spec v.2
+
+@[simp] lemma mk_out {v : Spv R} : mk (out v) = v :=
+begin
+  rcases v with ⟨ineq, hv⟩,
+  rw subtype.ext,
+  ext,
+  exact classical.some_spec (classical.some_spec (classical.some_spec hv)) _ _,
+end
+
+lemma out_mk (v : valuation R Γ) : (out (mk v)).is_equiv v :=
+classical.some_spec (classical.some_spec (classical.some_spec (mk v).2))
+
+noncomputable def lift {X}
+  (f : Π ⦃Γ₀ : Type u₀⦄ [linear_ordered_comm_group Γ₀], valuation R Γ₀ → X) (v : Spv R) : X :=
+f (out v)
+
+theorem lift_eq {X}
+  (f₀ : Π ⦃Γ₀ : Type u₀⦄ [linear_ordered_comm_group Γ₀], valuation R Γ₀ → X)
+  (f : Π ⦃Γ : Type u⦄ [linear_ordered_comm_group Γ], valuation R Γ → X)
+  (v : valuation R Γ)
+  (h : ∀ ⦃Γ₀ : Type u₀⦄ [linear_ordered_comm_group Γ₀] (v₀ : valuation R Γ₀), v₀.is_equiv v → f₀ v₀ = f v) :
+  lift f₀ (mk v) = f v :=
+h _ (out_mk v)
+
+lemma exists_rep (v : Spv R) :
+  ∃ {Γ₀ : Type u₀} [linear_ordered_comm_group Γ₀], by exactI ∃ (v₀ : valuation R Γ₀),
+  mk v₀ = v :=
+⟨out_Γ v, infer_instance, out v, mk_out⟩
+
+lemma sound {v₁ : valuation R Γ₁} {v₂ : valuation R Γ₂} (h : v₁.is_equiv v₂) : mk v₁ = mk v₂ :=
+begin
+  apply subtype.val_injective,
+  ext r s,
+  apply h,
+end
 
 /-
 definition mk' {Γ : Type u₂} [linear_ordered_comm_group Γ] (v : valuation R Γ) :
@@ -85,6 +132,10 @@ begin
   exact h r s,
 end
 -/
+
+-- jmc: I now think the following section is basically useless.
+-- Mario clearly said that computable out is not really worth anything.
+-- https://leanprover.zulipchat.com/#narrow/stream/116395-maths/topic/Perfectoid.20spaces/near/160027955
 section ineq
 
 -- @[refl] -- gives a weird error
@@ -229,15 +280,6 @@ and the proof comes from h.
 
 -/
 
--- Until then, we always have...
-
-definition out_Γ (v : Spv R) : Type u₀ := classical.some v.2
-
-noncomputable instance (v : Spv R) : linear_ordered_comm_group (out_Γ v) :=
-classical.some $ classical.some_spec v.2
-
-noncomputable definition out (v : Spv R) : valuation R (out_Γ v) :=
-classical.some $ classical.some_spec $ classical.some_spec v.2
 
 #exit
 
@@ -254,23 +296,6 @@ def on_quot (v : Spv R) : Spv (supp v).quotient :=
 
 
 
-
-noncomputable definition lift {β : Type u₃}
-(f : Valuation R → β) (H : ∀ v₁ v₂ : Valuation R, v₁ ≈ v₂ → f v₁ = f v₂) : Spv R → β :=
-f ∘ out
-
-lemma out_mk {v : Valuation R} : out (mk v) ≈ v := classical.some_spec (mk v).property
-
-@[simp] lemma mk_out {v : Spv R} : mk (out v) = v :=
-begin
-  cases v with ineq hv,
-  rw subtype.ext,
-  ext,
-  exact classical.some_spec hv _ _
-end
-
-lemma lift_mk {β : Type u₃} {f : Valuation R → β} {H : ∀ v₁ v₂ : Valuation R, v₁ ≈ v₂ → f v₁ = f v₂} (v : Valuation R) :
-lift f H (mk v) = f v := H _ _ out_mk
 
 lemma exists_rep (v : Spv R) : ∃ v' : Valuation R, mk v' = v := ⟨out v, mk_out⟩
 
