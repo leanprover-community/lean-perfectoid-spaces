@@ -8,23 +8,56 @@ variables {R : Type u₀} [comm_ring R] [topological_space R] [topological_ring 
 variables {Γ : Type u} [linear_ordered_comm_group Γ]
 variables {Γ₁ : Type u₁} [linear_ordered_comm_group Γ₁]
 variables {Γ₂ : Type u₂} [linear_ordered_comm_group Γ₂]
+variables {v₁ : valuation R Γ₁} {v₂ : valuation R Γ₂}
 
-/-- Continuity of a valuation. -/
+/-- Continuity of a valuation (Wedhorn 7.7). -/
 def is_continuous (v : valuation R Γ) : Prop :=
 ∀ g : value_group v, is_open {r : R | canonical_valuation v r < g}
 
 -- We could probably prove this now, but I didn't do it yet.
-lemma is_continuous_of_equiv_is_continuous
-  {v₁ : valuation R Γ₁} {v₂ : valuation R Γ₂} (heq : valuation.is_equiv v₁ v₂)
-  (H : v₁.is_continuous) : v₂.is_continuous :=
+lemma is_equiv.is_continuous_iff (h : v₁.is_equiv v₂) :
+  v₁.is_continuous ↔ v₂.is_continuous :=
 begin
-  intro g,
-  -- need map value_group v₁ → value_group v₂ coming from equiv
-  -- actually, we probably have this now.
-  sorry
+  split; intros H g,
+  { convert H (h.value_group_equiv.symm g),
+    symmetry,
+    funext,
+    apply propext,
+    sorry },
+  { convert H (h.value_group_equiv g),
+    funext,
+    apply propext,
+    sorry }
+end
+
+-- jmc: Is this definition equivalent? Or is it not enough to range over s : R?
+def is_continuous' (v : valuation R Γ) : Prop :=
+∀ s : R, is_open {r : R | v r < v s}
+
+lemma is_equiv.is_continuous'_iff (h : v₁.is_equiv v₂) :
+  v₁.is_continuous' ↔ v₂.is_continuous' :=
+begin
+  apply forall_congr,
+  intro s,
+  convert iff.rfl,
+  symmetry,
+  funext,
+  rw [lt_iff_le_not_le, lt_iff_le_not_le],
+  apply propext,
+  apply and_congr,
+  { apply h },
+  { apply not_iff_not_of_iff,
+    apply h }
 end
 
 end valuation
+
+namespace Spv
+variables {R : Type u₀} [comm_ring R] [topological_space R] [topological_ring R]
+
+def is_continuous : Spv R → Prop := lift (@valuation.is_continuous _ _ _ _)
+
+end Spv
 
 -- Now we can define what it means for `v : Spv R` to be continuous
 -- using Spv.lift.

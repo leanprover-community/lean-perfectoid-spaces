@@ -68,6 +68,17 @@ begin
   apply h,
 end
 
+lemma is_equiv_of_eq_mk {v₁ : valuation R Γ₁} {v₂ : valuation R Γ₂} (h : mk v₁ = mk v₂) :
+  v₁.is_equiv v₂ :=
+begin
+  intros r s,
+  have := congr_arg subtype.val h,
+  replace := congr this (rfl : r = r),
+  replace := congr this (rfl : s = s),
+  simp at this,
+  simp [this],
+end
+
 noncomputable instance : has_coe_to_fun (Spv R) :=
 { F := λ v, R → with_zero (out_Γ v),
   coe := λ v, (out v).val }
