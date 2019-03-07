@@ -30,23 +30,27 @@ begin
     sorry }
 end
 
--- jmc: Is this definition equivalent? Or is it not enough to range over s : R?
+-- jmc: Is this definition equivalent?
 def is_continuous' (v : valuation R Γ) : Prop :=
-∀ s : R, is_open {r : R | v r < v s}
+∀ s₁ s₂, is_open {r : R | v r * v s₁ < v s₂}
 
 lemma is_equiv.is_continuous'_iff (h : v₁.is_equiv v₂) :
   v₁.is_continuous' ↔ v₂.is_continuous' :=
 begin
   apply forall_congr,
-  intro s,
+  intro s₁,
+  apply forall_congr,
+  intro s₂,
   convert iff.rfl,
   symmetry,
   funext,
   rw [lt_iff_le_not_le, lt_iff_le_not_le],
   apply propext,
   apply and_congr,
-  { apply h },
+  { rw [← map_mul v₁, ← map_mul v₂],
+    apply h },
   { apply not_iff_not_of_iff,
+    rw [← map_mul v₁, ← map_mul v₂],
     apply h }
 end
 

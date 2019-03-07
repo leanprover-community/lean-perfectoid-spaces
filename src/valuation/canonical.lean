@@ -240,13 +240,13 @@ end
 
 /-- The canonical valuation on R/supp(v) -/
 definition quotient.canonical_valuation (v : valuation R Γ) :
-valuation (ideal.quotient (supp v)) (value_group v) :=
+  valuation (ideal.quotient (supp v)) (value_group v) :=
 @comap _ _ _ _ (valuation_field.canonical_valuation v) _ _ (localization.of)
   (by apply_instance)
 
 /-- The canonical valuation on R -/
 definition canonical_valuation (v : valuation R Γ) :
-valuation R (value_group v) :=
+  valuation R (value_group v) :=
 comap (quotient.canonical_valuation v) (ideal.quotient.mk (supp v))
 
 end canonical_equivalent_valuation
