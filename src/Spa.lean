@@ -3,11 +3,13 @@ import ring_theory.subring
 import continuous_valuations
 import Huber_pair
 
+import for_mathlib.adic_topology
+
 universes u₁ u₂ u₃
 
 local attribute [instance, priority 0] classical.prop_decidable
 
-open function Spv valuation
+open set function Spv valuation
 
 variables {Γ : Type*} [linear_ordered_comm_group Γ]
 
@@ -55,11 +57,11 @@ topological_space.generate_open.basic (basic_open r s) ⟨r, s, rfl⟩
 lemma basic_open_eq (s : A) : basic_open s s = {v | v s ≠ 0} :=
 set.ext $ λ v, ⟨λ h, h.right, λ h, ⟨le_refl _, h⟩⟩
 
--- should only be applied with (HfinT : fintype T) and (Hopen: is_open (span T))
-definition rational_open (s : A) (T : finset A) : set (Spa A) :=
+-- should only be applied with (Hfin : fintype T) and (Hopen: is_open (span T))
+definition rational_open (s : A) (T : set A) : set (Spa A) :=
 {v | (∀ t ∈ T, (v t ≤ v s)) ∧ (v s ≠ 0)}
 
-lemma mk_mem_rational_open {s : A} {T : finset A} {v : valuation A Γ} {hv : mk v ∈ Spa A} :
+lemma mk_mem_rational_open {s : A} {T : set A} {v : valuation A Γ} {hv : mk v ∈ Spa A} :
   (⟨mk v, hv⟩ : Spa A) ∈ rational_open s T ↔ (∀ t ∈ T, (v t ≤ v s)) ∧ (v s ≠ 0) :=
 begin
   apply and_congr,
@@ -71,7 +73,7 @@ begin
   { apply (out_mk v).ne_zero, },
 end
 
-definition rational_open_bInter (s : A) (T : finset A) :
+definition rational_open_bInter (s : A) (T : set A) :
   rational_open s T = (⋂ t ∈ T, basic_open t s) ∩ {v | v s ≠ 0} :=
 begin
   ext v,
@@ -86,115 +88,95 @@ begin
     exact (h₁ t ht).1 }
 end
 
-lemma rational_open_add_s (s : A) (T : finset A) :
+lemma rational_open_add_s (s : A) (T : set A) :
   rational_open s T = rational_open s (insert s T) :=
 begin
   ext v,
   split; rintros ⟨h₁, h₂⟩; split; try { exact h₂ }; intros t ht,
-  { rw finset.mem_insert at ht,
-    cases ht,
+  { cases ht,
     { rw ht, exact le_refl _ },
     { exact h₁ t ht } },
-  { exact h₁ t (finset.mem_insert_of_mem ht), }
+  { apply h₁ t,
+    exact mem_insert_of_mem _ ht }
 end
 
-lemma rational_open.is_open (s : A) (T : finset A) :
+lemma rational_open.is_open (s : A) (T : set A) [h : fintype T] :
   is_open (rational_open s T) :=
 begin
   rw rational_open_bInter,
   apply is_open_inter,
-  { apply is_open_bInter,
-    { apply set.finite_mem_finset, },
-    { intros,
-      exact basic_open.is_open _ _ } },
+  { apply is_open_bInter ⟨h⟩,
+    intros,
+    apply basic_open.is_open },
   { rw ← basic_open_eq s,
-    exact basic_open.is_open s s },
+    apply basic_open.is_open },
 end
 
-noncomputable def finset.monad : monad finset :=
-  {pure := @finset.singleton, bind := λ α β, finset.bind }
-local attribute [instance] finset.monad
-
-lemma rational_open_inter.aux₁ {s₁ s₂ : A} {T₁ T₂ : finset A}
+lemma rational_open_inter.aux₁ {s₁ s₂ : A} {T₁ T₂ : set A}
   (h₁ : s₁ ∈ T₁) (h₂ : s₂ ∈ T₂) :
   rational_open s₁ T₁ ∩ rational_open s₂ T₂ ⊆
   rational_open (s₁ * s₂) ((*) <$> T₁ <*> T₂) :=
 begin
   rintros v ⟨⟨hv₁, hs₁⟩, ⟨hv₂, hs₂⟩⟩,
-  have vmuls : v (s₁ * s₂) = v s₁ * v s₂ := valuation.map_mul _ _ _,
   split,
-  { rintros t ht, --⟨_, ⟨t₁, ht₁, rfl⟩, t₂, ht₂, ht⟩,
+  { rintros t ⟨_, ⟨t₁, ht₁, rfl⟩, t₂, ht₂, ht⟩,
     subst ht,
-    have vmult : v (t₁ * t₂) = v t₁ * v t₂ := valuation.map_mul _ _ _,
-    rw [vmuls, vmult],
-    refine le_trans (linear_ordered_comm_monoid.mul_le_mul_left  (hv₂ _ ht₂) _)
-                    (linear_ordered_comm_monoid.mul_le_mul_right (hv₁ _ ht₁) _ ) },
-  { intro H,
-    rw vmuls at H,
-    cases H1 : v s₁ with γ₁, exact hs₁ H1,
-    cases H2 : v s₂ with γ₂, exact hs₂ H2,
-    rw [H1,H2] at H,
-    change some (γ₁ * γ₂) = none at H,
-    exact option.no_confusion H },
+    convert le_trans
+      (linear_ordered_comm_monoid.mul_le_mul_right (hv₁ t₁ ht₁) _)
+      (linear_ordered_comm_monoid.mul_le_mul_left  (hv₂ t₂ ht₂) _);
+    apply valuation.map_mul },
+  { rw with_zero.ne_zero_iff_exists at hs₁ hs₂,
+    cases hs₁ with γ₁ hγ₁,
+    cases hs₂ with γ₂ hγ₂,
+    erw [valuation.map_mul, hγ₁, hγ₂],
+    exact with_zero.coe_ne_zero },
 end
 
-lemma rational_open_inter.aux₂ {s₁ s₂ : A} {T₁ T₂ : finset A}
+lemma rational_open_inter.aux₂ {s₁ s₂ : A} {T₁ T₂ : set A}
   (h₁ : s₁ ∈ T₁) (h₂ : s₂ ∈ T₂) :
-rational_open (s₁ * s₂) ((*) <$> T₁ <*> T₂) ⊆
-rational_open s₁ T₁ ∩ rational_open s₂ T₂ :=
+  rational_open (s₁ * s₂) ((*) <$> T₁ <*> T₂) ⊆
+  rational_open s₁ T₁ ∩ rational_open s₂ T₂ :=
 begin
-  rintros v ⟨hv,hs⟩,
+  rintros v ⟨hv, hs⟩,
   have vmuls : v (s₁ * s₂) = v s₁ * v s₂ := valuation.map_mul _ _ _,
-  have vs₁ne0 : v s₁ ≠ 0 := λ H, by simpa only [vmuls,H,zero_mul,ne.def,eq_self_iff_true,not_true] using hs,
-  have vs₂ne0 : v s₂ ≠ 0 := λ H, by simpa only [vmuls,H,mul_zero,ne.def,eq_self_iff_true,not_true] using hs,
-  split; split,
-  { intros t ht,
-    suffices H : v t * v s₂ ≤ v s₁ * v s₂,
-    { cases H' : v s₂ with γ, exfalso; exact vs₂ne0 H',
-      rw H' at H,
-      have := linear_ordered_comm_monoid.mul_le_mul_right H (some (γ⁻¹)),
-      conv at this { to_lhs, rw mul_assoc, congr, skip, change some (γ * γ⁻¹) },
-      conv at this { to_rhs, rw mul_assoc, congr, skip, change some (γ * γ⁻¹) },
-      simp only [mul_right_inv] at this,
-      change v t * 1 ≤ v s₁ * 1 at this,
-      rwa [mul_one,mul_one] at this },
-    { rw ←vmuls,
-      rw show v t * v s₂ = v (t * s₂), from (valuation.map_mul _ _ _).symm,
-      refine hv (t * s₂) ⟨_,⟨_,ht,rfl⟩,_,h₂,rfl⟩ } },
-  { exact vs₁ne0 },
-  { intros t ht,
-    suffices H : v s₁ * v t ≤ v s₁ * v s₂,
-    { cases H' : v s₁ with γ, exfalso; exact vs₁ne0 H',
-      rw H' at H,
-      have := linear_ordered_comm_monoid.mul_le_mul_left H (some (γ⁻¹)),
-      conv at this { to_lhs, rw ← mul_assoc, congr, change some (γ⁻¹ * γ) },
-      conv at this { to_rhs, rw ← mul_assoc, congr, change some (γ⁻¹ * γ) },
-      simp only [mul_left_inv] at this,
-      change 1 * v t ≤ 1 * v s₂ at this,
-      rwa [one_mul,one_mul] at this },
-    { rw ←vmuls,
-      rw show v s₁ * v t = v (s₁ * t), from (valuation.map_mul _ _ _).symm,
-      refine hv _ ⟨_, ⟨s₁, h₁, rfl⟩, t, ht, rfl⟩ } },
-  { exact vs₂ne0 }
+  have hs₁ : v s₁ ≠ 0 := λ H, by simpa [-coe_fn_coe_base, vmuls, H] using hs,
+  have hs₂ : v s₂ ≠ 0 := λ H, by simpa [-coe_fn_coe_base, vmuls, H] using hs,
+  split; split;
+  try { assumption };
+  intros t ht;
+  rw with_zero.ne_zero_iff_exists at hs₁ hs₂,
+  { suffices H : v t * v s₂ ≤ v s₁ * v s₂,
+    { cases hs₂ with γ hγ,
+      rw hγ at H,
+      have := linear_ordered_comm_monoid.mul_le_mul_right H γ⁻¹,
+      simp [mul_assoc, -coe_fn_coe_base] at this,
+      erw [mul_one, mul_one] at this,
+      exact this },
+    { erw [← valuation.map_mul, ← valuation.map_mul],
+      exact hv (t * s₂) ⟨_, ⟨t, ht, rfl⟩, ⟨s₂, h₂, rfl⟩⟩, } },
+  { suffices H : v s₁ * v t ≤ v s₁ * v s₂,
+    { cases hs₁ with γ hγ,
+      rw hγ at H,
+      have := linear_ordered_comm_monoid.mul_le_mul_left H γ⁻¹,
+      erw [← mul_assoc, ← mul_assoc] at this,
+      simp [-coe_fn_coe_base] at this,
+      erw [one_mul, one_mul] at this,
+      exact this },
+    { erw [← valuation.map_mul, ← valuation.map_mul],
+      exact hv _ ⟨_, ⟨s₁, h₁, rfl⟩, ⟨t, ht, rfl⟩⟩ } },
 end
 
-lemma rational_open_inter {s₁ s₂ : A} {T₁ T₂ : set A} [fintype T₁] [fintype T₂] (h₁ : s₁ ∈ T₁) (h₂ : s₂ ∈ T₂) :
-rational_open s₁ T₁ ∩ rational_open s₂ T₂ = rational_open (s₁ * s₂) ((*) <$> T₁ <*> T₂) :=
-begin
-  ext v, split; intro h,
-  exact rational_open_inter.aux₁ h₁ h₂ h,
-  exact rational_open_inter.aux₂ h₁ h₂ h
-end
+lemma rational_open_inter {s₁ s₂ : A} {T₁ T₂ : set A} (h₁ : s₁ ∈ T₁) (h₂ : s₂ ∈ T₂) :
+  rational_open s₁ T₁ ∩ rational_open s₂ T₂ =
+  rational_open (s₁ * s₂) ((*) <$> T₁ <*> T₂) :=
+le_antisymm (rational_open_inter.aux₁ h₁ h₂) (rational_open_inter.aux₂ h₁ h₂)
 
 @[simp] lemma rational_open_singleton {r s : A} :
 rational_open s {r} = basic_open r s :=
-ext $ λ v,
-{ mp  := λ h, ⟨h.left r (mem_singleton_iff.mpr rfl), h.right⟩,
-  mpr := λ h, ⟨λ t ht,
-          begin
-            rw mem_singleton_iff at ht, subst ht,
-            exact h.left
-          end, h.right⟩ }
+begin
+  apply le_antisymm; rintros v ⟨h₁, h₂⟩; split;
+  intros; simp [*] at *,
+end
 
 @[simp] lemma basic_open_eq_univ : basic_open (1 : A) (1 : A) = univ :=
 begin
@@ -202,10 +184,9 @@ begin
   { exact subset_univ _ },
   { intros v h,
     split,
-    exact le_refl _,
-    have v1 : v 1 = 1 := valuation.map_one _,
-    rw v1,
-    intro h, exact option.no_confusion h },
+    { exact le_refl _ },
+    erw [valuation.map_one],
+    exact one_ne_zero, },
 end
 
 @[simp] lemma rational_open_eq_univ : rational_open (1 : A) {(1 : A)} = univ :=
@@ -220,26 +201,24 @@ lemma rational_basis.is_basis : topological_space.is_topological_basis (rational
 begin
 split,
 { rintros U₁ ⟨s₁, T₁, hfin₁, H₁⟩ U₂ ⟨s₂, T₂, hfin₂, H₂⟩ v hv,
-  haveI := hfin₁,
-  haveI := hfin₂,
-  existsi U₁ ∩ U₂,
+  use U₁ ∩ U₂,
   rw rational_open_add_s at H₁ H₂,
   split,
-  { simp [H₁, H₂,rational_open_inter,-set.fmap_eq_image,-set.seq_eq_set_seq],
-    exact ⟨_,_,by apply_instance,rfl⟩ },
+  { simp only [H₁, H₂, rational_open_inter, set.mem_insert_iff, true_or, eq_self_iff_true],
+    resetI, -- adds hfin₁ and hfin₂ to type class system
+    exact ⟨_, _, infer_instance, rfl⟩ },
   { exact ⟨hv, subset.refl _⟩ } },
 split,
 { apply le_antisymm,
   { exact subset_univ _ },
-  apply subset_sUnion_of_mem,
-  refine ⟨(1 : A), {(1 : A)}, by apply_instance, by simp⟩ },
+  { apply subset_sUnion_of_mem,
+    refine ⟨(1 : A), {(1 : A)}, infer_instance, by simp⟩ } },
 { apply le_antisymm,
-  { unfold Spa.topological_space,
+  { delta Spa.topological_space,
     rw generate_from_le_iff_subset_is_open,
     rintros U ⟨r, s, H⟩,
-    rw [H,←rational_open_singleton],
-    refine topological_space.generate_open.basic _ ⟨s, {r}, _, rfl⟩,
-    exact set.fintype_singleton _ },
+    rw [H, ← rational_open_singleton],
+    exact topological_space.generate_open.basic _ ⟨s, {r}, infer_instance, rfl⟩ },
   { rw generate_from_le_iff_subset_is_open,
     rintros U ⟨s, T, hT, H⟩,
     subst H,
@@ -248,24 +227,44 @@ split,
   } }
 end
 
+
+/-
+The presheaf will be defined as the extension of a presheaf on the basis of rational opens.
+So we will now first define a presheaf on this basis.
+-/
+
 namespace rational_open
-def presheaf.ring (s : A) := localization.away s
 
-instance (s : A) : comm_ring (presheaf.ring s) :=
-by dunfold presheaf.ring ; apply_instance
+def presheaf.aux (s : A) (T : set A) := localization.away s
 
-def localize (s : A) : A → presheaf.ring s := λ a, localization.of a 1
+instance (s : A) (T : set A) : comm_ring (presheaf.aux s T) :=
+by delta presheaf.aux; apply_instance
 
 -- Definition of A\left(\frac T s\right) as a topological ring
-def presheaf.top_ring (s : A) (T : set A) (HfinT : fintype T) :
-   topological_space (presheaf.ring s) :=
- let As := presheaf.ring s in sorry
+def presheaf.topology (s : A) (T : set A) [Hfin : fintype T]
+  (Hopen : _root_.is_open ((ideal.span T) : set A)) :
+  topological_space (presheaf.aux s T) :=
+let As := presheaf.aux s T in
+let S₁ : set As := localization.of '' A.RHuber.A₀ in
+let T' : set As := localization.of '' T in
+let S₂ : set As := (*) (((localization.to_units s)⁻¹ : units As) : As) '' T' in -- need to update mathlib
+let S : set As := S₁ ∪ S₂ in
+let D := ring.closure S in
+let I := classical.some A.RHuber.A₀_is_ring_of_definition.2 in
+adic_topology (I * D)
+--  let As := presheaf.aux s T in sorry
  /-let D := ring.closure ((localize s) '' A.RHuber.A₀ ∪ (((λ x, x*s⁻¹) ∘ localize s) '' T)) in
  begin
    let nhd := λ n : ℕ, mul_ideal (pow_ideal ((localize s) '' A.Rplus) n) D,
   sorry
 end-/
+
+def presheaf (s : A) (T : set A) [Hfin : fintype T]
+  (Hopen : _root_.is_open ((ideal.span T) : set A)) :=
+sorry -- ring_completion presheaf.aux s T
+
 end rational_open
+
 end Spa
 
 -- goal now to define the 𝓞_X on *rational subsets* and then to extend.

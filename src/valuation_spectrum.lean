@@ -81,7 +81,16 @@ end
 
 noncomputable instance : has_coe_to_fun (Spv R) :=
 { F := λ v, R → with_zero (out_Γ v),
-  coe := λ v, (out v).val }
+  coe := λ v, ((out v) : R → with_zero (out_Γ v)) }
+
+section
+
+@[simp] lemma map_zero : v 0 = 0 := valuation.map_zero _
+@[simp] lemma map_one  : v 1 = 1 := valuation.map_one _
+@[simp] lemma map_mul  : ∀ x y, v (x * y) = v x * v y := valuation.map_mul _
+@[simp] lemma map_add  : ∀ x y, v (x + y) ≤ v x ∨ v (x + y) ≤ v y := valuation.map_add _
+
+end
 
 definition basic_open (r s : R) : set (Spv R) :=
 {v | v r ≤ v s ∧ v s ≠ 0}
