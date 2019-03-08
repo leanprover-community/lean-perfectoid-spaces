@@ -464,9 +464,7 @@ begin
   rcases hab with ⟨w,hw,h⟩, classical,
   change v r / v s = v t / v u,
   change (s * t - (u * r)) * w = 0 at h,
-  replace hs := ne_zero_of_mem_non_zero_divisors hs,
-  replace hu := ne_zero_of_mem_non_zero_divisors hu,
-  replace hw := ne_zero_of_mem_non_zero_divisors hw,
+  rw fraction_ring.mem_non_zero_divisors_iff_ne_zero at hs hu hw,
   have hvs : v s ≠ 0 := λ H, hs ((submodule.mem_bot R).mp (lattice.eq_bot_iff.1 hv H)),
   have hvu : v u ≠ 0 := λ H, hu ((submodule.mem_bot R).mp (lattice.eq_bot_iff.1 hv H)),
   have hvw : v w ≠ 0 := λ H, hw ((submodule.mem_bot R).mp (lattice.eq_bot_iff.1 hv H)),
@@ -533,7 +531,7 @@ subtype.ext.mpr $ funext $ λ r, show v r / v 1 = v r, by simp
 @[simp] lemma comap_on_frac_eq (v : valuation (fraction_ring R) Γ) :
   (v.comap of).on_frac
   (by {rw [comap_supp, ideal.zero_eq_bot, (supp v).eq_bot_of_prime],
-    apply ideal.comap_bot_of_inj, apply of.injective })
+    apply ideal.comap_bot_of_inj, apply fraction_ring.of.injective })
   = v :=
 subtype.ext.mpr $ funext $
 begin
@@ -549,15 +547,14 @@ begin
     use 1,
     split,
     { exact is_submonoid.one_mem _ },
-    { unfold_coes,
-      simp only [mul_one, one_mul, non_zero_divisors_one_val],
-      ring,
-      simp, } },
+    { simp only [mul_one, one_mul, non_zero_divisors_one_val, is_submonoid.coe_one],
+      rw mul_comm,
+      exact sub_self _, } },
   intro h,
   rw [← mem_supp_iff, (supp v).eq_bot_of_prime] at h,
   simp at h,
-  replace h := eq_zero_of _ h,
-  refine localization.ne_zero_of_mem_non_zero_divisors _ h,
+  replace h := fraction_ring.eq_zero_of _ h,
+  refine fraction_ring.mem_non_zero_divisors_iff_ne_zero.mp _ h,
   exact x.2.2
 end
 

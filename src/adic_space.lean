@@ -1,7 +1,7 @@
 
 import data.nat.prime
 import algebra.group_power
-import topology.algebra.topological_structures
+import topology.algebra.ring
 
 import for_mathlib.prime
 import for_mathlib.is_cover

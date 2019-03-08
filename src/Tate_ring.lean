@@ -1,4 +1,4 @@
-import topology.algebra.topological_structures
+import topology.algebra.ring
 import ring_theory.subring
 import tactic.linarith
 import power_bounded

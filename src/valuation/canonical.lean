@@ -283,7 +283,7 @@ begin
       intro hr', apply h2, exact (submodule.quotient.mk_eq_zero _).1 hr',
     let r'' := localization.of r',
     have hr'' : r'' ≠ 0,
-      intro hr'', apply hr', exact localization.eq_zero_of r' hr'',
+      intro hr'', apply hr', exact localization.fraction_ring.eq_zero_of r' hr'',
     show with_zero.map (value_group.to_Γ v)
       (valuation_field.canonical_valuation_v v
          (r'')) = some g,
@@ -367,8 +367,8 @@ lemma comap_on_frac {R : Type u₀} [integral_domain R]
     all_goals { intro H,
       erw [← mem_supp_iff, comap_supp, (supp _).eq_bot_of_prime] at H,
       simp at H,
-      replace H := eq_zero_of _ H,
-      refine localization.ne_zero_of_mem_non_zero_divisors _ H,
+      replace H := fraction_ring.eq_zero_of _ H,
+      refine fraction_ring.mem_non_zero_divisors_iff_ne_zero.mp _ H,
       apply val_prop _,
       apply_instance },
   end,
@@ -458,13 +458,13 @@ open localization
 
 def valfield_of_valfield_of_eq_supp (h : supp v₁ = supp v₂) :
   valuation_field v₁ → valuation_field v₂ :=
-localization.map (quot_of_quot_of_eq_supp h) (quot_of_quot_of_eq_supp_inj h)
+fraction_ring.map (quot_of_quot_of_eq_supp h) (quot_of_quot_of_eq_supp_inj h)
 
 lemma valfield_of_valfield_of_eq_supp_quotient_mk (h : supp v₁ = supp v₂) (r : R) :
   valfield_of_valfield_of_eq_supp h (of $ ideal.quotient.mk _ r) = of (ideal.quotient.mk _ r) :=
 begin
   unfold valfield_of_valfield_of_eq_supp,
-  rw localization.map_of,
+  rw fraction_ring.map_of,
   rw quot_of_quot_of_eq_supp_quotient_mk',
 end
 
@@ -475,7 +475,7 @@ instance (h : supp v₁ = supp v₂) : is_monoid_hom (valfield_of_valfield_of_eq
 is_semiring_hom.is_monoid_hom (valfield_of_valfield_of_eq_supp h)
 
 def valfield_equiv_valfield_of_eq_supp (h : supp v₁ = supp v₂) : valuation_field v₁ ≃r valuation_field v₂ :=
-localization.equiv_of_equiv (quot_equiv_quot_of_eq_supp h)
+fraction_ring.equiv_of_equiv (quot_equiv_quot_of_eq_supp h)
 
 instance valfield_equiv.is_field_hom (h : supp v₁ = supp v₂) :
   is_field_hom (valfield_equiv_valfield_of_eq_supp h).to_fun := by apply_instance

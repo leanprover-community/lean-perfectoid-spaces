@@ -1,5 +1,5 @@
-import topology.basic
-import topology.uniform_space.basic
+import topology.opens
+import topology.uniform_space.cauchy
 
 open topological_space
 

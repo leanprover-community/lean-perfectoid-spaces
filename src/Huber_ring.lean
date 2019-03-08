@@ -1,5 +1,5 @@
 import data.list.basic
-import topology.algebra.topological_structures
+import topology.algebra.ring
 import ring_theory.subring
 import group_theory.subgroup
 import tactic.tfae
@@ -56,7 +56,9 @@ begin
     { sorry },
     { sorry } },
   { sorry },
-  { --have := is_add_group_hom.image_add_subgroup subtype.val J.carrier,
+  { haveI : is_add_subgroup J.carrier := J.submodule_is_add_subgroup,
+    -- have := @is_add_group_hom.image_add_subgroup _ _ _ _
+    --  subtype.val (subtype.val.is_add_group_hom) J.carrier,
     apply add_group.closure_subset, }
 end
 

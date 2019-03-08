@@ -1,5 +1,5 @@
 import topology.basic
-import topology.algebra.topological_structures
+import topology.algebra.ring
 import algebra.group_power
 import ring_theory.subring
 import tactic.ring
@@ -10,7 +10,7 @@ variables {R : Type u} [comm_ring R] [topological_space R] [topological_ring R]
 
 /-- Wedhorn Definition 5.27 page 36 -/
 definition is_bounded (B : set R) : Prop :=
-∀ U ∈ (nhds (0 : R)).sets, ∃ V ∈ (nhds (0 : R)).sets, ∀ v ∈ V, ∀ b ∈ B, v*b ∈ U
+∀ U ∈ (nhds (0 : R)), ∃ V ∈ (nhds (0 : R)), ∀ v ∈ V, ∀ b ∈ B, v*b ∈ U
 
 definition is_power_bounded (r : R) : Prop := is_bounded (powers r)
 
@@ -64,7 +64,7 @@ lemma neg_mem : ∀ {a : R}, a ∈ power_bounded_subring R → -a ∈ power_boun
 λ a ha U hU,
 begin
   let Usymm := U ∩ {u | -u ∈ U},
-  let hUsymm : Usymm ∈ (nhds (0 : R)).sets :=
+  let hUsymm : Usymm ∈ (nhds (0 : R)) :=
   begin
     apply filter.inter_mem_sets hU,
     apply continuous.tendsto (topological_add_group.continuous_neg R) 0,

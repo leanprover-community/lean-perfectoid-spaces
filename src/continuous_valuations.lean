@@ -1,4 +1,4 @@
-import topology.algebra.topological_structures
+import topology.algebra.ring
 import valuation_spectrum
 
 universes u u₀ u₁ u₂ u₃
