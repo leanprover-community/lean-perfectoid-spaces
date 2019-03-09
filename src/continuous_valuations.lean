@@ -31,6 +31,16 @@ begin
 end
 
 -- jmc: Is this definition equivalent?
+-- KMB: I guess so. The extra edge cases are s₁ or s₂ in supp(v)
+-- and in these cases the modified definition is furthermore asking
+-- that the empty set and the whole ring are open, but
+-- both of these are always true.
+-- The value group is Frac(R/supp(v))^* hence everything in it
+-- is represented by s₂/s₁, so it boils down to checking that
+-- x * some(g) < some(h) iff x < some(h/g). This is true for x=0
+-- and also true for x=some(k) (it follows from the axiom)
+-- although I glanced through the API
+-- and couldn't find it.
 def is_continuous' (v : valuation R Γ) : Prop :=
 ∀ s₁ s₂, is_open {r : R | v r * v s₁ < v s₂}
 
@@ -62,9 +72,6 @@ variables {R : Type u₀} [comm_ring R] [topological_space R] [topological_ring 
 def is_continuous : Spv R → Prop := lift (@valuation.is_continuous _ _ _ _)
 
 end Spv
-
--- Now we can define what it means for `v : Spv R` to be continuous
--- using Spv.lift.
 
 -- KMB has not looked below this point.
 #exit
