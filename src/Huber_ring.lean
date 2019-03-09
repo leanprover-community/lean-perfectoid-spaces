@@ -22,7 +22,7 @@ structure Huber_ring.pair_of_definition :=
 (Ho   : is_open A₀)
 (J    : ideal A₀)
 (gen  : set A₀)
-(fin  : fintype gen)
+[fin  : fintype gen]
 (span : ideal.span gen = J)
 (top  : @is_ideal_adic _ (subset.comm_ring) _ (topological_subring A₀) J)
 
@@ -34,6 +34,9 @@ end
 namespace Huber_ring
 
 variables (A : Type u) [Huber_ring A]
+
+/- KMB: I am commenting this out because it doesn't compile, I didn't write it,
+and I don't know if we need it.
 
 /-- An alternative definition. This deduces the property. The constructor is given below.
 (Wedhorn, prop+def 6.1.) -/
@@ -57,16 +60,20 @@ begin
     { sorry } },
   { sorry },
   { haveI : is_add_subgroup J.carrier := J.submodule_is_add_subgroup,
-    -- have := @is_add_group_hom.image_add_subgroup _ _ _ _
-    --  subtype.val (subtype.val.is_add_group_hom) J.carrier,
+    --have := @is_add_group_hom.image_add_subgroup _ _ _ _
+    --subtype.val (subtype.val.is_add_group_hom) J.carrier,
     apply add_group.closure_subset, }
 end
+-/
 
 def is_ring_of_definition (A₀ : set A) : Prop :=
 ∃ pod : pair_of_definition A, A₀ = pod.A₀
 
 namespace is_ring_of_definition
 open list
+
+/- KMB: I am commenting this out because it doesn't compile, I didn't write it,
+and I don't know if we need it.
 
 -- Wedhorn, lemma 6.2.
 lemma tfae (A₀ : set A) [is_subring A₀] :
@@ -104,11 +111,12 @@ begin
     sorry },
   tfae_finish
 end
+-/
 
 end is_ring_of_definition
 
-
-namespace Huber_ring
+/- KMB : I am commenting this out because it doesn't compile, I didn't write it,
+and I don't know if we need it.
 
 -- Wedhorn, lemma 6.1.
 lemma tfae : (∃ U T : set A, T ⊆ U ∧ set.finite T ∧
@@ -151,20 +159,24 @@ begin
       { apply J.mul_mem_right, exact hx₀.left },
       { rw [hx, ← hx₀.right, ← hu.right], refl } } }
 end
+-/
 
 variables [Huber_ring A]
 
+-- KMB: The sorry here is Wedhorn 5.30, which uses definition 5.27 which I think isn't
+-- yet in the repo
 instance power_bounded_add_subgroup : is_add_subgroup (power_bounded_subring A) :=
 { zero_mem := power_bounded.zero_mem A,
-  add_mem := assume a b a_in b_in U U_nhds,begin
+  add_mem := assume a b a_in b_in U U_nhds, begin
     sorry
   end,
   neg_mem := λ a, power_bounded.neg_mem A }
 
 instance : is_subring (power_bounded_subring A) :=
-{..power_bounded.submonoid A, ..Huber_ring.power_bounded_add_subgroup}
+{..power_bounded.submonoid A, ..Huber_ring.power_bounded_add_subgroup A}
 
 instance nat.power_bounded: has_coe ℕ (power_bounded_subring A) := ⟨nat.cast⟩
 
 instance int.power_bounded: has_coe ℤ (power_bounded_subring A) := ⟨int.cast⟩
+
 end Huber_ring

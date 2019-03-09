@@ -179,6 +179,9 @@ begin
 end
 
 @[simp] lemma basic_open_eq_univ : basic_open (1 : A) (1 : A) = univ :=
+univ_subset_iff.1 $ λ v h, ⟨le_refl _,by erw valuation.map_one; exact one_ne_zero⟩
+
+/- Johan's original proof
 begin
   apply le_antisymm,
   { exact subset_univ _ },
@@ -188,7 +191,7 @@ begin
     erw [valuation.map_one],
     exact one_ne_zero, },
 end
-
+-/
 @[simp] lemma rational_open_eq_univ : rational_open (1 : A) {(1 : A)} = univ :=
 by simp
 
@@ -197,6 +200,8 @@ def rational_basis (A : Huber_pair) : set (set (Spa A)) :=
 
 attribute [instance] set.fintype_seq -- should move to mathlib
 
+-- Note: this lemma cannot be of any use to us because we're missing the
+-- assumption that <T> is open.
 lemma rational_basis.is_basis : topological_space.is_topological_basis (rational_basis A) :=
 begin
 split,
@@ -205,8 +210,7 @@ split,
   rw rational_open_add_s at H₁ H₂,
   split,
   { simp only [H₁, H₂, rational_open_inter, set.mem_insert_iff, true_or, eq_self_iff_true],
-    resetI, -- adds hfin₁ and hfin₂ to type class system
-    exact ⟨_, _, infer_instance, rfl⟩ },
+    exactI ⟨_, _, infer_instance, rfl⟩ },
   { exact ⟨hv, subset.refl _⟩ } },
 split,
 { apply le_antisymm,
@@ -240,6 +244,8 @@ def presheaf.aux (s : A) (T : set A) := localization.away s
 instance (s : A) (T : set A) : comm_ring (presheaf.aux s T) :=
 by delta presheaf.aux; apply_instance
 
+/- This doesn't compile so I commented it out.
+
 -- Definition of A\left(\frac T s\right) as a topological ring
 def presheaf.topology (s : A) (T : set A) [Hfin : fintype T]
   (Hopen : _root_.is_open ((ideal.span T) : set A)) :
@@ -259,10 +265,11 @@ adic_topology (I * D)
   sorry
 end-/
 
+
 def presheaf (s : A) (T : set A) [Hfin : fintype T]
   (Hopen : _root_.is_open ((ideal.span T) : set A)) :=
 sorry -- ring_completion presheaf.aux s T
-
+-/
 end rational_open
 
 end Spa
