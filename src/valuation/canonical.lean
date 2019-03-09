@@ -42,7 +42,8 @@ it's easier for us because it's in a smaller universe).
 
 TODO: Do we ever actually use 1.27 now? KMB has left part of it sorried.
 
-TODO: Do we need any of the dead code after #exit? KMB suspects not.
+TODO: Do we need any of the dead code commented out at the end of
+the file? KMB suspects not.
 This dead code is all about the workaround we had for getting down
 to R's universe from Gamma's universe before Johan's idea of using
 the canonical valuation.
