@@ -2,30 +2,32 @@
 import data.nat.prime
 import algebra.group_power
 import topology.algebra.ring
+import topology.opens
 
 import for_mathlib.prime
 import for_mathlib.is_cover
--- import for_mathlib.presheaves
--- import for_mathlib.topology
-import topology.basic
+
 import continuous_valuations
 import Spa
 import Huber_pair
+
+/- An adic space is...
+
+Vpre: p76
+
+-/
 
 universe u
 
 open nat function
 open topological_space
 
---definition 𝓞_X (A : Huber_pair) : presheaf_of_rings (Spa A) := sorry
--- it's a presheaf of complete topological rings on all opens (defined on rational opens
--- first and then extended to all via proj limits) -- Wedhorn p75
--- most of that would not be in the adic_space file.
-
---structure 𝓥pre :=
---(X : sorry)
---(𝓞X : sorry)
---(v : sorry)
+structure 𝓥pre (X : Type*) [topological_space X]
+-- :=
+--(𝓞X : presheaf of rings)
+--(complete : 𝓞X U is a complete topological ring)
+--(local : stalks are local)
+--(val : valuation on each stalk with support the max ideal)
 
 /-
 We denote by 𝓥pre the category of tuples X = (X, O X , (v x ) x∈X ), where
