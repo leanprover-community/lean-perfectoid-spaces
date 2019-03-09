@@ -8,11 +8,11 @@ The end-product is `instance : topological_ring (adic_ring I)`.
 import tactic.ring
 import data.pnat
 import ring_theory.ideal_operations
-import topology.algebra.group
+import topology.algebra.uniform_group topology.algebra.ring
 
 open filter set
 
-variables {R : Type*} [comm_ring R] 
+variables {R : Type*} [comm_ring R]
 
 namespace filter
 -- This will be the filter `nhds 0` in our adic-ring
@@ -21,16 +21,16 @@ def of_ideal (I : ideal R): filter R :=
 { sets := {s : set R | ∃ n : ℕ, (I^n).carrier ⊆ s},
   univ_sets := ⟨0, by simp⟩,
   sets_of_superset := assume s t ⟨n, hn⟩ st, ⟨n, subset.trans hn st⟩,
-  inter_sets := assume s t ⟨n, hn⟩ ⟨m, hm⟩, 
-    have (I ^ (n + m)).carrier ⊆ (I^n).carrier ∩ (I^m).carrier, 
-    by rw pow_add ; exact ideal.mul_le_inf, 
+  inter_sets := assume s t ⟨n, hn⟩ ⟨m, hm⟩,
+    have (I ^ (n + m)).carrier ⊆ (I^n).carrier ∩ (I^m).carrier,
+    by rw pow_add ; exact ideal.mul_le_inf,
     ⟨n + m, subset.trans this (inter_subset_inter hn hm)⟩ }
 
-lemma mem_of_ideal_sets {I : ideal R} (s : set R) : 
-  s ∈ (filter.of_ideal I).sets ↔ ∃ n : ℕ, (I^n).carrier ⊆ s := iff.rfl
+lemma mem_of_ideal_sets {I : ideal R} (s : set R) :
+  s ∈ filter.of_ideal I ↔ ∃ n : ℕ, (I^n).carrier ⊆ s := iff.rfl
 
-lemma mem_of_ideal_sets' {I : ideal R} (s : set R) : 
-  s ∈ (filter.of_ideal I).sets ↔ ∃ n > 0, (I^n).carrier ⊆ s := 
+lemma mem_of_ideal_sets' {I : ideal R} (s : set R) :
+  s ∈ filter.of_ideal I ↔ ∃ n > 0, (I^n).carrier ⊆ s :=
 begin
   split,
   { rintros ⟨n, H⟩,
@@ -53,8 +53,8 @@ begin
     simp [mem_of_ideal_sets, mem_Union, mem_principal_sets],
     exact iff.refl _ },
   { rintros n m,
-    have : (I ^ (n + m)).carrier ⊆ (I^n).carrier ∩ (I^m).carrier, 
-    by rw pow_add ; exact ideal.mul_le_inf, 
+    have : (I ^ (n + m)).carrier ⊆ (I^n).carrier ∩ (I^m).carrier,
+    by rw pow_add ; exact ideal.mul_le_inf,
     cases (subset_inter_iff.1 this),
     use n+m,
     split ; intros U U_sub ; rw mem_principal_sets at * ;
@@ -77,30 +77,30 @@ def add_group_with_zero_nhd.of_ideal (I : ideal R) : add_group_with_zero_nhd R :
            end,
   ..‹comm_ring R›}
 
-def adic_topology (I : ideal R) : topological_space R :=  
+def adic_topology (I : ideal R) : topological_space R :=
   @add_group_with_zero_nhd.topological_space R (add_group_with_zero_nhd.of_ideal I)
 
 def adic_ring (I : ideal R) := R
 
 namespace adic_ring
 variable {I : ideal R}
-
+open add_group_with_zero_nhd
 instance : comm_ring (adic_ring I) := by unfold adic_ring ; apply_instance
 instance : topological_space (adic_ring I) := adic_topology I
 
-lemma nhds_zero_eq (I : ideal R) : (nhds (0 : adic_ring I)).sets = {s : set R | ∃ n : ℕ, (I^n).carrier ⊆ s} := 
+lemma mem_nhds_zero_iff (I : ideal R) (s : set R) :
+  s ∈ nhds (0 : adic_ring I) ↔ ∃ n : ℕ, (I^n).carrier ⊆ s :=
 begin
-  rw add_group_with_zero_nhd.nhds_eq,
+  rw nhds_eq,
   dsimp [adic_ring],
-  ext s,
-  simp [filter.mem_of_ideal_sets], 
+  simp [filter.mem_of_ideal_sets],
   finish,
 end
 
-lemma nhds_eq (I : ideal R) {s : set (adic_ring I)} {a : adic_ring I}: 
-  s ∈ (nhds a).sets ↔ ∃ n : ℕ, (λ b, b + a) '' (I^n).carrier ⊆ s :=
+lemma nhds_eq (I : ideal R) {s : set (adic_ring I)} {a : adic_ring I}:
+  s ∈ nhds a ↔ ∃ n : ℕ, (λ b, b + a) '' (I^n).carrier ⊆ s :=
 begin
-  rw [add_group_with_zero_nhd.nhds_eq, mem_map, ←add_group_with_zero_nhd.nhds_zero_eq_Z, nhds_zero_eq],
+  rw [nhds_eq, mem_map, ←nhds_zero_eq_Z, mem_nhds_zero_iff],
   split ;
   { rintros ⟨n, h⟩,
     use n,
@@ -124,7 +124,7 @@ begin
   have key : (x₀*b + y₀*a + a*b) + x₀*y₀ = x*y, by rw [←x₀a, ←y₀b] ; ring,
   use x₀*b + y₀*a + a*b,
   exact
-  ⟨J.add_mem 
+  ⟨J.add_mem
      (J.add_mem (J.mul_mem_left b_in) (J.mul_mem_left a_in))
      (J.mul_mem_left b_in),
    key⟩,
