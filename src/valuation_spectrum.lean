@@ -2,6 +2,36 @@ import topology.order
 import group_theory.quotient_group
 import valuation.canonical
 
+/- Valuation Spectrum (Spv)
+
+The API for the valuation spectrum of a commutative ring. Normally defined as
+"the equivalence classes of valuations", there are set-theoretic issues.
+These issues are easily solved by noting that two valuations are equivalent
+if and only if they induce the same relation on R, where the relation
+attacted to a valuation sends (r,s) to v r ≤ v s.
+
+Our definition of Spv is currently the predicates which come from a
+valuation. There is another approach though: Prop 2.20 (p16) of
+https://homepages.uni-regensburg.de/~maf55605/contin_valuation.pdf
+classifies the relations which come from valuations as those satisfying
+some axioms. Here's why such a theorem must exist: given a relation coming
+from a valuation, we can reconstruct the support of the valuation (v r ≤ v 0),
+the relation on R / support coming from `on_quot v`, the relation on
+Frac(R/supp) coming from `on_frac v`, the things of valuation 1 in this
+field, and hence the value group of the valuation. The induced canonical
+valuation is a valuation we seek. This argument only uses a finite number of
+facts about the inequality, and so the theorem is that an inequality comes
+from a valuation if and only if these facts are satisfied. I'll refer to
+this argument (which currently is not in the repo) as "the 2.20 trick".
+Because it's not in the repo, some of our constructions are noncomputable
+(and could be made computable).
+
+The dead code after #exit is results which would be useful if we were
+to try and make things computable. Note that `out` is basically never
+computable, but `lift` often is.
+
+-/
+
 universes u u₀ u₁ u₂ u₃
 
 definition Spv (R : Type u₀) [comm_ring R] :=
@@ -12,6 +42,7 @@ variables {R : Type u₀} [comm_ring R] {v : Spv R}
 
 local notation r `≤[`v`]` s := v.1 r s
 
+/- Spv R is morally a quotient, so we start by giving it a quotient-like interface -/
 namespace Spv
 open valuation
 
@@ -19,17 +50,21 @@ variables {Γ  : Type u}  [linear_ordered_comm_group Γ]
 variables {Γ₁ : Type u₁} [linear_ordered_comm_group Γ₁]
 variables {Γ₂ : Type u₂} [linear_ordered_comm_group Γ₂]
 
+-- The work is embedded here with `canonical_valuation_is_equiv v` etc.
 definition mk (v : valuation R Γ) : Spv R :=
 ⟨λ r s, v r ≤ v s,
   ⟨value_group v, by apply_instance, canonical_valuation v, canonical_valuation_is_equiv v⟩⟩
 
 @[simp] lemma mk_val (v : valuation R Γ) : (mk v).val = λ r s, v r ≤ v s := rfl
 
+-- This definition uses choice. We could avoid it if we used the 2.20 trick.
 definition out_Γ (v : Spv R) : Type u₀ := classical.some v.2
 
+-- This instance could be made computable following the 2.20 trick.
 noncomputable instance (v : Spv R) : linear_ordered_comm_group (out_Γ v) :=
 classical.some $ classical.some_spec v.2
 
+-- This instance could be made computable following the 2.20 trick
 noncomputable definition out (v : Spv R) : valuation R (out_Γ v) :=
 classical.some $ classical.some_spec $ classical.some_spec v.2
 
@@ -44,6 +79,7 @@ end
 lemma out_mk (v : valuation R Γ) : (out (mk v)).is_equiv v :=
 classical.some_spec (classical.some_spec (classical.some_spec (mk v).2))
 
+-- This definition could be made computable if we used the 2.20 trick
 noncomputable def lift {X}
   (f : Π ⦃Γ₀ : Type u₀⦄ [linear_ordered_comm_group Γ₀], valuation R Γ₀ → X) (v : Spv R) : X :=
 f (out v)
