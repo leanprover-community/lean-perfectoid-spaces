@@ -216,6 +216,8 @@ variable (R)
 -- rings e.g. non-archimedean rings.
 definition power_bounded_subring := {r : R | is_power_bounded r}
 
+variable {R}
+
 namespace power_bounded
 
 instance : has_coe (power_bounded_subring R) R := ⟨subtype.val⟩
@@ -224,15 +226,15 @@ lemma zero_mem : (0 : R) ∈ power_bounded_subring R := power_bounded.zero
 
 lemma one_mem : (1 : R) ∈ power_bounded_subring R := power_bounded.one
 
-lemma add_mem (h : nonarchimedean R) {a b : R} (ha : a ∈ power_bounded_subring R)
+lemma add_mem (h : nonarchimedean R) ⦃a b : R⦄ (ha : a ∈ power_bounded_subring R)
   (hb : b ∈ power_bounded_subring R) : a + b ∈ power_bounded_subring R :=
 power_bounded.add h a b ha hb
 
 lemma mul_mem :
-∀ {a b : R}, a ∈ power_bounded_subring R → b ∈ power_bounded_subring R → a * b ∈ power_bounded_subring R :=
+∀ ⦃a b : R⦄, a ∈ power_bounded_subring R → b ∈ power_bounded_subring R → a * b ∈ power_bounded_subring R :=
 power_bounded.mul
 
-lemma neg_mem : ∀ {a : R}, a ∈ power_bounded_subring R → -a ∈ power_bounded_subring R :=
+lemma neg_mem : ∀ ⦃a : R⦄, a ∈ power_bounded_subring R → -a ∈ power_bounded_subring R :=
 λ a ha U hU,
 begin
   let Usymm := U ∩ {u | -u ∈ U},
@@ -266,8 +268,18 @@ begin
 end
 
 instance submonoid : is_submonoid (power_bounded_subring R) :=
-{ one_mem := power_bounded.one_mem R,
-  mul_mem := λ a b, power_bounded.mul_mem R }
+{ one_mem := power_bounded.one_mem,
+  mul_mem := power_bounded.mul_mem }
+
+instance (hR : nonarchimedean R) : is_add_subgroup (power_bounded_subring R) :=
+{ zero_mem := zero_mem,
+  add_mem := add_mem hR,
+  neg_mem := neg_mem  }
+
+instance (hR : nonarchimedean R) : is_subring (power_bounded_subring R) :=
+{ ..power_bounded.submonoid,
+  ..power_bounded.is_add_subgroup hR
+}
 
 definition is_uniform : Prop := is_bounded (power_bounded_subring R)
 
