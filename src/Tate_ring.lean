@@ -24,13 +24,12 @@ begin
   exact ⟨V₁ ∩ V₂, filter.inter_mem_sets H₁ H₂, assume v w ⟨hv, _⟩ ⟨_, hw⟩, @H (v, w) ⟨hv, hw⟩⟩
 end
 
-def topologically_nilpotent (r : R) : Prop :=
-∀ U ∈ (nhds (0 :R)).sets, ∃ N : ℕ, ∀ n : ℕ, n > N → r^n ∈ U
 
-def is_pseudo_uniformizer (ϖ : units R) : Prop := topologically_nilpotent ϖ.val
+
+def is_pseudo_uniformizer (ϖ : units R) : Prop := is_topologically_nilpotent ϖ.val
 
 variable (R)
-def pseudo_uniformizer := { ϖ : units R // topologically_nilpotent ϖ.val}
+def pseudo_uniformizer := { ϖ : units R // is_topologically_nilpotent ϖ.val}
 
 
 instance pseudo_unif.power_bounded: has_coe (pseudo_uniformizer R) (power_bounded_subring R) :=
