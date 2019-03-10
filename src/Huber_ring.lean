@@ -88,7 +88,7 @@ begin
   { rintros ⟨hl, hr⟩,
     refine ⟨hl, _⟩,
     intros U hU,
-    rw nhds_sets at hU,
+    rw mem_nhds_sets_iff at hU,
     rcases hU with ⟨U', U'_sub, ⟨U'_open, U'_0⟩⟩,
     rcases hr with ⟨J, h1, h2⟩,
     have H : (∃ (n : ℕ), (J^n).carrier ⊆ {a : A₀ | a.val ∈ U'}) :=
