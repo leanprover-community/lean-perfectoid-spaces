@@ -4,6 +4,8 @@ import algebra.group_power
 import ring_theory.subring
 import tactic.ring
 
+import for_mathlib.submonoid
+
 import nonarchimedean_ring
 
 /- The theory of topologically nilpotent, bounded, and power-bounded
@@ -36,7 +38,10 @@ definition is_bounded (B : set R) : Prop :=
 
 namespace bounded
 
--- TODO : PR to mathlib (branch kmb-top-monoid; compiling)
+lemma subset {B C : set R} (h : B ⊆ C) (hC : is_bounded C) : is_bounded B :=
+λ U hU, exists.elim (hC U hU) $ λ V ⟨hV, hC⟩, ⟨V, hV, λ v hv b hb, hC v hv b $ h hb⟩
+
+-- TODO : this is PR 809 to mathlib, remove when it hits
 lemma is_add_submonoid.mem_nhds_zero {G : Type*} [topological_space G] [add_monoid G]
   [topological_add_monoid G] (H : set G) [is_add_submonoid H] (hH : is_open H) :
   H ∈ nhds (0 : G) :=
@@ -48,9 +53,7 @@ begin
   exact is_add_submonoid.zero_mem _,
 end
 
-set_option trace.simplify.rewrite true
-
-lemma span_bounded_of_bounded (hR : nonarchimedean R) (T : set R)
+lemma add_group.closure (hR : nonarchimedean R) (T : set R)
   (hT : is_bounded T) : is_bounded (add_group.closure T) :=
 begin
   intros U hU,
@@ -91,20 +94,20 @@ end bounded
 
 definition is_power_bounded (r : R) : Prop := is_bounded (powers r)
 
-definition is_power_bounded_subset {T : set R} : Prop := is_bounded (monoid.closure T)
+definition is_power_bounded_subset (T : set R) : Prop := is_bounded (monoid.closure T)
 
 namespace power_bounded
 
-protected lemma zero : is_power_bounded (0 : R) :=
+lemma zero : is_power_bounded (0 : R) :=
 λ U hU, ⟨U,
 begin
   split, {exact hU},
   intros v hv b H,
-  cases H with n H,
+  induction H with n H,
   induction n ; { simp [H.symm, pow_succ, mem_of_nhds hU], try {assumption} }
 end⟩
 
-protected lemma one : is_power_bounded (1 : R) :=
+lemma one : is_power_bounded (1 : R) :=
 λ U hU, ⟨U,
 begin
   split, {exact hU},
@@ -113,8 +116,35 @@ begin
   simpa [H.symm]
 end⟩
 
--- need mul for add
-protected lemma mul (a b : R)
+lemma singleton (r : R) : is_power_bounded r ↔ is_power_bounded_subset ({r} : set R) :=
+begin
+  unfold is_power_bounded,
+  unfold is_power_bounded_subset,
+  rw monoid.closure_singleton,
+end
+
+lemma subset {B C : set R} (h : B ⊆ C) (hC : is_power_bounded_subset C) :
+  is_power_bounded_subset B :=
+λ U hU, exists.elim (hC U hU) $
+  λ V ⟨hV, hC⟩, ⟨V, hV, λ v hv b hb, hC v hv b $ monoid.closure_mono h hb⟩
+
+
+lemma union {S T : set R} (hS : is_power_bounded_subset S) (hT : is_power_bounded_subset T) :
+  is_power_bounded_subset (S ∪ T) :=
+begin
+  intros U hU,
+  rcases hT U hU with ⟨V, hV, hVU⟩,
+  rcases hS V hV with ⟨W, hW, hWV⟩,
+  use W, use hW, -- this is wrong
+  intros v hv b hb,
+  rw monoid.mem_closure_union_iff at hb,
+  rcases hb with ⟨y, hy, z, hz, hyz⟩,
+  rw [←hyz, ←mul_assoc],
+  apply hVU _ _ _ hz,
+  exact hWV _ hv _ hy,
+end
+
+lemma mul (a b : R)
   (ha : is_power_bounded a) (hb : is_power_bounded b) :
   is_power_bounded (a * b) :=
 λ U U_nhd,
@@ -136,14 +166,48 @@ begin
       refl } }
 end
 
-protected lemma add (hR : nonarchimedean R) (a b : R)
-  (ha : is_power_bounded a) (hb : is_power_bounded b) :
-  is_power_bounded (a + b) :=
-λ U U_nhd,
+lemma add_group.closure (hR : nonarchimedean R) {T : set R}
+  (hT : is_power_bounded_subset T) : is_power_bounded_subset (add_group.closure T) :=
 begin
-  sorry
+  refine bounded.subset _ (bounded.add_group.closure hR _ hT),
+  intros a ha,
+  apply monoid.in_closure.rec_on ha,
+  { apply add_group.closure_mono,
+    exact monoid.subset_closure
+  },
+  { apply add_group.mem_closure,
+    exact monoid.in_closure.one _
+  },
+  { intros a b ha hb Ha Hb,
+    haveI : is_subring (add_group.closure (monoid.closure T)) := ring.is_subring,
+    exact is_submonoid.mul_mem Ha Hb,
+  }
 end
 
+lemma monoid.closure (hR : nonarchimedean R) {T : set R}
+  (hT : is_power_bounded_subset T) : is_power_bounded_subset (monoid.closure T) :=
+begin
+  refine bounded.subset _ hT,
+  apply monoid.closure_subset,
+  refl,
+end
+
+lemma ring.closure (hR : nonarchimedean R) (T : set R)
+  (hT : is_power_bounded_subset T) : is_power_bounded_subset (ring.closure T) :=
+add_group.closure hR $ monoid.closure hR hT
+
+lemma add (hR : nonarchimedean R) (a b : R)
+  (ha : is_power_bounded a) (hb : is_power_bounded b) :
+  is_power_bounded (a + b) :=
+begin
+  rw singleton at ha hb ⊢,
+  have hab := add_group.closure hR (union ha hb),
+  refine subset _ hab,
+  rw set.singleton_subset_iff,
+  apply is_add_submonoid.add_mem;
+    apply add_group.subset_closure;
+    simp
+end
 
 end power_bounded
 
@@ -159,6 +223,10 @@ instance : has_coe (power_bounded_subring R) R := ⟨subtype.val⟩
 lemma zero_mem : (0 : R) ∈ power_bounded_subring R := power_bounded.zero
 
 lemma one_mem : (1 : R) ∈ power_bounded_subring R := power_bounded.one
+
+lemma add_mem (h : nonarchimedean R) {a b : R} (ha : a ∈ power_bounded_subring R)
+  (hb : b ∈ power_bounded_subring R) : a + b ∈ power_bounded_subring R :=
+power_bounded.add h a b ha hb
 
 lemma mul_mem :
 ∀ {a b : R}, a ∈ power_bounded_subring R → b ∈ power_bounded_subring R → a * b ∈ power_bounded_subring R :=
