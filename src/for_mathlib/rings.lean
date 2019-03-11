@@ -6,6 +6,12 @@ universes u u₁ u₂ v
 namespace ideal
 open function
 
+lemma map_span {R : Type u} [comm_ring R] {S : Type v} [comm_ring S]
+  (f : R → S) [is_ring_hom f] (X : set R) :
+  map f (span X) = span (f '' X) :=
+le_antisymm (map_le_iff_le_comap.2 $ span_le.2 $ λ x hx, subset_span $ set.mem_image_of_mem f hx) $
+  span_mono $ set.image_subset _ $ subset_span
+
 @[simp] lemma map_quotient_self {R : Type u} [comm_ring R] (I : ideal R) :
   ideal.map (ideal.quotient.mk I) I = ⊥ :=
 lattice.eq_bot_iff.2 $ ideal.map_le_iff_le_comap.2 $

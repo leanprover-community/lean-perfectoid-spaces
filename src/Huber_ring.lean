@@ -6,6 +6,7 @@ import data.padics
 import ring_theory.localization
 
 import for_mathlib.topological_rings
+import for_mathlib.rings
 import power_bounded
 
 -- f-adic rings are called Huber rings by Scholze.
@@ -79,12 +80,11 @@ begin
   use away.of_subring h s T '' gen,
   split,
   { apply_instance },
-  { have := @le_antisymm,
-    sorry }
+  { rw [← @ideal.map_span _ _ _ _ _ (away.of_subring.is_ring_hom' h s T) _, span],
+    refl }
 end
 
 end pair_of_definition
-
 
 variables {A : Type u} [Huber_ring A]
 
