@@ -10,6 +10,8 @@ import data.pnat
 import ring_theory.ideal_operations
 import topology.algebra.uniform_group topology.algebra.ring
 
+import for_mathlib.topology
+
 open filter set
 
 variables {R : Type*} [comm_ring R]
@@ -172,7 +174,15 @@ begin
       erw ← adic_ring.mem_nhds_zero_iff,
       exact hs, }, },
   { rintro ⟨H₁, H₂⟩,
-    sorry }
+    apply topological_add_group.ext,
+    { apply @topological_ring.to_topological_add_group },
+    { apply @topological_ring.to_topological_add_group (J.adic_ring) },
+    { ext s,
+      split; intro H,
+      { exact (adic_ring.mem_nhds_zero_iff J s).mpr (H₂ s H) },
+      { rcases (adic_ring.mem_nhds_zero_iff J s).mp H with ⟨n, hn⟩,
+        rw mem_nhds_sets_iff,
+        refine ⟨_, hn, H₁ n, (J^n).zero_mem⟩ } } }
 end
 
 variables (R) [topological_space R] [topological_ring R]
