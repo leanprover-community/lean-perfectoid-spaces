@@ -3,6 +3,7 @@ import topology.algebra.ring
 import ring_theory.subring
 import group_theory.subgroup
 import data.padics
+import ring_theory.localization
 
 import for_mathlib.topological_rings
 import power_bounded
@@ -11,7 +12,9 @@ import power_bounded
 -- Topological ring A contains on open subring A0 such that the subspace topology on A0 is
 -- I-adic, where I is a finitely generated ideal of A0 .
 
-universe u
+local attribute [instance, priority 0] classical.prop_decidable
+
+universes u v
 
 section
 variables (A : Type u) [comm_ring A] [topological_space A] [topological_ring A]
@@ -30,6 +33,58 @@ class Huber_ring (A : Type u) extends comm_ring A, topological_space A, topologi
 end
 
 namespace Huber_ring
+
+namespace pair_of_definition
+open localization
+
+variables {A : Type u} [comm_ring A] [topological_space A] [topological_ring A]
+
+def away_subring (h : pair_of_definition A) (s : A) (T : set A) :
+  set (away s) :=
+let s_inv : away s := ((to_units ⟨s, ⟨1, by simp⟩⟩)⁻¹ : units (away s)) in
+let E : set (away s) := {x | ∃ t ∈ T, x = of t * s_inv } in
+ring.closure (of '' h.A₀ ∪ E)
+
+instance away_subring.is_subring (h : pair_of_definition A) (s : A) (T : set A) :
+  is_subring (away_subring h s T) :=
+ring.is_subring
+
+instance (h : pair_of_definition A) : is_subring h.A₀ := h.Hr
+
+def away.of_subring (h : pair_of_definition A) (s : A) (T : set A) :
+  h.A₀ → away_subring h s T :=
+λ a, ⟨of a.val, ring.mem_closure $ or.inl ⟨_, a.property, rfl⟩⟩
+
+instance away.of_subring.is_ring_hom (h : pair_of_definition A) (s : A) (T : set A) :
+  is_ring_hom (away.of_subring h s T) :=
+{ map_one := rfl,
+  map_mul := λ a₁ a₂, subtype.val_injective $ of_mul _ _ _ _,
+  map_add := λ a₁ a₂, subtype.val_injective $ of_add _ _ _ _, }
+
+def away.of_subring.is_ring_hom' (h : pair_of_definition A) (s : A) (T : set A) :
+  @is_ring_hom _ _ (comm_ring.to_ring _) (comm_ring.to_ring _) (away.of_subring h s T) :=
+{ map_one := rfl,
+  map_mul := λ a₁ a₂, subtype.val_injective $ of_mul _ _ _ _,
+  map_add := λ a₁ a₂, subtype.val_injective $ of_add _ _ _ _, }
+
+def away_ideal (h : pair_of_definition A) (s : A) (T : set A) :
+  ideal (away_subring h s T) :=
+@ideal.map _ _ _ _ (away.of_subring h s T) (away.of_subring.is_ring_hom' h s T) h.J
+
+lemma away_ideal_fin (h : pair_of_definition A) (s : A) (T : set A) :
+  ∃ (gen : set (away_subring h s T)) (fin : fintype gen), ideal.span gen = away_ideal h s T :=
+begin
+  rcases h.fin with ⟨gen, fin, span⟩,
+  resetI,
+  use away.of_subring h s T '' gen,
+  split,
+  { apply_instance },
+  { have := @le_antisymm,
+    sorry }
+end
+
+end pair_of_definition
+
 
 variables {A : Type u} [Huber_ring A]
 
@@ -63,7 +118,6 @@ begin
   apply nonarchimedean_of_nonarchimedean_subring A₀ H₂,
   exact Htop.nonarchimedean,
 end
-
 
 
 instance (p : ℕ) [p.prime] : Huber_ring (ℚ_[p]) :=
@@ -105,53 +159,6 @@ begin
     --have := @is_add_group_hom.image_add_subgroup _ _ _ _
     --subtype.val (subtype.val.is_add_group_hom) J.carrier,
     apply add_group.closure_subset, }
-end
--/
-
-
-/- KMB : I am commenting this out because it doesn't compile, I didn't write it,
-and I don't know if we need it.
-
--- Wedhorn, lemma 6.1.
-lemma tfae : (∃ U T : set A, T ⊆ U ∧ set.finite T ∧
-(filter.generate {U' : set A | ∃ n : pnat, U' = {x | ∃ y ∈ U, y^(n:ℕ) = x}} = (nhds 0)) ∧
-{y : A | ∃ (t ∈ T) (u ∈ U), y = t * u} = {y : A | ∃ (u₁ ∈ U) (u₂ ∈ U), y = u₁ * u₂} ∧
-{y : A | ∃ (t ∈ U) (u ∈ U), y = t * u} ⊆ U) ↔
-(∃ (A₀ : set A) [h : is_subring A₀], by haveI := h; exact is_ring_of_definition A₀) :=
-begin
-  split,
-  { rintro ⟨U, T, Tsub, Tfin, hnhds, hTU, hU2⟩,
-    let W := add_group.closure U,
-    have hU : is_open U,
-    { -- is this provable, or should it have been an assumption?
-      sorry },
-    have hW : is_open W,
-    { sorry },
-    existsi (add_group.closure (W ∪ {1})),
-    split,
-    { split,
-      sorry,
-      sorry },
-    { sorry } },
-  { rintro ⟨A₀, hA₀, A₀_open, J, gen, ⟨hgen₁, hgen₂⟩, h1, h2⟩,
-    haveI := hA₀,
-    use [subtype.val '' J.carrier, subtype.val '' gen],
-    have gensubJ : subtype.val '' gen ⊆ subtype.val '' J.carrier,
-    { apply set.image_subset,
-      rw ← hgen₂,
-      convert ideal.subset_span, },
-    refine ⟨gensubJ, set.finite_image _ hgen₁, _, _, _⟩,
-    { apply le_antisymm,
-      { sorry },
-      { sorry } },
-    { ext x, split;
-      rintros ⟨t, ht, u, hu, H⟩,
-      { exact ⟨t, (gensubJ ht), u, hu, H⟩ },
-      sorry },
-    { rintros x ⟨x₀val, ⟨x₀, hx₀⟩, ⟨uval, ⟨u, hu⟩, hx⟩⟩,
-      refine ⟨x₀ * u, _, _⟩,
-      { apply J.mul_mem_right, exact hx₀.left },
-      { rw [hx, ← hx₀.right, ← hu.right], refl } } }
 end
 -/
 
