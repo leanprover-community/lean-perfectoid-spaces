@@ -4,6 +4,7 @@ import continuous_valuations
 import Huber_pair
 
 import for_mathlib.adic_topology
+import for_mathlib.data.set.finite
 
 universes u₁ u₂ u₃
 
@@ -181,22 +182,12 @@ end
 @[simp] lemma basic_open_eq_univ : basic_open (1 : A) (1 : A) = univ :=
 univ_subset_iff.1 $ λ v h, ⟨le_refl _,by erw valuation.map_one; exact one_ne_zero⟩
 
-/- Johan's original proof
-begin
-  apply le_antisymm,
-  { exact subset_univ _ },
-  { intros v h,
-    split,
-    { exact le_refl _ },
-    erw [valuation.map_one],
-    exact one_ne_zero, },
-end
--/
 @[simp] lemma rational_open_eq_univ : rational_open (1 : A) {(1 : A)} = univ :=
 by simp
 
 def rational_basis (A : Huber_pair) : set (set (Spa A)) :=
-{U : set (Spa A) | ∃ {s : A} {T : set A} {h : fintype T}, U = rational_open s T }
+{U : set (Spa A) | ∃ {s : A} {T : set A} {hfin : fintype T} {hopen : is_open (ideal.span T).carrier},
+                   U = rational_open s T }
 
 attribute [instance] set.fintype_seq -- should move to mathlib
 
@@ -205,12 +196,14 @@ attribute [instance] set.fintype_seq -- should move to mathlib
 lemma rational_basis.is_basis : topological_space.is_topological_basis (rational_basis A) :=
 begin
 split,
-{ rintros U₁ ⟨s₁, T₁, hfin₁, H₁⟩ U₂ ⟨s₂, T₂, hfin₂, H₂⟩ v hv,
+{ rintros U₁ ⟨s₁, T₁, hfin₁, hopen₁, H₁⟩ U₂ ⟨s₂, T₂, hfin₂, hopen₂, H₂⟩ v hv,
   use U₁ ∩ U₂,
   rw rational_open_add_s at H₁ H₂,
   split,
   { simp only [H₁, H₂, rational_open_inter, set.mem_insert_iff, true_or, eq_self_iff_true],
-    exactI ⟨_, _, infer_instance, rfl⟩ },
+    resetI,
+    refine ⟨_, _, infer_instance, _, rfl⟩,
+    sorry },
   { exact ⟨hv, subset.refl _⟩ } },
 split,
 { apply le_antisymm,

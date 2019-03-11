@@ -5,6 +5,8 @@ import ring_theory.subring
 import tactic.ring
 
 import for_mathlib.submonoid
+import for_mathlib.adic_topology
+import for_mathlib.topological_rings
 
 import nonarchimedean_ring
 
@@ -284,3 +286,39 @@ instance (hR : nonarchimedean R) : is_subring (power_bounded_subring R) :=
 definition is_uniform : Prop := is_bounded (power_bounded_subring R)
 
 end power_bounded
+
+section
+open set
+
+lemma is_adic.is_bounded (h : is_adic R) : is_bounded (univ : set R) :=
+begin
+  intros U hU,
+  rw mem_nhds_sets_iff at hU,
+  rcases hU with ⟨V, hV₁, ⟨hV₂, h0⟩⟩,
+  tactic.unfreeze_local_instances,
+  rcases h with ⟨J, hJ⟩,
+  rw is_ideal_adic_iff at hJ,
+  have H : (∃ (n : ℕ), (J^n).carrier ⊆ V) :=
+  begin
+    apply hJ.2,
+    exact mem_nhds_sets hV₂ h0,
+  end,
+  rcases H with ⟨n, hn⟩,
+  use (J^n).carrier, -- the key step
+  split,
+  { exact mem_nhds_sets (hJ.1 n) (J^n).zero_mem },
+  { rintros a ha b hb,
+    apply hV₁,
+    exact hn ((J^n).mul_mem_right ha), }
+end
+
+lemma is_bounded_subset (S₁ S₂ : set R) (h : S₁ ⊆ S₂) (H : is_bounded S₂) : is_bounded S₁ :=
+begin
+  intros U hU,
+  rcases H U hU with ⟨V, hV₁, hV₂⟩,
+  use [V, hV₁],
+  intros v hv b hb,
+  exact hV₂ _ hv _ (h hb),
+end
+
+end

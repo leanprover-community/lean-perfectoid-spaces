@@ -2,7 +2,7 @@ import data.list.basic
 import topology.algebra.ring
 import ring_theory.subring
 import group_theory.subgroup
-import tactic.tfae
+import data.padics
 
 import for_mathlib.topological_rings
 import power_bounded
@@ -21,9 +21,7 @@ structure Huber_ring.pair_of_definition :=
 [Hr   : is_subring A₀]
 (Ho   : is_open A₀)
 (J    : ideal A₀)
-(gen  : set A₀)
-[fin  : fintype gen]
-(span : ideal.span gen = J)
+(fin  : ∃ (gen : set A₀) (fin : fintype gen), ideal.span gen = J)
 (top  : @is_ideal_adic _ (subset.comm_ring) _ (topological_subring A₀) J)
 
 class Huber_ring (A : Type u) extends comm_ring A, topological_space A, topological_ring A :=
@@ -33,7 +31,51 @@ end
 
 namespace Huber_ring
 
-variables (A : Type u) [Huber_ring A]
+variables {A : Type u} [Huber_ring A]
+
+def is_ring_of_definition (A₀ : set A) : Prop :=
+∃ pod : pair_of_definition A, A₀ = pod.A₀
+
+instance is_ring_of_definition.is_subring {A₀ : set A} (h : is_ring_of_definition A₀) :
+  is_subring A₀ :=
+begin
+  cases h with pod h,
+  tactic.unfreeze_local_instances,
+  subst h,
+  exact pod.Hr
+end
+
+lemma is_adic_of_is_ring_of_definition (A₀ : set A) (h : is_ring_of_definition A₀) :
+  @is_adic A₀
+    (@subset.comm_ring _ _ _ $ is_ring_of_definition.is_subring h)
+    _ (@topological_subring _ _ _ _ A₀ (is_ring_of_definition.is_subring h)) :=
+begin
+  cases h with pod h,
+  tactic.unfreeze_local_instances,
+  subst h,
+  use [pod.J, pod.top]
+end
+
+lemma nonarchimedean : nonarchimedean A :=
+begin
+  rcases Huber_ring.pod A with ⟨A₀, H₁, H₂, J, Hfin, Htop⟩,
+  resetI,
+  apply nonarchimedean_of_nonarchimedean_subring A₀ H₂,
+  exact Htop.nonarchimedean,
+end
+
+
+
+instance (p : ℕ) [p.prime] : Huber_ring (ℚ_[p]) :=
+{ pod := ⟨{ A₀ := {x : ℚ_[p] | ∥x∥ ≤ 1},
+  Hr  := sorry,
+  Ho  := sorry,
+  J   := sorry,
+  fin := sorry,
+  top := sorry } }
+
+
+
 
 /- KMB: I am commenting this out because it doesn't compile, I didn't write it,
 and I don't know if we need it.
@@ -66,54 +108,6 @@ begin
 end
 -/
 
-def is_ring_of_definition (A₀ : set A) : Prop :=
-∃ pod : pair_of_definition A, A₀ = pod.A₀
-
-namespace is_ring_of_definition
-open list
-
-/- KMB: I am commenting this out because it doesn't compile, I didn't write it,
-and I don't know if we need it.
-
--- Wedhorn, lemma 6.2.
-lemma tfae (A₀ : set A) [is_subring A₀] :
-tfae [is_ring_of_definition A₀, (is_open A₀ ∧ is_adic A₀), (is_open A₀ ∧ is_bounded A₀)] :=
-begin
-  tfae_have : 1 → 2,
-  { rintro ⟨pod, h⟩,
-    tactic.unfreeze_local_instances,
-    subst h,
-    exact ⟨pod.Ho, ⟨pod.J, pod.top⟩⟩ },
-  tfae_have : 2 → 3,
-  { rintros ⟨hl, hr⟩,
-    refine ⟨hl, _⟩,
-    intros U hU,
-    rw mem_nhds_sets_iff at hU,
-    rcases hU with ⟨U', U'_sub, ⟨U'_open, U'_0⟩⟩,
-    rcases hr with ⟨J, h1, h2⟩,
-    have H : (∃ (n : ℕ), (J^n).carrier ⊆ {a : A₀ | a.val ∈ U'}) :=
-      h2 {a | a.val ∈ U'} U'_0 (continuous_subtype_val _ U'_open),
-    rcases H with ⟨n, hn⟩,
-    use coe '' (J^n).carrier, -- the key step
-    split,
-    { apply mem_nhds_sets,
-      { refine embedding_open embedding_subtype_val _ (h1 n),
-        rw set.range_coe_subtype,
-        exact hl },
-      { exact ⟨0, (J^n).zero_mem, rfl⟩ } },
-    { rintros a ⟨a₀, ha₀⟩ b hb,
-      apply U'_sub,
-      rw ← ha₀.right,
-      exact hn ((J^n).mul_mem_right ha₀.left : (a₀ * ⟨b,hb⟩) ∈ J^n) } },
-  tfae_have : 3 → 1,
-  { rintro ⟨hl, hr⟩,
-    refine ⟨⟨A₀, hl, _, _, _, _, _⟩, rfl⟩,
-    sorry },
-  tfae_finish
-end
--/
-
-end is_ring_of_definition
 
 /- KMB : I am commenting this out because it doesn't compile, I didn't write it,
 and I don't know if we need it.
@@ -160,23 +154,5 @@ begin
       { rw [hx, ← hx₀.right, ← hu.right], refl } } }
 end
 -/
-
-variables [Huber_ring A]
-
--- KMB: The sorry here is Wedhorn 5.30, which uses definition 5.27 which I think isn't
--- yet in the repo
-instance power_bounded_add_subgroup : is_add_subgroup (power_bounded_subring A) :=
-{ zero_mem := power_bounded.zero_mem A,
-  add_mem := assume a b a_in b_in U U_nhds, begin
-    sorry
-  end,
-  neg_mem := λ a, power_bounded.neg_mem A }
-
-instance : is_subring (power_bounded_subring A) :=
-{..power_bounded.submonoid A, ..Huber_ring.power_bounded_add_subgroup A}
-
-instance nat.power_bounded: has_coe ℕ (power_bounded_subring A) := ⟨nat.cast⟩
-
-instance int.power_bounded: has_coe ℤ (power_bounded_subring A) := ⟨int.cast⟩
 
 end Huber_ring

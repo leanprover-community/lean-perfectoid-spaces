@@ -77,14 +77,15 @@ def add_group_with_zero_nhd.of_ideal (I : ideal R) : add_group_with_zero_nhd R :
            end,
   ..‹comm_ring R›}
 
-def adic_topology (I : ideal R) : topological_space R :=
+def ideal.adic_topology (I : ideal R) : topological_space R :=
   @add_group_with_zero_nhd.topological_space R (add_group_with_zero_nhd.of_ideal I)
 
-def adic_ring (I : ideal R) := R
+def ideal.adic_ring (I : ideal R) := R
 
 namespace adic_ring
 variable {I : ideal R}
-open add_group_with_zero_nhd
+open add_group_with_zero_nhd ideal
+
 instance : comm_ring (adic_ring I) := by unfold adic_ring ; apply_instance
 instance : topological_space (adic_ring I) := adic_topology I
 
@@ -137,4 +138,45 @@ instance : topological_ring (adic_ring I) :=
 { continuous_add := continuous_add',
   continuous_mul := continuous_mul',
   continuous_neg := continuous_neg' }
+
+lemma is_open_pow_ideal (n : ℕ) : @is_open I.adic_ring _ (I^n).carrier :=
+begin
+  rw [is_open_iff_mem_nhds],
+  intros i hi,
+  rw nhds_eq,
+  use n,
+  rintros i' ⟨j, hj, h₂⟩,
+  rw ← h₂,
+  apply ideal.add_mem _ hj hi,
+end
+
 end adic_ring
+
+section
+
+def is_ideal_adic [H : topological_space R] [topological_ring R] (J : ideal R) : Prop :=
+H = J.adic_topology
+
+notation `is-`J`-adic` := is_ideal_adic J
+
+lemma is_ideal_adic_iff [topological_space R] [topological_ring R] (J : ideal R) :
+  is-J-adic ↔ (∀ n : ℕ, is_open (J^n).carrier) ∧ (∀ s ∈ nhds (0 : R), ∃ n : ℕ, (J^n).carrier ⊆ s) :=
+begin
+  split,
+  { intro H,
+    delta is_ideal_adic at H,
+    erw H at *,
+    split,
+    { exact adic_ring.is_open_pow_ideal, },
+    { intros s hs,
+      erw ← adic_ring.mem_nhds_zero_iff,
+      exact hs, }, },
+  { rintro ⟨H₁, H₂⟩,
+    sorry }
+end
+
+variables (R) [topological_space R] [topological_ring R]
+
+def is_adic : Prop := ∃ (J : ideal R), is-J-adic
+
+end

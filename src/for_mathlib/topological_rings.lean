@@ -19,11 +19,3 @@ instance topological_subring (A₀ : set A) [is_subring A₀] : topological_ring
   continuous_mul := continuous_subtype_mk _ $ continuous_mul
     (continuous_fst.comp continuous_subtype_val)
     (continuous_snd.comp continuous_subtype_val) }
-
-def is_ideal_adic (J : ideal A) : Prop :=
-(∀ n : ℕ, is_open (J^n : ideal A).carrier) ∧ (∀ S : set A, (0 : A) ∈ S → is_open S → ∃ n : ℕ, (J^n : ideal A).carrier ⊆ S)
-
-notation `is-`J`-adic` := is_ideal_adic J
-
-def is_adic (A₀ : set A) [is_subring A₀] : Prop := ∃ (J : ideal A₀),
-(by haveI := topological_subring A₀; exact is-J-adic)
