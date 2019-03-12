@@ -120,13 +120,13 @@ begin
 end
 
 
-instance (p : ℕ) [p.prime] : Huber_ring (ℚ_[p]) :=
+noncomputable instance padic.Huber_ring (p : ℕ) [p.prime] : Huber_ring (ℚ_[p]) :=
 { pod := ⟨{ A₀ := {x : ℚ_[p] | ∥x∥ ≤ 1},
   Hr  := sorry,
   Ho  := sorry,
   J   := sorry,
   fin := sorry,
-  top := sorry } }
+  top := sorry }⟩ }
 
 
 
