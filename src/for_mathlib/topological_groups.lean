@@ -1,5 +1,6 @@
 import topology.algebra.group
-import topology.algebra.uniform_group
+import topology.algebra.uniform_ring
+import ring_theory.subring
 
 universes u v
 
@@ -7,21 +8,41 @@ variables {G : Type u} [add_comm_group G]
 
 open filter set
 
+def prod_map {α₁ : Type*} {α₂ : Type*} {β₁ : Type*} {β₂ : Type*}
+  (f : α₁ → α₂) (g : β₁ → β₂) : α₁ × β₁ → α₂ × β₂
+:= λ p, (f p.1, g p.2)
+
+infix `⨯`:90 := prod_map
+
 def add_group_with_zero_nhd.of_open_add_subgroup
   (H : set G) [is_add_subgroup H] (t : topological_space H) (h : @topological_add_group H t _) :
   add_group_with_zero_nhd G :=
 { Z := (nhds (0 : H)).map $ (subtype.val : H → G),
-  zero_Z := λ U hU, mem_pure $ by {rw mem_map at hU, have := mem_of_nhds hU, exact this },
+  zero_Z := calc pure ((0 : H) : G) = map subtype.val (pure 0) : (filter.map_pure _ _).symm
+                                ... ≤ _ : map_mono (pure_le_nhds _),
   sub_Z :=
   begin
-    rw tendsto_prod_self_iff,
-    rintros U hU,
-    rw mem_map at hU,
-    rcases exists_nhds_half_neg hU with ⟨V, h₁, h₂⟩,
-    use [subtype.val '' V, image_mem_map h₁],
-    rintros x y ⟨x₀, hx₁, hx₂⟩ ⟨y₀, hy₁, hy₂⟩,
-    erw [← hx₂, ← hy₂],
-    simpa using h₂ _ _ hx₁ hy₁,
+    let δ_G := λ (p : G × G), p.1 - p.2,
+    let δ_H := λ (p : H × H), p.1 - p.2,
+    let ι : H → G := subtype.val,
+    let N := nhds (0 : H),
+    let Z := map subtype.val N,
+    change map δ_G (filter.prod Z Z) ≤ Z,
+    have key₁: map δ_H (nhds (0, 0)) ≤ N,
+    { rw [show N = nhds (δ_H (0, 0)), by simp [*]],
+      exact continuous_sub'.tendsto _ },
+    have key₂ : δ_G ∘ ι⨯ι = ι ∘ δ_H,
+    { ext p,
+      change (p.1 : G) - (p.2 : G) = (p.1 - p.2 : G),
+      simp [is_add_subgroup.coe_neg, is_add_submonoid.coe_add] },
+
+    calc map δ_G (filter.prod Z Z)
+          = map δ_G (map (ι ⨯ ι) $ filter.prod N N) : by rw prod_map_map_eq;refl
+      ... = map (δ_G ∘ ι⨯ι) (filter.prod N N)       : map_map
+      ... = map (ι ∘ δ_H) (filter.prod N N)         : by rw key₂
+      ... = map ι (map δ_H $ filter.prod N N)       : eq.symm map_map
+      ... = map ι (map δ_H $ nhds (0, 0))           : by rw ← nhds_prod_eq
+      ... ≤ map ι N : map_mono key₁
   end,
   ..‹add_comm_group G› }
 
@@ -29,3 +50,4 @@ def of_open_add_subgroup {G : Type u} [str : add_comm_group G] (H : set G) [is_a
   (t : topological_space H) (h : @topological_add_group H t _) : topological_space G :=
 @add_group_with_zero_nhd.topological_space G
   (add_group_with_zero_nhd.of_open_add_subgroup H t h)
+
