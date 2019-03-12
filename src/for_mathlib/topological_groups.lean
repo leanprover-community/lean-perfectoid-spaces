@@ -2,6 +2,8 @@ import topology.algebra.group
 import topology.algebra.uniform_ring
 import ring_theory.subring
 
+import for_mathlib.topology
+
 universes u v
 
 variables {G : Type u} [add_comm_group G]
@@ -51,3 +53,14 @@ def of_open_add_subgroup {G : Type u} [str : add_comm_group G] (H : set G) [is_a
 @add_group_with_zero_nhd.topological_space G
   (add_group_with_zero_nhd.of_open_add_subgroup H t h)
 
+section
+variables (G) [topological_space G] [topological_add_group G]
+
+-- This is a hack. That is why it is confined to a section.
+-- Making this an attribute on a wider scope is dangerous!
+local attribute [instance] topological_add_group.to_uniform_space
+
+-- Wedhorn Definition 5.31 page 38
+definition is_complete_hausdorff : Prop := is_complete (univ : set G) ∧ is_hausdorff G
+
+end

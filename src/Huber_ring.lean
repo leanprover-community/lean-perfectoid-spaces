@@ -119,6 +119,8 @@ begin
   exact Htop.nonarchimedean,
 end
 
+instance power_bounded_subring.is_subring : is_subring (power_bounded_subring A) :=
+power_bounded_subring.is_subring nonarchimedean
 
 noncomputable instance padic.Huber_ring (p : ℕ) [p.prime] : Huber_ring (ℚ_[p]) :=
 { pod := ⟨{ A₀ := {x : ℚ_[p] | ∥x∥ ≤ 1},

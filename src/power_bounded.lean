@@ -220,7 +220,7 @@ definition power_bounded_subring := {r : R | is_power_bounded r}
 
 variable {R}
 
-namespace power_bounded
+namespace power_bounded_subring
 
 instance : has_coe (power_bounded_subring R) R := ⟨subtype.val⟩
 
@@ -269,9 +269,9 @@ begin
       refl }
 end
 
-instance submonoid : is_submonoid (power_bounded_subring R) :=
-{ one_mem := power_bounded.one_mem,
-  mul_mem := power_bounded.mul_mem }
+instance : is_submonoid (power_bounded_subring R) :=
+{ one_mem := one_mem,
+  mul_mem := mul_mem }
 
 instance (hR : nonarchimedean R) : is_add_subgroup (power_bounded_subring R) :=
 { zero_mem := zero_mem,
@@ -279,13 +279,14 @@ instance (hR : nonarchimedean R) : is_add_subgroup (power_bounded_subring R) :=
   neg_mem := neg_mem  }
 
 instance (hR : nonarchimedean R) : is_subring (power_bounded_subring R) :=
-{ ..power_bounded.submonoid,
-  ..power_bounded.is_add_subgroup hR
+{ ..power_bounded_subring.is_submonoid,
+  ..power_bounded_subring.is_add_subgroup hR
 }
 
+variable (R)
 definition is_uniform : Prop := is_bounded (power_bounded_subring R)
 
-end power_bounded
+end power_bounded_subring
 
 section
 open set
