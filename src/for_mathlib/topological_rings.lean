@@ -19,3 +19,13 @@ instance topological_subring (A₀ : set A) [is_subring A₀] : topological_ring
   continuous_mul := continuous_subtype_mk _ $ continuous_mul
     (continuous_fst.comp continuous_subtype_val)
     (continuous_snd.comp continuous_subtype_val) }
+
+lemma half_nhds {s : set A} (hs : s ∈ (nhds (0 : A))) :
+  ∃ V ∈ (nhds (0 : A)), ∀ v w ∈ V, v * w ∈ s :=
+begin
+  have : ((λa:A×A, a.1 * a.2) ⁻¹' s) ∈ (nhds ((0, 0) : A × A)) :=
+    tendsto_mul' (by simpa using hs),
+  rw nhds_prod_eq at this,
+  rcases filter.mem_prod_iff.1 this with ⟨V₁, H₁, V₂, H₂, H⟩,
+  exact ⟨V₁ ∩ V₂, filter.inter_mem_sets H₁ H₂, assume v w ⟨hv, _⟩ ⟨_, hw⟩, @H (v, w) ⟨hv, hw⟩⟩
+end

@@ -4,9 +4,14 @@ import tactic.linarith
 import power_bounded
 import Huber_ring
 
+import for_mathlib.topological_rings
+
 -- Scholze : "Recall that a topological ring R is Tate if it contains an
 -- open and bounded subring R₀ ⊂ R and a topologically nilpotent unit ϖ ∈ R; such elements are
 -- called pseudo-uniformizers."
+
+-- jmc: Shall we remove the above quote?
+-- jmc: We define Tate ring as a Huber ring with a pseudo-uniformizer.
 
 universe u
 
@@ -14,31 +19,19 @@ variables {R : Type u} [comm_ring R] [topological_space R] [topological_ring R]
 
 open filter function
 
-lemma half_nhds {s : set R} (hs : s ∈ (nhds (0 : R)).sets) :
-  ∃ V ∈ (nhds (0 : R)).sets, ∀ v w ∈ V, v * w ∈ s :=
-begin
-  have : ((λa:R×R, a.1 * a.2) ⁻¹' s) ∈ (nhds ((0, 0) : R × R)).sets :=
-    tendsto_mul' (by simpa using hs),
-  rw nhds_prod_eq at this,
-  rcases filter.mem_prod_iff.1 this with ⟨V₁, H₁, V₂, H₂, H⟩,
-  exact ⟨V₁ ∩ V₂, filter.inter_mem_sets H₁ H₂, assume v w ⟨hv, _⟩ ⟨_, hw⟩, @H (v, w) ⟨hv, hw⟩⟩
-end
-
-
-
 def is_pseudo_uniformizer (ϖ : units R) : Prop := is_topologically_nilpotent ϖ.val
 
 variable (R)
 def pseudo_uniformizer := { ϖ : units R // is_topologically_nilpotent ϖ.val}
 
-
-instance pseudo_unif.power_bounded: has_coe (pseudo_uniformizer R) (power_bounded_subring R) :=
+instance pseudo_uniformizer.power_bounded :
+  has_coe (pseudo_uniformizer R) (power_bounded_subring R) :=
 ⟨λ ⟨ϖ, h⟩, ⟨ϖ, begin
   intros U U_nhds,
   rcases half_nhds U_nhds with ⟨U', ⟨U'_nhds, U'_prod⟩⟩,
   rcases h U' U'_nhds with ⟨N, H⟩,
   let V : set R := (λ u, u*ϖ^(N+1)) '' U',
-  have V_nhds : V ∈ (nhds (0 : R)).sets,
+  have V_nhds : V ∈ (nhds (0 : R)),
   { dsimp [V],
     have inv : left_inverse (λ (u : R), u * (↑ϖ⁻¹)^((N + 1))) (λ (u : R), u * ϖ^(N + 1)) ∧
         right_inverse (λ (u : R), u * (↑ϖ⁻¹)^(N + 1)) (λ (u : R), u * ϖ^(N + 1)),
@@ -56,13 +49,5 @@ instance pseudo_unif.power_bounded: has_coe (pseudo_uniformizer R) (power_bounde
   linarith
 end⟩⟩
 
-class Tate_ring (R : Type*) extends comm_ring R, topological_space R, topological_ring R :=
-(R₀ : set R)
-(R₀_is_open : is_open R₀)
-(R₀_is_bounded : is_bounded R₀)
-(R₀_is_subring : is_subring R₀)
-(ϖ : units R)
-(ϖ_is_pseudo_uniformizer : is_pseudo_uniformizer ϖ)
-
-instance tate_ring.to_huber_ring (R : Type*) [Tate_ring R] : Huber_ring R :=
-sorry
+class Tate_ring (R : Type u) [Huber_ring R] : Prop :=
+(has_pseudo_uniformizer : ∃ ϖ : units R, is_pseudo_uniformizer ϖ)
