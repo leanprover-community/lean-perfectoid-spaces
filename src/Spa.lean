@@ -189,10 +189,10 @@ def rational_basis (A : Huber_pair) : set (set (Spa A)) :=
 {U : set (Spa A) | ∃ {s : A} {T : set A} {hfin : fintype T} {hopen : is_open (ideal.span T).carrier},
                    U = rational_open s T }
 
-attribute [instance] set.fintype_seq -- should move to mathlib
-
 -- Note: this lemma cannot be of any use to us because we're missing the
 -- assumption that <T> is open.
+-- jmc: the above remark is now out of date.
+-- Current status: proof is broken with 2 sorries.
 lemma rational_basis.is_basis : topological_space.is_topological_basis (rational_basis A) :=
 begin
 split,
@@ -203,6 +203,7 @@ split,
   { simp only [H₁, H₂, rational_open_inter, set.mem_insert_iff, true_or, eq_self_iff_true],
     resetI,
     refine ⟨_, _, infer_instance, _, rfl⟩,
+    -- See the remarks in Wedhorn 7.30.(5).
     sorry },
   { exact ⟨hv, subset.refl _⟩ } },
 split,
@@ -218,7 +219,8 @@ split,
     rintros U ⟨r, s, H⟩,
     rw [H, ← rational_open_singleton],
     refine topological_space.generate_open.basic _ ⟨s, {r}, infer_instance, _, rfl⟩,
-    sorry -- is this even true?
+    sorry -- is this even true? I guess we shouldn't do the rw 2 lines up.
+    -- Instead, we should use a smarter argument that I haven't cooked up yet.
      },
   { rw generate_from_le_iff_subset_is_open,
     rintros U ⟨s, T, hT, hT', H⟩,
