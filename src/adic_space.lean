@@ -43,29 +43,29 @@ Wedhorn p76 shows how Spa(A) gives an object of this for A a Huber pair
 --definition affinoid_adic_space (A : Huber_pair) : 𝓥pre := sorry
 
 -- unwritten -- it's a full subcat of 𝓥pre
-class preadic_space (X : Type) extends topological_space X
+class preadic_space (X : Type*) extends topological_space X
 
 -- not logically necessary but should be easy
 instance (A : Huber_pair) : preadic_space (Spa A) := sorry
 
 -- attribute [class] _root_.is_open
 
-instance preadic_space_restriction {X : Type} [preadic_space X] {U : opens X} :
+instance preadic_space_restriction {X : Type*} [preadic_space X] {U : opens X} :
   preadic_space U := sorry
 
 -- unwritten
-class adic_space (X : Type) extends preadic_space X
+class adic_space (X : Type*) extends preadic_space X
 
 -- a preadic_space_equiv is just an isom in 𝓥pre, or an isomorphism of preadic spaces.
 -- is homeo in Lean yet?
 -- unwritten
-structure preadic_space_equiv (X Y : Type) [AX : preadic_space X] [AY : preadic_space Y] extends equiv X Y
+structure preadic_space_equiv (X Y : Type*) [AX : preadic_space X] [AY : preadic_space Y] extends equiv X Y
 
-definition is_preadic_space_equiv (X Y : Type) [AX : preadic_space X] [AY : preadic_space Y] :=
+definition is_preadic_space_equiv (X Y : Type*) [AX : preadic_space X] [AY : preadic_space Y] :=
   nonempty (preadic_space_equiv X Y)
 
-definition preadic_space_pullback {X : Type} [preadic_space X] (U : set X) := {x : X // x ∈ U}
+definition preadic_space_pullback {X : Type*} [preadic_space X] (U : set X) := {x : X // x ∈ U}
 
-instance pullback_is_preadic_space {X : Type} [preadic_space X] (U : set X) : preadic_space (preadic_space_pullback U) := sorry
+instance pullback_is_preadic_space {X : Type*} [preadic_space X] (U : set X) : preadic_space (preadic_space_pullback U) := sorry
 
 -- notation `is_open` := _root_.is_open
