@@ -120,7 +120,7 @@ lemma rational_open_inter.aux₁ {s₁ s₂ : A} {T₁ T₂ : set A}
 begin
   rintros v ⟨⟨hv₁, hs₁⟩, ⟨hv₂, hs₂⟩⟩,
   split,
-  { rintros t ⟨_, ⟨t₁, ht₁, rfl⟩, t₂, ht₂, ht⟩,
+  { rintros t ⟨_, ⟨t₁, ht₁, rfl⟩, ⟨t₂, ht₂, ht⟩⟩,
     subst ht,
     convert le_trans
       (linear_ordered_comm_monoid.mul_le_mul_right (hv₁ t₁ ht₁) _)
@@ -189,6 +189,13 @@ def rational_basis (A : Huber_pair) : set (set (Spa A)) :=
 {U : set (Spa A) | ∃ {s : A} {T : set A} {hfin : fintype T} {hopen : is_open (ideal.span T).carrier},
                    U = rational_open s T }
 
+lemma rational_basis.is_basis.aux₁ (s₁ s₂ : A) (T₁ T₂ : set A) :
+  (*) <$> T₁ <*> T₂ ⊆ (*) <$> (insert s₁ T₁) <*> (insert s₂ T₂) :=
+begin
+  rintros t ⟨_, ⟨t₁, ht₁, rfl⟩, ⟨t₂, ht₂, ht⟩⟩,
+  exact ⟨_, ⟨t₁, mem_insert_of_mem _ ht₁, rfl⟩, ⟨t₂, mem_insert_of_mem _ ht₂, ht⟩⟩
+end
+
 -- Note: this lemma cannot be of any use to us because we're missing the
 -- assumption that <T> is open.
 -- jmc: the above remark is now out of date.
@@ -203,8 +210,12 @@ split,
   { simp only [H₁, H₂, rational_open_inter, set.mem_insert_iff, true_or, eq_self_iff_true],
     resetI,
     refine ⟨_, _, infer_instance, _, rfl⟩,
-    -- See the remarks in Wedhorn 7.30.(5).
-    sorry },
+    -- jmc: what follows is a sketch. We can fill the gaps once we know more about topological rings
+    have foo := ideal.span_mono (rational_basis.is_basis.aux₁ s₁ s₂ T₁ T₂),
+    suffices : is_open (ideal.span ((*) <$> T₁ <*> T₂)).carrier,
+    { sorry /- use "foo" from two lines up -/ },
+    { -- See the remarks in Wedhorn 7.30.(5).
+      sorry } },
   { exact ⟨hv, subset.refl _⟩ } },
 split,
 { apply le_antisymm,
