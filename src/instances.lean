@@ -1,5 +1,4 @@
 import data.padics
-import for_mathlib.prime
 
 import Huber_ring
 
@@ -8,28 +7,30 @@ jmc: The first goal of this file is to show that the p-adics form a Huber ring.
 jmc: We may extend this with other examples later.
 -/
 
-section
+namespace padic_int
+open set
+variables (p : ℕ) [nat.prime p]
 
-open set nat.Prime
-variable [nat.Prime]
-
-local attribute [instance] pp
-
-instance padic_int.coe_is_ring_hom :
+instance coe_is_ring_hom :
   is_ring_hom (λ x, x : ℤ_[p] → ℚ_[p]) :=
 by refine {..} ; intros ; simp
 
-def padic_int.subring : set ℚ_[p] :=
+def subring : set ℚ_[p] :=
   range (λ x, x : ℤ_[p] → ℚ_[p])
 
-instance padic_int.subring.is_subring :
-  is_subring (padic_int.subring) :=
+namespace subring
+
+instance is_subring :
+  is_subring (subring p) :=
 is_ring_hom.is_subring_set_range _
 
-def padic_int.subring.is_open :
-  is_open (padic_int.subring) :=
+noncomputable def max_ideal : ideal (subring p) :=
+ideal.span {(p : subring p)}
+
+def is_open :
+  is_open (subring p) :=
 begin
-  erw [padic_int.subring, subtype.val_range],
+  erw [subring, subtype.val_range],
   convert @metric.is_open_ball _ _ (0 : ℚ_[p]) p,
   funext,
   apply propext,
@@ -47,16 +48,18 @@ begin
     sorry }
 end
 
-noncomputable def padic_int.subring.max_ideal : ideal padic_int.subring :=
-ideal.span {(nat.cast p : padic_int.subring)}
+end subring
 
-noncomputable instance padic.Huber_ring : Huber_ring (ℚ_[p]) :=
+end padic_int
+
+open padic_int
+
+noncomputable instance padic.Huber_ring (p : ℕ) [p.prime] :
+  Huber_ring (ℚ_[p]) :=
 { pod := ⟨{
-    A₀  := padic_int.subring,
+    A₀  := subring p,
     Hr  := by apply_instance,
-    Ho  := padic_int.subring.is_open,
-    J   := padic_int.subring.max_ideal,
+    Ho  := subring.is_open p,
+    J   := subring.max_ideal p,
     fin := ⟨_, infer_instance, rfl⟩,
     top := sorry }⟩ }
-
-end
