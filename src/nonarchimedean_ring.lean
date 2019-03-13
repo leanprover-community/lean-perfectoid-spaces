@@ -4,10 +4,10 @@ import ring_theory.subring
 import for_mathlib.adic_topology
 import for_mathlib.topological_rings
 
-/- A commutative topological ring is _non-archimedean_ if every open subset
-   containing 0 also contains an open additive subgroup.
--/
+open set
 
+/--A commutative topological ring is non-archimedean if every open subset
+   containing 0 also contains an open additive subgroup.-/
 definition nonarchimedean (G : Type*)
   [add_group G] [topological_space G] [topological_add_group G] : Prop :=
 ∀ U ∈ nhds (0 : G), ∃ V : set G, is_add_subgroup V ∧ is_open V ∧ V ⊆ U
@@ -35,24 +35,21 @@ begin
   exact hJ.nonarchimedean
 end
 
-lemma nonarchimedean_of_nonarchimedean_subring (R₀ : set R) [is_subring R₀]
-  (h : is_open R₀) (H : nonarchimedean R₀) : nonarchimedean R :=
+lemma nonarchimedean_of_nonarchimedean_embedding
+  {R₀ : Type*} [ring R₀] [topological_space R₀] [topological_ring R₀]
+  (f : R₀ → R) [is_ring_hom f] (emb : embedding f) (hf : is_open (range f)) (H : nonarchimedean R₀) :
+  nonarchimedean R :=
 begin
   intros U hU,
-  have := H (subtype.val ⁻¹' U) _,
-  { rcases this with ⟨V, hV⟩,
-    use subtype.val '' V,
+  have := H (f ⁻¹' U) _,
+  { rcases this with ⟨V, ⟨h₁, h₂, h₃⟩⟩,
+    use f '' V,
+    resetI,
     split,
-    { refine @is_add_group_hom.image_add_subgroup _ _ _ _ subtype.val
-        ⟨λ x y, show (x + y).val = x.val + y.val, from _⟩ V hV.1,
-      refl, },
-    { split,
-      { apply embedding_open embedding_subtype_val,
-        { rw subtype.val_range,
-          exact h, },
-        { exact hV.2.1 } },
-      { rw set.image_subset_iff,
-        exact hV.2.2 } } },
-  { apply continuous.tendsto (continuous_subtype_val),
-    exact hU }
+    { apply_instance },
+    split,
+    { exact embedding_open emb hf h₂ },
+    { rwa set.image_subset_iff } },
+  { apply continuous.tendsto (emb.continuous),
+    rwa is_ring_hom.map_zero f }
 end

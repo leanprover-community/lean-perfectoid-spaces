@@ -17,110 +17,99 @@ local attribute [instance, priority 0] classical.prop_decidable
 universes u v
 
 section
-variables (A : Type u) [comm_ring A] [topological_space A] [topological_ring A]
+open set
 
-structure Huber_ring.pair_of_definition :=
-(A₀   : set A)
-[Hr   : is_subring A₀]
-(Ho   : is_open A₀)
-(J    : ideal A₀)
-(fin  : ∃ (gen : set A₀) (fin : fintype gen), ideal.span gen = J)
-(top  : @is_ideal_adic _ (subset.comm_ring) _ (topological_subring A₀) J)
+structure Huber_ring.ring_of_definition
+  (A₀ : Type*) [comm_ring A₀] [topological_space A₀] [topological_ring A₀]
+  (A : Type*) [comm_ring A] [topological_space A] [topological_ring A] :=
+(f : A₀ → A)
+(hom : is_ring_hom f)
+(emb : embedding f)
+(hf  : is_open (range f))
+(J   : ideal A₀)
+(fin : ∃ gen, finite gen ∧ ideal.span gen = J)
+(top : is_ideal_adic J)
 
 class Huber_ring (A : Type u) extends comm_ring A, topological_space A, topological_ring A :=
-(pod : nonempty $ Huber_ring.pair_of_definition A)
+(pod : ∃ (A₀ : Type u) [comm_ring A₀] [topological_space A₀] [topological_ring A₀],
+  by resetI; exact nonempty (Huber_ring.ring_of_definition A₀ A))
 
 end
 
 namespace Huber_ring
 
-namespace pair_of_definition
-open localization
+namespace ring_of_definition
+open set localization
 
-variables {A : Type u} [comm_ring A] [topological_space A] [topological_ring A]
+variables {A  : Type u} [comm_ring A ] [topological_space A ] [topological_ring A ]
+variables {A₀ : Type u} [comm_ring A₀] [topological_space A₀] [topological_ring A₀]
 
-def away_subring (h : pair_of_definition A) (s : A) (T : set A) :
-  set (away s) :=
+def away_type (h : ring_of_definition A₀ A) (s : A) (T : set A) : Type u :=
 let s_inv : away s := ((to_units ⟨s, ⟨1, by simp⟩⟩)⁻¹ : units (away s)) in
 let E : set (away s) := {x | ∃ t ∈ T, x = of t * s_inv } in
-ring.closure (of '' h.A₀ ∪ E)
+ring.closure (of '' (range h.f) ∪ E)
 
-instance away_subring.is_subring (h : pair_of_definition A) (s : A) (T : set A) :
-  is_subring (away_subring h s T) :=
-ring.is_subring
+instance away_subring.comm_ring (h : ring_of_definition A₀ A) (s : A) (T : set A) :
+  comm_ring (away_type h s T) :=
+by delta away_type; apply_instance
 
-instance (h : pair_of_definition A) : is_subring h.A₀ := h.Hr
+def away.of_subring (h : ring_of_definition A₀ A) (s : A) (T : set A) :
+  A₀ → away_type h s T :=
+λ a, ⟨of (h.f a), ring.mem_closure $ or.inl $ ⟨h.f a, mem_range_self a, rfl⟩⟩
 
-def away.of_subring (h : pair_of_definition A) (s : A) (T : set A) :
-  h.A₀ → away_subring h s T :=
-λ a, ⟨of a.val, ring.mem_closure $ or.inl ⟨_, a.property, rfl⟩⟩
-
-instance away.of_subring.is_ring_hom (h : pair_of_definition A) (s : A) (T : set A) :
+instance away.of_subring.is_ring_hom (h : ring_of_definition A₀ A) (s : A) (T : set A) :
   is_ring_hom (away.of_subring h s T) :=
-{ map_one := rfl,
-  map_mul := λ a₁ a₂, subtype.val_injective $ of_mul _ _ _ _,
-  map_add := λ a₁ a₂, subtype.val_injective $ of_add _ _ _ _, }
+{ map_one := subtype.val_injective $ show of (h.f 1) = 1,
+    by erw [@is_ring_hom.map_one _ _ _ _ h.f h.hom, of_one _ _],
+  map_mul := λ a₁ a₂, subtype.val_injective $ show of (h.f _) = of (h.f _) * of (h.f _),
+    by erw [@is_ring_hom.map_mul _ _ _ _ h.f h.hom, of_mul _ _],
+  map_add := λ a₁ a₂, subtype.val_injective $ show of (h.f _) = of (h.f _) + of (h.f _),
+    by erw [@is_ring_hom.map_add _ _ _ _ h.f h.hom, of_add _ _] }
 
-def away.of_subring.is_ring_hom' (h : pair_of_definition A) (s : A) (T : set A) :
-  @is_ring_hom _ _ (comm_ring.to_ring _) (comm_ring.to_ring _) (away.of_subring h s T) :=
-{ map_one := rfl,
-  map_mul := λ a₁ a₂, subtype.val_injective $ of_mul _ _ _ _,
-  map_add := λ a₁ a₂, subtype.val_injective $ of_add _ _ _ _, }
+def away_ideal (h : ring_of_definition A₀ A) (s : A) (T : set A) :
+  ideal (away_type h s T) :=
+h.J.map (away.of_subring h s T)
 
-def away_ideal (h : pair_of_definition A) (s : A) (T : set A) :
-  ideal (away_subring h s T) :=
-@ideal.map _ _ _ _ (away.of_subring h s T) (away.of_subring.is_ring_hom' h s T) h.J
-
-lemma away_ideal_fin (h : pair_of_definition A) (s : A) (T : set A) :
-  ∃ (gen : set (away_subring h s T)) (fin : fintype gen), ideal.span gen = away_ideal h s T :=
+lemma away_ideal_fin (h : ring_of_definition A₀ A) (s : A) (T : set A) :
+  ∃ (gen : set (away_type h s T)), finite gen ∧ ideal.span gen = away_ideal h s T :=
 begin
   rcases h.fin with ⟨gen, fin, span⟩,
   resetI,
   use away.of_subring h s T '' gen,
   split,
-  { apply_instance },
-  { rw [← @ideal.map_span _ _ _ _ _ (away.of_subring.is_ring_hom' h s T) _, span],
-    refl }
+  { apply finite_image _ fin, },
+  { rw [← ideal.map_span _ _, span],
+    refl, }
 end
 
-end pair_of_definition
+instance (h : ring_of_definition A₀ A) (s : A) (T : set A) :
+  topological_space (away_type h s T) :=
+(away_ideal h s T).adic_topology
+
+instance (h : ring_of_definition A₀ A) (s : A) (T : set A) :
+  topological_ring (away_type h s T) :=
+adic_ring.topological_ring
+
+-- jmc: the following definition is not yet possible
+-- jmc: we first need a topological ring structure on (away s)
+
+-- def away_ring_of_definition (h : ring_of_definition A₀ A) (s : A) (T : set A) :
+--   ring_of_definition (away_type h s T) (away s) :=
+
+end ring_of_definition
 
 variables {A : Type u} [Huber_ring A]
 
-def is_ring_of_definition (A₀ : set A) : Prop :=
-∃ pod : pair_of_definition A, A₀ = pod.A₀
-
-instance is_ring_of_definition.is_subring {A₀ : set A} (h : is_ring_of_definition A₀) :
-  is_subring A₀ :=
-begin
-  cases h with pod h,
-  tactic.unfreeze_local_instances,
-  subst h,
-  exact pod.Hr
-end
-
-lemma is_adic_of_is_ring_of_definition (A₀ : set A) (h : is_ring_of_definition A₀) :
-  @is_adic A₀
-    (@subset.comm_ring _ _ _ $ is_ring_of_definition.is_subring h)
-    _ (@topological_subring _ _ _ _ A₀ (is_ring_of_definition.is_subring h)) :=
-begin
-  cases h with pod h,
-  tactic.unfreeze_local_instances,
-  subst h,
-  use [pod.J, pod.top]
-end
-
 lemma nonarchimedean : nonarchimedean A :=
 begin
-  rcases Huber_ring.pod A with ⟨A₀, H₁, H₂, J, Hfin, Htop⟩,
+  rcases Huber_ring.pod A with ⟨A₀, H₁, H₂, H₃, f, hom, emb, hf, J, Hfin, Htop⟩,
   resetI,
-  apply nonarchimedean_of_nonarchimedean_subring A₀ H₂,
+  apply nonarchimedean_of_nonarchimedean_embedding f emb hf,
   exact Htop.nonarchimedean,
 end
 
 instance power_bounded_subring.is_subring : is_subring (power_bounded_subring A) :=
 power_bounded_subring.is_subring nonarchimedean
-
 
 
 /- KMB: I am commenting this out because it doesn't compile, I didn't write it,
