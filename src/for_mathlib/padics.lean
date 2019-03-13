@@ -92,13 +92,6 @@ begin
     simp [-padic.cast_eq_of_rat_of_nat],
 end
 
-/-
-jmc: HELP!!!
-subtype.metric_space seems to be missing
--/
-
-noncomputable instance : metric_space ℤ_[p] := sorry -- subtype.metric_space
-
 lemma neg_def : ∀ x : ℤ_[p], -x = ⟨-x.val, by cases x; simpa⟩
 | ⟨x, hx⟩ := rfl
 
