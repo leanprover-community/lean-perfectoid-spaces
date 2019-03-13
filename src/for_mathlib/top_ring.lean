@@ -117,7 +117,7 @@ end ring_with_zero_nhd
 
 section
 open filter set lattice
-variables {A : Type*} [ring A] {ι : Type*} [inhabited ι] {G : ι → set A} [∀ i, is_add_subgroup $ G i]
+variables {A : Type*} [ring A] {ι : Type*} [inhabited ι] (G : ι → set A) [∀ i, is_add_subgroup $ G i]
   (h_directed : ∀ i j, ∃ k, G k ⊆ G i ∩ G j)
   (h_left_mul : ∀ x i, ∃ j, (λ y : A, x*y) '' (G j) ⊆ G i)
   (h_right_mul : ∀ x i, ∃ j, (λ y : A, y*x) '' (G j) ⊆ G i)
@@ -176,12 +176,14 @@ def of_subgroups : ring_with_zero_nhd A :=
   ..‹ring A› }
 
 def topology_of_subgroups : topological_space A :=
-@ring_with_zero_nhd.topological_space A (of_subgroups h_directed h_left_mul h_right_mul h_mul)
+@ring_with_zero_nhd.topological_space A
+  (of_subgroups _ h_directed h_left_mul h_right_mul h_mul)
 
 lemma of_subgroups.nhds_zero (U : set A) :
-  U ∈ @nhds A (topology_of_subgroups h_directed h_left_mul h_right_mul h_mul) (0 : A) ↔ ∃ i, G i ⊆ U :=
+  U ∈ @nhds A (topology_of_subgroups _ h_directed h_left_mul h_right_mul h_mul)
+    (0 : A) ↔ ∃ i, G i ⊆ U :=
 begin
-  letI rnz := (of_subgroups h_directed h_left_mul h_right_mul h_mul),
+  letI rnz := (of_subgroups _ h_directed h_left_mul h_right_mul h_mul),
   rw @add_group_with_zero_nhd.nhds_zero_eq_Z A (@ring_with_zero_nhd.to_add_group_with_zero_nhd A rnz),
   change  U ∈ (⨅ i, principal (G i)) ↔ _,
   rw mem_infi_range_of_base h_directed,

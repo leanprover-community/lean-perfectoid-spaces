@@ -6,6 +6,8 @@ import ring_theory.localization
 
 import for_mathlib.topological_rings
 import for_mathlib.rings
+import for_mathlib.top_ring
+
 import power_bounded
 
 -- f-adic rings are called Huber rings by Scholze.
@@ -43,6 +45,31 @@ open set localization
 
 variables {A  : Type u} [comm_ring A ] [topological_space A ] [topological_ring A ]
 variables {A₀ : Type u} [comm_ring A₀] [topological_space A₀] [topological_ring A₀]
+
+lemma mul_left_subset (h : ring_of_definition A₀ A) (a : A) (i : ℕ) :
+  ∃ (j : ℕ), (*) a '' (h.f '' (h.J ^ j).carrier) ⊆ h.f '' (h.J ^ i).carrier :=
+begin
+  rcases h with ⟨f,hom,emb,hf,J,fin,top⟩,
+  cases emb with inj ind,
+  tactic.unfreeze_local_instances,
+  subst ind,
+  resetI,
+  rw is_ideal_adic_iff at top,
+  cases top with H₁ H₂,
+  show ∃ (j : ℕ), (*) a '' (f '' (J ^ j).carrier) ⊆ f '' (J ^ i).carrier,
+  simp only [set.image_subset_iff],
+  apply H₂,
+  rw mem_nhds_induced,
+  refine ⟨_, _, set.subset.refl _⟩,
+  apply mem_nhds_sets,
+  { suffices : continuous ((*) a),
+    { apply this,
+      resetI,
+      refine @embedding_open _ _ (topological_space.induced f _) _ f _ ⟨inj, rfl⟩ hf (H₁ _), },
+    sorry },
+  { use [0, (J^i).zero_mem],
+    simp [is_ring_hom.map_zero f] }
+end
 
 def away_type (h : ring_of_definition A₀ A) (s : A) (T : set A) : Type u :=
 let s_inv : away s := ((to_units ⟨s, ⟨1, by simp⟩⟩)⁻¹ : units (away s)) in
@@ -89,6 +116,38 @@ instance (h : ring_of_definition A₀ A) (s : A) (T : set A) :
 instance (h : ring_of_definition A₀ A) (s : A) (T : set A) :
   topological_ring (away_type h s T) :=
 adic_ring.topological_ring
+
+instance foo (h : ring_of_definition A₀ A) (s : A) (T : set A) :
+  is_ring_hom (subtype.val : away_type h s T → away s) :=
+@is_ring_hom.is_ring_hom _ _ _ ring.is_subring
+
+instance (h : ring_of_definition A₀ A) (s : A) (T : set A) :
+  ring_with_zero_nhd (away s) :=
+@of_subgroups _ _ ℕ _
+ (λ n, subtype.val '' ((away_ideal h s T)^n).carrier)
+ (λ n, @is_add_group_hom.image_add_subgroup _ _ _ _ subtype.val
+  (@is_ring_hom.is_add_group_hom _ _ _ _ subtype.val $ ring_of_definition.foo h s T)
+   _ (submodule.submodule_is_add_subgroup _))
+  (λ i j, ⟨i+j,
+  begin
+    rw set.image_inter subtype.val_injective,
+    apply set.image_subset,
+    rw pow_add,
+    exact ideal.mul_le_inf,
+  end⟩)
+  begin
+    intros a i,
+    dsimp,
+    sorry
+  end
+  begin
+    intros a i,
+    sorry
+  end
+  begin
+    intros i,
+    use i,
+  end
 
 -- jmc: the following definition is not yet possible
 -- jmc: we first need a topological ring structure on (away s)
