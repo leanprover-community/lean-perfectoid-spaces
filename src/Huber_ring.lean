@@ -43,87 +43,130 @@ namespace ring_of_definition
 open set localization algebra
 
 variables {A  : Type u} [comm_ring A ] [topological_space A ] [topological_ring A ]
-variables {A₀ : Type u} [comm_ring A₀] [topological_space A₀] [topological_ring A₀]
-variables (h : ring_of_definition A₀ A) (T : set A) (s : A)
+variables (A₀ : Type u) [comm_ring A₀] [topological_space A₀] [topological_ring A₀]
+
+variables [algebra A₀ A]
+variables (emb : embedding (algebra_map A : A₀ → A))
+variables (open_range : is_open (range (algebra_map A : A₀ → A)))
+variables (T : set A) (s : A)
 
 /-
 Our goal is to define a topology on (away s), which is the localization of A at s.
-This topology will depend on T, and should not depend on the ring of definition
-(h : ring_of_definition A₀ A). In the literature, this ring is commonly denoted with
-A(T/s) to indicate the dependence on T. For the same reason, we start by defining a
-wrapper type that includes T in its assumptions.
-We will construct the topology on A(T/s) by showing that it is a Huber ring: we construct
-a ring of definition that does depend on (h : ring_of_definition A₀ A).
+This topology will depend on T, and should not depend on the ring of definition.
+In the literature, this ring is commonly denoted with A(T/s) to indicate the
+dependence on T. For the same reason, we start by defining a wrapper type that
+includes T in its assumptions.
+We will construct the topology on A(T/s) by showing that it is a Huber ring:
+we construct a ring of definition that does depend on (h : ring_of_definition A₀ A).
 -/
 
 /--The localization at s, endowed with a topology that depends on T-/
-def away (T : set A) (s : A) := away s
+def away (T : set A) (s : A) := (comap A₀ A (away s))
 
-instance away.comm_ring : comm_ring (away T s) :=
+instance away.comm_ring : comm_ring (away A₀ T s) :=
 by delta away; apply_instance
 
+instance : algebra A₀ (away A₀ T s) :=
+by delta away; apply_instance
+
+def T_over_s : set (away A₀ T s) :=
+let s_inv : (away A₀ T s) :=
+  ((to_units ⟨s, ⟨1, by simp⟩⟩)⁻¹ : units (away A₀ T s)) in
+{x | ∃ t ∈ T, x = of t * s_inv }
+
+local notation `E` := T_over_s A₀ T s
+
 /--The ring of definition for the localization.-/
-def away_subring : Type u :=
-let s_inv : away T s := ((to_units ⟨s, ⟨1, by simp⟩⟩)⁻¹ : units (away T s)) in
-let E : set (away T s) := {x | ∃ t ∈ T, x = of t * s_inv } in
-ring.closure (of '' (range h.f) ∪ E)
+def away_subalgebra := adjoin A₀ E
 
-instance away_subring.comm_ring : comm_ring (h.away_subring T s) :=
-by delta away_subring; by apply_instance
+-- def away_subalgebra_map : A₀ → (away_subalgebra A₀ T s : Type _) :=
+-- subalgebra_map _
 
-def away_f : h.away_subring T s → away T s := subtype.val
+-- instance : is_ring_hom (away_subalgebra_map A₀ T s) :=
+-- by delta away_subalgebra_map; apply_instance
 
-instance away_f.is_ring_hom : is_ring_hom (h.away_f T s) :=
-@is_ring_hom.is_ring_hom _ _ _ ring.is_subring
+set_option class.instance_max_depth 50
 
-instance away.algebra : algebra (h.away_subring T s) (away T s) :=
-of_ring_hom (h.away_f T s) (away_f.is_ring_hom h T s)
+-- def away_ideal (J : ideal A₀) : ideal (adjoin A₀ E) :=
+-- J.map $ algebra_map _
+
+variables (J : ideal A₀) (top : is-J-adic)
+
+instance adjoin.topological_space (J : ideal A₀) :
+  topological_space (adjoin A₀ E) :=
+(J.map $ algebra_map _).adic_topology
+
+instance adjoin.topological_ring (J : ideal A₀) :
+  @topological_ring (adjoin A₀ E)
+  (adjoin.topological_space _ _ _ J) _ :=
+by convert @adic_ring.topological_ring _ _ (J.map $ (algebra_map (adjoin A₀ E)))
+
+-- @ideal.map _ _ _ _ (subalgebra_map $ adjoin A₀ (E A₀ T s))
+-- (subalgebra_map.is_ring_hom (adjoin A₀ (E A₀ T s)))
+--  J
+
+-- (algebra_map A₀ : A₀ → ((adjoin A₀ (E A₀ T s)) : Type _))
+
+-- /--The ring of definition for the localization.-/
+-- def away_subring : Type u :=
+-- let s_inv : away T s := ((to_units ⟨s, ⟨1, by simp⟩⟩)⁻¹ : units (away T s)) in
+-- let E : set (away T s) := {x | ∃ t ∈ T, x = of t * s_inv } in
+-- ring.closure (of '' (range h.f) ∪ E)
+
+-- instance away_subring.comm_ring : comm_ring (h.away_subring T s) :=
+-- by delta away_subring; by apply_instance
+
+-- def away_f : h.away_subring T s → away T s := subtype.val
+
+-- instance away_f.is_ring_hom : is_ring_hom (h.away_f T s) :=
+-- @is_ring_hom.is_ring_hom _ _ _ ring.is_subring
+
+-- instance away.algebra : algebra (h.away_subring T s) (away T s) :=
+-- of_ring_hom (h.away_f T s) (away_f.is_ring_hom h T s)
 
 
-def away_of_subring : A₀ → h.away_subring T s :=
-λ a, ⟨(h.f a), ring.mem_closure $ or.inl $ ⟨h.f a, mem_range_self a, rfl⟩⟩
+-- def away_of_subring : A₀ → h.away_subring T s :=
+-- λ a, ⟨(h.f a), ring.mem_closure $ or.inl $ ⟨h.f a, mem_range_self a, rfl⟩⟩
 
-instance away.of_subring.is_ring_hom :
-  is_ring_hom (h.away_of_subring T s) :=
-{ map_one := subtype.val_injective $ show of (h.f 1) = 1,
-    by erw [@is_ring_hom.map_one _ _ _ _ h.f h.hom, of_one _ _],
-  map_mul := λ a₁ a₂, subtype.val_injective $ show of (h.f _) = of (h.f _) * of (h.f _),
-    by erw [@is_ring_hom.map_mul _ _ _ _ h.f h.hom, of_mul _ _],
-  map_add := λ a₁ a₂, subtype.val_injective $ show of (h.f _) = of (h.f _) + of (h.f _),
-    by erw [@is_ring_hom.map_add _ _ _ _ h.f h.hom, of_add _ _] }
+-- instance away.of_subring.is_ring_hom :
+--   is_ring_hom (h.away_of_subring T s) :=
+-- { map_one := subtype.val_injective $ show of (h.f 1) = 1,
+--     by erw [@is_ring_hom.map_one _ _ _ _ h.f h.hom, of_one _ _],
+--   map_mul := λ a₁ a₂, subtype.val_injective $ show of (h.f _) = of (h.f _) * of (h.f _),
+--     by erw [@is_ring_hom.map_mul _ _ _ _ h.f h.hom, of_mul _ _],
+--   map_add := λ a₁ a₂, subtype.val_injective $ show of (h.f _) = of (h.f _) + of (h.f _),
+--     by erw [@is_ring_hom.map_add _ _ _ _ h.f h.hom, of_add _ _] }
 
-lemma away_comm_square :
-  (of : A → away T s) ∘ h.f = h.away_f T s ∘ h.away_of_subring T s := rfl
+-- lemma away_comm_square :
+--   (of : A → away T s) ∘ h.f = h.away_f T s ∘ h.away_of_subring T s := rfl
 
-def away_ideal : ideal (h.away_subring T s) :=
-h.J.map (h.away_of_subring T s)
 
-lemma away_ideal_fin :
-  ∃ (gen : set (h.away_subring T s)), finite gen ∧ ideal.span gen = h.away_ideal T s :=
-begin
-  rcases h.fin with ⟨gen, fin, span⟩,
-  resetI,
-  use h.away_of_subring T s '' gen,
-  split,
-  { apply finite_image _ fin, },
-  { rw [← ideal.map_span _ _, span],
-    refl, }
-end
+-- lemma away_ideal_fin :
+--   ∃ (gen : set (h.away_subring T s)), finite gen ∧ ideal.span gen = h.away_ideal T s :=
+-- begin
+--   rcases h.fin with ⟨gen, fin, span⟩,
+--   resetI,
+--   use h.away_of_subring T s '' gen,
+--   split,
+--   { apply finite_image _ fin, },
+--   { rw [← ideal.map_span _ _, span],
+--     refl, }
+-- end
 
-namespace away_subring
+-- namespace away_subring
 
-instance : topological_space (h.away_subring T s) :=
-(h.away_ideal T s).adic_topology
+-- instance : topological_space (h.away_subring T s) :=
+-- (h.away_ideal T s).adic_topology
 
-instance : topological_ring (h.away_subring T s) :=
-adic_ring.topological_ring
+-- instance : topological_ring (h.away_subring T s) :=
+-- adic_ring.topological_ring
 
-end away_subring
+-- end away_subring
 
 lemma exists_image_mul_left_subset (a : A) (i : ℕ) :
-  ∃ (j₀ : ℕ), ∀ j ≥ j₀, (*) a '' (h.f '' ↑(h.J ^ j)) ⊆ h.f '' ↑(h.J ^ i) :=
+  ∃ (j₀ : ℕ), ∀ j ≥ j₀, (*) a '' ((algebra_map A : A₀ → A) '' ↑(J ^ j)) ⊆
+  (algebra_map A : A₀ → A) '' ↑(J ^ i) :=
 begin
-  rcases h with ⟨f,hom,emb,hf,J,fin,top⟩,
   cases emb with inj ind,
   tactic.unfreeze_local_instances,
   subst ind,

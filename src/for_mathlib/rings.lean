@@ -1,4 +1,5 @@
 import ring_theory.ideal_operations ring_theory.localization data.equiv.algebra
+import ring_theory.algebra_operations
 import for_mathlib.subtype
 
 universes u u₁ u₂ v
@@ -17,9 +18,34 @@ funext $ λ _, is_ring_hom.map_mul f
 end
 
 namespace localization
-variables {R : Type*} [comm_ring R]
+variables {R : Type*} [comm_ring R] (s : set R) [is_submonoid s]
+
+instance : algebra R (localization R s) :=
+algebra.of_ring_hom of (by apply_instance)
 
 end localization
+
+namespace algebra
+open submodule
+variables {R : Type*} {A : Type*} [comm_ring R] [comm_ring A] [algebra R A]
+variables (M : submodule R A)
+
+lemma mul_left_span_singleton_eq_image (a : A) : ↑(span _ {a} * M) = (*) a '' M :=
+begin
+  ext x,
+  split; intro h,
+  { apply algebra.mul_induction_on h,
+    { intros a' ha' m hm,
+      rw mem_span_singleton at ha',
+      cases ha' with r hr,
+      use [r • m, M.smul_mem r hm],
+      rw [← hr],
+      simp },
+    repeat {sorry} },
+  { sorry }
+end
+
+end algebra
 
 namespace ideal
 
