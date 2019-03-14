@@ -29,3 +29,9 @@ begin
   rcases filter.mem_prod_iff.1 this with ⟨V₁, H₁, V₂, H₂, H⟩,
   exact ⟨V₁ ∩ V₂, filter.inter_mem_sets H₁ H₂, assume v w ⟨hv, _⟩ ⟨_, hw⟩, @H (v, w) ⟨hv, hw⟩⟩
 end
+
+lemma continuous_mul_left (a : A) : continuous (λ x, a * x) :=
+continuous_mul continuous_const continuous_id
+
+lemma continuous_mul_right (a : A) : continuous (λ x, x * a) :=
+continuous_mul continuous_id continuous_const

@@ -3,8 +3,30 @@ import for_mathlib.subtype
 
 universes u u₁ u₂ v
 
+section
+
+variables {R : Type*} {S : Type*} [ring R] [ring S]
+
+lemma mul_left_mul (x y : R) : (*) (x * y) = (*) x ∘ (*) y :=
+funext $ λ _, mul_assoc _ _ _
+
+lemma is_ring_hom.map_mul_left (f : R → S) [is_ring_hom f] (x : R) :
+  f ∘ ((*) x) = ((*) (f x)) ∘ f :=
+funext $ λ _, is_ring_hom.map_mul f
+
+
+end
+
 namespace ideal
+
 open function
+
+variables {R : Type*} {S : Type*} [comm_ring R] [comm_ring S]
+
+instance map_is_monoid_hom {f : R → S} [is_ring_hom f] :
+  is_monoid_hom (ideal.map f) :=
+{ map_one := ideal.map_top f,
+  map_mul := ideal.map_mul f }
 
 lemma map_span {R : Type u} [comm_ring R] {S : Type v} [comm_ring S]
   (f : R → S) [is_ring_hom f] (X : set R) :

@@ -85,7 +85,6 @@ instance to_add_group_with_zero_nhd {α :Type*} [ring_with_zero_nhd α] :
 instance : topological_space α :=
 by apply_instance
 
-
 instance : topological_ring α :=
 begin
   refine {..add_group_with_zero_nhd.topological_add_group, ..},

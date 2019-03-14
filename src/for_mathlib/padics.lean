@@ -92,47 +92,6 @@ begin
     simp [-padic.cast_eq_of_rat_of_nat],
 end
 
-lemma neg_def : ∀ x : ℤ_[p], -x = ⟨-x.val, by cases x; simpa⟩
-| ⟨x, hx⟩ := rfl
-
-instance : topological_ring ℤ_[p] :=
-{ continuous_neg :=
-  begin
-    suffices : continuous (λ (x : ℤ_[p]), show ℤ_[p], from ⟨-x.val, by cases x; simpa⟩),
-    { simpa [neg_def] },
-    apply continuous_subtype_mk,
-    apply continuous_neg continuous_subtype_val,
-    apply_instance
-  end,
-  continuous_add :=
-  begin
-    suffices : continuous (λ (x : ℤ_[p] × ℤ_[p]), show ℤ_[p], from ⟨x.fst + x.snd, _⟩),
-    { convert this,
-      { funext, apply subtype.val_injective, simp [add_def] },
-      refine le_trans (padic_norm_e.nonarchimedean _ _) (max_le_iff.2 _),
-      cases x with x y, cases x, cases y, split; assumption },
-    apply continuous_subtype_mk,
-    apply continuous_add
-      (continuous_fst.comp continuous_subtype_val)
-      (continuous_snd.comp continuous_subtype_val),
-    apply_instance
-  end,
-  continuous_mul :=
-  begin
-    suffices : continuous (λ (x : ℤ_[p] × ℤ_[p]), show ℤ_[p], from ⟨x.fst * x.snd, _⟩),
-    { convert this,
-      { funext, apply subtype.val_injective, simp [add_def] },
-      begin rw padic_norm_e.mul, apply mul_le_one;
-        { cases x with x y, cases x, cases y,
-          assumption <|> apply norm_nonneg }
-      end },
-    apply continuous_subtype_mk,
-    apply continuous_mul
-      (continuous_fst.comp continuous_subtype_val)
-      (continuous_snd.comp continuous_subtype_val),
-    apply_instance
-  end }
-
 instance coe_is_ring_hom : is_ring_hom (λ x, x : ℤ_[p] → ℚ_[p]) :=
 by refine {..} ; intros ; simp
 
