@@ -1,6 +1,6 @@
 import data.list.basic
 import topology.algebra.ring
-import ring_theory.subring
+import ring_theory.algebra_operations
 import group_theory.subgroup
 import ring_theory.localization
 
@@ -23,11 +23,10 @@ open set
 
 structure Huber_ring.ring_of_definition
   (A₀ : Type*) [comm_ring A₀] [topological_space A₀] [topological_ring A₀]
-  (A : Type*) [comm_ring A] [topological_space A] [topological_ring A] :=
-(f : A₀ → A)
-(hom : is_ring_hom f)
-(emb : embedding f)
-(hf  : is_open (range f))
+  (A : Type*) [comm_ring A] [topological_space A] [topological_ring A]
+  extends algebra A₀ A :=
+(emb : embedding to_fun)
+(hf  : is_open (range to_fun))
 (J   : ideal A₀)
 (fin : ∃ gen, finite gen ∧ ideal.span gen = J)
 (top : is_ideal_adic J)
@@ -41,7 +40,7 @@ end
 namespace Huber_ring
 
 namespace ring_of_definition
-open set localization
+open set localization algebra
 
 variables {A  : Type u} [comm_ring A ] [topological_space A ] [topological_ring A ]
 variables {A₀ : Type u} [comm_ring A₀] [topological_space A₀] [topological_ring A₀]
@@ -76,6 +75,10 @@ def away_f : h.away_subring T s → away T s := subtype.val
 
 instance away_f.is_ring_hom : is_ring_hom (h.away_f T s) :=
 @is_ring_hom.is_ring_hom _ _ _ ring.is_subring
+
+instance away.algebra : algebra (h.away_subring T s) (away T s) :=
+of_ring_hom (h.away_f T s) (away_f.is_ring_hom h T s)
+
 
 def away_of_subring : A₀ → h.away_subring T s :=
 λ a, ⟨(h.f a), ring.mem_closure $ or.inl $ ⟨h.f a, mem_range_self a, rfl⟩⟩

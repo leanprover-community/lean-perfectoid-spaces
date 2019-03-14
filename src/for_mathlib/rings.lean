@@ -14,8 +14,12 @@ lemma is_ring_hom.map_mul_left (f : R → S) [is_ring_hom f] (x : R) :
   f ∘ ((*) x) = ((*) (f x)) ∘ f :=
 funext $ λ _, is_ring_hom.map_mul f
 
-
 end
+
+namespace localization
+variables {R : Type*} [comm_ring R]
+
+end localization
 
 namespace ideal
 
