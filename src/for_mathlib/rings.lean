@@ -27,8 +27,15 @@ end localization
 
 namespace algebra
 open submodule
-variables {R : Type*} {A : Type*} [comm_ring R] [comm_ring A] [algebra R A]
+variables (R : Type*) (A : Type*) [comm_ring R] [ring A] [algebra R A]
 variables (M : submodule R A)
+
+def linear_map : R →ₗ[R] A :=
+{ to_fun := algebra_map _,
+  add := λ _ _, is_ring_hom.map_add _,
+  smul := λ c x, by rw smul_def c (algebra_map A x); exact is_ring_hom.map_mul _ }
+
+variables {R} {A}
 
 lemma mul_left_span_singleton_eq_image (a : A) : ↑(span _ {a} * M) = (*) a '' M :=
 begin
@@ -56,6 +63,37 @@ begin
 end
 
 end algebra
+
+namespace submodule
+open algebra
+
+variables {R : Type*} [comm_ring R]
+variables {A : Type*} [ring A] [algebra R A]
+variables {B : Type*} [ring B] [algebra R B]
+variables (f : A →ₐ[R] B)
+variables (M N : submodule R A)
+
+lemma map_mul : (M * N).map f.to_linear_map = M.map f.to_linear_map * N.map f.to_linear_map :=
+begin
+  apply le_antisymm,
+  { rintros _ ⟨m, hm, rfl⟩,
+    show f m ∈ M.map f.to_linear_map * N.map f.to_linear_map,
+    apply algebra.mul_induction_on hm; intros,
+    { erw f.map_mul,
+      apply mul_mem_mul; refine ⟨_,‹_›,rfl⟩ },
+    { erw f.map_zero,
+      exact submodule.zero_mem _ },
+    { erw f.map_add,
+      exact submodule.add_mem _ ‹_› ‹_› },
+    { erw f.to_linear_map.map_smul,
+      exact submodule.smul_mem _ ‹_› ‹_› } },
+  { rw mul_le,
+    rintros _ ⟨m, hm, rfl⟩ _ ⟨n, hn, rfl⟩,
+    use [m * n, mul_mem_mul hm hn],
+    apply f.map_mul, }
+end
+
+end submodule
 
 namespace ideal
 

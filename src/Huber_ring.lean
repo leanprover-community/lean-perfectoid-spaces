@@ -40,14 +40,12 @@ end
 namespace Huber_ring
 
 namespace ring_of_definition
-open set localization algebra
+open set localization algebra submodule
 
 variables {A  : Type u} [comm_ring A ] [topological_space A ] [topological_ring A ]
 variables (A₀ : Type u) [comm_ring A₀] [topological_space A₀] [topological_ring A₀]
 
 variables [algebra A₀ A]
-variables (emb : embedding (algebra_map A : A₀ → A))
-variables (open_range : is_open (range (algebra_map A : A₀ → A)))
 variables (T : set A) (s : A)
 
 /-
@@ -69,148 +67,90 @@ by delta away; apply_instance
 instance : algebra A₀ (away A₀ T s) :=
 by delta away; apply_instance
 
-def T_over_s : set (away A₀ T s) :=
+def T_over_s.aux : set (away A₀ T s) :=
 let s_inv : (away A₀ T s) :=
   ((to_units ⟨s, ⟨1, by simp⟩⟩)⁻¹ : units (away A₀ T s)) in
 {x | ∃ t ∈ T, x = of t * s_inv }
 
-local notation `E` := T_over_s A₀ T s
+local notation `T_over_s` := T_over_s.aux A₀ T s
 
 /--The ring of definition for the localization.-/
-def away_subalgebra := adjoin A₀ E
+def D.aux := adjoin A₀ T_over_s
 
--- def away_subalgebra_map : A₀ → (away_subalgebra A₀ T s : Type _) :=
--- subalgebra_map _
+local notation `D` := D.aux A₀ T s
 
--- instance : is_ring_hom (away_subalgebra_map A₀ T s) :=
--- by delta away_subalgebra_map; apply_instance
+variables (emb : embedding (algebra_map A : A₀ → A))
+variables (open_range : is_open (range (algebra_map A : A₀ → A)))
+variables (I₀ : ideal A₀) (top : is-I₀-adic)
 
-set_option class.instance_max_depth 50
+set_option class.instance_max_depth 90
+def J₀.aux : ideal D := I₀.map $ algebra_map _
 
--- def away_ideal (J : ideal A₀) : ideal (adjoin A₀ E) :=
--- J.map $ algebra_map _
+local notation `J₀` := J₀.aux A₀ T s I₀
 
-variables (J : ideal A₀) (top : is-J-adic)
+variable (A)
+def I.aux (i : ℕ) : submodule A₀ A := submodule.map (linear_map A₀ A) (I₀ ^ i)
 
-instance adjoin.topological_space (J : ideal A₀) :
-  topological_space (adjoin A₀ E) :=
-(J.map $ algebra_map _).adic_topology
+local notation `I^` i := I.aux A A₀ I₀ i
 
-instance adjoin.topological_ring (J : ideal A₀) :
-  @topological_ring (adjoin A₀ E)
-  (adjoin.topological_space _ _ _ J) _ :=
-by convert @adic_ring.topological_ring _ _ (J.map $ (algebra_map (adjoin A₀ E)))
+def J.aux : submodule D (away A₀ T s) :=
+submodule.map (linear_map D (away A₀ T s)) (J₀ : submodule D D)
 
--- @ideal.map _ _ _ _ (subalgebra_map $ adjoin A₀ (E A₀ T s))
--- (subalgebra_map.is_ring_hom (adjoin A₀ (E A₀ T s)))
---  J
+local notation `J^` i := submodule.map (linear_map D (away A₀ T s)) (J₀ ^ i)
 
--- (algebra_map A₀ : A₀ → ((adjoin A₀ (E A₀ T s)) : Type _))
+instance adjoin.topological_space : topological_space (D) :=
+(J₀).adic_topology
 
--- /--The ring of definition for the localization.-/
--- def away_subring : Type u :=
--- let s_inv : away T s := ((to_units ⟨s, ⟨1, by simp⟩⟩)⁻¹ : units (away T s)) in
--- let E : set (away T s) := {x | ∃ t ∈ T, x = of t * s_inv } in
--- ring.closure (of '' (range h.f) ∪ E)
+instance adjoin.topological_ring :
+  @topological_ring D (adjoin.topological_space _ _ _ I₀) _ :=
+by convert @adic_ring.topological_ring _ _ (J₀)
 
--- instance away_subring.comm_ring : comm_ring (h.away_subring T s) :=
--- by delta away_subring; by apply_instance
+include emb open_range top
+variables {A} {I₀}
 
--- def away_f : h.away_subring T s → away T s := subtype.val
-
--- instance away_f.is_ring_hom : is_ring_hom (h.away_f T s) :=
--- @is_ring_hom.is_ring_hom _ _ _ ring.is_subring
-
--- instance away.algebra : algebra (h.away_subring T s) (away T s) :=
--- of_ring_hom (h.away_f T s) (away_f.is_ring_hom h T s)
-
-
--- def away_of_subring : A₀ → h.away_subring T s :=
--- λ a, ⟨(h.f a), ring.mem_closure $ or.inl $ ⟨h.f a, mem_range_self a, rfl⟩⟩
-
--- instance away.of_subring.is_ring_hom :
---   is_ring_hom (h.away_of_subring T s) :=
--- { map_one := subtype.val_injective $ show of (h.f 1) = 1,
---     by erw [@is_ring_hom.map_one _ _ _ _ h.f h.hom, of_one _ _],
---   map_mul := λ a₁ a₂, subtype.val_injective $ show of (h.f _) = of (h.f _) * of (h.f _),
---     by erw [@is_ring_hom.map_mul _ _ _ _ h.f h.hom, of_mul _ _],
---   map_add := λ a₁ a₂, subtype.val_injective $ show of (h.f _) = of (h.f _) + of (h.f _),
---     by erw [@is_ring_hom.map_add _ _ _ _ h.f h.hom, of_add _ _] }
-
--- lemma away_comm_square :
---   (of : A → away T s) ∘ h.f = h.away_f T s ∘ h.away_of_subring T s := rfl
-
-
--- lemma away_ideal_fin :
---   ∃ (gen : set (h.away_subring T s)), finite gen ∧ ideal.span gen = h.away_ideal T s :=
--- begin
---   rcases h.fin with ⟨gen, fin, span⟩,
---   resetI,
---   use h.away_of_subring T s '' gen,
---   split,
---   { apply finite_image _ fin, },
---   { rw [← ideal.map_span _ _, span],
---     refl, }
--- end
-
--- namespace away_subring
-
--- instance : topological_space (h.away_subring T s) :=
--- (h.away_ideal T s).adic_topology
-
--- instance : topological_ring (h.away_subring T s) :=
--- adic_ring.topological_ring
-
--- end away_subring
-
-include emb top
-
-lemma exists_image_mul_left_subset (a : A) (i : ℕ) :
-  ∃ (j₀ : ℕ), ∀ j ≥ j₀, (*) a '' ((algebra_map A : A₀ → A) '' ↑(J ^ j)) ⊆
-  (algebra_map A : A₀ → A) '' ↑(J ^ i) :=
+lemma exists_image_mul_left_subset' (a : A) (i : ℕ) :
+  ∃ (j : ℕ), (*) a '' ((algebra_map A : A₀ → A) '' ↑(I₀ ^ j)) ⊆
+  (algebra_map A : A₀ → A) '' ↑(I₀ ^ i) :=
 begin
-  -- cases emb with inj ind,
-  -- tactic.unfreeze_local_instances,
-  -- subst ind,
-  -- resetI,
-  -- letI : topological_space A₀ := topological_space.induced f ‹topological_space A›,
   rw is_ideal_adic_iff at top,
   cases top with H₁ H₂,
-  -- proper start of the proof
-  -- show ∃ (j₀ : ℕ), ∀ j ≥ j₀, (*) a '' (f '' ↑(J ^ j)) ⊆ f '' ↑(J ^ i),
   simp only [set.image_subset_iff],
-  -- have key_fact : ∀ (s : set A₀), s ∈ nhds (0 : A₀) → ∃ (j₀ : ℕ), ∀ j ≥ j₀, ↑(J^j) ⊆ s :=
-  -- begin
-  --   intros s hs,
-  --   cases H₂ s hs with j₀ hj₀,
-  --   use j₀,
-  --   intros j hj,
-  --   apply set.subset.trans _ hj₀,
-  --   cases nat.exists_eq_add_of_le hj with k hk,
-  --   rw [hk, pow_add],
-  --   transitivity,
-  --   { exact ideal.mul_le_inf },
-  --   { rw ← submodule.le_def,
-  --     exact lattice.inf_le_left }
-  -- end,
-  -- apply key_fact,
-  -- rw mem_nhds_induced,
-  -- refine ⟨_, _, set.subset.refl _⟩,
-  -- apply mem_nhds_sets,
-  -- { apply continuous_mul_left _,
-  --   apply embedding_open ⟨inj, rfl⟩ hf (H₁ _),
-  --   apply_instance },
-  -- { use [0, (J^i).zero_mem],
-  --   simp [is_ring_hom.map_zero f] }
+  apply H₂,
+  apply mem_nhds_sets,
+  apply emb.continuous,
+  { apply continuous_mul_left,
+    apply embedding_open;
+    apply_assumption },
+  { use [0, (I₀^i).zero_mem],
+    simp [is_ring_hom.map_zero (algebra_map A)] }
 end
 
-omit emb top
+lemma exists_image_mul_left_subset (a : A) (i : ℕ) :
+  ∃ (j : ℕ), (span _ {a} * I^j) ≤ I^i :=
+begin
+  show ∃ (j : ℕ), ↑(span _ {a} * I^j) ⊆ ↑(I^i),
+  simp [mul_left_span_singleton_eq_image _ a],
+  apply exists_image_mul_left_subset' _ _ _ _ a i; assumption
+end
+
+omit emb open_range top
 
 namespace away
 open function
 
+
+
+include emb open_range top
+
 lemma exists_image_mul_left_subset.aux (a : A) (i : ℕ) :
-  ∃ (j₀ : ℕ), ∀ j ≥ j₀, (*) (of a : away T s) '' (h.away_f T s '' ↑(h.away_ideal T s ^ j)) ⊆
+  ∃ (j : ℕ), ((span _ {(of a : away A₀ T s)}) * J^j) ≤ J^i :=
+begin
+  cases exists_image_mul_left_subset A₀ emb open_range top a i with j hj,
+  use j,
+end
+
+lemma exists_image_mul_left_subset.aux (a : A) (i : ℕ) :
+  ∃ (j : ℕ), (*) (of a : away T s) '' (h.away_f T s '' ↑(h.away_ideal T s ^ j)) ⊆
     h.away_f T s '' ↑(h.away_ideal T s ^ i) :=
 begin
   cases exists_image_mul_left_subset h a i with j₀ hj₀,
