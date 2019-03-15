@@ -61,15 +61,17 @@ we construct a ring of definition that does depend on (h : ring_of_definition A�
 /--The localization at s, endowed with a topology that depends on T-/
 def away (T : set A) (s : A) := (comap A₀ A (away s))
 
-instance away.comm_ring : comm_ring (away A₀ T s) :=
+local notation `ATs` := away A₀ T s
+
+instance away.comm_ring : comm_ring (ATs) :=
 by delta away; apply_instance
 
-instance : algebra A₀ (away A₀ T s) :=
+instance : algebra A₀ (ATs) :=
 by delta away; apply_instance
 
-def T_over_s.aux : set (away A₀ T s) :=
-let s_inv : (away A₀ T s) :=
-  ((to_units ⟨s, ⟨1, by simp⟩⟩)⁻¹ : units (away A₀ T s)) in
+def T_over_s.aux : set (ATs) :=
+let s_inv : ATs :=
+  ((to_units ⟨s, ⟨1, by simp⟩⟩)⁻¹ : units ATs) in
 {x | ∃ t ∈ T, x = of t * s_inv }
 
 local notation `T_over_s` := T_over_s.aux A₀ T s
@@ -79,24 +81,32 @@ def D.aux := adjoin A₀ T_over_s
 
 local notation `D` := D.aux A₀ T s
 
-variables (emb : embedding (algebra_map A : A₀ → A))
-variables (open_range : is_open (range (algebra_map A : A₀ → A)))
+lemma away_comm_square :
+  (D).val.comp (of_id A₀ D) = (to_comap A₀ A _ : A →ₐ[A₀] ATs).comp (of_id A₀ A) := rfl
+
+-- lemma away_comm_square_linear :
+--   (D).val.to_linear_map.comp (of_id A₀ D).to_linear_map =
+--   (to_comap A₀ A _ : A →ₐ[A₀] ATs).to_linear_map.comp (of_id A₀ A).to_linear_map := rfl
+
+variables (emb : embedding (of_id A₀ A : A₀ → A))
+variables (open_range : is_open (range (of_id A₀ A : A₀ → A)))
 variables (I₀ : ideal A₀) (top : is-I₀-adic)
 
 set_option class.instance_max_depth 90
-def J₀.aux : ideal D := I₀.map $ algebra_map _
+
+def J₀.aux : ideal D := I₀.map $ of_id A₀ D
 
 local notation `J₀` := J₀.aux A₀ T s I₀
 
 variable (A)
-def I.aux (i : ℕ) : submodule A₀ A := submodule.map (linear_map A₀ A) (I₀ ^ i)
+def I.aux (i : ℕ) : submodule A₀ A := submodule.map (of_id A₀ A).to_linear_map (I₀ ^ i)
 variable {A}
 
 local notation `I^` i := I.aux A A₀ I₀ i
 
 include I₀
-def J.aux (i : ℕ) : submodule D (away A₀ T s) :=
-submodule.map (linear_map D (away A₀ T s)) (by convert J₀ ^ i : submodule D D)
+def J.aux (i : ℕ) : submodule D ATs :=
+submodule.map (of_id D ATs).to_linear_map (by convert J₀ ^ i : submodule D D)
 omit I₀
 
 local notation `J^` i := J.aux A₀ T s I₀ i
@@ -112,8 +122,7 @@ include emb open_range top
 variables {A} {I₀}
 
 lemma exists_image_mul_left_subset' (a : A) (i : ℕ) :
-  ∃ (j : ℕ), (*) a '' ((algebra_map A : A₀ → A) '' ↑(I₀ ^ j)) ⊆
-  (algebra_map A : A₀ → A) '' ↑(I₀ ^ i) :=
+  ∃ (j : ℕ), (*) a '' ((of_id A₀ A) '' ↑(I₀ ^ j)) ⊆ (of_id A₀ A) '' ↑(I₀ ^ i) :=
 begin
   rw is_ideal_adic_iff at top,
   cases top with H₁ H₂,
@@ -129,17 +138,15 @@ begin
 end
 
 lemma exists_image_mul_left_subset (a : A) (i : ℕ) :
-  ∃ (j : ℕ), (span _ {a} * I^j) ≤ I^i :=
+  ∃ (j : ℕ), (map (lmul_left A₀ A a) I^j) ≤ I^i :=
 begin
-  show ∃ (j : ℕ), ↑(span _ {a} * I^j) ⊆ ↑(I^i),
-  simp [mul_left_span_singleton_eq_image _ a],
   apply exists_image_mul_left_subset' _ _ _ _ a i; assumption
 end
 
 omit emb open_range top
 
 namespace away
-open function
+open function linear_map
 
 include emb open_range top
 
@@ -147,56 +154,47 @@ lemma exists_image_mul_left_subset.aux (a : A) (i : ℕ) :
   ∃ (j : ℕ), ((span _ {(of a : away A₀ T s)}) * J^j) ≤ J^i :=
 begin
   cases exists_image_mul_left_subset A₀ emb open_range top a i with j hj,
-  use j,
-end
-
-lemma exists_image_mul_left_subset.aux' (a : A) (i : ℕ) :
-  ∃ (j : ℕ), (*) (of a : away T s) '' (h.away_f T s '' ↑(h.away_ideal T s ^ j)) ⊆
-    h.away_f T s '' ↑(h.away_ideal T s ^ i) :=
-begin
-  cases exists_image_mul_left_subset h a i with j₀ hj₀,
-  use j₀,
-  intros j hj,
+  refine ⟨j, _⟩, -- change this to `use j` to get a deterministic timeout
+  simp only [mul_left_span_singleton_eq_image],
+  delta J.aux J₀.aux,
   erw ← @is_monoid_hom.map_pow _ _ _ _ (ideal.map _) ideal.map_is_monoid_hom,
   erw ← @is_monoid_hom.map_pow _ _ _ _ (ideal.map _) ideal.map_is_monoid_hom,
+  rw le_def',
   rintros _ ⟨_, ⟨⟨x₀, hx₀, rfl⟩, rfl⟩⟩,
   apply submodule.span_induction hx₀,
-  { intros x hx,
-    delta away_ideal ideal.map,
+  { intros m hm,
     refine set.image_subset _ ideal.subset_span _,
-    have key_fact := set.image_subset (of : A → away T s) (hj₀ j hj),
-    rw [← image_comp of, ← image_comp of] at key_fact,
-    rw [is_ring_hom.map_mul_left (of : A → away T s)] at key_fact,
-    rw [← image_comp, comp.assoc, h.away_comm_square T s, ← comp.assoc] at key_fact,
-    rw [image_comp, image_comp (h.away_f T s)] at key_fact,
+    have key_fact := submodule.map_mono hj,
+    erw [← map_comp, ← map_comp _ (to_comap A₀ A _ : A →ₐ[A₀] ATs).to_linear_map,
+      ← map_comp, map_lmul_left, comp_assoc,
+      ← to_linear_map_comp, ← away_comm_square A₀ T s, to_linear_map_comp,
+      ← comp_assoc, map_comp, map_comp, map_comp] at key_fact,
     apply key_fact,
-    use [x, hx] },
-  { use [0, (ideal.map _ _).zero_mem],
-    rw @is_ring_hom.map_zero _ _ _ _ (h.away_f _ _) (away_f.is_ring_hom h T s),
-    exact (mul_zero _).symm },
-  { rintros x y ⟨x', ⟨hx', hx⟩⟩ ⟨y', ⟨hy', hy⟩⟩,
-    use [x' + y', ideal.add_mem (ideal.map _ _) hx' hy'],
-    rw @is_ring_hom.map_add _ _ _ _ (h.away_f _ _) (away_f.is_ring_hom h T s),
-    rw @is_ring_hom.map_add _ _ _ _ (h.away_f _ _) (away_f.is_ring_hom h T s),
-    rw [hx, hy],
-    exact (left_distrib _ _ _).symm },
-  { rintros a' x ⟨x', ⟨hx', hx⟩⟩,
-    use [a' * x', ideal.mul_mem_left (ideal.map _ _) hx'],
-    rw smul_eq_mul,
-    rw @is_ring_hom.map_mul _ _ _ _ (h.away_f _ _) (away_f.is_ring_hom h T s),
-    rw @is_ring_hom.map_mul _ _ _ _ (h.away_f _ _) (away_f.is_ring_hom h T s),
-    rw [hx, ← mul_assoc, mul_comm _ (of a), mul_assoc] }
+    refine ⟨_, ⟨_, hm, rfl⟩, rfl⟩, },
+  { repeat {rw linear_map.map_zero},
+    apply submodule.zero_mem },
+  { intros,
+    repeat {rw linear_map.map_add},
+    apply submodule.add_mem; assumption },
+  { intros,
+    repeat {rw linear_map.map_smul},
+    apply submodule.smul_mem; assumption },
 end
 
 lemma exists_image_mul_left_subset.aux' (s' : powers s) (i : ℕ) :
-  ∃ (j : ℕ), (*) (units.val (to_units s' : units (away T s))⁻¹ : away T s) ''
-    (away_f h T s '' ↑(away_ideal h T s ^ j)) ⊆ away_f h T s '' ↑(away_ideal h T s ^ i) :=
+  ∃ (j : ℕ), ((span _ {(units.val (to_units s' : units ATs)⁻¹ : away A₀ T s)}) * J^j) ≤ J^i :=
 begin
+  delta J.aux,
   induction i with i ih,
-  { sorry },
+  { erw [pow_zero, ideal.one_eq_top, map_top],
+    simp only [mul_left_span_singleton_eq_image],
+    sorry },
   { cases ih with j hj,
-    use j+1,
-    sorry }
+    refine ⟨j+1, _⟩,
+    erw [pow_succ' _ j, pow_succ' _ i, submodule.map_mul],
+    erw [← mul_assoc],
+    convert mul_le_mul_left hj,
+    erw [submodule.map_mul, mul_comm] }
 end
 
 lemma exists_image_mul_left_subset (a : away T s) (i : ℕ) :

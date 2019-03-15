@@ -2,7 +2,7 @@ import ring_theory.ideal_operations ring_theory.localization data.equiv.algebra
 import ring_theory.algebra_operations
 import for_mathlib.subtype
 
-universes u u₁ u₂ v
+universes u u₁ u₂ v v₁ w
 
 section
 
@@ -26,41 +26,42 @@ algebra.of_ring_hom of (by apply_instance)
 end localization
 
 namespace algebra
+
+section span_mul
 open submodule
-variables (R : Type*) (A : Type*) [comm_ring R] [ring A] [algebra R A]
+variables {R : Type*} {A : Type*} [comm_ring R] [ring A] [algebra R A]
 variables (M : submodule R A)
 
-def linear_map : R →ₗ[R] A :=
-{ to_fun := algebra_map _,
-  add := λ _ _, is_ring_hom.map_add _,
-  smul := λ c x, by rw smul_def c (algebra_map A x); exact is_ring_hom.map_mul _ }
-
-variables {R} {A}
-
-lemma mul_left_span_singleton_eq_image (a : A) : ↑(span _ {a} * M) = (*) a '' M :=
+lemma mul_left_span_singleton_eq_image (a : A) :
+  span R {a} * M = map (lmul_left R A a) M :=
 begin
-  ext x,
-  split; intro h,
-  { apply algebra.mul_induction_on h,
-    { intros a' ha' m hm,
-      rw mem_span_singleton at ha',
-      cases ha' with r hr,
-      use [r • m, M.smul_mem r hm],
-      rw [← hr],
-      simp },
-    { use [0, M.zero_mem],
-      exact mul_zero _ },
-    { rintros a₁ a₂ ⟨m₁, hm₁, rfl⟩ ⟨m₂, hm₂, rfl⟩,
-      use [m₁ + m₂, M.add_mem hm₁ hm₂],
-      exact left_distrib _ _ _ },
-    { rintros r a' ⟨m, hm, rfl⟩,
-      use [r • m, M.smul_mem r hm],
-      simp } },
-  { rcases h with ⟨m, hm, rfl⟩,
+  apply le_antisymm,
+  { rw mul_le,
+    intros a' ha' m hm,
+    rw mem_span_singleton at ha',
+    rcases ha' with ⟨r, rfl⟩,
+    use [r • m, M.smul_mem r hm],
+    simp },
+  { rintros _ ⟨m, hm, rfl⟩,
     apply mul_mem_mul _ hm,
     apply subset_span,
     simp }
 end
+
+lemma mul_left_span_singleton_eq_image' (a : A) : ↑(span _ {a} * M) = (*) a '' M :=
+congr_arg submodule.carrier (mul_left_span_singleton_eq_image M a)
+
+end span_mul
+
+section to_linear_map
+variables {R : Type u} {A : Type v} {B : Type w} {C : Type u₁} {D : Type v₁}
+variables [comm_ring R] [ring A] [ring B] [ring C] [ring D]
+variables [algebra R A] [algebra R B] [algebra R C] [algebra R D]
+
+@[simp] lemma to_linear_map_comp (f : A →ₐ[R] B) (g : B →ₐ[R] C) :
+  (g.comp f).to_linear_map = g.to_linear_map.comp f.to_linear_map := rfl
+
+end to_linear_map
 
 end algebra
 
@@ -68,6 +69,8 @@ namespace submodule
 open algebra
 
 variables {R : Type*} [comm_ring R]
+
+section
 variables {A : Type*} [ring A] [algebra R A]
 variables {B : Type*} [ring B] [algebra R B]
 variables (f : A →ₐ[R] B)
@@ -76,21 +79,39 @@ variables (M N : submodule R A)
 lemma map_mul : (M * N).map f.to_linear_map = M.map f.to_linear_map * N.map f.to_linear_map :=
 begin
   apply le_antisymm,
-  { rintros _ ⟨m, hm, rfl⟩,
-    show f m ∈ M.map f.to_linear_map * N.map f.to_linear_map,
-    apply algebra.mul_induction_on hm; intros,
-    { erw f.map_mul,
-      apply mul_mem_mul; refine ⟨_,‹_›,rfl⟩ },
-    { erw f.map_zero,
-      exact submodule.zero_mem _ },
-    { erw f.map_add,
-      exact submodule.add_mem _ ‹_› ‹_› },
-    { erw f.to_linear_map.map_smul,
-      exact submodule.smul_mem _ ‹_› ‹_› } },
+  { rw [map_le_iff_le_comap, mul_le],
+    intros,
+    erw [mem_comap, f.map_mul],
+    apply mul_mem_mul; refine ⟨_, ‹_›, rfl⟩ },
   { rw mul_le,
     rintros _ ⟨m, hm, rfl⟩ _ ⟨n, hn, rfl⟩,
     use [m * n, mul_mem_mul hm hn],
-    apply f.map_mul, }
+    apply f.map_mul }
+end
+
+lemma map_lmul_left (a : A) :
+  f.to_linear_map.comp (lmul_left R A a) = (lmul_left R B (f a)).comp f.to_linear_map :=
+linear_map.ext $ λ b, f.map_mul a b
+
+-- instance : has_one (submodule R A) :=
+-- submodule.map (of_id R A).to_linear_map (1 : ideal R)
+-- 
+-- instance : monoid (submodule R A) :=
+-- {
+--   ..algebra.comm_semigroup }
+
+end
+
+section
+variables {M : Type*} [add_comm_group M] [module R M]
+variables {N : Type*} [add_comm_group N] [module R N]
+variables (f : M →ₗ[R] N)
+variables (s : set M)
+
+lemma map_span : (span R s).map f = span R (f '' s) :=
+le_antisymm (map_le_iff_le_comap.2 $ span_le.2 $ λ x hx, subset_span $ set.mem_image_of_mem f hx) $
+  span_le.mpr $ set.image_subset _ $ subset_span
+
 end
 
 end submodule
