@@ -41,8 +41,18 @@ begin
       use [r • m, M.smul_mem r hm],
       rw [← hr],
       simp },
-    repeat {sorry} },
-  { sorry }
+    { use [0, M.zero_mem],
+      exact mul_zero _ },
+    { rintros a₁ a₂ ⟨m₁, hm₁, rfl⟩ ⟨m₂, hm₂, rfl⟩,
+      use [m₁ + m₂, M.add_mem hm₁ hm₂],
+      exact left_distrib _ _ _ },
+    { rintros r a' ⟨m, hm, rfl⟩,
+      use [r • m, M.smul_mem r hm],
+      simp } },
+  { rcases h with ⟨m, hm, rfl⟩,
+    apply mul_mem_mul _ hm,
+    apply subset_span,
+    simp }
 end
 
 end algebra

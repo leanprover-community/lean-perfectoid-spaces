@@ -163,44 +163,48 @@ by convert @adic_ring.topological_ring _ _ (J.map $ (algebra_map (adjoin A₀ E)
 
 -- end away_subring
 
+include emb top
+
 lemma exists_image_mul_left_subset (a : A) (i : ℕ) :
   ∃ (j₀ : ℕ), ∀ j ≥ j₀, (*) a '' ((algebra_map A : A₀ → A) '' ↑(J ^ j)) ⊆
   (algebra_map A : A₀ → A) '' ↑(J ^ i) :=
 begin
-  cases emb with inj ind,
-  tactic.unfreeze_local_instances,
-  subst ind,
-  resetI,
-  letI : topological_space A₀ := topological_space.induced f ‹topological_space A›,
+  -- cases emb with inj ind,
+  -- tactic.unfreeze_local_instances,
+  -- subst ind,
+  -- resetI,
+  -- letI : topological_space A₀ := topological_space.induced f ‹topological_space A›,
   rw is_ideal_adic_iff at top,
   cases top with H₁ H₂,
   -- proper start of the proof
-  show ∃ (j₀ : ℕ), ∀ j ≥ j₀, (*) a '' (f '' ↑(J ^ j)) ⊆ f '' ↑(J ^ i),
+  -- show ∃ (j₀ : ℕ), ∀ j ≥ j₀, (*) a '' (f '' ↑(J ^ j)) ⊆ f '' ↑(J ^ i),
   simp only [set.image_subset_iff],
-  have key_fact : ∀ (s : set A₀), s ∈ nhds (0 : A₀) → ∃ (j₀ : ℕ), ∀ j ≥ j₀, ↑(J^j) ⊆ s :=
-  begin
-    intros s hs,
-    cases H₂ s hs with j₀ hj₀,
-    use j₀,
-    intros j hj,
-    apply set.subset.trans _ hj₀,
-    cases nat.exists_eq_add_of_le hj with k hk,
-    rw [hk, pow_add],
-    transitivity,
-    { exact ideal.mul_le_inf },
-    { rw ← submodule.le_def,
-      exact lattice.inf_le_left }
-  end,
-  apply key_fact,
-  rw mem_nhds_induced,
-  refine ⟨_, _, set.subset.refl _⟩,
-  apply mem_nhds_sets,
-  { apply continuous_mul_left _,
-    apply embedding_open ⟨inj, rfl⟩ hf (H₁ _),
-    apply_instance },
-  { use [0, (J^i).zero_mem],
-    simp [is_ring_hom.map_zero f] }
+  -- have key_fact : ∀ (s : set A₀), s ∈ nhds (0 : A₀) → ∃ (j₀ : ℕ), ∀ j ≥ j₀, ↑(J^j) ⊆ s :=
+  -- begin
+  --   intros s hs,
+  --   cases H₂ s hs with j₀ hj₀,
+  --   use j₀,
+  --   intros j hj,
+  --   apply set.subset.trans _ hj₀,
+  --   cases nat.exists_eq_add_of_le hj with k hk,
+  --   rw [hk, pow_add],
+  --   transitivity,
+  --   { exact ideal.mul_le_inf },
+  --   { rw ← submodule.le_def,
+  --     exact lattice.inf_le_left }
+  -- end,
+  -- apply key_fact,
+  -- rw mem_nhds_induced,
+  -- refine ⟨_, _, set.subset.refl _⟩,
+  -- apply mem_nhds_sets,
+  -- { apply continuous_mul_left _,
+  --   apply embedding_open ⟨inj, rfl⟩ hf (H₁ _),
+  --   apply_instance },
+  -- { use [0, (J^i).zero_mem],
+  --   simp [is_ring_hom.map_zero f] }
 end
+
+omit emb top
 
 namespace away
 open function
