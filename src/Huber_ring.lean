@@ -197,6 +197,9 @@ begin
     erw [submodule.map_mul, mul_comm] }
 end
 
+#exit
+-- everything that follows is not yet refactored
+
 lemma exists_image_mul_left_subset (a : away T s) (i : ℕ) :
   ∃ (j : ℕ), (*) a '' (h.away_f T s '' ↑(h.away_ideal T s ^ j)) ⊆
     h.away_f T s '' ↑(h.away_ideal T s ^ i) :=
