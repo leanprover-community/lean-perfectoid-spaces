@@ -90,13 +90,16 @@ local notation `J₀` := J₀.aux A₀ T s I₀
 
 variable (A)
 def I.aux (i : ℕ) : submodule A₀ A := submodule.map (linear_map A₀ A) (I₀ ^ i)
+variable {A}
 
 local notation `I^` i := I.aux A A₀ I₀ i
 
-def J.aux : submodule D (away A₀ T s) :=
-submodule.map (linear_map D (away A₀ T s)) (J₀ : submodule D D)
+include I₀
+def J.aux (i : ℕ) : submodule D (away A₀ T s) :=
+submodule.map (linear_map D (away A₀ T s)) (by convert J₀ ^ i : submodule D D)
+omit I₀
 
-local notation `J^` i := submodule.map (linear_map D (away A₀ T s)) (J₀ ^ i)
+local notation `J^` i := J.aux A₀ T s I₀ i
 
 instance adjoin.topological_space : topological_space (D) :=
 (J₀).adic_topology
@@ -138,8 +141,6 @@ omit emb open_range top
 namespace away
 open function
 
-
-
 include emb open_range top
 
 lemma exists_image_mul_left_subset.aux (a : A) (i : ℕ) :
@@ -149,7 +150,7 @@ begin
   use j,
 end
 
-lemma exists_image_mul_left_subset.aux (a : A) (i : ℕ) :
+lemma exists_image_mul_left_subset.aux' (a : A) (i : ℕ) :
   ∃ (j : ℕ), (*) (of a : away T s) '' (h.away_f T s '' ↑(h.away_ideal T s ^ j)) ⊆
     h.away_f T s '' ↑(h.away_ideal T s ^ i) :=
 begin
