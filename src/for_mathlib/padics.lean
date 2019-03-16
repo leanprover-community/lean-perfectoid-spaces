@@ -11,8 +11,8 @@ namespace padic_numbers
 
 variables {p : ℕ} [nat.prime p]
 
-@[simp] lemma norm_p : ∥(p : ℚ_[p])∥ = p⁻¹ := sorry
-@[simp] lemma norm_nat_pow_p (n : ℕ) : ∥(p : ℚ_[p])^n∥ = (p : ℝ) ^ (-n : ℤ) := sorry
+-- @[simp] lemma norm_p : ∥(p : ℚ_[p])∥ = p⁻¹ := sorry
+-- @[simp] lemma norm_nat_pow_p (n : ℕ) : ∥(p : ℚ_[p])^n∥ = (p : ℝ) ^ (-n : ℤ) := sorry
 @[simp] lemma norm_int_pow_p (n : ℤ) : ∥(p : ℚ_[p])^n∥ = (p : ℝ) ^ -n := sorry
 
 @[simp] lemma p_ne_zero : (p : ℚ_[p]) ≠ 0 :=
@@ -25,8 +25,8 @@ open function
 
 variables {p : ℕ} [nat.prime p]
 
-@[simp] lemma norm_p : ∥(p : ℤ_[p])∥ = p⁻¹ := sorry
-@[simp] lemma norm_pow_p (n : ℕ) : ∥(p : ℤ_[p])^n∥ = (p : ℝ) ^ (-n : ℤ) := sorry
+-- @[simp] lemma norm_p : ∥(p : ℤ_[p])∥ = p⁻¹ := sorry
+-- @[simp] lemma norm_pow_p (n : ℕ) : ∥(p : ℤ_[p])^n∥ = (p : ℝ) ^ (-n : ℤ) := sorry
 @[simp] lemma norm_units (u : units ℤ_[p]) : ∥(u : ℤ_[p])∥ = 1 :=
 is_unit_iff.mp $ is_unit_unit u
 
