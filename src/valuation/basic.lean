@@ -357,6 +357,26 @@ instance : ideal.is_prime (supp v) :=
 
 lemma v_nonzero_of_not_in_supp (a : R) (h : a ∉ supp v) : v a ≠ 0 := λ h2, h h2
 
+-- group version of v
+def v_to_Γ (a : R) : Γ :=
+option.rec_on (v a) 1 id
+
+variable {v}
+
+lemma v_to_Γ_is_v {a : R} (h : a ∉ supp v) : v a = ↑(v_to_Γ v a) :=
+begin
+  destruct (v a),
+  { intro h2,
+    exfalso,
+    apply v_nonzero_of_not_in_supp v a h,
+    exact h2
+  },
+  { intros g hg,
+    unfold v_to_Γ,
+    rw hg, refl,
+  }
+end
+
 -- v(a)=v(a+s) if s in support. First an auxiliary lemma
 lemma val_add_supp_aux (a s : R) (h : v s = 0) : v (a + s) ≤ v a :=
 begin
@@ -368,10 +388,12 @@ end
 
 lemma val_add_supp (a s : R) (h : s ∈ supp v) : v (a + s) = v a :=
 begin
-  apply le_antisymm (val_add_supp_aux v a s h),
-  convert val_add_supp_aux v (a + s) (-s) _, simp,
+  apply le_antisymm (val_add_supp_aux a s h),
+  convert val_add_supp_aux (a + s) (-s) _, simp,
   rwa ←ideal.neg_mem_iff at h,
 end
+
+variable (v)
 
 -- Function corresponding to extension of a valuation on R to a valuation on R / J if J is in the support -/
 definition on_quot_val {J : ideal R} (hJ : J ≤ supp v) :
@@ -379,7 +401,7 @@ definition on_quot_val {J : ideal R} (hJ : J ≤ supp v) :
 λ q, quotient.lift_on' q v $ λ a b h,
 begin
   have hsupp : a - b ∈ supp v := hJ h,
-  convert val_add_supp v b (a - b) hsupp,
+  convert val_add_supp b (a - b) hsupp,
   simp,
 end
 
@@ -405,7 +427,7 @@ definition on_quot {J : ideal R} (hJ : J ≤ supp v) :
 subtype.ext.mpr $ funext $
   λ r, @quotient.lift_on_beta _ _ (J.quotient_rel) v
   (λ a b h, have hsupp : a - b ∈ supp v := hJ h,
-    by convert val_add_supp v b (a - b) hsupp; simp) _
+    by convert val_add_supp b (a - b) hsupp; simp) _
 
 lemma comap_supp {S : Type u₁} [comm_ring S] (f : S → R) [is_ring_hom f] :
   supp (v.comap f) = ideal.comap f v.supp :=
@@ -438,6 +460,12 @@ begin
     exact ⟨x, hx, rfl⟩ },
   { rw ideal.map_le_iff_le_comap,
     intros x hx, exact hx }
+end
+
+lemma quot_supp_zero : supp (v.on_quot (le_refl _)) = 0 :=
+begin
+  rw supp_quot_supp,
+  exact ideal.map_quotient_self _,
 end
 
 end supp
@@ -560,14 +588,29 @@ end
 
 end fraction_ring
 
+section fraction_ring
+open localization
+
 variables [comm_ring R]
 variables {Γ : Type u} [linear_ordered_comm_group Γ] (v : valuation R Γ)
 
-definition valuation_field_aux := (supp v).quotient
+instance : integral_domain (ideal.quotient (supp v)) := by apply_instance
+instance : is_submonoid (localization.non_zero_divisors (ideal.quotient (supp v))) := by apply_instance
 
-instance : integral_domain (valuation_field_aux v) := by delta valuation_field_aux; apply_instance
+@[simp] lemma on_frac_quot_comap_eq :
+  ((v.on_quot (le_refl _)).on_frac $ quot_supp_zero v).comap (of ∘ (ideal.quotient.mk _)) = v :=
+by rw [comap_comp, on_frac_comap_eq, on_quot_comap_eq]
 
-definition valuation_field := localization.fraction_ring (valuation_field_aux v)
+end fraction_ring
+
+variables [comm_ring R]
+variables {Γ : Type u} [linear_ordered_comm_group Γ] (v : valuation R Γ)
+
+definition valuation_ID := (supp v).quotient
+
+instance valuation.integral_domain' : integral_domain (valuation_ID v) := by delta valuation_ID; apply_instance
+
+definition valuation_field := localization.fraction_ring (valuation_ID v)
 
 instance : discrete_field (valuation_field v) := by delta valuation_field; apply_instance
 
