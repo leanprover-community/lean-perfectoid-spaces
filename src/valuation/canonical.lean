@@ -254,8 +254,71 @@ end canonical_equivalent_valuation
 
 namespace canonical_valuation
 
--- This lemma shows that
--- the valuation v can be reconstructed from its associated canonical valuation
+-- everything in the image of the value group is a ratio of things
+-- coming from the ring
+lemma value_group.is_ratio (v : valuation R Γ) (g : value_group v) :
+∃ r s : R, r ∉ supp v ∧ s ∉ supp v ∧ canonical_valuation v s * g = canonical_valuation v r :=
+begin
+  rcases g with ⟨u, u', huu', hu'u⟩,
+  rcases u with ⟨⟨r⟩, ⟨s⟩, h⟩,
+  change ideal.quotient.mk _ s ∈ _ at h,
+  use r, use s,
+  have hs : s ∉ supp v,
+  { intro h2,
+    rw @localization.fraction_ring.mem_non_zero_divisors_iff_ne_zero
+      (valuation_ID v) at h,
+    rw (ideal.quotient.eq_zero_iff_mem).2 h2 at h,
+    apply h, refl,
+  },
+  have hr : r ∉ supp v,
+  {
+    change (localization.mk (submodule.quotient.mk r) (⟨submodule.quotient.mk s, h⟩) *
+      u' : valuation_field v) = 1 at huu',
+    intro hr,
+    rw (submodule.quotient.mk_eq_zero _).2 hr at huu',
+    have : (localization.of (ideal.quotient.mk (supp v) 0) : valuation_field v) / (localization.of (ideal.quotient.mk (supp v) s) : valuation_field v) * u' = 1,
+      simpa using huu',
+    rw ideal.quotient.mk_zero at this,
+    change ((0 : valuation_field v) / localization.of (ideal.quotient.mk (supp v) s) * u' = 1) at this,
+    rw _root_.zero_div at this,
+    rw zero_mul at this,
+    revert this, simp,
+  },
+  split, exact hr, split, exact hs,
+  let rq := ideal.quotient.mk (supp v) r,
+  let sq := ideal.quotient.mk (supp v) s,
+  have hr' : rq ≠ 0,
+    intro h2, apply hr, exact ideal.quotient.eq_zero_iff_mem.1 h2,
+  have hs' : sq ≠ 0,
+    intro h2, apply hs, exact ideal.quotient.eq_zero_iff_mem.1 h2,
+show (valuation_field.canonical_valuation_v v (localization.of sq)) *
+  ↑(value_group_quotient v _)
+--  ↑(quotient_group.mk _)
+ = (valuation_field.canonical_valuation_v v (localization.of rq)),
+  unfold valuation_field.canonical_valuation_v,
+  split_ifs,
+    exfalso, exact hs' (localization.fraction_ring.eq_zero_of _ h_1),
+    exfalso, exact hs' (localization.fraction_ring.eq_zero_of _ h_1),
+    exfalso, exact hr' (localization.fraction_ring.eq_zero_of _ h_2),
+  show some _ = some _,
+  congr,
+  show value_group_quotient v _ * value_group_quotient v _ = value_group_quotient v _,
+  rw ←(value_group_quotient.is_group_hom v).mul,
+  congr,
+  apply units.ext,
+  show localization.of sq * _ = localization.of rq,
+  suffices : (localization.of sq : valuation_field v) * (localization.mk rq ⟨sq, h⟩ : valuation_field v) = localization.of rq,
+    convert this,
+  rw localization.mk_eq,
+  rw mul_comm,
+  rw mul_assoc,
+  convert mul_one _,
+  convert units.inv_val _,
+end
+
+
+-- This lemma shows that the valuation v can be reconstructed from its
+-- associated canonical valuation
 lemma to_Γ :
 (canonical_valuation v).map (value_group.to_Γ v)
   (value_group.to_Γ_monotone _) = v :=
@@ -524,8 +587,6 @@ begin
   exact valuation.map_one _,
 end
 
--- jmc: Currently using tactic mode for this definition. Don't know how to cleanly avoid it.
--- KMB : fixed?
 def val_ring_equiv_of_is_equiv (h : v₁.is_equiv v₂) : v₁.valuation_ring ≃r v₂.valuation_ring :=
 { hom := begin
   cases (valfield_equiv_valfield_of_eq_supp h.supp_eq).hom,
@@ -562,7 +623,6 @@ begin
   refl,
 end
 
---set_option pp.notation false
 lemma is_equiv.norm_one_eq_norm_one (h : is_equiv v₁ v₂) : valuation_field_norm_one v₁ =
   valfield_units_of_valfield_units_of_eq_supp (is_equiv.supp_eq h) ⁻¹'
   valuation_field_norm_one v₂ :=
@@ -579,12 +639,67 @@ def is_equiv.value_group_equiv_aux (h : is_equiv v₁ v₂) : group_equiv (value
       (valuation_field_norm_one v₂))) :=
 group_equiv.quot_eq_of_eq $ h.norm_one_eq_norm_one
 
--- most of Wedhorn 1.27 (iii) -> (i)
+-- group part of Wedhorn 1.27 (iii) -> (i)
 def is_equiv.value_group_equiv (h : is_equiv v₁ v₂) :
 group_equiv (value_group v₁) (value_group v₂) :=
 group_equiv.trans (h.value_group_equiv_aux) $
   group_equiv.quotient
     (valfield_units_equiv_units_of_eq_supp (is_equiv.supp_eq h)) (valuation_field_norm_one v₂)
+
+-- ordering part of 1.27 (iii) -> (i)
+-- MAYBE I SHOULD PROVE THAT THE EQUIV SENDS V<=1 TO V<=1 FIRST?
+def is_equiv.value_group_order_equiv (h : is_equiv v₁ v₂) (x y : value_group v₁) (h2 : x ≤ y) :
+  h.value_group_equiv x ≤ h.value_group_equiv y :=
+begin
+  rcases canonical_valuation.value_group.is_ratio v₁ x with ⟨rx, sx, hrx, hsx, hx⟩,
+  rcases canonical_valuation.value_group.is_ratio v₁ y with ⟨ry, sy, hry, hsy, hy⟩,
+  let cv₁ := canonical_valuation v₁,
+  have hsx0 : 0 < cv₁ sx,
+  { apply lt_of_not_ge,
+    intro hv, apply hsx,
+    have hv' : cv₁ sx = 0 := (eq_zero_iff_le_zero cv₁).2 (by rw is_valuation.map_zero cv₁; exact hv),
+    exact (eq_zero_iff_le_zero v₁).2
+      ((v₁.canonical_valuation_is_equiv sx 0).1 ((eq_zero_iff_le_zero cv₁).1 hv')),
+  },
+  have hsy0 : 0 < cv₁ sy,
+  { apply lt_of_not_ge,
+    intro hv, apply hsy,
+    have hv' : cv₁ sy = 0 := (eq_zero_iff_le_zero cv₁).2 (by rw is_valuation.map_zero cv₁; exact hv),
+    exact (eq_zero_iff_le_zero v₁).2
+      ((v₁.canonical_valuation_is_equiv sy 0).1 ((eq_zero_iff_le_zero cv₁).1 hv')),
+  },
+  have : cv₁ (rx * sy) ≤ cv₁ (ry * sx),
+  calc cv₁ (rx * sy) = cv₁ rx * cv₁ sy : cv₁.map_mul _ _
+  ...                = (cv₁ sx * x) * cv₁ sy : by rw hx
+  ...                = (cv₁ sx * x) * cv₁ sy : by rw hx
+  ...                ≤ (cv₁ sx * y) * cv₁ sy :
+                         (linear_ordered_comm_monoid.mul_le_mul_right
+                           ((linear_ordered_comm_monoid.mul_le_mul_left
+                             (with_zero.some_le_some_of_le h2)) _) _)
+  ...                = cv₁ sy * y * cv₁ sx : by rw [mul_comm, mul_comm (cv₁ sx), mul_assoc]
+  ...                = cv₁ ry * cv₁ sx : by rw hy
+  ...                = cv₁ (ry * sx) : (cv₁.map_mul _ _).symm,
+  replace this := (v₁.canonical_valuation_is_equiv (rx * sy) (ry * sx)).1 this,
+  replace this := (h (rx * sy) (ry * sx)).1 this,
+  replace this := (v₂.canonical_valuation_is_equiv (rx * sy) (ry * sx)).2 this,
+
+  -- Goal should now follow from this and a similar calc calculation,
+  -- except that we need to know that is_equiv.value_group_equiv sends v1 to v2.
+
+  --induction x,
+  --  swap, refl,
+  --cases x with x1 x2 h12 h21,
+  --dsimp [setoid.r] at h2,
+  unfold coe_fn has_coe_to_fun.coe is_equiv.value_group_equiv group_equiv.trans,
+  dsimp,
+  unfold equiv.trans,
+  dsimp,
+  unfold is_equiv.value_group_equiv_aux group_equiv.quot_eq_of_eq,
+  dsimp,
+  rcases canonical_valuation.value_group.is_ratio v₁ x with ⟨rx, sx, hx⟩,
+  sorry
+end
+
 
 end -- some random section I guess?
 
