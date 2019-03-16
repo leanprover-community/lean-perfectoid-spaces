@@ -162,7 +162,10 @@ notation `is-`J`-adic` := is_ideal_adic J
 
 lemma is_ideal_adic_iff [topological_space R] [topological_ring R] (J : ideal R) :
   is-J-adic ↔ (∀ n : ℕ, is_open (J^n).carrier) ∧ (∀ s ∈ nhds (0 : R), ∃ n : ℕ, ↑(J^n) ⊆ s) :=
-begin
+sorry
+-- The proof below can be uncommented as soon as
+-- https://github.com/leanprover-community/mathlib/pull/826 is merged
+/- begin
   split,
   { intro H,
     delta is_ideal_adic at H,
@@ -183,7 +186,7 @@ begin
         rw mem_nhds_sets_iff,
         refine ⟨_, hn, H₁ n, (J^n).zero_mem⟩ } } }
 end
-
+ -/
 variables (R) [topological_space R] [topological_ring R]
 
 def is_adic : Prop := ∃ (J : ideal R), is-J-adic
