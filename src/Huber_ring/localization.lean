@@ -1,7 +1,7 @@
 import ring_theory.localization
 
 import for_mathlib.topological_rings
-import for_mathlib.rings
+import for_mathlib.algebra
 import for_mathlib.top_ring
 
 import Huber_ring.basic
