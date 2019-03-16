@@ -181,6 +181,8 @@ begin
     apply submodule.smul_mem; assumption },
 end
 
+-- TODO(jmc): This needs the assumption that T.A is open.
+-- I have not yet added that assumption.
 lemma exists_image_mul_left_subset.aux' (s' : powers s) (i : ℕ) :
   ∃ (j : ℕ), ((span _ {(units.val (to_units s' : units ATs)⁻¹ : away A₀ T s)}) * J^j) ≤ J^i :=
 begin

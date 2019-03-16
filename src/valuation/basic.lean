@@ -615,6 +615,8 @@ definition max_ideal : ideal (valuation_ring v) :=
     simpa using hx
   end }
 
+set_option class.instance_max_depth 40
+
 instance max_ideal_is_maximal : (max_ideal v).is_maximal :=
 begin
   rw ideal.is_maximal_iff,
@@ -643,6 +645,8 @@ begin
     apply subtype.val_injective,
     exact xinv_mul_x }
 end
+
+set_option class.instance_max_depth 32
 
 definition residue_field := (max_ideal v).quotient
 
