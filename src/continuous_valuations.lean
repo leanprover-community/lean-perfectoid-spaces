@@ -44,6 +44,22 @@ end
 def is_continuous' (v : valuation R Γ) : Prop :=
 ∀ s₁ s₂, is_open {r : R | v r * v s₁ < v s₂}
 
+lemma continuous_iff_continuous' {v : valuation R Γ} :
+is_continuous' v ↔ is_continuous v :=
+begin
+  split,
+  { intro h,
+    rintro ⟨⟨r,s⟩,u',huu',hu'u⟩,
+    have := h s.val r,
+    dsimp,
+    sorry
+  },
+  {
+    sorry
+  }
+end
+
+
 lemma is_equiv.is_continuous'_iff (h : v₁.is_equiv v₂) :
   v₁.is_continuous' ↔ v₂.is_continuous' :=
 begin
