@@ -1,4 +1,4 @@
-import power_bounded Huber_ring data.polynomial
+import power_bounded Huber_ring.basic data.polynomial
 
 universes u v
 

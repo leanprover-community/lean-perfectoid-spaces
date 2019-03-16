@@ -1,0 +1,49 @@
+import topology.algebra.ring
+import ring_theory.algebra_operations
+import group_theory.subgroup
+
+import power_bounded
+
+-- f-adic rings are called Huber rings by Scholze.
+-- Topological ring A contains on open subring A0 such that the subspace topology on A0 is
+-- I-adic, where I is a finitely generated ideal of A0 .
+
+local attribute [instance, priority 0] classical.prop_decidable
+
+universes u v
+
+section
+open set
+
+structure Huber_ring.ring_of_definition
+  (A₀ : Type*) [comm_ring A₀] [topological_space A₀] [topological_ring A₀]
+  (A : Type*) [comm_ring A] [topological_space A] [topological_ring A]
+  extends algebra A₀ A :=
+(emb : embedding to_fun)
+(hf  : is_open (range to_fun))
+(J   : ideal A₀)
+(fin : J.fg)
+(top : is_ideal_adic J)
+
+class Huber_ring (A : Type u) extends comm_ring A, topological_space A, topological_ring A :=
+(pod : ∃ (A₀ : Type u) [comm_ring A₀] [topological_space A₀] [topological_ring A₀],
+  by resetI; exact nonempty (Huber_ring.ring_of_definition A₀ A))
+
+end
+
+namespace Huber_ring
+
+variables {A : Type u} [Huber_ring A]
+
+lemma nonarchimedean : nonarchimedean A :=
+begin
+  rcases Huber_ring.pod A with ⟨A₀, H₁, H₂, H₃, H₄, emb, hf, J, Hfin, Htop⟩,
+  resetI,
+  apply nonarchimedean_of_nonarchimedean_embedding (algebra_map A) emb hf,
+  exact Htop.nonarchimedean,
+end
+
+instance power_bounded_subring.is_subring : is_subring (power_bounded_subring A) :=
+power_bounded_subring.is_subring nonarchimedean
+
+end Huber_ring

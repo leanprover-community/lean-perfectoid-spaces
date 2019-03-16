@@ -1,6 +1,6 @@
 import for_mathlib.padics
 
-import Huber_ring
+import Huber_ring.basic
 
 /-
 jmc: The first goal of this file is to show that the p-adics form a Huber ring.

@@ -2,7 +2,7 @@ import topology.algebra.ring
 import ring_theory.subring
 import tactic.linarith
 import power_bounded
-import Huber_ring
+import Huber_ring.basic
 
 import for_mathlib.topological_rings
 
