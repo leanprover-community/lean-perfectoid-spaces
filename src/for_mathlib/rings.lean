@@ -93,21 +93,24 @@ lemma map_lmul_left (a : A) :
   f.to_linear_map.comp (lmul_left R A a) = (lmul_left R B (f a)).comp f.to_linear_map :=
 linear_map.ext $ λ b, f.map_mul a b
 
-def one : submodule R A :=
-submodule.map (of_id R A).to_linear_map (1 : ideal R)
+-- TODO(jmc): Uncommenting these lines breaks things down the file.
+-- I have not yet investigated.
 
-instance : monoid (submodule R A) :=
-{ one := one,
-  one_mul :=
-  begin
-    intro M,
-    apply le_antisymm,
-    { rw mul_le,
-      sorry },
-    { sorry }
-  end,
-  mul_one := sorry,
-  ..algebra.semigroup }
+-- def one : submodule R A :=
+-- submodule.map (of_id R A).to_linear_map (1 : ideal R)
+
+-- instance : monoid (submodule R A) :=
+-- { one := one,
+--   one_mul :=
+--   begin
+--     intro M,
+--     apply le_antisymm,
+--     { rw mul_le,
+--       sorry },
+--     { sorry }
+--   end,
+--   mul_one := sorry,
+--   ..algebra.semigroup }
 
 -- TODO: comm_monoid if A is comm_ring
 
