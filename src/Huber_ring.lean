@@ -28,7 +28,7 @@ structure Huber_ring.ring_of_definition
 (emb : embedding to_fun)
 (hf  : is_open (range to_fun))
 (J   : ideal A₀)
-(fin : ∃ gen, finite gen ∧ ideal.span gen = J)
+(fin : J.fg)
 (top : is_ideal_adic J)
 
 class Huber_ring (A : Type u) extends comm_ring A, topological_space A, topological_ring A :=
@@ -199,6 +199,29 @@ begin
     erw [submodule.map_mul, mul_comm] }
 end
 
+end away
+
+end ring_of_definition
+
+end Huber_ring
+
+namespace Huber_ring
+
+variables {A : Type u} [Huber_ring A]
+
+lemma nonarchimedean : nonarchimedean A :=
+begin
+  rcases Huber_ring.pod A with ⟨A₀, H₁, H₂, H₃, H₄, emb, hf, J, Hfin, Htop⟩,
+  resetI,
+  apply nonarchimedean_of_nonarchimedean_embedding (algebra_map A) emb hf,
+  exact Htop.nonarchimedean,
+end
+
+instance power_bounded_subring.is_subring : is_subring (power_bounded_subring A) :=
+power_bounded_subring.is_subring nonarchimedean
+
+end Huber_ring
+
 #exit
 -- everything that follows is not yet refactored
 
@@ -257,18 +280,6 @@ sorry
 
 end ring_of_definition
 
-variables {A : Type u} [Huber_ring A]
-
-lemma nonarchimedean : nonarchimedean A :=
-begin
-  rcases Huber_ring.pod A with ⟨A₀, H₁, H₂, H₃, f, hom, emb, hf, J, Hfin, Htop⟩,
-  resetI,
-  apply nonarchimedean_of_nonarchimedean_embedding f emb hf,
-  exact Htop.nonarchimedean,
-end
-
-instance power_bounded_subring.is_subring : is_subring (power_bounded_subring A) :=
-power_bounded_subring.is_subring nonarchimedean
 
 
 /- KMB: I am commenting this out because it doesn't compile, I didn't write it,

@@ -280,8 +280,7 @@ instance (hR : nonarchimedean R) : is_add_subgroup (power_bounded_subring R) :=
 
 instance (hR : nonarchimedean R) : is_subring (power_bounded_subring R) :=
 { ..power_bounded_subring.is_submonoid,
-  ..power_bounded_subring.is_add_subgroup hR
-}
+  ..power_bounded_subring.is_add_subgroup hR }
 
 variable (R)
 definition is_uniform : Prop := is_bounded (power_bounded_subring R)
