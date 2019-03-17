@@ -463,10 +463,7 @@ begin
 end
 
 lemma quot_supp_zero : supp (v.on_quot (le_refl _)) = 0 :=
-begin
-  rw supp_quot_supp,
-  exact ideal.map_quotient_self _,
-end
+by rw supp_quot_supp; exact ideal.map_quotient_self _
 
 end supp
 
@@ -588,31 +585,27 @@ end
 
 end fraction_ring
 
-section fraction_ring
-open localization
-
-variables [comm_ring R]
-variables {Γ : Type u} [linear_ordered_comm_group Γ] (v : valuation R Γ)
-
-instance : integral_domain (ideal.quotient (supp v)) := by apply_instance
-instance : is_submonoid (localization.non_zero_divisors (ideal.quotient (supp v))) := by apply_instance
-
-@[simp] lemma on_frac_quot_comap_eq :
-  ((v.on_quot (le_refl _)).on_frac $ quot_supp_zero v).comap (of ∘ (ideal.quotient.mk _)) = v :=
-by rw [comap_comp, on_frac_comap_eq, on_quot_comap_eq]
-
-end fraction_ring
-
 variables [comm_ring R]
 variables {Γ : Type u} [linear_ordered_comm_group Γ] (v : valuation R Γ)
 
 definition valuation_ID := (supp v).quotient
 
-instance valuation.integral_domain' : integral_domain (valuation_ID v) := by delta valuation_ID; apply_instance
+instance valuation.integral_domain' : integral_domain (valuation_ID v) :=
+by delta valuation_ID; apply_instance
 
 definition valuation_field := localization.fraction_ring (valuation_ID v)
 
 instance : discrete_field (valuation_field v) := by delta valuation_field; apply_instance
+
+-- on_frac_quot_comap_eq needs more class.instance_max_depth to compile if
+-- this instance is not explicitly given as a hint
+instance : is_submonoid (localization.non_zero_divisors (ideal.quotient (supp v))) :=
+by apply_instance
+
+@[simp] lemma on_frac_quot_comap_eq :
+  ((v.on_quot (le_refl _)).on_frac $ quot_supp_zero v).comap
+  (localization.of ∘ (ideal.quotient.mk _)) = v :=
+by rw [comap_comp, on_frac_comap_eq, on_quot_comap_eq]
 
 section
 open ideal
