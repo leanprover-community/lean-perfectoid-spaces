@@ -677,7 +677,19 @@ def is_equiv.value_group_order_equiv (h : is_equiv v₁ v₂) (x y : value_group
 begin
   induction x, induction y,
   have h3 := (is_equiv.on_valuation_field_is_equiv h x y).1 h2,
+  sorry, refl, refl,
+end
 
+end -- section
+
+end valuation
+
+#exit
+
+def is_equiv.value_group_order_equiv (h : is_equiv v₁ v₂) (x y : value_group v₁) (h2 : x ≤ y) :
+  h.value_group_equiv.to_equiv x ≤ h.value_group_equiv.to_equiv y :=
+begin
+  -- ...
   rcases canonical_valuation.value_group.is_ratio v₁ x with ⟨rx, sx, hrx, hsx, hx⟩,
   rcases canonical_valuation.value_group.is_ratio v₁ y with ⟨ry, sy, hry, hsy, hy⟩,
   let cv₁ := canonical_valuation v₁,
