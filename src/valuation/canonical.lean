@@ -95,7 +95,8 @@ instance value_group_quotient.is_group_hom :
 is_group_hom (value_group_quotient v) := ⟨λ _ _, rfl⟩
 
 instance : linear_order (value_group v) :=
-{ le := λ a' b', quotient.lift_on₂' a' b' (λ s t, v.on_valuation_field s ≤ v.on_valuation_field t) $
+{ le := λ a' b', 
+    quotient.lift_on₂' a' b' (λ s t, v.on_valuation_field ↑s ≤ v.on_valuation_field ↑t) $
     λ a b c d hac hbd, begin
       change a⁻¹ * c ∈ is_group_hom.ker v.on_valuation_field.unit_map at hac,
       change b⁻¹ * d ∈ is_group_hom.ker v.on_valuation_field.unit_map at hbd,
@@ -256,6 +257,7 @@ namespace canonical_valuation
 
 -- everything in the image of the value group is a ratio of things
 -- coming from the ring
+-- Remark (KMB) -- writing this code was surprisingly painful
 lemma value_group.is_ratio (v : valuation R Γ) (g : value_group v) :
 ∃ r s : R, r ∉ supp v ∧ s ∉ supp v ∧ canonical_valuation v s * g = canonical_valuation v r :=
 begin
@@ -293,7 +295,6 @@ begin
     intro h2, apply hs, exact ideal.quotient.eq_zero_iff_mem.1 h2,
 show (valuation_field.canonical_valuation_v v (localization.of sq)) *
   ↑(value_group_quotient v _)
---  ↑(quotient_group.mk _)
  = (valuation_field.canonical_valuation_v v (localization.of rq)),
   unfold valuation_field.canonical_valuation_v,
   split_ifs,
@@ -315,7 +316,6 @@ show (valuation_field.canonical_valuation_v v (localization.of sq)) *
   convert mul_one _,
   convert units.inv_val _,
 end
-
 
 -- This lemma shows that the valuation v can be reconstructed from its
 -- associated canonical valuation
@@ -514,6 +514,10 @@ def quot_equiv_quot_of_eq_supp (h : supp v₁ = supp v₂) : (supp v₁).quotien
     refl
   end }
 
+def quot_equiv_quot_mk_eq_mk (h : supp v₁ = supp v₂) (r : R) :
+  (quot_equiv_quot_of_eq_supp h).to_equiv (ideal.quotient.mk _ r) = ideal.quotient.mk _ r :=
+quot_of_quot_of_eq_supp_quotient_mk' h r
+
 lemma quot_of_quot_of_eq_supp_inj (h : supp v₁ = supp v₂) : injective (quot_of_quot_of_eq_supp h) :=
 injective_of_left_inverse (quot_equiv_quot_of_eq_supp h).left_inv
 
@@ -544,6 +548,11 @@ fraction_ring.equiv_of_equiv (quot_equiv_quot_of_eq_supp h)
 instance valfield_equiv.is_field_hom (h : supp v₁ = supp v₂) :
   is_field_hom (valfield_equiv_valfield_of_eq_supp h).to_fun := by apply_instance
 
+lemma valfield_equiv_valfield_mk_eq_mk (h : supp v₁ = supp v₂) (r : R) :
+  (valfield_equiv_valfield_of_eq_supp h).to_equiv (of $ ideal.quotient.mk _ r)
+  = of (ideal.quotient.mk _ r) :=
+valfield_of_valfield_of_eq_supp_quotient_mk h r
+
 def valfield_units_of_valfield_units_of_eq_supp (h : supp v₁ = supp v₂) :
   units (valuation_field v₁) → units (valuation_field v₂) :=
 units.map $ valfield_of_valfield_of_eq_supp h
@@ -552,11 +561,20 @@ instance valfield_units.is_group_hom (h : supp v₁ = supp v₂) :
 is_group_hom (valfield_units_of_valfield_units_of_eq_supp h) :=
 by unfold valfield_units_of_valfield_units_of_eq_supp; apply_instance
 
+lemma units_valfield_of_units_valfield_of_eq_supp_mk
+  (h : supp v₁ = supp v₂) (r : R) (hr : r ∉ supp v₁) :
+  valfield_units_of_valfield_units_of_eq_supp h (units_valfield.mk v₁ r hr)
+  = units_valfield.mk v₂ r (h ▸ hr) := units.ext $ valfield_equiv_valfield_mk_eq_mk h r
+
 def valfield_units_equiv_units_of_eq_supp (h : supp v₁ = supp v₂) :
 group_equiv (units (valuation_field v₁)) (units (valuation_field v₂)) :=
 let h' := valfield_equiv_valfield_of_eq_supp h in
 by letI := h'.hom; exact units.map_equiv {hom := by apply_instance, ..h'}
 end
+
+lemma valfield_units_equiv_units_mk_eq_mk (h : supp v₁ = supp v₂) (r : R) (hr : r ∉ supp v₁):
+(valfield_units_equiv_units_of_eq_supp h).to_equiv (units_valfield.mk v₁ r hr) =
+units_valfield.mk v₂ r (h ▸ hr) := units_valfield_of_units_valfield_of_eq_supp_mk h r hr
 
 lemma is_equiv.comap_quot_of_quot (h : v₁.is_equiv v₂) :
   (v₁.on_quot (set.subset.refl _)).is_equiv
@@ -597,6 +615,12 @@ def val_ring_equiv_of_is_equiv (h : v₁.is_equiv v₂) : v₁.valuation_ring �
       apply_assumption,
 } end,
 ..val_ring_equiv_of_is_equiv_aux h }
+
+-- We could prove here
+-- lemma val_ring_equiv_mk_eq_mk (h : v₁.is_equiv v₂) (r : R) (hr : v₁ r ≤ 1) :
+-- val_ring_equiv_of_is_equiv.to_equiv ⟨of $ ideal.quotient.mk _ r, proof it's in val_ring⟩
+-- = ⟨of $ ideal.quotient.mk _ r, longer proof it's in val ring⟩
+-- but I'm not sure we need it.
 
 
 -- This explicit instance helps type class inference; it's a shortcut.
@@ -651,6 +675,9 @@ group_equiv.trans (h.value_group_equiv_aux) $
 def is_equiv.value_group_order_equiv (h : is_equiv v₁ v₂) (x y : value_group v₁) (h2 : x ≤ y) :
   h.value_group_equiv x ≤ h.value_group_equiv y :=
 begin
+  induction x, induction y,
+  have h3 := (is_equiv.on_valuation_field_is_equiv h x y).1 h2,
+  
   rcases canonical_valuation.value_group.is_ratio v₁ x with ⟨rx, sx, hrx, hsx, hx⟩,
   rcases canonical_valuation.value_group.is_ratio v₁ y with ⟨ry, sy, hry, hsy, hy⟩,
   let cv₁ := canonical_valuation v₁,

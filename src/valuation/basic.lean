@@ -597,6 +597,14 @@ definition valuation_field := localization.fraction_ring (valuation_ID v)
 
 instance : discrete_field (valuation_field v) := by delta valuation_field; apply_instance
 
+def units_valfield.mk (r : R) (h : r ∉ supp v) : units (valuation_field v) :=
+⟨localization.of (ideal.quotient.mk (supp v) r),
+ (localization.of (ideal.quotient.mk (supp v) r))⁻¹,
+ mul_inv_cancel (λ h2, h $ ideal.quotient.eq_zero_iff_mem.1 $
+   localization.fraction_ring.eq_zero_of _ h2),
+ inv_mul_cancel (λ h2, h $ ideal.quotient.eq_zero_iff_mem.1 $
+   localization.fraction_ring.eq_zero_of _ h2)⟩
+
 -- on_frac_quot_comap_eq needs more class.instance_max_depth to compile if
 -- this instance is not explicitly given as a hint
 instance : is_submonoid (localization.non_zero_divisors (ideal.quotient (supp v))) :=
