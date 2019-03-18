@@ -1,6 +1,9 @@
 -- the majority of this is PR'ed to mathlib, most to
 -- https://github.com/leanprover-community/mathlib/pull/789
 
+-- NOTE : this PR has changed so much that this file is now positively dangerous to import.
+#exit
+
 import algebra.group data.equiv.basic
 import group_theory.subgroup
 import group_theory.quotient_group
