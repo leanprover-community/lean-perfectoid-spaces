@@ -3,6 +3,8 @@ open function
 
 variables {α : Type*} {β : Type*}
 
+/-- A function between preorders is strictly monotone if
+  `a < b` implies `f a < f b`. -/
 def strict_mono [preorder α] [preorder β] (f : α → β) :=
 ∀ a b, a < b → f a < f b
 
