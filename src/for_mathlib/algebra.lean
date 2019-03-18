@@ -2,6 +2,7 @@ import ring_theory.algebra_operations
 import ring_theory.localization
 
 import for_mathlib.rings
+import for_mathlib.top_ring
 
 namespace localization
 variables {R : Type*} [comm_ring R] (s : set R) [is_submonoid s]
@@ -49,6 +50,22 @@ variables [algebra R A] [algebra R B] [algebra R C]
 
 end to_linear_map
 
+section
+variables {R : Type*} [comm_ring R]
+variables {A : Type*} [ring A] [algebra R A]
+variables {B : Type*} [ring B] [algebra R B]
+variables (f : A →ₐ[R] B)
+
+lemma map_lmul_left (a : A) :
+  f ∘ (lmul_left R A a) = (lmul_left R B (f a)) ∘ f :=
+funext $ λ b, f.map_mul a b
+
+lemma lmul_left_mul (a b : A) :
+  lmul_left R A (a * b) = (lmul_left R A a).comp (lmul_left R A b) :=
+linear_map.ext $ λ _, mul_assoc _ _ _
+
+end
+
 end algebra
 
 namespace submodule
@@ -61,6 +78,8 @@ variables {A : Type*} [ring A] [algebra R A]
 variables {B : Type*} [ring B] [algebra R B]
 variables (f : A →ₐ[R] B)
 variables (M N : submodule R A)
+
+attribute [simp] comap_id
 
 lemma map_mul : (M * N).map f.to_linear_map = M.map f.to_linear_map * N.map f.to_linear_map :=
 begin
@@ -75,9 +94,23 @@ begin
     apply f.map_mul }
 end
 
-lemma map_lmul_left (a : A) :
+@[simp] lemma lmul_left_one : lmul_left R A 1 = linear_map.id :=
+linear_map.ext $ λ _, one_mul _
+
+lemma lmul_left_comp (a : A) :
   f.to_linear_map.comp (lmul_left R A a) = (lmul_left R B (f a)).comp f.to_linear_map :=
 linear_map.ext $ λ b, f.map_mul a b
+
+lemma map_lmul_left_inv (a : units A) :
+  map (lmul_left R A ↑a⁻¹) = comap (lmul_left R A a) :=
+funext $ λ M, ext $ λ m, by { rw mem_map, }
+-- le_antisymm
+--   (by { rw [map_le_iff_le_comap, ← comap_comp, ← lmul_left_mul], simp [le_refl] })
+--   (by {  })
+
+lemma lmul_left_units_le_iff (a : units A) :
+  M.map (lmul_left _ _ a) ≤ N ↔ M ≤ N.map (lmul_left _ _ ↑a⁻¹) :=
+by rw [map_le_iff_le_comap, map_lmul_left_inv]
 
 /-
 TODO(jmc):
@@ -111,3 +144,26 @@ TODO(jmc):
 end
 
 end submodule
+
+section comm_algebra
+open algebra
+
+variables {R : Type*} {A: Type*} [comm_ring R] [comm_ring A] [algebra R A]
+  {ι : Type*} [inhabited ι] (M : ι → submodule R A)
+  (h_directed : ∀ i j, ∃ k, M k ≤ M i ⊓ M j)
+  (h_left_mul : ∀ x i, ∃ j, (M j).map (lmul_left _ _ x) ≤ M i)
+  (h_mul : ∀ i, ∃ j, (λ x : A × A, x.1*x.2) '' (set.prod (M j) (M j)) ≤ M i)
+include h_directed h_left_mul h_mul
+
+def of_submodules_comm : ring_with_zero_nhd A :=
+of_subgroups_comm (λ i, (M i : set A)) h_directed h_left_mul h_mul
+
+def topology_of_submodules_comm : topological_space A :=
+topology_of_subgroups_comm (λ i, (M i : set A)) h_directed h_left_mul h_mul
+
+lemma of_submodules_comm.nhds_zero (U : set A) :
+  U ∈ @nhds A (topology_of_submodules_comm _ h_directed h_left_mul h_mul)
+    (0 : A) ↔ ∃ i, (M i : set A) ⊆ U :=
+of_subgroups.nhds_zero _ _ _ _ _ _
+
+end comm_algebra

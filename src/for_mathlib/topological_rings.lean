@@ -35,3 +35,18 @@ continuous_mul continuous_const continuous_id
 
 lemma continuous_mul_right (a : A) : continuous (λ x, x * a) :=
 continuous_mul continuous_id continuous_const
+
+namespace topological_ring
+
+variables (A)
+
+def open_subgroups := { U : set A // is_add_subgroup U ∧ is_open U }
+
+variables {A} (U : open_subgroups A)
+
+instance : is_add_subgroup U.val := U.2.1
+
+instance : inhabited (open_subgroups A) :=
+{ default := ⟨set.univ, ⟨by apply_instance, by simp⟩⟩ }
+
+end topological_ring

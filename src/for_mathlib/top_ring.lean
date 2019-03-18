@@ -1,9 +1,10 @@
 import tactic.abel
-import tactic.squeeze
 import order.filter
 import topology.algebra.group
 import topology.algebra.ring
 import order.filter.lift
+
+import tactic.where
 
 section bases
 open filter set
@@ -115,7 +116,7 @@ end
 end ring_with_zero_nhd
 
 section
-open filter set lattice
+open filter set lattice add_group_with_zero_nhd
 variables {A : Type*} [ring A] {ι : Type*} [inhabited ι] (G : ι → set A) [∀ i, is_add_subgroup $ G i]
   (h_directed : ∀ i j, ∃ k, G k ⊆ G i ∩ G j)
   (h_left_mul : ∀ x i, ∃ j, (λ y : A, x*y) '' (G j) ⊆ G i)
@@ -172,7 +173,7 @@ def of_subgroups : ring_with_zero_nhd A :=
                 rw image_subset_iff at hj,
                 exact hj (⟨x_in, y_in⟩ : (x, y) ∈ set.prod (G j) (G j)),
               end,
-  ..‹ring A› }
+  to_ring := ‹ring A› }
 
 def topology_of_subgroups : topological_space A :=
 @ring_with_zero_nhd.topological_space A
@@ -187,4 +188,52 @@ begin
   change  U ∈ (⨅ i, principal (G i)) ↔ _,
   rw mem_infi_range_of_base h_directed,
 end
+
+lemma of_subgroups.is_open (i : ι) :
+  @is_open A (topology_of_subgroups _ h_directed h_left_mul h_right_mul h_mul) (G i) :=
+begin
+  letI rnz := (of_subgroups _ h_directed h_left_mul h_right_mul h_mul),
+  rw is_open_iff_nhds,
+  intros a ha,
+  rw nhds_eq,
+  rw le_principal_iff,
+  rw filter.mem_map,
+  erw filter.mem_infi,
+  { rw set.mem_Union,
+    use i,
+    rw show {x : A | x + a ∈ G i} = G i,
+    { ext g,
+      split; intro h,
+      { rw ← (is_add_subgroup.add_mem_cancel_left (G i) ha),
+        assumption },
+      { rw ← (is_add_subgroup.add_mem_cancel_left (G i) ha) at h,
+        assumption } },
+    exact mem_principal_self _ },
+  { intros i j,
+    cases h_directed i j with k hk,
+    use k,
+    split; show principal _ ≤ principal _;
+    rw principal_mono;
+    refine set.subset.trans hk _,
+    { apply set.inter_subset_left },
+    { apply set.inter_subset_right } },
+  { apply_instance }
 end
+
+end
+
+section comm_ring
+
+variables {A : Type*} [comm_ring A] {ι : Type*} [inhabited ι] (G : ι → set A) [∀ i, is_add_subgroup $ G i]
+  (h_directed : ∀ i j, ∃ k, G k ⊆ G i ∩ G j)
+  (h_left_mul : ∀ x i, ∃ j, (λ y : A, x*y) '' (G j) ⊆ G i)
+  (h_mul : ∀ i, ∃ j, (λ x : A × A, x.1*x.2) '' (set.prod (G j) (G j)) ⊆ G i)
+include h_directed h_left_mul h_mul
+
+def of_subgroups_comm : ring_with_zero_nhd A :=
+of_subgroups G h_directed h_left_mul (by simpa only [mul_comm]) h_mul
+
+def topology_of_subgroups_comm : topological_space A :=
+topology_of_subgroups G h_directed h_left_mul (by simpa only [mul_comm]) h_mul
+
+end comm_ring

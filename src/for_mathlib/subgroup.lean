@@ -1,8 +1,21 @@
--- This is all in PR #790
-
 import group_theory.subgroup
+import for_mathlib.submonoid
+
+section
+variables {α : Type*} [group α]
+
+@[to_additive is_add_subgroup.inter]
+lemma is_subgroup.inter (s₁ s₂ : set α) [is_subgroup s₁] [is_subgroup s₂] :
+  is_subgroup (s₁ ∩ s₂) :=
+{ inv_mem := λ x hx, ⟨is_subgroup.inv_mem hx.1, is_subgroup.inv_mem hx.2⟩,
+  ..is_submonoid.inter s₁ s₂ }
+
+end
+
 
 -- this should go around https://github.com/leanprover-community/mathlib/blob/8fbf296d9a50aaf7ea56832ac208a4ed6bbcae8e/src/group_theory/subgroup.lean#L443
+
+-- This is all in PR #790
 
 variables {α : Type*} {β : Type*} [group α] [group β]
 
