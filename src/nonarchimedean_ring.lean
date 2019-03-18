@@ -1,6 +1,9 @@
 import topology.algebra.ring
 import ring_theory.subring
 
+import tactic.tidy
+
+import for_mathlib.subgroup
 import for_mathlib.adic_topology
 import for_mathlib.top_ring
 import for_mathlib.topological_rings
@@ -37,6 +40,61 @@ begin
 end
 
 end of_subgroups
+
+namespace nonarchimedean
+open topological_ring
+variables {R : Type*} [comm_ring R] [topological_space R] [topological_ring R]
+variables {S : Type*} [comm_ring S] [topological_space S] [topological_ring S]
+
+lemma open_subgroups_directed (h : nonarchimedean R) (U₁ U₂ : open_subgroups R) :
+  ∃ U : open_subgroups R, U.1 ⊆ U₁.1 ∩ U₂.1 :=
+begin
+  let U : open_subgroups R := ⟨_, _, _⟩,
+  { use U },
+  { apply is_add_subgroup.inter },
+  { exact is_open_inter U₁.2.2 U₂.2.2 }
+end
+
+lemma left_mul_subset (h : nonarchimedean R) (U : open_subgroups R) (r : R) :
+  ∃ V : open_subgroups R, (λ x : R, r * x) '' V.1 ⊆ U.1 :=
+begin
+  let V : open_subgroups R := ⟨_, _, _⟩,
+  { use V,
+    rw set.image_subset_iff },
+  { letI : is_add_group_hom (λ (x : R), r * x) :=
+      ⟨λ _ _, left_distrib _ _ _⟩,
+    apply_instance },
+  { apply continuous_mul_left,
+    exact U.2.2 }
+end
+
+lemma prod (hR : nonarchimedean R) (hS : nonarchimedean S) :
+  nonarchimedean (R × S) :=
+begin
+  intros U hU,
+  rw [show (0 : R × S) = (0,0), from rfl] at hU,
+  rw nhds_prod_eq at hU,
+  rw filter.mem_prod_iff at hU,
+  rcases hU with ⟨U₁, hU₁, U₂, hU₂, h⟩,
+  rcases hR _ hU₁ with ⟨V₁, _, _, _⟩,
+  rcases hS _ hU₂ with ⟨V₂, _, _, _⟩,
+  refine ⟨set.prod V₁ V₂, _, _, _⟩,
+  { resetI, apply_instance },
+  { apply is_open_prod; assumption },
+  { refine set.subset.trans (set.prod_mono _ _) h; assumption }
+end
+
+lemma mul_subset (h : nonarchimedean R) (U : open_subgroups R) :
+  ∃ V : open_subgroups R, (λ x : R × R, x.1*x.2) '' (set.prod V.1 V.1) ⊆ U.1 :=
+begin
+  let V : open_subgroups R := ⟨_, _, _⟩,
+  work_on_goal 0 {
+    use V,
+    rw set.image_subset_iff },
+  sorry
+end
+
+end nonarchimedean
 
 variables {R : Type*} [comm_ring R]
 

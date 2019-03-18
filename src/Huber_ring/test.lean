@@ -85,7 +85,10 @@ begin
     use V,
     erw [localization.mk_eq, mul_comm, lmul_left_mul, map_comp],
     refine le_trans (map_mono hV) _,
-    clear hV V, },
+    clear hV V,
+    rw lmul_left_units_le_iff,
+    rw [inv_inv, to_units_coe],
+    rw map_span, },
 end
 begin
   intro U,

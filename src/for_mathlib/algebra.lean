@@ -1,6 +1,8 @@
 import ring_theory.algebra_operations
 import ring_theory.localization
 
+import tactic.tidy
+
 import for_mathlib.rings
 import for_mathlib.top_ring
 
@@ -64,6 +66,13 @@ lemma lmul_left_mul (a b : A) :
   lmul_left R A (a * b) = (lmul_left R A a).comp (lmul_left R A b) :=
 linear_map.ext $ λ _, mul_assoc _ _ _
 
+-- This can be removed after updating mathlib
+local attribute [instance] linear_map.endomorphism_ring
+
+instance : is_monoid_hom (lmul_left R A) :=
+{ map_one := linear_map.ext $ λ _, one_mul _,
+  map_mul := lmul_left_mul }
+
 end
 
 end algebra
@@ -101,12 +110,55 @@ lemma lmul_left_comp (a : A) :
   f.to_linear_map.comp (lmul_left R A a) = (lmul_left R B (f a)).comp f.to_linear_map :=
 linear_map.ext $ λ b, f.map_mul a b
 
+lemma map_eq_comap_symm {M : Type*} {N : Type*}
+  [add_comm_group M] [add_comm_group N] [module R M] [module R N]
+  (f : M ≃ₗ[R] N) :
+  map (↑f : M →ₗ[R] N) = comap ↑f.symm :=
+funext $ λ P, ext $ λ x,
+begin
+  rw [mem_map, mem_comap],
+  split; intro h,
+  { rcases h with ⟨p, h₁, h₂⟩,
+    erw ← f.to_equiv.eq_symm_apply at h₂,
+    rwa h₂ at h₁ },
+  { exact ⟨_, h, f.apply_symm_apply x⟩ }
+end
+
+-- This can be removed after updating mathlib
+local attribute [instance] linear_map.endomorphism_ring
+
+def linear_equiv_of_units {M : Type*} [add_comm_group M] [module R M]
+  (f : units (M →ₗ[R] M)) : (M ≃ₗ[R] M) :=
+{ inv_fun := f.inv.to_fun,
+  left_inv := λ m, show (f.inv * f.val) m = m,
+    by erw f.inv_val; simp,
+  right_inv := λ m, show (f.val * f.inv) m = m,
+    by erw f.val_inv; simp,
+  ..f.val }
+
+def units_of_linear_equiv {M : Type*} [add_comm_group M] [module R M]
+  (f : (M ≃ₗ[R] M)) : units (M →ₗ[R] M) :=
+{ val := f,
+  inv := f.symm,
+  val_inv := linear_map.ext $ λ _, f.apply_symm_apply _,
+  inv_val := linear_map.ext $ λ _, f.symm_apply_apply _ }
+
+def units_equiv {M : Type*} [add_comm_group M] [module R M] :
+  units (M →ₗ[R] M) ≃ (M ≃ₗ[R] M) :=
+{ to_fun := linear_equiv_of_units,
+  inv_fun := units_of_linear_equiv,
+  left_inv := by tidy,
+  right_inv := λ f,
+  begin
+    delta linear_equiv_of_units units_of_linear_equiv,
+    cases f,
+    tidy
+  end }
+
 lemma map_lmul_left_inv (a : units A) :
   map (lmul_left R A ↑a⁻¹) = comap (lmul_left R A a) :=
-funext $ λ M, ext $ λ m, by { rw mem_map, }
--- le_antisymm
---   (by { rw [map_le_iff_le_comap, ← comap_comp, ← lmul_left_mul], simp [le_refl] })
---   (by {  })
+map_eq_comap_symm $ linear_equiv_of_units $
+  units.map (lmul_left R A) a⁻¹
 
 lemma lmul_left_units_le_iff (a : units A) :
   M.map (lmul_left _ _ a) ≤ N ↔ M ≤ N.map (lmul_left _ _ ↑a⁻¹) :=
