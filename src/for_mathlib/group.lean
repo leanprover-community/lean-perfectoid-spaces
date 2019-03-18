@@ -19,7 +19,7 @@ begin
 end
 
 -- this one lemma is not PR'ed yet.
-def quot_eq_of_eq {G1 : set G} [normal_subgroup G1] {G2 : set G} [normal_subgroup G2]
+def group_equiv.quot_eq_of_eq {G1 : set G} [normal_subgroup G1] {G2 : set G} [normal_subgroup G2]
 (h : G1 = G2) : group_equiv (quotient G1) (quotient G2) :=
 { to_fun := λ q, quotient.lift_on' q (quotient_group.mk : G → quotient G2) $
     λ a b hab, quotient.sound'

@@ -95,7 +95,7 @@ instance value_group_quotient.is_group_hom :
 is_group_hom (value_group_quotient v) := ⟨λ _ _, rfl⟩
 
 instance : linear_order (value_group v) :=
-{ le := λ a' b', 
+{ le := λ a' b',
     quotient.lift_on₂' a' b' (λ s t, v.on_valuation_field ↑s ≤ v.on_valuation_field ↑t) $
     λ a b c d hac hbd, begin
       change a⁻¹ * c ∈ is_group_hom.ker v.on_valuation_field.unit_map at hac,
@@ -569,7 +569,7 @@ lemma units_valfield_of_units_valfield_of_eq_supp_mk
 def valfield_units_equiv_units_of_eq_supp (h : supp v₁ = supp v₂) :
 group_equiv (units (valuation_field v₁)) (units (valuation_field v₂)) :=
 let h' := valfield_equiv_valfield_of_eq_supp h in
-by letI := h'.hom; exact units.map_equiv {hom := by apply_instance, ..h'}
+by letI := h'.hom; exact units.map_equiv {mul_hom := h'.hom.map_mul, ..h'}
 end
 
 lemma valfield_units_equiv_units_mk_eq_mk (h : supp v₁ = supp v₂) (r : R) (hr : r ∉ supp v₁):
@@ -673,11 +673,11 @@ group_equiv.trans (h.value_group_equiv_aux) $
 -- ordering part of 1.27 (iii) -> (i)
 -- MAYBE I SHOULD PROVE THAT THE EQUIV SENDS V<=1 TO V<=1 FIRST?
 def is_equiv.value_group_order_equiv (h : is_equiv v₁ v₂) (x y : value_group v₁) (h2 : x ≤ y) :
-  h.value_group_equiv x ≤ h.value_group_equiv y :=
+  h.value_group_equiv.to_equiv x ≤ h.value_group_equiv.to_equiv y :=
 begin
   induction x, induction y,
   have h3 := (is_equiv.on_valuation_field_is_equiv h x y).1 h2,
-  
+
   rcases canonical_valuation.value_group.is_ratio v₁ x with ⟨rx, sx, hrx, hsx, hx⟩,
   rcases canonical_valuation.value_group.is_ratio v₁ y with ⟨ry, sy, hry, hsy, hy⟩,
   let cv₁ := canonical_valuation v₁,

@@ -86,17 +86,20 @@ end mul_equiv
 
 -- equiv of groups
 
-structure group_equiv (α : Type*) (β : Type*) [group α] [group β] extends mul_equiv α β
+def group_equiv (α : Type*) (β : Type*) [group α] [group β] := mul_equiv α β
 
 namespace group_equiv
 variables [group α] [group β] [group γ]
 
-@[refl] def refl (α : Type*) [group α] : group_equiv α α := {..mul_equiv.refl α}
-@[symm] def symm (h : group_equiv α β) : group_equiv β α := { ..mul_equiv.symm h.to_mul_equiv}
-@[trans] def trans (h : group_equiv α β) (h' : group_equiv β γ) : group_equiv α γ :=
-{ ..mul_equiv.trans h.to_mul_equiv h'.to_mul_equiv}
+@[refl] def refl (α : Type*) [group α] : group_equiv α α := mul_equiv.refl α
+
+@[symm] def symm : group_equiv α β → group_equiv β α := mul_equiv.symm
+
+@[trans] def trans : group_equiv α β → group_equiv β γ → group_equiv α γ := mul_equiv.trans
 
 end group_equiv
+
+-- equiv of add_groups needs doing
 
 namespace mul_equiv
 
