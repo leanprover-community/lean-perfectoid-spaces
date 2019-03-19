@@ -7,10 +7,12 @@ import for_mathlib.monotone
 import for_mathlib.rings
 import for_mathlib.with_zero
 import for_mathlib.linear_ordered_comm_group
+import for_mathlib.order -- preorder.comap
 
 import tactic.tidy
 import tactic.abel
 import tactic.ring
+import tactic.where
 
 /- valuations.basic
 
@@ -90,6 +92,10 @@ instance : is_valuation v := v.property
 @[simp] lemma map_one  : v 1 = 1 := v.property.map_one
 @[simp] lemma map_mul  : ∀ x y, v (x * y) = v x * v y := v.property.map_mul
 @[simp] lemma map_add  : ∀ x y, v (x + y) ≤ v x ∨ v (x + y) ≤ v y := v.property.map_add
+
+-- not an instance, because more than one v on a given R
+/-- a valuation gives a preorder on the underlying ring-/
+def to_preorder : preorder R := preorder.comap v
 
 -- If x ∈ R is a unit then v x is non-zero
 theorem map_unit (h : x * y = 1) : (v x).is_some :=
@@ -464,6 +470,10 @@ end
 
 lemma quot_supp_zero : supp (v.on_quot (le_refl _)) = 0 :=
 by rw supp_quot_supp; exact ideal.map_quotient_self _
+
+lemma quot_preorder_comap {J : ideal R} (hJ : J ≤ supp v) :
+preorder.comap' (v.on_quot hJ).to_preorder (ideal.quotient.mk J) = v.to_preorder :=
+preorder.ext $ λ x y, iff.rfl
 
 end supp
 

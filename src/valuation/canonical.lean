@@ -3,6 +3,7 @@ import valuation.basic
 import for_mathlib.quotient_group
 import for_mathlib.subgroup
 import for_mathlib.group -- group_equiv
+import for_mathlib.order -- preorder.comap
 /-
 
 The purpose of this file is to define a "canonical" valuation equivalent to
