@@ -14,11 +14,10 @@ universes u v
 
 local attribute [instance, priority 0] classical.prop_decidable
 
-variables {A  : Type u} [comm_ring A ] [topological_space A ] [topological_ring A ]
-variables (T : set A) (s : A)
-
 namespace Huber_ring
 open localization algebra topological_ring submodule set
+variables {A  : Type u} [comm_ring A] [topological_space A ] [topological_ring A]
+variables (T : set A) (s : A)
 
 def away (T : set A) (s : A) := away s
 
@@ -148,16 +147,27 @@ begin
   }
 end
 
-section
+end away
 
-end
+end Huber_ring
+
+namespace Huber_ring
+open localization algebra topological_ring submodule set
+variables {A  : Type u} [Huber_ring A]
+variables (T : set A) (s : A)
+
+namespace away
+
+set_option class.instance_max_depth 80
 
 /- Wedhorn 6.20 for n = 1-/
-lemma mul_T_open [Huber_ring A] (hT : is_open ↑(ideal.span T)) (U : open_subgroups A) :
-  is_open (subgroup.closure {x | ∃ t ∈ T, ∃ u ∈ U.val, x = t * u}) :=
-sorry
+lemma mul_T_open (hT : is_open (↑(ideal.span T) : set A)) (U : open_subgroups A) :
+  is_open (add_group.closure {x | ∃ t ∈ T, ∃ u ∈ U.val, x = t * u}) :=
+begin
+  sorry
+end
 
-instance (h : nonarchimedean A) (hT : is_open (↑(ideal.span T) : set A)) :
+instance (hT : is_open (↑(ideal.span T) : set A)) :
   topological_space (away T s) :=
 topology_of_submodules_comm
 (λ U : open_subgroups A, span (D T s) (of_id A (away T s) '' U.1))
@@ -178,7 +188,7 @@ begin
   apply localization.induction_on a',
   intros a s',
   let W : open_subgroups A := _,
-  cases aux₁ T s h W a with V hV,
+  cases aux₁ T s Huber_ring.nonarchimedean W a with V hV,
   work_on_goal 0 {
     use V,
     erw [localization.mk_eq, mul_comm, lmul_left_mul, map_comp],
@@ -195,7 +205,7 @@ begin
     -- rcases h.left_mul_subset U s' with ⟨_, _⟩,
      },
 end
-(mul_subset T s h)
+(mul_subset T s Huber_ring.nonarchimedean)
 
 end away
 
