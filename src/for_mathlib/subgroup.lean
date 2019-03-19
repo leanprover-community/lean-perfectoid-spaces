@@ -15,9 +15,9 @@ instance is_subgroup.inter (s₁ s₂ : set α) [is_subgroup s₁] [is_subgroup 
 @[to_additive is_add_subgroup.prod]
 instance is_subgroup.prod (s : set α) (t :  set β) [is_subgroup s] [is_subgroup t] :
   is_subgroup (s.prod t) :=
-{ one_mem := _,
-  mul_mem := _,
-  inv_mem := _ }
+{ one_mem := by rw set.mem_prod; split; apply is_submonoid.one_mem,
+  mul_mem := by intros; rw set.mem_prod at *; split; apply is_submonoid.mul_mem; tauto,
+  inv_mem := by intros; rw set.mem_prod at *; split; apply is_subgroup.inv_mem; tauto }
 
 end
 

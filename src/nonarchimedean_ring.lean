@@ -68,30 +68,58 @@ begin
     exact U.2.2 }
 end
 
-lemma prod (hR : nonarchimedean R) (hS : nonarchimedean S) :
-  nonarchimedean (R × S) :=
+lemma prod.aux (hR : nonarchimedean R) (hS : nonarchimedean S) :
+  ∀ U ∈ nhds (0 : R × S), ∃ (V : set R) (W : set S),
+    is_add_subgroup V ∧ is_open V ∧ is_add_subgroup W ∧ is_open W ∧ V.prod W ⊆ U :=
 begin
   intros U hU,
   rw [show (0 : R × S) = (0,0), from rfl] at hU,
   rw nhds_prod_eq at hU,
   rw filter.mem_prod_iff at hU,
   rcases hU with ⟨U₁, hU₁, U₂, hU₂, h⟩,
-  rcases hR _ hU₁ with ⟨V₁, _, _, _⟩,
-  rcases hS _ hU₂ with ⟨V₂, _, _, _⟩,
-  refine ⟨set.prod V₁ V₂, _, _, _⟩,
-  { resetI, apply_instance },
-  { apply is_open_prod; assumption },
+  rcases hR _ hU₁ with ⟨V, _, _, _⟩,
+  rcases hS _ hU₂ with ⟨W, _, _, _⟩,
+  refine ⟨V, W, ‹_›, ‹_›, ‹_›, ‹_›, _⟩,
   { refine set.subset.trans (set.prod_mono _ _) h; assumption }
+end
+
+lemma prod.aux' (hR : nonarchimedean R) :
+  ∀ U ∈ nhds (0 : R × R), ∃ (V : set R), is_add_subgroup V ∧ is_open V ∧ V.prod V ⊆ U :=
+begin
+  intros U hU,
+  rcases prod.aux hR hR U hU with ⟨V, W, _, _, _, _, _⟩,
+  refine ⟨V ∩ W, _, _, _⟩,
+  { resetI, apply_instance },
+  { apply is_open_inter; assumption },
+  { refine set.subset.trans (set.prod_mono _ _) ‹_›; simp },
+end
+
+lemma prod (hR : nonarchimedean R) (hS : nonarchimedean S) :
+  nonarchimedean (R × S) :=
+begin
+  intros U hU,
+  rcases prod.aux hR hS U hU with ⟨V, W, _, _, _, _, _⟩,
+  refine ⟨V.prod W, _, _, ‹_›⟩,
+  { resetI, apply_instance },
+  { apply is_open_prod; assumption }
 end
 
 lemma mul_subset (h : nonarchimedean R) (U : open_subgroups R) :
   ∃ V : open_subgroups R, (λ x : R × R, x.1*x.2) '' (set.prod V.1 V.1) ⊆ U.1 :=
 begin
-  let V : open_subgroups R := ⟨_, _, _⟩,
+  rcases prod.aux' h _ _ with ⟨V, _, _, H⟩,
+  refine ⟨⟨V, ‹_›, ‹_›⟩, _⟩,
   work_on_goal 0 {
-    use V,
-    rw set.image_subset_iff },
-  sorry
+    rw set.image_subset_iff,
+    refine set.subset.trans (set.prod_mono _ _) H; simp [le_refl] },
+  { apply mem_nhds_sets,
+    { apply continuous_mul',
+      cases U,
+      tauto },
+    { rw mem_preimage_eq,
+      convert is_add_submonoid.zero_mem _,
+      { simp },
+      { apply_instance } } }
 end
 
 end nonarchimedean
