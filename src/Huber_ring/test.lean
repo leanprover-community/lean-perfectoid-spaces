@@ -3,6 +3,7 @@ import tactic.tidy
 import tactic.ring
 
 import nonarchimedean_ring
+import Huber_ring.basic
 
 import for_mathlib.topological_rings
 import for_mathlib.algebra
@@ -147,7 +148,17 @@ begin
   }
 end
 
-instance (h : nonarchimedean A) : topological_space (away T s) :=
+section
+
+end
+
+/- Wedhorn 6.20 for n = 1-/
+lemma mul_T_open [Huber_ring A] (hT : is_open ↑(ideal.span T)) (U : open_subgroups A) :
+  is_open (subgroup.closure {x | ∃ t ∈ T, ∃ u ∈ U.val, x = t * u}) :=
+sorry
+
+instance (h : nonarchimedean A) (hT : is_open (↑(ideal.span T) : set A)) :
+  topological_space (away T s) :=
 topology_of_submodules_comm
 (λ U : open_subgroups A, span (D T s) (of_id A (away T s) '' U.1))
 begin
@@ -175,7 +186,14 @@ begin
     clear hV V,
     rw lmul_left_units_le_iff,
     rw [inv_inv, to_units_coe],
-    rw map_span, },
+    rw map_span,
+    apply span_mono,
+    rw ← image_comp,
+    erw ← map_lmul_left (of_id A (away T s)) s',
+    -- convert image_subset _ _ using 1,
+    -- work_on_goal 0 { apply image_comp },
+    -- rcases h.left_mul_subset U s' with ⟨_, _⟩,
+     },
 end
 (mul_subset T s h)
 

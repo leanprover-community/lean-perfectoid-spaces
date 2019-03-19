@@ -35,7 +35,7 @@ namespace Huber_ring
 
 variables {A : Type u} [Huber_ring A]
 
-lemma nonarchimedean : nonarchimedean A :=
+protected lemma nonarchimedean : nonarchimedean A :=
 begin
   rcases Huber_ring.pod A with ⟨A₀, H₁, H₂, H₃, H₄, emb, hf, J, Hfin, Htop⟩,
   resetI,
