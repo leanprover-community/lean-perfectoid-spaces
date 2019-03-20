@@ -591,7 +591,7 @@ begin
 end
 
 lemma frac_preorder_comap (hv : supp v = 0) :
-  preorder.comap' (v.on_frac hv).to_preorder (localization.of) = v.to_preorder :=
+  preorder.lift' (v.on_frac hv).to_preorder (localization.of) = v.to_preorder :=
 preorder.ext $ λ x y, begin show (v.on_frac hv) x ≤ (v.on_frac hv) y ↔ v x ≤ v y,
 rw [←on_frac_comap_eq' v hv, ←on_frac_comap_eq' v hv], exact iff.rfl end
 
@@ -611,7 +611,7 @@ definition valuation_field := localization.fraction_ring (valuation_ID v)
 
 instance : discrete_field (valuation_field v) := by delta valuation_field; apply_instance
 
-instance valuation.preorder' : preorder (valuation_field v) :=
+instance valuation.valfield_preorder : preorder (valuation_field v) :=
   ((v.on_quot (le_refl _)).on_frac $ quot_supp_zero v).to_preorder
 
 def units_valfield.mk (r : R) (h : r ∉ supp v) : units (valuation_field v) :=
@@ -622,7 +622,7 @@ def units_valfield.mk (r : R) (h : r ∉ supp v) : units (valuation_field v) :=
  inv_mul_cancel (λ h2, h $ ideal.quotient.eq_zero_iff_mem.1 $
    localization.fraction_ring.eq_zero_of _ h2)⟩
 
-instance valuation.preorder'' : preorder (units (valuation_field v)) := preorder.comap (λ u, u.val)
+instance valuation.units_valfield_preorder : preorder (units (valuation_field v)) := preorder.lift (λ u, u.val)
 
 -- on_frac_quot_comap_eq needs more class.instance_max_depth to compile if
 -- this instance is not explicitly given as a hint

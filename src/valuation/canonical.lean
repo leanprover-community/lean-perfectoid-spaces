@@ -3,7 +3,7 @@ import valuation.basic
 import for_mathlib.quotient_group
 import for_mathlib.subgroup
 import for_mathlib.group -- group_equiv
-import for_mathlib.order -- preorder.comap
+import for_mathlib.order -- preorder.lift'
 /-
 
 The purpose of this file is to define a "canonical" valuation equivalent to
@@ -217,8 +217,6 @@ lemma valuation_field.canonical_valuation_unit :
 unit_map (valuation_field.canonical_valuation v) = value_group_quotient v :=
 begin
   -- really hard to get to the dite
-  unfold valuation_field.canonical_valuation,
-  unfold valuation_field.canonical_valuation_v,
   ext x,
   rw ←option.some_inj,
   rw unit_map_eq,
@@ -259,6 +257,7 @@ namespace canonical_valuation
 -- everything in the image of the value group is a ratio of things
 -- coming from the ring
 -- Remark (KMB) -- writing this code was surprisingly painful
+-- Remark (KMB) -- I am not even sure we ever use it!
 lemma value_group.is_ratio (v : valuation R Γ) (g : value_group v) :
 ∃ r s : R, r ∉ supp v ∧ s ∉ supp v ∧ canonical_valuation v s * g = canonical_valuation v r :=
 begin
@@ -481,7 +480,7 @@ begin
   exact is_equiv_of_map_of_strict_mono _ _
 end
 
-def quot_of_quot_of_eq_supp (h : supp v₁ = supp v₂) : (supp v₁).quotient → (supp v₂).quotient :=
+def quot_of_quot_of_eq_supp (h : supp v₁ = supp v₂) : valuation_ID v₁ → valuation_ID v₂ :=
 ideal.quotient.lift _ (ideal.quotient.mk _)
 (λ r hr, ideal.quotient.eq_zero_iff_mem.2 $ h ▸ hr)
 
@@ -672,13 +671,13 @@ group_equiv.trans (h.value_group_equiv_aux) $
     (valfield_units_equiv_units_of_eq_supp (is_equiv.supp_eq h)) (valuation_field_norm_one v₂)
 
 -- ordering part of 1.27 (iii) -> (i)
--- MAYBE I SHOULD PROVE THAT THE EQUIV SENDS V<=1 TO V<=1 FIRST?
 def is_equiv.value_group_order_equiv (h : is_equiv v₁ v₂) (x y : value_group v₁) (h2 : x ≤ y) :
   h.value_group_equiv.to_equiv x ≤ h.value_group_equiv.to_equiv y :=
 begin
-  induction x, induction y,
+  induction x, induction y, swap, refl, swap, refl,
   have h3 := (is_equiv.on_valuation_field_is_equiv h x y).1 h2,
-  sorry, refl, refl,
+--  convert h3,
+  sorry,
 end
 
 end -- section
