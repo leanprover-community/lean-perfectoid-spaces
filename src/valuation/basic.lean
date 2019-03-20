@@ -563,6 +563,9 @@ lemma on_frac_val' (hv : supp v = 0) (q : fraction_ring R) :
   (v.on_frac hv).comap of = v :=
 subtype.ext.mpr $ funext $ λ r, show v r / v 1 = v r, by simp
 
+lemma on_frac_comap_eq' (hv : supp v = 0) (r : R) :
+  ((v.on_frac hv).comap of : valuation R Γ) r = v r := by rw on_frac_comap_eq
+
 @[simp] lemma comap_on_frac_eq (v : valuation (fraction_ring R) Γ) :
   (v.comap of).on_frac
   (by {rw [comap_supp, ideal.zero_eq_bot, (supp v).eq_bot_of_prime],
@@ -593,6 +596,11 @@ begin
   exact x.2.2
 end
 
+lemma frac_preorder_comap (hv : supp v = 0) :
+  preorder.comap' (v.on_frac hv).to_preorder (localization.of) = v.to_preorder :=
+preorder.ext $ λ x y, begin show (v.on_frac hv) x ≤ (v.on_frac hv) y ↔ v x ≤ v y,
+rw [←on_frac_comap_eq' v hv, ←on_frac_comap_eq' v hv], exact iff.rfl end
+
 end fraction_ring
 
 variables [comm_ring R]
@@ -603,9 +611,14 @@ definition valuation_ID := (supp v).quotient
 instance valuation.integral_domain' : integral_domain (valuation_ID v) :=
 by delta valuation_ID; apply_instance
 
+instance : preorder (valuation_ID v) := (v.on_quot (le_refl _)).to_preorder
+
 definition valuation_field := localization.fraction_ring (valuation_ID v)
 
 instance : discrete_field (valuation_field v) := by delta valuation_field; apply_instance
+
+instance valuation.preorder' : preorder (valuation_field v) :=
+  ((v.on_quot (le_refl _)).on_frac $ quot_supp_zero v).to_preorder
 
 def units_valfield.mk (r : R) (h : r ∉ supp v) : units (valuation_field v) :=
 ⟨localization.of (ideal.quotient.mk (supp v) r),
@@ -614,6 +627,8 @@ def units_valfield.mk (r : R) (h : r ∉ supp v) : units (valuation_field v) :=
    localization.fraction_ring.eq_zero_of _ h2),
  inv_mul_cancel (λ h2, h $ ideal.quotient.eq_zero_iff_mem.1 $
    localization.fraction_ring.eq_zero_of _ h2)⟩
+
+instance valuation.preorder'' : preorder (units (valuation_field v)) := preorder.comap (λ u, u.val)
 
 -- on_frac_quot_comap_eq needs more class.instance_max_depth to compile if
 -- this instance is not explicitly given as a hint
