@@ -35,11 +35,27 @@ adjoin A {x | ∃ t ∈ T, x = of t * s_inv }
 
 set_option class.instance_max_depth 80
 
+lemma directed (U₁ U₂ : open_subgroups A) :
+  ∃ (U : open_subgroups A), span ↥(D T s) (⇑(of_id A (away T s)) '' U.val) ≤
+    span ↥(D T s) (⇑(of_id A (away T s)) '' U₁.val) ⊓
+    span ↥(D T s) (⇑(of_id A (away T s)) '' U₂.val) :=
+begin
+  let U₃ : open_subgroups A :=
+    ⟨U₁.1 ∩ U₂.1, ⟨is_add_subgroup.inter _ _, is_open_inter U₁.2.2 U₂.2.2⟩⟩,
+  use U₃,
+  rw lattice.le_inf_iff,
+  split;
+  rw span_le;
+  refine subset.trans (image_subset _ _) subset_span,
+  { apply inter_subset_left },
+  { apply inter_subset_right },
+end
+
 lemma aux₁ (h : nonarchimedean A) (U : open_subgroups A) (a : A) :
   ∃ V : open_subgroups A,
-  (span ↥(D T s) (of_id A (away T s) '' V.1)).map
-  (lmul_left _ (away T s) ((of_id A (away T s) : A → (away T s)) a))
-  ≤ (span ↥(D T s) (of_id A (away T s) '' U.1)) :=
+    (span ↥(D T s) (of_id A (away T s) '' V.1)).map
+      (lmul_left _ (away T s) ((of_id A (away T s) : A → (away T s)) a)) ≤
+    (span ↥(D T s) (of_id A (away T s) '' U.1)) :=
 begin
   rcases h _ _ with ⟨V, h₁, h₂, h₃⟩,
   work_on_goal 0 {
@@ -158,8 +174,6 @@ variables (T : set A) (s : A)
 
 namespace away
 
-set_option class.instance_max_depth 80
-
 /- Wedhorn 6.20 for n = 1-/
 lemma mul_T_open (hT : is_open (↑(ideal.span T) : set A)) (U : open_subgroups A) :
   is_open (add_group.closure {x | ∃ t ∈ T, ∃ u ∈ U.val, x = t * u}) :=
@@ -167,45 +181,91 @@ begin
   sorry
 end
 
-instance (hT : is_open (↑(ideal.span T) : set A)) :
-  topological_space (away T s) :=
-topology_of_submodules_comm
-(λ U : open_subgroups A, span (D T s) (of_id A (away T s) '' U.1))
+set_option class.instance_max_depth 580
+
+lemma mul_left (hT : is_open (↑(ideal.span T) : set A)) (a : away T s) (U : open_subgroups A) :
+  ∃ (V : open_subgroups A),
+    map (lmul_left ↥(D T s) (away T s) a) (span ↥(D T s) (⇑(of_id A (away T s)) '' V.val)) ≤
+      span ↥(D T s) (⇑(of_id A (away T s)) '' U.val) :=
 begin
-  intros U₁ U₂,
-  let U₃ : open_subgroups A :=
-    ⟨U₁.1 ∩ U₂.1, ⟨is_add_subgroup.inter _ _, is_open_inter U₁.2.2 U₂.2.2⟩⟩,
-  use U₃,
-  rw lattice.le_inf_iff,
-  split;
-  rw span_le;
-  refine subset.trans (image_subset _ _) subset_span,
-  { apply inter_subset_left },
-  { apply inter_subset_right },
-end
-begin
-  intros a' U,
-  apply localization.induction_on a',
-  intros a s',
-  let W : open_subgroups A := _,
-  cases aux₁ T s Huber_ring.nonarchimedean W a with V hV,
+  apply localization.induction_on a,
+  intros a' s',
+  clear a,
+  suffices : ∃ W : open_subgroups A, _,
   work_on_goal 0 {
+    cases this with W hW,
+    cases aux₁ T s Huber_ring.nonarchimedean W a' with V hV,
     use V,
     erw [localization.mk_eq, mul_comm, lmul_left_mul, map_comp],
     refine le_trans (map_mono hV) _,
     clear hV V,
     rw lmul_left_units_le_iff,
     rw [inv_inv, to_units_coe],
-    rw map_span,
-    apply span_mono,
-    rw ← image_comp,
-    erw ← map_lmul_left (of_id A (away T s)) s',
-    -- convert image_subset _ _ using 1,
-    -- work_on_goal 0 { apply image_comp },
-    -- rcases h.left_mul_subset U s' with ⟨_, _⟩,
-     },
+    exact hW },
+  clear a',
+  cases s'.property with n hn,
+  dsimp,
+  change s^n = s' at hn,
+  erw ← hn,
+  clear hn s',
+  induction n with k hk,
+  { use U,
+    erw [pow_zero, coe_one, lmul_left_one, submodule.map_id],
+    exact le_refl _ },
+  erw [pow_succ, coe_mul, lmul_left_mul, submodule.map_comp],
+  cases hk with W hW,
+  suffices : ∃ V : open_subgroups A, _,
+  work_on_goal 0 {
+    cases this with V hV,
+    use V,
+    refine le_trans _ (map_mono hW),
+    exact hV },
+  clear hW U,
+  let V : open_subgroups A := ⟨_, by apply_instance, mul_T_open _ hT W⟩,
+  use V,
+  rw [span_le, image_subset_iff, add_group.closure_subset_iff],
+  rintros _ ⟨t, ht, w, hw, rfl⟩,
+  rw mem_preimage_eq,
+  erw mem_map,
+  let s_unit : units (away T s) := to_units ⟨s, ⟨1, by simp⟩⟩,
+  let y : away T s := ↑(s_unit⁻¹ : units _) * _,
+  work_on_goal 0 {
+    use y,
+    split,
+    work_on_goal 1 {
+      rw [lmul_left_apply],
+      dsimp only [y],
+      erw [← mul_assoc, s_unit.val_inv, one_mul] },
+  },
+  apply span_mono,
+  work_on_goal 1 {
+    erw mem_span_singleton,
+    work_on_goal 0 {
+      let t_over_s : _ := _,
+      refine ⟨t_over_s, _⟩,
+      work_on_goal 1 {
+        dsimp only [y],
+        erw [alg_hom.map_mul, ← mul_assoc, smul_def],
+        congr' 1,
+        rw mul_comm,
+      },
+      work_on_goal 1 {
+        fsplit,
+        { exact (of t) * ↑s_unit⁻¹ },
+        apply ring.mem_closure,
+        apply mem_union_right,
+        exact ⟨_, ht, rfl⟩ } } },
+  work_on_goal 0 {
+    erw singleton_subset_iff,
+    use [w, hw] },
+  refl
 end
-(mul_subset T s Huber_ring.nonarchimedean)
+
+instance (hT : is_open (↑(ideal.span T) : set A)) :
+  topological_space (away T s) :=
+topology_of_submodules_comm
+(λ U : open_subgroups A, span (D T s) (of_id A (away T s) '' U.1))
+(directed T s) (mul_left T s hT) (mul_subset T s Huber_ring.nonarchimedean)
 
 end away
 
