@@ -44,6 +44,6 @@ begin
 end
 
 instance power_bounded_subring.is_subring : is_subring (power_bounded_subring A) :=
-power_bounded_subring.is_subring nonarchimedean
+power_bounded_subring.is_subring Huber_ring.nonarchimedean
 
 end Huber_ring

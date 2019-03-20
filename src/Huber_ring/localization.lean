@@ -22,15 +22,7 @@ variables (A₀ : Type u) [comm_ring A₀] [topological_space A₀] [topological
 variables [algebra A₀ A]
 variables (T : set A) (s : A)
 
-/-
-Our goal is to define a topology on (away s), which is the localization of A at s.
-This topology will depend on T, and should not depend on the ring of definition.
-In the literature, this ring is commonly denoted with A(T/s) to indicate the
-dependence on T. For the same reason, we start by defining a wrapper type that
-includes T in its assumptions.
-We will construct the topology on A(T/s) by showing that it is a Huber ring:
-we construct a ring of definition that does depend on (h : ring_of_definition A₀ A).
--/
+
 
 /--The localization at s, endowed with a topology that depends on T-/
 def away (T : set A) (s : A) := (comap A₀ A (away s))

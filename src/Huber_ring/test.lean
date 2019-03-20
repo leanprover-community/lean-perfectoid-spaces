@@ -7,6 +7,7 @@ import Huber_ring.basic
 
 import for_mathlib.topological_rings
 import for_mathlib.algebra
+import for_mathlib.lc_algebra
 import for_mathlib.top_ring
 import for_mathlib.subgroup
 
@@ -19,28 +20,53 @@ open localization algebra topological_ring submodule set
 variables {A  : Type u} [comm_ring A] [topological_space A ] [topological_ring A]
 variables (T : set A) (s : A)
 
+/-
+Our goal is to define a topology on (away s), which is the localization of A at s.
+This topology will depend on T, and should not depend on the ring of definition.
+In the literature, this ring is commonly denoted with A(T/s) to indicate the
+dependence on T. For the same reason, we start by defining a wrapper type that
+includes T in its assumptions.
+-/
+
+/--The localization at `s`, endowed with a topology that depends on `T`-/
 def away (T : set A) (s : A) := away s
+
+local notation `ATs` := away T s
 
 namespace away
 
-instance : comm_ring (away T s) := by delta away; apply_instance
+instance : comm_ring ATs := by delta away; apply_instance
 
-instance : module A (away T s) := by delta away; apply_instance
+instance : module A ATs := by delta away; apply_instance
 
-instance : algebra A (away T s) := by delta away; apply_instance
+instance : algebra A ATs := by delta away; apply_instance
 
-def D : subalgebra A (away T s) :=
-let s_inv : (away T s) := ((to_units ⟨s, ⟨1, by simp⟩⟩)⁻¹ : units (away T s)) in
+/--An auxiliary subring, used to define the topology on `away T s`-/
+def aux : subalgebra A ATs :=
+let s_inv : ATs := ((to_units ⟨s, ⟨1, by simp⟩⟩)⁻¹ : units ATs) in
 adjoin A {x | ∃ t ∈ T, x = of t * s_inv }
+
+local notation `D` := aux T s
+
+/-
+To put a topology on `away T s` we want to use the construction
+`topology_of_submodules_comm` which needs a directed family of
+submodules of `ATs = away T s` viewed as `D`-algebra.
+This directed family has two satisfy two extra conditions.
+Proving these two conditions takes up the beef of this file.
+
+Initially we only assume that `A` is a nonarchimedean ring,
+but towards the end we need to strengthen this assumption to Huber ring.
+-/
 
 set_option class.instance_max_depth 80
 
-lemma directed (U₁ U₂ : open_subgroups A) :
-  ∃ (U : open_subgroups A), span ↥(D T s) (⇑(of_id A (away T s)) '' U.val) ≤
-    span ↥(D T s) (⇑(of_id A (away T s)) '' U₁.val) ⊓
-    span ↥(D T s) (⇑(of_id A (away T s)) '' U₂.val) :=
+/-The submodules spanned by the open subgroups of `A` form a directed family-/
+lemma directed (U₁ U₂ : open_add_subgroups A) :
+  ∃ (U : open_add_subgroups A), span ↥D (⇑(of_id A ATs) '' U.val) ≤
+    span ↥D (⇑(of_id A ATs) '' U₁.val) ⊓ span ↥D (⇑(of_id A ATs) '' U₂.val) :=
 begin
-  let U₃ : open_subgroups A :=
+  let U₃ : open_add_subgroups A :=
     ⟨U₁.1 ∩ U₂.1, ⟨is_add_subgroup.inter _ _, is_open_inter U₁.2.2 U₂.2.2⟩⟩,
   use U₃,
   rw lattice.le_inf_iff,
@@ -51,38 +77,35 @@ begin
   { apply inter_subset_right },
 end
 
-lemma aux₁ (h : nonarchimedean A) (U : open_subgroups A) (a : A) :
-  ∃ V : open_subgroups A,
-    (span ↥(D T s) (of_id A (away T s) '' V.1)).map
-      (lmul_left _ (away T s) ((of_id A (away T s) : A → (away T s)) a)) ≤
-    (span ↥(D T s) (of_id A (away T s) '' U.1)) :=
+/-For every open subgroup `U` of `A` and every `a : A`,
+there exists an open subgroup `V` of `A`,
+such that `a . (span D V)` is contained in the `D`-span of `U`.-/
+lemma exists_mul_left_subset (h : nonarchimedean A) (U : open_add_subgroups A) (a : A) :
+  ∃ V : open_add_subgroups A,
+    (span ↥D (of_id A ATs '' V.1)).map (lmul_left _ ATs ((of_id A ATs : A → ATs) a)) ≤
+    (span ↥D (of_id A ATs '' U.1)) :=
 begin
   rcases h _ _ with ⟨V, h₁, h₂, h₃⟩,
-  work_on_goal 0 {
-    split,
-  },
+  let W : open_add_subgroups A := ⟨V, h₁, h₂⟩,
+  use W,
   work_on_goal 0 {
     erw [map_span, span_le, ← image_comp, ← algebra.map_lmul_left, image_comp],
-    refine subset.trans (image_subset (of_id A (away T s) : A → (away T s)) _) subset_span, },
-  work_on_goal 1 {
+    refine subset.trans (image_subset (of_id A ATs : A → ATs) _) subset_span,
     rw image_subset_iff,
-    convert h₃, },
-    work_on_goal 4 {
-      apply mem_nhds_sets,
-      { apply continuous_mul_left,
-        exact U.2.2 },
-      { rw [mem_preimage_eq, linear_map.map_zero],
-        apply is_add_submonoid.zero_mem } },
-  all_goals { constructor },
-  split; assumption
+    exact h₃ },
+  apply mem_nhds_sets (continuous_mul_left _ _ U.2.2),
+  { rw [mem_preimage_eq, mul_zero],
+    apply is_add_submonoid.zero_mem }
 end
 
-lemma mul_subset (h : nonarchimedean A) (U : open_subgroups A) :
-∃ (V : open_subgroups A),
+/-For every open subgroup `U` of `A`, there exists an open subgroup `V` of `A`,
+such that the multiplication map sends the `D`-span of `V` into the `D`-span of `U`.-/
+lemma mul_subset (h : nonarchimedean A) (U : open_add_subgroups A) :
+∃ (V : open_add_subgroups A),
     (λ (x : away T s × away T s), x.fst * x.snd) ''
-        set.prod ↑(span ↥(D T s) (⇑(of_id A (away T s)) '' V.val))
-          ↑(span ↥(D T s) (⇑(of_id A (away T s)) '' V.val)) ≤
-      ↑(span ↥(D T s) (⇑(of_id A (away T s)) '' U.val)) :=
+        set.prod ↑(span ↥D (⇑(of_id A ATs) '' V.val))
+          ↑(span ↥D (⇑(of_id A ATs) '' V.val)) ≤
+      ↑(span ↥D (⇑(of_id A ATs) '' U.val)) :=
 begin
   rcases nonarchimedean.mul_subset h U with ⟨V, hV⟩,
   use V,
@@ -97,25 +120,17 @@ begin
   erw mem_span_iff_lc at h₁ h₂ ⊢,
   rcases h₁ with ⟨lc₁, H₁, hx₁⟩,
   rcases h₂ with ⟨lc₂, H₂, hx₂⟩,
-  refine ⟨_, _, _⟩,
-  work_on_goal 0 {
-    refine lc₁.sum (λ r a, _),
-    refine lc₂.sum (λ s b, _),
-    exact finsupp.single (r * s) (a * b) },
+  refine ⟨lc₁ * lc₂, _, _⟩,
   work_on_goal 0 {
     rw lc.mem_supported at H₁ H₂ ⊢,
-    refine subset.trans finsupp.support_sum _,
+    refine subset.trans (lc.support_mul _ _) _,
     intros a' ha,
-    erw finset.mem_bind at ha,
-    rcases ha with ⟨a, ha₁, ha₂⟩,
-    have hb := finsupp.support_sum ha₂,
-    erw finset.mem_bind at hb,
-    rcases hb with ⟨b, hb₁, hb₂⟩,
-    have H := finsupp.support_single_subset hb₂,
-    erw mem_singleton_iff at H,
-    subst H,
-    replace ha₁ := H₁ ha₁,
-    replace hb₁ := H₂ hb₁,
+    erw finset.mem_image at ha,
+    rcases ha with ⟨y, hy₁, hy₂⟩,
+    rw finset.mem_product at hy₁,
+    rw ← hy₂,
+    have ha₁ := H₁ hy₁.left,
+    have hb₁ := H₂ hy₁.right,
     rw mem_image at ha₁ hb₁ ⊢,
     rcases ha₁ with ⟨a₀, _, _⟩,
     rcases hb₁ with ⟨b₀, _, _⟩,
@@ -123,44 +138,8 @@ begin
     split,
     { rw set.mem_prod, split; assumption },
     { simp * } },
-  { rw lc.total_apply at hx₁ hx₂ ⊢,
-    rw [← hx₁, ← hx₂],
-    rw finsupp.sum_mul,
-    simp only [finsupp.mul_sum],
-    have hyp₁ : ∀ (a : away T s), (0 : away T s) • a = 0 := by intros; simp,
-    let hyp₂ : _ := _,
-    rw finsupp.sum_sum_index,
-    work_on_goal 0 {
-      apply finset.sum_congr,
-      { refl },
-      intros a ha,
-      change finsupp.sum _ _ = finsupp.sum _ _,
-      erw finsupp.sum_sum_index,
-    },
-    work_on_goal 2 { exact hyp₂ },
-    all_goals { try {exact hyp₁ } },
-    work_on_goal 2 {
-      intros a b₁ b₂,
-      repeat {rw algebra.smul_def},
-      rw is_ring_hom.map_add (algebra_map _),
-      { rw right_distrib },
-      { apply_instance } },
-    work_on_goal 1 { assumption },
-    work_on_goal 0 {
-      clear hyp₁ hyp₂,
-      apply finset.sum_congr,
-      { refl },
-      intros b hb,
-      change finsupp.sum _ _ = _,
-      rw finsupp.sum_single_index,
-      work_on_goal 1 { rw zero_smul },
-      dsimp,
-      repeat {erw algebra.smul_def},
-      rw is_ring_hom.map_mul (algebra_map _),
-      { ring },
-      all_goals { apply_instance }
-    }
-  }
+  { rw [← hx₁, ← hx₂],
+    exact lc.atotal.map_mul _ _ }
 end
 
 end away
@@ -174,27 +153,36 @@ variables (T : set A) (s : A)
 
 namespace away
 
+local notation `ATs` := away T s
+local notation `D` := aux T s
+
 /- Wedhorn 6.20 for n = 1-/
-lemma mul_T_open (hT : is_open (↑(ideal.span T) : set A)) (U : open_subgroups A) :
+lemma mul_T_open (hT : is_open (↑(ideal.span T) : set A)) (U : open_add_subgroups A) :
   is_open (add_group.closure {x | ∃ t ∈ T, ∃ u ∈ U.val, x = t * u}) :=
 begin
-  sorry
+  tactic.unfreeze_local_instances,
+  rcases ‹Huber_ring A› with ⟨_, _, _, ⟨A₀, _, _, _, ⟨_, emb, hf, I, fg, top⟩⟩⟩,
+  resetI,
+  rcases (is_ideal_adic_iff I).mp top with ⟨H₁, H₂⟩,
+  cases H₂ _ (mem_nhds_sets _ _) with n hn,
+  work_on_goal 2 { exact emb.continuous _ hT },
+  all_goals {sorry}
 end
 
-set_option class.instance_max_depth 580
+set_option class.instance_max_depth 150
 
-lemma mul_left (hT : is_open (↑(ideal.span T) : set A)) (a : away T s) (U : open_subgroups A) :
-  ∃ (V : open_subgroups A),
-    map (lmul_left ↥(D T s) (away T s) a) (span ↥(D T s) (⇑(of_id A (away T s)) '' V.val)) ≤
-      span ↥(D T s) (⇑(of_id A (away T s)) '' U.val) :=
+lemma mul_left (hT : is_open (↑(ideal.span T) : set A)) (a : away T s) (U : open_add_subgroups A) :
+  ∃ (V : open_add_subgroups A),
+    map (lmul_left ↥D ATs a) (span ↥D (⇑(of_id A ATs) '' V.val)) ≤
+      span ↥D (⇑(of_id A ATs) '' U.val) :=
 begin
   apply localization.induction_on a,
   intros a' s',
   clear a,
-  suffices : ∃ W : open_subgroups A, _,
+  suffices : ∃ W : open_add_subgroups A, _,
   work_on_goal 0 {
     cases this with W hW,
-    cases aux₁ T s Huber_ring.nonarchimedean W a' with V hV,
+    cases exists_mul_left_subset T s Huber_ring.nonarchimedean W a' with V hV,
     use V,
     erw [localization.mk_eq, mul_comm, lmul_left_mul, map_comp],
     refine le_trans (map_mono hV) _,
@@ -214,20 +202,20 @@ begin
     exact le_refl _ },
   erw [pow_succ, coe_mul, lmul_left_mul, submodule.map_comp],
   cases hk with W hW,
-  suffices : ∃ V : open_subgroups A, _,
+  suffices : ∃ V : open_add_subgroups A, _,
   work_on_goal 0 {
     cases this with V hV,
     use V,
     refine le_trans _ (map_mono hW),
     exact hV },
   clear hW U,
-  let V : open_subgroups A := ⟨_, by apply_instance, mul_T_open _ hT W⟩,
+  let V : open_add_subgroups A := ⟨_, by apply_instance, mul_T_open _ hT W⟩,
   use V,
   rw [span_le, image_subset_iff, add_group.closure_subset_iff],
   rintros _ ⟨t, ht, w, hw, rfl⟩,
   rw mem_preimage_eq,
   erw mem_map,
-  let s_unit : units (away T s) := to_units ⟨s, ⟨1, by simp⟩⟩,
+  let s_unit : units ATs := to_units ⟨s, ⟨1, by simp⟩⟩,
   let y : away T s := ↑(s_unit⁻¹ : units _) * _,
   work_on_goal 0 {
     use y,
@@ -262,9 +250,9 @@ begin
 end
 
 instance (hT : is_open (↑(ideal.span T) : set A)) :
-  topological_space (away T s) :=
+  topological_space ATs :=
 topology_of_submodules_comm
-(λ U : open_subgroups A, span (D T s) (of_id A (away T s) '' U.1))
+(λ U : open_add_subgroups A, span D (of_id A ATs '' U.1))
 (directed T s) (mul_left T s hT) (mul_subset T s Huber_ring.nonarchimedean)
 
 end away

@@ -40,13 +40,15 @@ namespace topological_ring
 
 variables (A)
 
-def open_subgroups := { U : set A // is_add_subgroup U ∧ is_open U }
+-- This should be generalised to topological groups, and use `to_additive`.
 
-variables {A} (U : open_subgroups A)
+def open_add_subgroups := { U : set A // is_add_subgroup U ∧ is_open U }
+
+variables {A} (U : open_add_subgroups A)
 
 instance : is_add_subgroup U.val := U.2.1
 
-instance : inhabited (open_subgroups A) :=
+instance : inhabited (open_add_subgroups A) :=
 { default := ⟨set.univ, ⟨by apply_instance, by simp⟩⟩ }
 
 end topological_ring
