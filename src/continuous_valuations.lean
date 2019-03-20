@@ -19,12 +19,12 @@ lemma is_equiv.is_continuous_iff (h : v₁.is_equiv v₂) :
   v₁.is_continuous ↔ v₂.is_continuous :=
 begin
   split; intros H g,
-  { convert H (h.value_group_equiv.symm g),
+  { convert H (h.value_group_equiv.symm.to_equiv g),
     symmetry,
     funext,
     apply propext,
     sorry },
-  { convert H (h.value_group_equiv g),
+  { convert H (h.value_group_equiv.to_equiv g),
     funext,
     apply propext,
     sorry }
@@ -50,8 +50,8 @@ begin
   split,
   { intro h,
     rintro ⟨⟨r,s⟩,u',huu',hu'u⟩,
-    have := h s.val r,
-    dsimp,
+    --have := h s.val r,
+    --dsimp,
     sorry
   },
   {
