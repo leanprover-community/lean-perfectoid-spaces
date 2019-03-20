@@ -95,7 +95,7 @@ instance : is_valuation v := v.property
 
 -- not an instance, because more than one v on a given R
 /-- a valuation gives a preorder on the underlying ring-/
-def to_preorder : preorder R := preorder.comap v
+def to_preorder : preorder R := preorder.lift v
 
 -- If x ∈ R is a unit then v x is non-zero
 theorem map_unit (h : x * y = 1) : (v x).is_some :=
@@ -472,7 +472,7 @@ lemma quot_supp_zero : supp (v.on_quot (le_refl _)) = 0 :=
 by rw supp_quot_supp; exact ideal.map_quotient_self _
 
 lemma quot_preorder_comap {J : ideal R} (hJ : J ≤ supp v) :
-preorder.comap' (v.on_quot hJ).to_preorder (ideal.quotient.mk J) = v.to_preorder :=
+preorder.lift' (v.on_quot hJ).to_preorder (ideal.quotient.mk J) = v.to_preorder :=
 preorder.ext $ λ x y, iff.rfl
 
 end supp
@@ -493,10 +493,7 @@ variables {Γ : Type u} [linear_ordered_comm_group Γ] (v : valuation R Γ)
 definition on_frac_val (hv : supp v = 0) : fraction_ring R → with_zero Γ :=
 quotient.lift (λ rs, v rs.1 / v rs.2.1 : R × non_zero_divisors R → with_zero Γ)
 begin
-  intros a b hab,
-  rcases a with ⟨r,s,hs⟩,
-  rcases b with ⟨t,u,hu⟩,
-  rcases hab with ⟨w,hw,h⟩, classical,
+  rintro ⟨r, s, hs⟩ ⟨t, u, hu⟩ ⟨w, hw, h⟩,
   change v r / v s = v t / v u,
   change (s * t - (u * r)) * w = 0 at h,
   rw fraction_ring.mem_non_zero_divisors_iff_ne_zero at hs hu hw,
@@ -579,15 +576,12 @@ begin
     apply congr_arg,
     change ⟦_⟧ = ⟦_⟧,
     apply quotient.sound,
-    use 1,
-    split,
-    { exact is_submonoid.one_mem _ },
-    { simp only [mul_one, one_mul, non_zero_divisors_one_val, is_submonoid.coe_one],
-      rw mul_comm,
-      exact sub_self _, } },
+    use 1, use is_submonoid.one_mem _,
+    show (↑(x.snd) * 1 * x.fst + -(1 * (x.fst * (x.snd).val))) * 1 = 0,
+    rw [mul_one, mul_one, one_mul, mul_comm],
+    exact sub_self _},
   intro h,
-  rw [← mem_supp_iff, (supp v).eq_bot_of_prime] at h,
-  simp at h,
+  rw [← mem_supp_iff, (supp v).eq_bot_of_prime, submodule.mem_bot] at h,
   replace h := fraction_ring.eq_zero_of _ h,
   refine fraction_ring.mem_non_zero_divisors_iff_ne_zero.mp _ h,
   exact x.2.2
