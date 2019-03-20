@@ -54,7 +54,7 @@ namespace mul_equiv
 
 variables [has_mul α] [has_mul β] [has_mul γ]
 
-@[refl] def refl (α : Type) [has_mul α] : α ≃* α :=
+@[refl] def refl (α : Type*) [has_mul α] : α ≃* α :=
 { mul_hom := λ _ _,rfl,
 ..equiv.refl _}
 
@@ -85,6 +85,22 @@ instance is_monoid_hom (h : α ≃* β) : is_monoid_hom h.to_equiv := {
 end mul_equiv
 
 -- equiv of groups
+
+def group_equiv (α : Type*) (β : Type*) [group α] [group β] := mul_equiv α β
+
+namespace group_equiv
+variables [group α] [group β] [group γ]
+
+@[refl] def refl (α : Type*) [group α] : group_equiv α α := mul_equiv.refl α
+
+@[symm] def symm : group_equiv α β → group_equiv β α := mul_equiv.symm
+
+@[trans] def trans : group_equiv α β → group_equiv β γ → group_equiv α γ := mul_equiv.trans
+
+end group_equiv
+
+-- equiv of add_groups needs doing
+
 namespace mul_equiv
 
 variables [group α] [group β] [group γ]

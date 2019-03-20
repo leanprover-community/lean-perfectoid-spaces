@@ -7,10 +7,12 @@ import for_mathlib.monotone
 import for_mathlib.rings
 import for_mathlib.with_zero
 import for_mathlib.linear_ordered_comm_group
+import for_mathlib.order -- preorder.comap
 
 import tactic.tidy
 import tactic.abel
 import tactic.ring
+import tactic.where
 
 /- valuations.basic
 
@@ -90,6 +92,10 @@ instance : is_valuation v := v.property
 @[simp] lemma map_one  : v 1 = 1 := v.property.map_one
 @[simp] lemma map_mul  : ∀ x y, v (x * y) = v x * v y := v.property.map_mul
 @[simp] lemma map_add  : ∀ x y, v (x + y) ≤ v x ∨ v (x + y) ≤ v y := v.property.map_add
+
+-- not an instance, because more than one v on a given R
+/-- a valuation gives a preorder on the underlying ring-/
+def to_preorder : preorder R := preorder.lift v
 
 -- If x ∈ R is a unit then v x is non-zero
 theorem map_unit (h : x * y = 1) : (v x).is_some :=
@@ -465,6 +471,10 @@ end
 lemma quot_supp_zero : supp (v.on_quot (le_refl _)) = 0 :=
 by rw supp_quot_supp; exact ideal.map_quotient_self _
 
+lemma quot_preorder_comap {J : ideal R} (hJ : J ≤ supp v) :
+preorder.lift' (v.on_quot hJ).to_preorder (ideal.quotient.mk J) = v.to_preorder :=
+preorder.ext $ λ x y, iff.rfl
+
 end supp
 
 end valuation
@@ -483,10 +493,7 @@ variables {Γ : Type u} [linear_ordered_comm_group Γ] (v : valuation R Γ)
 definition on_frac_val (hv : supp v = 0) : fraction_ring R → with_zero Γ :=
 quotient.lift (λ rs, v rs.1 / v rs.2.1 : R × non_zero_divisors R → with_zero Γ)
 begin
-  intros a b hab,
-  rcases a with ⟨r,s,hs⟩,
-  rcases b with ⟨t,u,hu⟩,
-  rcases hab with ⟨w,hw,h⟩, classical,
+  rintro ⟨r, s, hs⟩ ⟨t, u, hu⟩ ⟨w, hw, h⟩,
   change v r / v s = v t / v u,
   change (s * t - (u * r)) * w = 0 at h,
   rw fraction_ring.mem_non_zero_divisors_iff_ne_zero at hs hu hw,
@@ -553,6 +560,9 @@ lemma on_frac_val' (hv : supp v = 0) (q : fraction_ring R) :
   (v.on_frac hv).comap of = v :=
 subtype.ext.mpr $ funext $ λ r, show v r / v 1 = v r, by simp
 
+lemma on_frac_comap_eq' (hv : supp v = 0) (r : R) :
+  ((v.on_frac hv).comap of : valuation R Γ) r = v r := by rw on_frac_comap_eq
+
 @[simp] lemma comap_on_frac_eq (v : valuation (fraction_ring R) Γ) :
   (v.comap of).on_frac
   (by {rw [comap_supp, ideal.zero_eq_bot, (supp v).eq_bot_of_prime],
@@ -569,19 +579,21 @@ begin
     apply congr_arg,
     change ⟦_⟧ = ⟦_⟧,
     apply quotient.sound,
-    use 1,
-    split,
-    { exact is_submonoid.one_mem _ },
-    { simp only [mul_one, one_mul, non_zero_divisors_one_val, is_submonoid.coe_one],
-      rw mul_comm,
-      exact sub_self _, } },
+    use 1, use is_submonoid.one_mem _,
+    show (↑(x.snd) * 1 * x.fst + -(1 * (x.fst * (x.snd).val))) * 1 = 0,
+    rw [mul_one, mul_one, one_mul, mul_comm],
+    exact sub_self _},
   intro h,
-  rw [← mem_supp_iff, (supp v).eq_bot_of_prime] at h,
-  simp at h,
+  rw [← mem_supp_iff, (supp v).eq_bot_of_prime, submodule.mem_bot] at h,
   replace h := fraction_ring.eq_zero_of _ h,
   refine fraction_ring.mem_non_zero_divisors_iff_ne_zero.mp _ h,
   exact x.2.2
 end
+
+lemma frac_preorder_comap (hv : supp v = 0) :
+  preorder.lift' (v.on_frac hv).to_preorder (localization.of) = v.to_preorder :=
+preorder.ext $ λ x y, begin show (v.on_frac hv) x ≤ (v.on_frac hv) y ↔ v x ≤ v y,
+rw [←on_frac_comap_eq' v hv, ←on_frac_comap_eq' v hv], exact iff.rfl end
 
 end fraction_ring
 
@@ -593,9 +605,14 @@ definition valuation_ID := (supp v).quotient
 instance valuation.integral_domain' : integral_domain (valuation_ID v) :=
 by delta valuation_ID; apply_instance
 
+instance : preorder (valuation_ID v) := (v.on_quot (le_refl _)).to_preorder
+
 definition valuation_field := localization.fraction_ring (valuation_ID v)
 
 instance : discrete_field (valuation_field v) := by delta valuation_field; apply_instance
+
+instance valuation.valfield_preorder : preorder (valuation_field v) :=
+  ((v.on_quot (le_refl _)).on_frac $ quot_supp_zero v).to_preorder
 
 def units_valfield.mk (r : R) (h : r ∉ supp v) : units (valuation_field v) :=
 ⟨localization.of (ideal.quotient.mk (supp v) r),
@@ -604,6 +621,8 @@ def units_valfield.mk (r : R) (h : r ∉ supp v) : units (valuation_field v) :=
    localization.fraction_ring.eq_zero_of _ h2),
  inv_mul_cancel (λ h2, h $ ideal.quotient.eq_zero_iff_mem.1 $
    localization.fraction_ring.eq_zero_of _ h2)⟩
+
+instance valuation.units_valfield_preorder : preorder (units (valuation_field v)) := preorder.lift (λ u, u.val)
 
 -- on_frac_quot_comap_eq needs more class.instance_max_depth to compile if
 -- this instance is not explicitly given as a hint
