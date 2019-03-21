@@ -26,9 +26,8 @@ end
 
 -- This is all in PR #790
 
-variables {α : Type*} {β : Type*} [group α] [group β]
-
 namespace is_group_hom
+variables {α : Type*} {β : Type*} [group α] [group β]
 
 @[to_additive is_add_group_hom.zero_ker_neg']
 lemma one_ker_inv' (f : α → β) [is_group_hom f] {a b : α} (h : f (a⁻¹ * b) = 1) : f a = f b :=
@@ -52,3 +51,37 @@ lemma inv_iff_ker' (f : α → β) [w : is_group_hom f] (a b : α) : f a = f b �
 by rw [mem_ker]; exact one_iff_ker_inv' _ _ _
 
 end is_group_hom
+
+section
+variables {α : Type*} [comm_monoid α] {β : Type*}
+
+-- @[to_additive sum_mem_closure]
+-- lemma prod_mem_closure (s : set α) (ι : finset β) (f : β → α) (h : ∀ i ∈ ι, f i ∈ s) :
+--   ι.prod f ∈ monoid.closure s := sorry
+
+end
+
+namespace add_monoid
+variables {α : Type*} [add_comm_monoid α] {β : Type*}
+
+local attribute [instance] classical.prop_decidable
+
+lemma sum_mem_closure (s : set α) (ι : finset β) (f : β → α) (h : ∀ i ∈ ι, f i ∈ s) :
+  ι.sum f ∈ add_monoid.closure s :=
+begin
+  revert h,
+  apply finset.induction_on ι,
+  { intros, rw finset.sum_empty, apply is_add_submonoid.zero_mem },
+  { intros i ι' hi IH h,
+    rw finset.sum_insert hi,
+    apply is_add_submonoid.add_mem,
+    { apply add_monoid.subset_closure,
+      apply h,
+      apply finset.mem_insert_self },
+    { apply IH,
+      intros i' hi',
+      apply h,
+      apply finset.mem_insert_of_mem hi' } }
+end
+
+end add_monoid
