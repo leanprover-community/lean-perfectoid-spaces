@@ -68,6 +68,12 @@ section canonical_equivalent_valuation
 
 instance : comm_group (units (valuation_field v)) := by apply_instance
 
+instance valuation.units_preorder : preorder (units (valuation_field v)) :=
+{ le := λ u v, u.val ≤ v.val,
+  le_refl := le_refl,
+  le_trans := λ _ _ _, le_trans
+}
+
 definition valuation_field_norm_one := is_group_hom.ker v.on_valuation_field.unit_map
 
 instance (v : valuation R Γ) : normal_subgroup (valuation_field_norm_one v) :=
@@ -95,6 +101,7 @@ by unfold value_group.to_Γ; apply_instance
 instance value_group_quotient.is_group_hom :
 is_group_hom (value_group_quotient v) := ⟨λ _ _, rfl⟩
 
+-- KMB now worried that this should change to λ s t, s ≤ t with possible breakage
 instance : linear_order (value_group v) :=
 { le := λ a' b',
     quotient.lift_on₂' a' b' (λ s t, v.on_valuation_field ↑s ≤ v.on_valuation_field ↑t) $
@@ -484,6 +491,21 @@ def quot_of_quot_of_eq_supp (h : supp v₁ = supp v₂) : valuation_ID v₁ → 
 ideal.quotient.lift _ (ideal.quotient.mk _)
 (λ r hr, ideal.quotient.eq_zero_iff_mem.2 $ h ▸ hr)
 
+lemma quot_of_quot_of_eq_supp.id (r : valuation_ID v) : quot_of_quot_of_eq_supp (rfl) r = r :=
+by rcases r;refl
+
+lemma quot_of_quot_of_eq_supp.comp (h12 : supp v₁ = supp v₂) (h23 : supp v₂ = supp v₃)
+  (r : valuation_ID v₁) : quot_of_quot_of_eq_supp h23 (quot_of_quot_of_eq_supp h12 r) =
+  quot_of_quot_of_eq_supp (h23 ▸ h12 : supp v₁ = supp v₃) r :=
+by rcases r;refl
+
+def valuation_ID.equiv (h : supp v₁ = supp v₂) : valuation_ID v₁ ≃ valuation_ID v₂ :=
+{ to_fun := quot_of_quot_of_eq_supp h,
+  inv_fun := quot_of_quot_of_eq_supp (h.symm),
+  left_inv := λ r, by rw quot_of_quot_of_eq_supp.comp h h.symm; exact quot_of_quot_of_eq_supp.id r,
+  right_inv := λ r, by rw quot_of_quot_of_eq_supp.comp h.symm h; exact quot_of_quot_of_eq_supp.id r
+}
+
 @[simp] lemma quot_of_quot_of_eq_supp_quotient_mk (h : supp v₁ = supp v₂) :
   quot_of_quot_of_eq_supp h ∘ ideal.quotient.mk _ = ideal.quotient.mk _ :=
 funext $ λ x, ideal.quotient.lift_mk
@@ -492,27 +514,13 @@ lemma quot_of_quot_of_eq_supp_quotient_mk' (h : supp v₁ = supp v₂) (r : R) :
   quot_of_quot_of_eq_supp h (ideal.quotient.mk _ r) = ideal.quotient.mk _ r :=
 by rw ←quot_of_quot_of_eq_supp_quotient_mk h
 
-instance (h : supp v₁ = supp v₂) : is_ring_hom (quot_of_quot_of_eq_supp h) :=
+instance quot_of_quot_of_eq_supp.is_ring_hom (h : supp v₁ = supp v₂) :
+  is_ring_hom (quot_of_quot_of_eq_supp h) :=
 by delta quot_of_quot_of_eq_supp; apply_instance
 
-def quot_equiv_quot_of_eq_supp (h : supp v₁ = supp v₂) : (supp v₁).quotient ≃r (supp v₂).quotient :=
-{ hom := by delta quot_of_quot_of_eq_supp; apply_instance,
-  to_fun := quot_of_quot_of_eq_supp h,
-  inv_fun := quot_of_quot_of_eq_supp h.symm,
-  left_inv :=
-  begin
-    rintro ⟨q⟩,
-    delta quot_of_quot_of_eq_supp,
-    erw ideal.quotient.lift_mk,
-    refl
-  end,
-  right_inv :=
-  begin
-    rintro ⟨q⟩,
-    delta quot_of_quot_of_eq_supp,
-    erw ideal.quotient.lift_mk,
-    refl
-  end }
+def quot_equiv_quot_of_eq_supp (h : supp v₁ = supp v₂) : valuation_ID v₁ ≃r valuation_ID v₂ :=
+{ hom :=quot_of_quot_of_eq_supp.is_ring_hom h,
+  ..valuation_ID.equiv h}
 
 def quot_equiv_quot_mk_eq_mk (h : supp v₁ = supp v₂) (r : R) :
   (quot_equiv_quot_of_eq_supp h).to_equiv (ideal.quotient.mk _ r) = ideal.quotient.mk _ r :=
@@ -520,6 +528,17 @@ quot_of_quot_of_eq_supp_quotient_mk' h r
 
 lemma quot_of_quot_of_eq_supp_inj (h : supp v₁ = supp v₂) : injective (quot_of_quot_of_eq_supp h) :=
 injective_of_left_inverse (quot_equiv_quot_of_eq_supp h).left_inv
+
+lemma valuation_ID_le_of_le_of_equiv (h : v₁.is_equiv v₂) (a b : valuation_ID v₁) :
+  (a ≤ b) ↔
+  quot_of_quot_of_eq_supp (is_equiv.supp_eq h) a ≤ quot_of_quot_of_eq_supp (is_equiv.supp_eq h) b :=
+by rcases a; rcases b; exact (h a b)
+
+def valuation_ID.preorder_equiv (h : v₁.is_equiv v₂) :
+  preorder_equiv (valuation_ID v₁) (valuation_ID v₂) :=
+{ preorder_iso := valuation_ID_le_of_le_of_equiv h,
+  ..valuation_ID.equiv h.supp_eq
+}
 
 section
 open localization
@@ -545,6 +564,9 @@ is_semiring_hom.is_monoid_hom (valfield_of_valfield_of_eq_supp h)
 def valfield_equiv_valfield_of_eq_supp (h : supp v₁ = supp v₂) : valuation_field v₁ ≃r valuation_field v₂ :=
 fraction_ring.equiv_of_equiv (quot_equiv_quot_of_eq_supp h)
 
+lemma valfield_equiv_eq_valfield_of_valfield (h : supp v₁ = supp v₂) (q : valuation_field v₁) :
+(valfield_equiv_valfield_of_eq_supp h).to_equiv q = valfield_of_valfield_of_eq_supp h q := rfl
+
 instance valfield_equiv.is_field_hom (h : supp v₁ = supp v₂) :
   is_field_hom (valfield_equiv_valfield_of_eq_supp h).to_fun := by apply_instance
 
@@ -552,29 +574,6 @@ lemma valfield_equiv_valfield_mk_eq_mk (h : supp v₁ = supp v₂) (r : R) :
   (valfield_equiv_valfield_of_eq_supp h).to_equiv (of $ ideal.quotient.mk _ r)
   = of (ideal.quotient.mk _ r) :=
 valfield_of_valfield_of_eq_supp_quotient_mk h r
-
-def valfield_units_of_valfield_units_of_eq_supp (h : supp v₁ = supp v₂) :
-  units (valuation_field v₁) → units (valuation_field v₂) :=
-units.map $ valfield_of_valfield_of_eq_supp h
-
-instance valfield_units.is_group_hom (h : supp v₁ = supp v₂) :
-is_group_hom (valfield_units_of_valfield_units_of_eq_supp h) :=
-by unfold valfield_units_of_valfield_units_of_eq_supp; apply_instance
-
-lemma units_valfield_of_units_valfield_of_eq_supp_mk
-  (h : supp v₁ = supp v₂) (r : R) (hr : r ∉ supp v₁) :
-  valfield_units_of_valfield_units_of_eq_supp h (units_valfield.mk v₁ r hr)
-  = units_valfield.mk v₂ r (h ▸ hr) := units.ext $ valfield_equiv_valfield_mk_eq_mk h r
-
-def valfield_units_equiv_units_of_eq_supp (h : supp v₁ = supp v₂) :
-group_equiv (units (valuation_field v₁)) (units (valuation_field v₂)) :=
-let h' := valfield_equiv_valfield_of_eq_supp h in
-by letI := h'.hom; exact units.map_equiv {mul_hom := h'.hom.map_mul, ..h'}
-end
-
-lemma valfield_units_equiv_units_mk_eq_mk (h : supp v₁ = supp v₂) (r : R) (hr : r ∉ supp v₁):
-(valfield_units_equiv_units_of_eq_supp h).to_equiv (units_valfield.mk v₁ r hr) =
-units_valfield.mk v₂ r (h ▸ hr) := units_valfield_of_units_valfield_of_eq_supp_mk h r hr
 
 lemma is_equiv.comap_quot_of_quot (h : v₁.is_equiv v₂) :
   (v₁.on_quot (set.subset.refl _)).is_equiv
@@ -622,6 +621,49 @@ def val_ring_equiv_of_is_equiv (h : v₁.is_equiv v₂) : v₁.valuation_ring �
 -- = ⟨of $ ideal.quotient.mk _ r, longer proof it's in val ring⟩
 -- but I'm not sure we need it.
 
+lemma valfeld_le_of_le_of_equiv (h : v₁.is_equiv v₂) (a b : valuation_field v₁) :
+  (a ≤ b) ↔ valfield_of_valfield_of_eq_supp (h.supp_eq) a ≤
+    valfield_of_valfield_of_eq_supp (h.supp_eq) b :=
+is_equiv.on_valuation_field_is_equiv h a b
+
+def valfield.preorder_equiv (h : v₁.is_equiv v₂) :
+  preorder_equiv (valuation_field v₁) (valuation_field v₂) :=
+{ preorder_iso := valfeld_le_of_le_of_equiv h,
+  ..(valfield_equiv_valfield_of_eq_supp h.supp_eq).to_equiv
+}
+
+-- units
+
+def valfield_units_of_valfield_units_of_eq_supp (h : supp v₁ = supp v₂) :
+  units (valuation_field v₁) → units (valuation_field v₂) :=
+units.map $ valfield_of_valfield_of_eq_supp h
+
+instance valfield_units.is_group_hom (h : supp v₁ = supp v₂) :
+is_group_hom (valfield_units_of_valfield_units_of_eq_supp h) :=
+by unfold valfield_units_of_valfield_units_of_eq_supp; apply_instance
+
+lemma units_valfield_of_units_valfield_of_eq_supp_mk
+  (h : supp v₁ = supp v₂) (r : R) (hr : r ∉ supp v₁) :
+  valfield_units_of_valfield_units_of_eq_supp h (units_valfield.mk v₁ r hr)
+  = units_valfield.mk v₂ r (h ▸ hr) := units.ext $ valfield_equiv_valfield_mk_eq_mk h r
+
+def valfield_units_equiv_units_of_eq_supp (h : supp v₁ = supp v₂) :
+group_equiv (units (valuation_field v₁)) (units (valuation_field v₂)) :=
+let h' := valfield_equiv_valfield_of_eq_supp h in
+by letI := h'.hom; exact units.map_equiv {mul_hom := h'.hom.map_mul, ..h'}
+end
+
+lemma valfield_units_equiv_units_mk_eq_mk (h : supp v₁ = supp v₂) (r : R) (hr : r ∉ supp v₁):
+(valfield_units_equiv_units_of_eq_supp h).to_equiv (units_valfield.mk v₁ r hr) =
+units_valfield.mk v₂ r (h ▸ hr) := units_valfield_of_units_valfield_of_eq_supp_mk h r hr
+
+
+
+def valfield_units_preorder_equiv (h : v₁.is_equiv v₂) :
+  preorder_equiv (units (valuation_field v₁)) (units (valuation_field v₂)) :=
+{ preorder_iso := λ u v, @preorder_equiv.preorder_iso _ _ _ _ (valfield.preorder_equiv h) u.val v.val,
+  ..valfield_units_equiv_units_of_eq_supp (h.supp_eq)
+ }
 
 -- This explicit instance helps type class inference; it's a shortcut.
 -- The "by apply_instance" proof needs
