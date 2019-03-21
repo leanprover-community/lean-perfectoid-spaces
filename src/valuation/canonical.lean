@@ -710,7 +710,7 @@ group_equiv.quot_eq_of_eq $ h.norm_one_eq_norm_one
 def is_equiv.value_group_equiv (h : is_equiv v₁ v₂) :
 group_equiv (value_group v₁) (value_group v₂) :=
 group_equiv.trans (h.value_group_equiv_aux) $
-  group_equiv.quotient
+  group_equiv.quotient'
     (valfield_units_equiv_units_of_eq_supp (is_equiv.supp_eq h)) (valuation_field_norm_one v₂)
 
 -- ordering part of 1.27 (iii) -> (i)

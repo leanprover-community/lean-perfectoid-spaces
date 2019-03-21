@@ -23,7 +23,9 @@ end quotient_group
 
 open quotient_group
 
-def group_equiv.quotient {G : Type*} {H : Type*} [group G] [group H]
+-- I don't use this any more, first because group_equiv.quotient is more general
+-- and second because I don't like the definition of the function via  quotient_group.map
+def group_equiv.quotient' {G : Type*} {H : Type*} [group G] [group H]
 (h : group_equiv G H) (K : set H) [normal_subgroup K] :
 group_equiv (quotient_group.quotient (h.to_equiv ⁻¹' K)) (quotient_group.quotient K) :=
 { to_fun := map (h.to_equiv ⁻¹' K) K h.to_fun (le_refl (h.to_equiv ⁻¹' K)),
@@ -43,3 +45,37 @@ group_equiv (quotient_group.quotient (h.to_equiv ⁻¹' K)) (quotient_group.quot
     by apply_instance,
     cases H with H, exact H,
   end}
+
+lemma quotient_group.ker_mk {G : Type*} [group G] (N : set G) [normal_subgroup N] :
+  is_group_hom.ker (quotient_group.mk : G → quotient_group.quotient N) = N :=
+begin
+  ext g,
+  show quotient.mk' g ∈ {(1 : quotient_group.quotient N)} ↔ g ∈ N,
+  rw set.mem_singleton_iff,
+  show _ = quotient.mk' (1 : G) ↔ _,
+  rw quotient.eq',
+  show g⁻¹ * 1 ∈ N ↔ _,
+  rw [mul_one, is_subgroup.inv_mem_iff],
+end
+
+def group_equiv.quotient {G : Type*} {H : Type*} [group G] [group H]
+  (he : group_equiv G H) (J : set G) [normal_subgroup J] (K : set H) [normal_subgroup K]
+  (h2 : he.to_equiv ⁻¹' K = J) :
+group_equiv (quotient_group.quotient J) (quotient_group.quotient K) :=
+{ to_fun := quotient_group.lift J (λ g, quotient_group.mk (he.to_equiv g)) begin
+    unfold set.preimage at h2,
+    intros g hg,
+    rw ←h2 at hg,
+    rw ←is_group_hom.mem_ker (quotient_group.mk : H → quotient_group.quotient K),
+    rwa quotient_group.ker_mk,
+  end,
+  inv_fun := quotient_group.lift K (λ h, quotient_group.mk (he.symm.to_equiv h)) begin
+    intros h hh,
+    rw ←is_group_hom.mem_ker (quotient_group.mk : G → quotient_group.quotient J),
+    rw quotient_group.ker_mk,
+    sorry,
+  end,
+  left_inv := sorry,
+  right_inv := sorry,
+  mul_hom := sorry
+  }
