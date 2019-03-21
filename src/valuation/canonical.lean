@@ -727,66 +727,6 @@ end -- section
 
 end valuation
 
-#exit
-
-def is_equiv.value_group_order_equiv (h : is_equiv v₁ v₂) (x y : value_group v₁) (h2 : x ≤ y) :
-  h.value_group_equiv.to_equiv x ≤ h.value_group_equiv.to_equiv y :=
-begin
-  -- ...
-  rcases canonical_valuation.value_group.is_ratio v₁ x with ⟨rx, sx, hrx, hsx, hx⟩,
-  rcases canonical_valuation.value_group.is_ratio v₁ y with ⟨ry, sy, hry, hsy, hy⟩,
-  let cv₁ := canonical_valuation v₁,
-  have hsx0 : 0 < cv₁ sx,
-  { apply lt_of_not_ge,
-    intro hv, apply hsx,
-    have hv' : cv₁ sx = 0 := (eq_zero_iff_le_zero cv₁).2 (by rw is_valuation.map_zero cv₁; exact hv),
-    exact (eq_zero_iff_le_zero v₁).2
-      ((v₁.canonical_valuation_is_equiv sx 0).1 ((eq_zero_iff_le_zero cv₁).1 hv')),
-  },
-  have hsy0 : 0 < cv₁ sy,
-  { apply lt_of_not_ge,
-    intro hv, apply hsy,
-    have hv' : cv₁ sy = 0 := (eq_zero_iff_le_zero cv₁).2 (by rw is_valuation.map_zero cv₁; exact hv),
-    exact (eq_zero_iff_le_zero v₁).2
-      ((v₁.canonical_valuation_is_equiv sy 0).1 ((eq_zero_iff_le_zero cv₁).1 hv')),
-  },
-  have : cv₁ (rx * sy) ≤ cv₁ (ry * sx),
-  calc cv₁ (rx * sy) = cv₁ rx * cv₁ sy : cv₁.map_mul _ _
-  ...                = (cv₁ sx * x) * cv₁ sy : by rw hx
-  ...                = (cv₁ sx * x) * cv₁ sy : by rw hx
-  ...                ≤ (cv₁ sx * y) * cv₁ sy :
-                         (linear_ordered_comm_monoid.mul_le_mul_right
-                           ((linear_ordered_comm_monoid.mul_le_mul_left
-                             (with_zero.some_le_some_of_le h2)) _) _)
-  ...                = cv₁ sy * y * cv₁ sx : by rw [mul_comm, mul_comm (cv₁ sx), mul_assoc]
-  ...                = cv₁ ry * cv₁ sx : by rw hy
-  ...                = cv₁ (ry * sx) : (cv₁.map_mul _ _).symm,
-  replace this := (v₁.canonical_valuation_is_equiv (rx * sy) (ry * sx)).1 this,
-  replace this := (h (rx * sy) (ry * sx)).1 this,
-  replace this := (v₂.canonical_valuation_is_equiv (rx * sy) (ry * sx)).2 this,
-
-  -- Goal should now follow from this and a similar calc calculation,
-  -- except that we need to know that is_equiv.value_group_equiv sends v1 to v2.
-
-  --induction x,
-  --  swap, refl,
-  --cases x with x1 x2 h12 h21,
-  --dsimp [setoid.r] at h2,
-  unfold coe_fn has_coe_to_fun.coe is_equiv.value_group_equiv group_equiv.trans,
-  dsimp,
-  unfold equiv.trans,
-  dsimp,
-  unfold is_equiv.value_group_equiv_aux group_equiv.quot_eq_of_eq,
-  dsimp,
-  rcases canonical_valuation.value_group.is_ratio v₁ x with ⟨rx, sx, hx⟩,
-  sorry
-end
-
-
-end -- some random section I guess?
-
-end valuation
-
 /-
 
 File ends here. Below are some comments, mostly dealt with now.

@@ -24,7 +24,7 @@ end quotient_group
 open quotient_group
 
 -- I don't use this any more, first because group_equiv.quotient is more general
--- and second because I don't like the definition of the function via  quotient_group.map
+-- and second because I don't like the definition of the function via quotient_group.map
 def group_equiv.quotient' {G : Type*} {H : Type*} [group G] [group H]
 (h : group_equiv G H) (K : set H) [normal_subgroup K] :
 group_equiv (quotient_group.quotient (h.to_equiv ⁻¹' K)) (quotient_group.quotient K) :=
@@ -58,6 +58,8 @@ begin
   rw [mul_one, is_subgroup.inv_mem_iff],
 end
 
+-- This version is better, but Mario points out that really I shuold be using a
+-- relation rather than h2 : he.to_equiv ⁻¹' K = J.
 def group_equiv.quotient {G : Type*} {H : Type*} [group G] [group H]
   (he : group_equiv G H) (J : set G) [normal_subgroup J] (K : set H) [normal_subgroup K]
   (h2 : he.to_equiv ⁻¹' K = J) :
