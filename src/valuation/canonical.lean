@@ -689,9 +689,11 @@ begin
   refl,
 end
 
-lemma is_equiv.norm_one_eq_norm_one (h : is_equiv v₁ v₂) : valuation_field_norm_one v₁ =
-  valfield_units_of_valfield_units_of_eq_supp (is_equiv.supp_eq h) ⁻¹'
-  valuation_field_norm_one v₂ :=
+lemma is_equiv.norm_one_eq_norm_one (h : is_equiv v₁ v₂) :
+  valfield_units_of_valfield_units_of_eq_supp (is_equiv.supp_eq h) ⁻¹' valuation_field_norm_one v₂
+  =
+  valuation_field_norm_one v₁
+  :=
 begin
   ext x,
   rw [set.mem_preimage_eq, val_one_iff_unit_val_one x,
@@ -700,36 +702,25 @@ begin
 end
 
 -- TODO -- make this a preorder_equiv. This is the heart of the problem
-def is_equiv.value_group_equiv_aux (h : is_equiv v₁ v₂) : group_equiv (value_group v₁)
-  (quotient_group.quotient
-    ((valfield_units_of_valfield_units_of_eq_supp (is_equiv.supp_eq h)) ⁻¹'
-      (valuation_field_norm_one v₂))) :=
-group_equiv.quot_eq_of_eq $ h.norm_one_eq_norm_one
+--def is_equiv.value_group_equiv_aux (h : is_equiv v₁ v₂) : group_equiv (value_group v₁)
+--  (quotient_group.quotient
+--    ((valfield_units_of_valfield_units_of_eq_supp (is_equiv.supp_eq h)) ⁻¹'
+--      (valuation_field_norm_one v₂))) :=
+--group_equiv.quot_eq_of_eq $ h.norm_one_eq_norm_one
 
 -- group part of Wedhorn 1.27 (iii) -> (i)
 def is_equiv.value_group_equiv (h : is_equiv v₁ v₂) :
-group_equiv (value_group v₁) (value_group v₂) :=
-group_equiv.trans (h.value_group_equiv_aux) $
-  group_equiv.quotient'
-    (valfield_units_equiv_units_of_eq_supp (is_equiv.supp_eq h)) (valuation_field_norm_one v₂)
+group_equiv (value_group v₁) (value_group v₂) := group_equiv.quotient
+  (valfield_units_equiv_units_of_eq_supp h.supp_eq)
+  (valuation_field_norm_one v₁)
+  (valuation_field_norm_one v₂) $ is_equiv.norm_one_eq_norm_one h
 
 -- ordering part of 1.27 (iii) -> (i)
 def is_equiv.value_group_order_equiv (h : is_equiv v₁ v₂) (x y : value_group v₁) (h2 : x ≤ y) :
   h.value_group_equiv.to_equiv x ≤ h.value_group_equiv.to_equiv y :=
 begin
   induction x, induction y, swap, refl, swap, refl,
-  have h3 := (is_equiv.on_valuation_field_is_equiv h x y).1 h2,
-  unfold has_le.le preorder.le partial_order.le linear_order.le,
-  unfold quotient.lift_on₂',
-  unfold quotient.lift_on₂,
-  unfold quotient.lift₂,
-  unfold quotient.lift,
-  dsimp [setoid.r],
-  let X : v₂.on_valuation_field (((is_equiv.value_group_equiv h).to_equiv) x)
-    ≤ v₂.on_valuation_field (((is_equiv.value_group_equiv h).to_equiv) y) := _,
-
---  convert h3,
-  sorry,
+  exact (is_equiv.on_valuation_field_is_equiv h x y).1 h2,
 end
 
 end -- section

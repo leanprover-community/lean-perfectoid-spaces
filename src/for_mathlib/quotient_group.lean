@@ -73,9 +73,31 @@ group_equiv (quotient_group.quotient J) (quotient_group.quotient K) :=
     intros h hh,
     rw ←is_group_hom.mem_ker (quotient_group.mk : G → quotient_group.quotient J),
     rw quotient_group.ker_mk,
-    sorry,
+    show he.to_equiv.symm h ∈ J,
+    rw ←h2,
+    show he.to_equiv (he.to_equiv.symm h) ∈ K,
+    convert hh,
+    exact he.to_equiv.right_inv h
   end,
-  left_inv := sorry,
-  right_inv := sorry,
-  mul_hom := sorry
+  left_inv := λ g, begin
+    induction g,
+    conv begin
+      to_rhs,
+      rw ←he.to_equiv.left_inv g,
+    end,
+    refl, refl,
+    end,
+  right_inv := λ h, begin
+    induction h,
+    conv begin
+      to_rhs,
+      rw ←he.to_equiv.right_inv h,
+    end,
+    refl, refl,
+  end,
+  mul_hom := begin
+    have H := quotient_group.is_group_hom_quotient_lift J _ _,
+    cases H with H,
+    exact H, -- !
+  end
   }
