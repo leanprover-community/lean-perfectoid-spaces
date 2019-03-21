@@ -699,6 +699,7 @@ begin
   refl,
 end
 
+-- TODO -- make this a preorder_equiv. This is the heart of the problem
 def is_equiv.value_group_equiv_aux (h : is_equiv v₁ v₂) : group_equiv (value_group v₁)
   (quotient_group.quotient
     ((valfield_units_of_valfield_units_of_eq_supp (is_equiv.supp_eq h)) ⁻¹'
@@ -718,6 +719,15 @@ def is_equiv.value_group_order_equiv (h : is_equiv v₁ v₂) (x y : value_group
 begin
   induction x, induction y, swap, refl, swap, refl,
   have h3 := (is_equiv.on_valuation_field_is_equiv h x y).1 h2,
+  unfold has_le.le preorder.le partial_order.le linear_order.le,
+  unfold quotient.lift_on₂',
+  unfold quotient.lift_on₂,
+  unfold quotient.lift₂,
+  unfold quotient.lift,
+  dsimp [setoid.r],
+  let X : v₂.on_valuation_field (((is_equiv.value_group_equiv h).to_equiv) x)
+    ≤ v₂.on_valuation_field (((is_equiv.value_group_equiv h).to_equiv) y) := _,
+
 --  convert h3,
   sorry,
 end
