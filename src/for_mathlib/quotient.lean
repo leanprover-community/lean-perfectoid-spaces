@@ -1,4 +1,5 @@
 import data.set.basic
+import data.quot
 variables {α : Type*} {β : Type*} [s : setoid α]
 
 namespace quotient
@@ -11,5 +12,11 @@ lemma prod_preimage_eq_image (g : quotient s → β) {h : α → β} (Hh : h = g
     λ ⟨⟨b₁, b₂⟩, h₁, h₂⟩, show (g a₁, g a₂) ∈ r, from
     have h₃ : ⟦b₁⟧ = a₁ ∧ ⟦b₂⟧ = a₂ := prod.ext_iff.1 h₂,
      h₃.1 ▸ h₃.2 ▸ h₁⟩)
-
 end quotient
+
+lemma quot_mk_quotient_mk {α :Type*} [setoid α] (a : α) : quot.mk setoid.r a = ⟦a⟧ :=
+rfl
+
+noncomputable
+def habitant_of_quotient_habitant {α : Type*} {s : setoid α} (x : quotient s) : α :=
+(classical.inhabited_of_nonempty $ (nonempty_quotient_iff s).1 ⟨x⟩).default
