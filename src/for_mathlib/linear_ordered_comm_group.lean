@@ -173,6 +173,9 @@ theorem some_le_some_of_le [partial_order α] {x y : α} (h : x ≤ y) :
 (x : with_zero α) ≤ y :=
 λ a ha, ⟨y, rfl, by cases ha; assumption⟩
 
+theorem some_le_some [partial_order α] {x y : α} : (x : with_zero α) ≤ (y : with_zero α) ↔ x ≤ y :=
+⟨λ h, by rcases (h x rfl) with ⟨z, ⟨h2⟩, h3⟩; exact h3, some_le_some_of_le⟩
+
 def map (f : α → β) : with_zero α → with_zero β := option.map f
 
 @[simp] theorem le_zero_iff_eq_zero [partial_order α] {x : with_zero α} : x ≤ 0 ↔ x = 0 :=

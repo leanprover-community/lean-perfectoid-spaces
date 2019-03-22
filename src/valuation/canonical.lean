@@ -101,9 +101,9 @@ by unfold value_group.to_Γ; apply_instance
 instance value_group_quotient.is_group_hom :
 is_group_hom (value_group_quotient v) := ⟨λ _ _, rfl⟩
 
--- KMB now worried that this should change to λ s t, s ≤ t with possible breakage
 instance : linear_order (value_group v) :=
 { le := λ a' b',
+    -- KMB now worried that this should change to λ s t, s ≤ t with possible breakage
     quotient.lift_on₂' a' b' (λ s t, v.on_valuation_field ↑s ≤ v.on_valuation_field ↑t) $
     λ a b c d hac hbd, begin
       change a⁻¹ * c ∈ is_group_hom.ker v.on_valuation_field.unit_map at hac,
@@ -701,13 +701,6 @@ begin
   refl,
 end
 
--- TODO -- make this a preorder_equiv. This is the heart of the problem
---def is_equiv.value_group_equiv_aux (h : is_equiv v₁ v₂) : group_equiv (value_group v₁)
---  (quotient_group.quotient
---    ((valfield_units_of_valfield_units_of_eq_supp (is_equiv.supp_eq h)) ⁻¹'
---      (valuation_field_norm_one v₂))) :=
---group_equiv.quot_eq_of_eq $ h.norm_one_eq_norm_one
-
 -- group part of Wedhorn 1.27 (iii) -> (i)
 def is_equiv.value_group_equiv (h : is_equiv v₁ v₂) :
 group_equiv (value_group v₁) (value_group v₂) := group_equiv.quotient
@@ -723,11 +716,37 @@ begin
   exact (is_equiv.on_valuation_field_is_equiv h x y).1 h2,
 end
 
+-- TODO : switch iff sides
 def is_equiv.value_group_order_equiv (h : is_equiv v₁ v₂) : ∀ (x y : value_group v₁),
   x ≤ y ↔ h.value_group_equiv.to_equiv x ≤ h.value_group_equiv.to_equiv y :=
 linear_order_le_iff_of_monotone_injective
   (h.value_group_equiv.to_equiv.bijective.1)
   (is_equiv.value_group_order_equiv_aux h)
+
+def is_equiv.value_group_equiv_monotone (h : is_equiv v₁ v₂) :
+  monotone (h.value_group_equiv.to_equiv) := λ x y, (is_equiv.value_group_order_equiv h x y).1
+
+-- TODO : switch iff sides
+def is_equiv.with_zero_value_group_order_equiv (h : is_equiv v₁ v₂)
+  (x y : with_zero (value_group v₁)) : x ≤ y ↔
+  with_zero.map h.value_group_equiv.to_equiv x ≤
+  with_zero.map h.value_group_equiv.to_equiv y :=
+begin
+  cases x with x,
+  { show _ ↔ none ≤ _,
+    split; intros; exact with_zero.zero_le,
+  },
+  cases y with y,
+  { show _ ↔ some _ ≤ none,
+    split; {intro h, exfalso, revert h, simp},
+  },
+  show (x : with_zero $ value_group v₁) ≤ (y : with_zero $ value_group v₁) ↔
+    ((((is_equiv.value_group_equiv h).to_equiv) x) : with_zero $ value_group v₂) ≤
+    ((((is_equiv.value_group_equiv h).to_equiv) y) : with_zero $ value_group v₂),
+  rw with_zero.some_le_some,
+  rw with_zero.some_le_some,
+  exact (is_equiv.value_group_order_equiv h x y)
+end
 
 end -- section
 

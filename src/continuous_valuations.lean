@@ -1,6 +1,8 @@
 import topology.algebra.ring
 import valuation_spectrum
 
+import for_mathlib.logic
+
 universes u u₀ u₁ u₂ u₃
 
 namespace valuation
@@ -14,22 +16,68 @@ variables {v₁ : valuation R Γ₁} {v₂ : valuation R Γ₂}
 def is_continuous (v : valuation R Γ) : Prop :=
 ∀ g : value_group v, is_open {r : R | canonical_valuation v r < g}
 
+/- need :
+  1) for all r : R,
+  with_zero.map (value_group_equiv h).to_fun (⇑(canonical_valuation v₁) r =
+  canonical_valuation v₂ r
+  -- This is pulling back a valuation along a map of groups.
+
+  2) with_zero.map (value_group_equiv h) is monotonic. [follows from mono of value_group_equiv]
+
+  3) (follows from 2) it's strictly monotonic. [done: equiv.lt_map_of_le_map]
+-/
 -- We could probably prove this now, but I didn't do it yet.
 lemma is_equiv.is_continuous_iff (h : v₁.is_equiv v₂) :
-  v₁.is_continuous ↔ v₂.is_continuous :=
+  v₁.is_continuous ↔ v₂.is_continuous := begin
+  unfold valuation.is_continuous,
+  rw ←forall_iff_forall_surj (h.value_group_equiv.to_equiv.bijective.2),
+  apply forall_congr,
+  intro g,
+  convert iff.rfl,
+  funext r,
+  apply propext,
+  /-
+  ⊢ ⇑(canonical_valuation v₂) r < ↑(⇑((is_equiv.value_group_equiv h).to_equiv) g) ↔
+    ⇑(canonical_valuation v₁) r < ↑g
+  -/
+end
+/-
+⊢ (∀ (g : value_group v₁), is_open {r : R | ⇑(canonical_valuation v₁) r < ↑g}) ↔
+    ∀ (g : value_group v₂), is_open {r : R | ⇑(canonical_valuation v₂) r < ↑g}
+-/
+/-
 begin
+  unfold is_continuous,
   split; intros H g,
   { convert H (h.value_group_equiv.symm.to_equiv g),
     symmetry,
     funext,
     apply propext,
+    cases classical.em (r ∈ supp v₁),
+    { -- comap (quotient.canonical_valuation v) (ideal.quotient.mk (supp v))
+      show (quotient.canonical_valuation v₁) (ideal.quotient.mk (supp v₁) r) < _
+        ↔ (quotient.canonical_valuation v₂) (ideal.quotient.mk (supp v₂) r) < _,
+      rw (ideal.quotient.eq_zero_iff_mem).2 h_1,
+      rw (ideal.quotient.eq_zero_iff_mem).2 (h.supp_eq ▸ h_1 : r ∈ supp v₂),
+      rw valuation.map_zero,
+      rw valuation.map_zero,
+      show 0 < some _ ↔ 0 < some _,
+      split;intro H; exact with_zero.zero_lt_some,
+    },
+    { -- goal in this one is to get hold of element of value_group
+      -- corresponding to g
+     sorry
+    }
+    rw lt_iff_not_ge,
+    rw lt_iff_not_ge,
+    apply not_iff_not_of_iff,
     sorry },
   { convert H (h.value_group_equiv.to_equiv g),
     funext,
     apply propext,
     sorry }
 end
-
+-/
 -- jmc: Is this definition equivalent?
 -- KMB: I guess so. The extra edge cases are s₁ or s₂ in supp(v)
 -- and in these cases the modified definition is furthermore asking
