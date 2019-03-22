@@ -5,10 +5,12 @@ import tactic.ring
 import nonarchimedean_ring
 import Huber_ring.basic
 
+import for_mathlib.finset
 import for_mathlib.topological_rings
 import for_mathlib.algebra
 import for_mathlib.lc_algebra
 import for_mathlib.top_ring
+import for_mathlib.submodule
 import for_mathlib.subgroup
 
 universes u v
@@ -89,7 +91,7 @@ begin
   let W : open_add_subgroups A := ⟨V, h₁, h₂⟩,
   use W,
   work_on_goal 0 {
-    erw [map_span, span_le, ← image_comp, ← algebra.map_lmul_left, image_comp],
+    erw [← span_image, span_le, ← image_comp, ← algebra.map_lmul_left, image_comp],
     refine subset.trans (image_subset (of_id A ATs : A → ATs) _) subset_span,
     rw image_subset_iff,
     exact h₃ },
@@ -142,6 +144,33 @@ begin
     exact lc.atotal.map_mul _ _ }
 end
 
+lemma K.aux (L : finset A) (h : (↑L : set A) ⊆ ideal.span T) :
+  ∃ (K : finset A),
+  (↑L : set A) ⊆ add_group.closure {x | ∃ (t ∈ T) (k ∈ (↑K : set A)), x = t * k} :=
+begin
+  delta ideal.span at h,
+  erw span_eq_map_lc at h,
+  choose s hs using finset.exists_finset_of_subset_image L _ _ h,
+  use s.bind (λ f, f.frange),
+  intros l hl,
+  cases hs with h' hs,
+  subst h',
+  erw finset.mem_image at hl,
+  rcases hl with ⟨f, hf, rfl⟩,
+  apply add_group.mclosure_subset,
+  apply add_monoid.sum_mem_closure,
+  intros t ht,
+  refine ⟨t, _, _, _, mul_comm _ _⟩,
+  { replace hf := hs hf,
+    erw lc.mem_supported at hf,
+    exact hf ht },
+  { erw [linear_map.id_apply, finset.mem_bind],
+    use [f, hf],
+    erw finsupp.mem_support_iff at ht,
+    erw finsupp.mem_frange,
+    exact ⟨ht, ⟨t, rfl⟩⟩ }
+end
+
 end away
 
 end Huber_ring
@@ -160,12 +189,58 @@ local notation `D` := aux T s
 lemma mul_T_open (hT : is_open (↑(ideal.span T) : set A)) (U : open_add_subgroups A) :
   is_open (add_group.closure {x | ∃ t ∈ T, ∃ u ∈ U.val, x = t * u}) :=
 begin
+  -- we need to remember that A is nonarchimedean, before we destruct the Huber ring instance
+  have nonarch : nonarchimedean A := Huber_ring.nonarchimedean,
   tactic.unfreeze_local_instances,
   rcases ‹Huber_ring A› with ⟨_, _, _, ⟨A₀, _, _, _, ⟨_, emb, hf, I, fg, top⟩⟩⟩,
   resetI,
   rcases (is_ideal_adic_iff I).mp top with ⟨H₁, H₂⟩,
-  cases H₂ _ (mem_nhds_sets _ _) with n hn,
-  work_on_goal 2 { exact emb.continuous _ hT },
+  cases H₂ _ (mem_nhds_sets (emb.continuous _ hT) _) with n hn,
+  work_on_goal 1 {
+    rw mem_preimage_eq,
+    erw is_ring_hom.map_zero (to_fun A),
+    { exact (ideal.span _).zero_mem },
+    apply_instance },
+  cases fg_pow I fg n with L hL,
+  rw ← hL at hn,
+  have Lsub := set.subset.trans subset_span hn,
+  rw ← image_subset_iff at Lsub,
+  rw ← finset.coe_image at Lsub,
+  cases K.aux _ _ Lsub with K hK,
+  let V := K.inf (λ a : A, classical.some (nonarch.left_mul_subset U a)),
+  cases H₂ _ (mem_nhds_sets (emb.continuous _ V.2.2) _) with m hm,
+  work_on_goal 1 {
+    rw mem_preimage_eq,
+    erw is_ring_hom.map_zero (to_fun A),
+    { exact is_add_submonoid.zero_mem _ },
+    apply_instance },
+  rw ← image_subset_iff at hm,
+  apply @open_add_subgroups.is_open_of_open_add_subgroup A _ _ _ _
+    (add_group.closure.is_add_subgroup _),
+  refine ⟨⟨to_fun A '' ↑(I^(m+1)), _, _⟩, _⟩,
+  work_on_goal 2 { assumption },
+  all_goals { try {apply_instance} },
+  { exact embedding_open emb hf (H₁ _) },
+  have hIm :
+    (add_group.closure {x | ∃ t ∈ T, ∃ ki ∈
+      add_group.closure {ki | ∃ k ∈ K, ∃ i ∈ ((to_fun A : A₀ → A) '' ↑(I^m)), ki = k * i},
+        x = t * ki}) ⊆ _ := _,
+  work_on_goal 0 { refine set.subset.trans _ hIm, clear hIm },
+  work_on_goal 1 {
+    apply add_group.closure_mono,
+    rintros _ ⟨t, ht, ki, hki, rfl⟩,
+    use [t, ht],
+    refine ⟨_, _, rfl⟩,
+    apply add_group.in_closure.rec_on hki,
+    { rintros _ ⟨k, hk, i, hi, rfl⟩,
+      replace hi := hm hi,
+      have H : V ≤ classical.some (nonarch.left_mul_subset U k) := finset.inf_le hk,
+      replace hi := H hi,
+      apply classical.some_spec (nonarch.left_mul_subset U k),
+      use [i, hi] },
+    { apply is_add_submonoid.zero_mem },
+    { intros, apply is_add_subgroup.neg_mem, assumption },
+    { intros, apply is_add_submonoid.add_mem; assumption } },
   all_goals {sorry}
 end
 

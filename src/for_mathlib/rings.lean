@@ -18,23 +18,6 @@ funext $ λ _, is_monoid_hom.map_mul f
 
 end
 
-namespace submodule
-
-section
-variables {R : Type*} [ring R]
-variables {M : Type*} [add_comm_group M] [module R M]
-variables {N : Type*} [add_comm_group N] [module R N]
-variables (f : M →ₗ[R] N)
-variables (s : set M)
-
-lemma map_span : (span R s).map f = span R (f '' s) :=
-le_antisymm (map_le_iff_le_comap.2 $ span_le.2 $ λ x hx, subset_span $ set.mem_image_of_mem f hx) $
-  span_le.mpr $ set.image_subset _ $ subset_span
-
-end
-
-end submodule
-
 namespace ideal
 
 open function
@@ -46,11 +29,12 @@ instance map_is_monoid_hom {f : R → S} [is_ring_hom f] :
 { map_one := ideal.map_top f,
   map_mul := ideal.map_mul f }
 
-lemma map_span {R : Type u} [comm_ring R] {S : Type v} [comm_ring S]
+lemma span_image {R : Type u} [comm_ring R] {S : Type v} [comm_ring S]
   (f : R → S) [is_ring_hom f] (X : set R) :
-  map f (span X) = span (f '' X) :=
-le_antisymm (map_le_iff_le_comap.2 $ span_le.2 $ λ x hx, subset_span $ set.mem_image_of_mem f hx) $
-  span_mono $ set.image_subset _ $ subset_span
+  span (f '' X) = map f (span X) :=
+le_antisymm
+  (span_mono $ set.image_subset _ $ subset_span)
+  (map_le_iff_le_comap.2 $ span_le.2 $ λ x hx, subset_span $ set.mem_image_of_mem f hx)
 
 @[simp] lemma map_quotient_self {R : Type u} [comm_ring R] (I : ideal R) :
   ideal.map (ideal.quotient.mk I) I = ⊥ :=

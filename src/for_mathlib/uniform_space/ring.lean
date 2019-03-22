@@ -236,11 +236,22 @@ open uniform_space
 variables {α : Type*}  [uniform_space α]
 variables {β : Type*}  [uniform_space β]
 
+lemma uniform_continuous_coe : uniform_continuous (coe : α → ring_completion α) :=
+completion.uniform_continuous_coe _
+
+lemma continuous_coe : continuous (coe : α → ring_completion α) :=
+completion.continuous_coe _
+
 def extension [separated β] [complete_space β] (f : α → β) : ring_completion α → β :=
 completion.extension $ sep_quot.lift f
 
-def continuous_extension [separated β] [complete_space β] (f : α → β) : ring_completion α → β :=
-completion.extension $ sep_quot.lift f
+def uniform_continuous_extension [separated β] [complete_space β] (f : α → β) :
+  uniform_continuous (extension f):=
+completion.uniform_continuous_extension
+
+def continuous_extension [separated β] [complete_space β] (f : α → β) :
+  continuous (extension f):=
+(ring_completion.uniform_continuous_extension f).continuous
 
 lemma extension_coe [separated β] [complete_space β] {f : α → β} (hf : uniform_continuous f) (a : α) :
   (ring_completion.extension f) a = f a :=
@@ -250,6 +261,11 @@ begin
 end
 
 local attribute [instance] separation_setoid
+
+
+lemma ext [t2_space β] {f g : ring_completion α → β} (hf : continuous f) (hg : continuous g)
+  (h : ∀ a : α, f a = g a) : f = g :=
+completion.ext hf hg (by rintro ⟨a⟩ ; exact h a)
 
 lemma extension_unique [separated β] [complete_space β]
   {f : α → β} (hf : uniform_continuous f)
@@ -280,7 +296,7 @@ end
 end ring_completion
 
 section ring_completion
-open uniform_space
+open uniform_space ring_completion
 variables (α : Type*) [comm_ring α] [uniform_space α] [uniform_add_group α] [topological_ring α]
 variables (β : Type*) [comm_ring β] [uniform_space β] [uniform_add_group β] [topological_ring β]
 
@@ -300,5 +316,30 @@ by haveI := sep_quot.is_ring_hom_lift hf ;
 
 lemma ring_completion.map_is_ring_hom : is_ring_hom (ring_completion.map f) :=
 by haveI := sep_quot.is_ring_hom_map hf ;
-  exact uniform_space.completion.is_ring_hom_map (sep_quot α) (sep_quot.continuous_map hf)
+  exact completion.is_ring_hom_map (sep_quot α) (sep_quot.continuous_map hf)
+
+omit hf
+
+def completion_of_complete_separated [complete_space α] [separated α] : α ≃ (ring_completion α) :=
+{ to_fun := coe,
+  inv_fun := ring_completion.extension id,
+  left_inv := ring_completion.extension_coe uniform_continuous_id,
+  right_inv :=
+  begin
+    apply congr_fun,
+    change coe ∘ (extension id) = id,
+    refine ext ((continuous_extension id).comp continuous_coe) continuous_id _,
+    intro x,
+    change coe ((extension id) ↑x) = id ↑x,
+    rw ring_completion.extension_coe uniform_continuous_id,
+    simp,
+  end }
+
+lemma uniform_continuous_completion_equiv [complete_space α] [separated α] :
+  uniform_continuous (completion_of_complete_separated α).to_fun :=
+completion.uniform_continuous_coe _
+
+lemma uniform_continuous_completion_equiv_symm [complete_space α] [separated α] :
+  uniform_continuous ⇑(completion_of_complete_separated α).symm :=
+completion.uniform_continuous_extension
 end ring_completion
