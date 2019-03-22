@@ -8,6 +8,7 @@ import for_mathlib.rings
 import for_mathlib.with_zero
 import for_mathlib.linear_ordered_comm_group
 import for_mathlib.order -- preorder.comap
+import for_mathlib.equiv
 
 import tactic.tidy
 import tactic.abel
@@ -260,6 +261,15 @@ variables {v₁ : valuation R Γ₁} {v₂ : valuation R Γ₂} {v₃ : valuatio
 
 lemma of_eq {v' : valuation R Γ} (h : v = v') : v.is_equiv v' :=
 by subst h; refl
+
+lemma map {v' : valuation R Γ} (f : Γ → Γ₁) [is_group_hom f] (inf : injective f) (hf : monotone f)
+  (h : v.is_equiv v') : (map v f hf).is_equiv (map v' f hf) := λ r s, begin
+  show (with_zero.map f) (v r) ≤ (with_zero.map f) (v s) ↔
+    (with_zero.map f) (v' r) ≤ (with_zero.map f) (v' s),
+  rw ←linear_order_le_iff_of_monotone_injective (with_zero.map_inj inf) (with_zero.map_monotone hf),
+  rw ←linear_order_le_iff_of_monotone_injective (with_zero.map_inj inf) (with_zero.map_monotone hf),
+  apply h,
+end
 
 lemma comap {S : Type u₃} [comm_ring S] (f : S → R) [is_ring_hom f] (h : v₁.is_equiv v₂) :
   (v₁.comap f).is_equiv (v₂.comap f) :=

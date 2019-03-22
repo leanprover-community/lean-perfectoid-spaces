@@ -536,7 +536,7 @@ by rcases a; rcases b; exact (h a b)
 
 def valuation_ID.preorder_equiv (h : v₁.is_equiv v₂) :
   preorder_equiv (valuation_ID v₁) (valuation_ID v₂) :=
-{ preorder_iso := valuation_ID_le_of_le_of_equiv h,
+{ le_map := valuation_ID_le_of_le_of_equiv h,
   ..valuation_ID.equiv h.supp_eq
 }
 
@@ -628,7 +628,7 @@ is_equiv.on_valuation_field_is_equiv h a b
 
 def valfield.preorder_equiv (h : v₁.is_equiv v₂) :
   preorder_equiv (valuation_field v₁) (valuation_field v₂) :=
-{ preorder_iso := valfeld_le_of_le_of_equiv h,
+{ le_map := valfeld_le_of_le_of_equiv h,
   ..(valfield_equiv_valfield_of_eq_supp h.supp_eq).to_equiv
 }
 
@@ -661,7 +661,7 @@ units_valfield.mk v₂ r (h ▸ hr) := units_valfield_of_units_valfield_of_eq_su
 
 def valfield_units_preorder_equiv (h : v₁.is_equiv v₂) :
   preorder_equiv (units (valuation_field v₁)) (units (valuation_field v₂)) :=
-{ preorder_iso := λ u v, @preorder_equiv.preorder_iso _ _ _ _ (valfield.preorder_equiv h) u.val v.val,
+{ le_map := λ u v, @preorder_equiv.le_map _ _ _ _ (valfield.preorder_equiv h) u.val v.val,
   ..valfield_units_equiv_units_of_eq_supp (h.supp_eq)
  }
 
@@ -716,12 +716,18 @@ group_equiv (value_group v₁) (value_group v₂) := group_equiv.quotient
   (valuation_field_norm_one v₂) $ is_equiv.norm_one_eq_norm_one h
 
 -- ordering part of 1.27 (iii) -> (i)
-def is_equiv.value_group_order_equiv (h : is_equiv v₁ v₂) (x y : value_group v₁) (h2 : x ≤ y) :
+def is_equiv.value_group_order_equiv_aux (h : is_equiv v₁ v₂) (x y : value_group v₁) (h2 : x ≤ y) :
   h.value_group_equiv.to_equiv x ≤ h.value_group_equiv.to_equiv y :=
 begin
   induction x with x, induction y, swap, refl, swap, refl,
   exact (is_equiv.on_valuation_field_is_equiv h x y).1 h2,
 end
+
+def is_equiv.value_group_order_equiv (h : is_equiv v₁ v₂) : ∀ (x y : value_group v₁),
+  x ≤ y ↔ h.value_group_equiv.to_equiv x ≤ h.value_group_equiv.to_equiv y :=
+linear_order_le_iff_of_monotone_injective
+  (h.value_group_equiv.to_equiv.bijective.1)
+  (is_equiv.value_group_order_equiv_aux h)
 
 end -- section
 

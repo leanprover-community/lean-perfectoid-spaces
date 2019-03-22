@@ -1,4 +1,5 @@
 import data.equiv.basic algebra.group
+import order.basic logic.basic -- needed for order stuff
 
 -- A lot of this is in PR 789
 
@@ -132,29 +133,50 @@ def map_equiv (h : α ≃* β) : units α ≃* units β :=
 
 end units
 
+-- from here on -- should this go in data.equiv.order?
+
 structure preorder_equiv (α β : Type*) [preorder α] [preorder β] extends α ≃ β :=
-(preorder_iso : ∀ {x y}, x ≤ y ↔ to_fun x ≤ to_fun y)
+(le_map : ∀ {x y}, x ≤ y ↔ to_fun x ≤ to_fun y)
 
 infix ` ≃≤ `:50 := preorder_equiv
+
+-- iff for ordering -- is this in mathlib?
+def linear_order_le_iff_of_monotone_injective {α : Type*} {β : Type*}
+  [linear_order α] [linear_order β] {f : α → β}
+  (hf : function.injective f)
+  (h2 : ∀ x y, x ≤ y → f x ≤ f y)
+  : ∀ x y, x ≤ y ↔ f x ≤ f y :=
+λ x y, ⟨h2 x y, λ h3, le_of_not_lt $ λ h4, not_lt_of_le h3 $ lt_of_le_of_ne
+ (h2 y x $ le_of_lt h4) $ λ h5, ne_of_lt h4 $ hf h5⟩
 
 namespace preorder_equiv
 
 variables [preorder α] [preorder β] [preorder γ]
 
 @[refl] def refl (α : Type*) [preorder α] : α ≃≤ α :=
-{ preorder_iso := λ _ _, iff.rfl,
+{ le_map := λ _ _, iff.rfl,
 ..equiv.refl _}
 
 @[symm] def symm (h : α ≃≤ β) : β ≃≤ α :=
-{ preorder_iso := λ x y, begin convert (@preorder_iso _ _ _ _ h (h.to_equiv.symm x) (h.to_equiv.symm y)).symm,
-  { exact (h.right_inv x).symm},
-  { exact (h.right_inv y).symm},
+{ le_map := λ x y, begin
+    convert (@le_map _ _ _ _ h (h.to_equiv.symm x) (h.to_equiv.symm y)).symm,
+    { exact (h.right_inv x).symm},
+    { exact (h.right_inv y).symm},
   end
   ..h.to_equiv.symm}
 
 @[trans] def trans (h1 : α ≃≤ β) (h2 : β ≃≤ γ) : (α ≃≤ γ) :=
-{ preorder_iso := λ x y,
-    iff.trans (@preorder_iso _ _ _ _ h1 x y) (@preorder_iso _ _ _ _ h2 (h1.to_equiv x) (h1.to_equiv y)),
+{ le_map := λ x y,
+    iff.trans (@le_map _ _ _ _ h1 x y) (@le_map _ _ _ _ h2 (h1.to_equiv x) (h1.to_equiv y)),
   ..equiv.trans h1.to_equiv h2.to_equiv }
 
 end preorder_equiv
+
+def equiv.lt_map_of_le_map {α : Type*} {β : Type*} [preorder α] [preorder β]
+  (he : α ≃ β) (hle : ∀ x y, x ≤ y ↔ he x ≤ he y) : (∀ x y, x < y ↔ he x < he y) :=
+λ x y, by rw [lt_iff_le_not_le, hle x y, hle y x, lt_iff_le_not_le]
+
+def equiv.le_map_iff_lt_map {α : Type*} {β : Type*} [partial_order α] [partial_order β]
+  (he : α ≃ β) : (∀ x y, x ≤ y ↔ he x ≤ he y) ↔ (∀ x y, x < y ↔ he x < he y) :=
+⟨equiv.lt_map_of_le_map he, λ hlt x y, by rw [le_iff_eq_or_lt, le_iff_eq_or_lt];
+  exact or_congr (by simp) (hlt x y)⟩
