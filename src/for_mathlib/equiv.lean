@@ -1,9 +1,8 @@
 import data.equiv.basic algebra.group
 
--- all this is in PR 789
+-- A lot of this is in PR 789
 
 variables {α : Type*} {β : Type*} {γ : Type*}
-
 
 @[to_additive is_add_hom]
 def is_mul_hom {α β : Type*} [has_mul α] [has_mul β] (f : α → β) : Prop :=
@@ -132,3 +131,30 @@ def map_equiv (h : α ≃* β) : units α ≃* units β :=
   mul_hom := λ a b, units.ext $ h.mul_hom a b}
 
 end units
+
+structure preorder_equiv (α β : Type*) [preorder α] [preorder β] extends α ≃ β :=
+(preorder_iso : ∀ {x y}, x ≤ y ↔ to_fun x ≤ to_fun y)
+
+infix ` ≃≤ `:50 := preorder_equiv
+
+namespace preorder_equiv
+
+variables [preorder α] [preorder β] [preorder γ]
+
+@[refl] def refl (α : Type*) [preorder α] : α ≃≤ α :=
+{ preorder_iso := λ _ _, iff.rfl,
+..equiv.refl _}
+
+@[symm] def symm (h : α ≃≤ β) : β ≃≤ α :=
+{ preorder_iso := λ x y, begin convert (@preorder_iso _ _ _ _ h (h.to_equiv.symm x) (h.to_equiv.symm y)).symm,
+  { exact (h.right_inv x).symm},
+  { exact (h.right_inv y).symm},
+  end
+  ..h.to_equiv.symm}
+
+@[trans] def trans (h1 : α ≃≤ β) (h2 : β ≃≤ γ) : (α ≃≤ γ) :=
+{ preorder_iso := λ x y,
+    iff.trans (@preorder_iso _ _ _ _ h1 x y) (@preorder_iso _ _ _ _ h2 (h1.to_equiv x) (h1.to_equiv y)),
+  ..equiv.trans h1.to_equiv h2.to_equiv }
+
+end preorder_equiv

@@ -68,6 +68,12 @@ section canonical_equivalent_valuation
 
 instance : comm_group (units (valuation_field v)) := by apply_instance
 
+instance valuation.units_preorder : preorder (units (valuation_field v)) :=
+{ le := λ u v, u.val ≤ v.val,
+  le_refl := le_refl,
+  le_trans := λ _ _ _, le_trans
+}
+
 definition valuation_field_norm_one := is_group_hom.ker v.on_valuation_field.unit_map
 
 instance (v : valuation R Γ) : normal_subgroup (valuation_field_norm_one v) :=
@@ -95,6 +101,7 @@ by unfold value_group.to_Γ; apply_instance
 instance value_group_quotient.is_group_hom :
 is_group_hom (value_group_quotient v) := ⟨λ _ _, rfl⟩
 
+-- KMB now worried that this should change to λ s t, s ≤ t with possible breakage
 instance : linear_order (value_group v) :=
 { le := λ a' b',
     quotient.lift_on₂' a' b' (λ s t, v.on_valuation_field ↑s ≤ v.on_valuation_field ↑t) $
@@ -484,6 +491,21 @@ def quot_of_quot_of_eq_supp (h : supp v₁ = supp v₂) : valuation_ID v₁ → 
 ideal.quotient.lift _ (ideal.quotient.mk _)
 (λ r hr, ideal.quotient.eq_zero_iff_mem.2 $ h ▸ hr)
 
+lemma quot_of_quot_of_eq_supp.id (r : valuation_ID v) : quot_of_quot_of_eq_supp (rfl) r = r :=
+by rcases r;refl
+
+lemma quot_of_quot_of_eq_supp.comp (h12 : supp v₁ = supp v₂) (h23 : supp v₂ = supp v₃)
+  (r : valuation_ID v₁) : quot_of_quot_of_eq_supp h23 (quot_of_quot_of_eq_supp h12 r) =
+  quot_of_quot_of_eq_supp (h23 ▸ h12 : supp v₁ = supp v₃) r :=
+by rcases r;refl
+
+def valuation_ID.equiv (h : supp v₁ = supp v₂) : valuation_ID v₁ ≃ valuation_ID v₂ :=
+{ to_fun := quot_of_quot_of_eq_supp h,
+  inv_fun := quot_of_quot_of_eq_supp (h.symm),
+  left_inv := λ r, by rw quot_of_quot_of_eq_supp.comp h h.symm; exact quot_of_quot_of_eq_supp.id r,
+  right_inv := λ r, by rw quot_of_quot_of_eq_supp.comp h.symm h; exact quot_of_quot_of_eq_supp.id r
+}
+
 @[simp] lemma quot_of_quot_of_eq_supp_quotient_mk (h : supp v₁ = supp v₂) :
   quot_of_quot_of_eq_supp h ∘ ideal.quotient.mk _ = ideal.quotient.mk _ :=
 funext $ λ x, ideal.quotient.lift_mk
@@ -492,27 +514,13 @@ lemma quot_of_quot_of_eq_supp_quotient_mk' (h : supp v₁ = supp v₂) (r : R) :
   quot_of_quot_of_eq_supp h (ideal.quotient.mk _ r) = ideal.quotient.mk _ r :=
 by rw ←quot_of_quot_of_eq_supp_quotient_mk h
 
-instance (h : supp v₁ = supp v₂) : is_ring_hom (quot_of_quot_of_eq_supp h) :=
+instance quot_of_quot_of_eq_supp.is_ring_hom (h : supp v₁ = supp v₂) :
+  is_ring_hom (quot_of_quot_of_eq_supp h) :=
 by delta quot_of_quot_of_eq_supp; apply_instance
 
-def quot_equiv_quot_of_eq_supp (h : supp v₁ = supp v₂) : (supp v₁).quotient ≃r (supp v₂).quotient :=
-{ hom := by delta quot_of_quot_of_eq_supp; apply_instance,
-  to_fun := quot_of_quot_of_eq_supp h,
-  inv_fun := quot_of_quot_of_eq_supp h.symm,
-  left_inv :=
-  begin
-    rintro ⟨q⟩,
-    delta quot_of_quot_of_eq_supp,
-    erw ideal.quotient.lift_mk,
-    refl
-  end,
-  right_inv :=
-  begin
-    rintro ⟨q⟩,
-    delta quot_of_quot_of_eq_supp,
-    erw ideal.quotient.lift_mk,
-    refl
-  end }
+def quot_equiv_quot_of_eq_supp (h : supp v₁ = supp v₂) : valuation_ID v₁ ≃r valuation_ID v₂ :=
+{ hom :=quot_of_quot_of_eq_supp.is_ring_hom h,
+  ..valuation_ID.equiv h}
 
 def quot_equiv_quot_mk_eq_mk (h : supp v₁ = supp v₂) (r : R) :
   (quot_equiv_quot_of_eq_supp h).to_equiv (ideal.quotient.mk _ r) = ideal.quotient.mk _ r :=
@@ -520,6 +528,17 @@ quot_of_quot_of_eq_supp_quotient_mk' h r
 
 lemma quot_of_quot_of_eq_supp_inj (h : supp v₁ = supp v₂) : injective (quot_of_quot_of_eq_supp h) :=
 injective_of_left_inverse (quot_equiv_quot_of_eq_supp h).left_inv
+
+lemma valuation_ID_le_of_le_of_equiv (h : v₁.is_equiv v₂) (a b : valuation_ID v₁) :
+  (a ≤ b) ↔
+  quot_of_quot_of_eq_supp (is_equiv.supp_eq h) a ≤ quot_of_quot_of_eq_supp (is_equiv.supp_eq h) b :=
+by rcases a; rcases b; exact (h a b)
+
+def valuation_ID.preorder_equiv (h : v₁.is_equiv v₂) :
+  preorder_equiv (valuation_ID v₁) (valuation_ID v₂) :=
+{ preorder_iso := valuation_ID_le_of_le_of_equiv h,
+  ..valuation_ID.equiv h.supp_eq
+}
 
 section
 open localization
@@ -545,6 +564,9 @@ is_semiring_hom.is_monoid_hom (valfield_of_valfield_of_eq_supp h)
 def valfield_equiv_valfield_of_eq_supp (h : supp v₁ = supp v₂) : valuation_field v₁ ≃r valuation_field v₂ :=
 fraction_ring.equiv_of_equiv (quot_equiv_quot_of_eq_supp h)
 
+lemma valfield_equiv_eq_valfield_of_valfield (h : supp v₁ = supp v₂) (q : valuation_field v₁) :
+(valfield_equiv_valfield_of_eq_supp h).to_equiv q = valfield_of_valfield_of_eq_supp h q := rfl
+
 instance valfield_equiv.is_field_hom (h : supp v₁ = supp v₂) :
   is_field_hom (valfield_equiv_valfield_of_eq_supp h).to_fun := by apply_instance
 
@@ -552,29 +574,6 @@ lemma valfield_equiv_valfield_mk_eq_mk (h : supp v₁ = supp v₂) (r : R) :
   (valfield_equiv_valfield_of_eq_supp h).to_equiv (of $ ideal.quotient.mk _ r)
   = of (ideal.quotient.mk _ r) :=
 valfield_of_valfield_of_eq_supp_quotient_mk h r
-
-def valfield_units_of_valfield_units_of_eq_supp (h : supp v₁ = supp v₂) :
-  units (valuation_field v₁) → units (valuation_field v₂) :=
-units.map $ valfield_of_valfield_of_eq_supp h
-
-instance valfield_units.is_group_hom (h : supp v₁ = supp v₂) :
-is_group_hom (valfield_units_of_valfield_units_of_eq_supp h) :=
-by unfold valfield_units_of_valfield_units_of_eq_supp; apply_instance
-
-lemma units_valfield_of_units_valfield_of_eq_supp_mk
-  (h : supp v₁ = supp v₂) (r : R) (hr : r ∉ supp v₁) :
-  valfield_units_of_valfield_units_of_eq_supp h (units_valfield.mk v₁ r hr)
-  = units_valfield.mk v₂ r (h ▸ hr) := units.ext $ valfield_equiv_valfield_mk_eq_mk h r
-
-def valfield_units_equiv_units_of_eq_supp (h : supp v₁ = supp v₂) :
-group_equiv (units (valuation_field v₁)) (units (valuation_field v₂)) :=
-let h' := valfield_equiv_valfield_of_eq_supp h in
-by letI := h'.hom; exact units.map_equiv {mul_hom := h'.hom.map_mul, ..h'}
-end
-
-lemma valfield_units_equiv_units_mk_eq_mk (h : supp v₁ = supp v₂) (r : R) (hr : r ∉ supp v₁):
-(valfield_units_equiv_units_of_eq_supp h).to_equiv (units_valfield.mk v₁ r hr) =
-units_valfield.mk v₂ r (h ▸ hr) := units_valfield_of_units_valfield_of_eq_supp_mk h r hr
 
 lemma is_equiv.comap_quot_of_quot (h : v₁.is_equiv v₂) :
   (v₁.on_quot (set.subset.refl _)).is_equiv
@@ -622,6 +621,49 @@ def val_ring_equiv_of_is_equiv (h : v₁.is_equiv v₂) : v₁.valuation_ring �
 -- = ⟨of $ ideal.quotient.mk _ r, longer proof it's in val ring⟩
 -- but I'm not sure we need it.
 
+lemma valfeld_le_of_le_of_equiv (h : v₁.is_equiv v₂) (a b : valuation_field v₁) :
+  (a ≤ b) ↔ valfield_of_valfield_of_eq_supp (h.supp_eq) a ≤
+    valfield_of_valfield_of_eq_supp (h.supp_eq) b :=
+is_equiv.on_valuation_field_is_equiv h a b
+
+def valfield.preorder_equiv (h : v₁.is_equiv v₂) :
+  preorder_equiv (valuation_field v₁) (valuation_field v₂) :=
+{ preorder_iso := valfeld_le_of_le_of_equiv h,
+  ..(valfield_equiv_valfield_of_eq_supp h.supp_eq).to_equiv
+}
+
+-- units
+
+def valfield_units_of_valfield_units_of_eq_supp (h : supp v₁ = supp v₂) :
+  units (valuation_field v₁) → units (valuation_field v₂) :=
+units.map $ valfield_of_valfield_of_eq_supp h
+
+instance valfield_units.is_group_hom (h : supp v₁ = supp v₂) :
+is_group_hom (valfield_units_of_valfield_units_of_eq_supp h) :=
+by unfold valfield_units_of_valfield_units_of_eq_supp; apply_instance
+
+lemma units_valfield_of_units_valfield_of_eq_supp_mk
+  (h : supp v₁ = supp v₂) (r : R) (hr : r ∉ supp v₁) :
+  valfield_units_of_valfield_units_of_eq_supp h (units_valfield.mk v₁ r hr)
+  = units_valfield.mk v₂ r (h ▸ hr) := units.ext $ valfield_equiv_valfield_mk_eq_mk h r
+
+def valfield_units_equiv_units_of_eq_supp (h : supp v₁ = supp v₂) :
+group_equiv (units (valuation_field v₁)) (units (valuation_field v₂)) :=
+let h' := valfield_equiv_valfield_of_eq_supp h in
+by letI := h'.hom; exact units.map_equiv {mul_hom := h'.hom.map_mul, ..h'}
+end
+
+lemma valfield_units_equiv_units_mk_eq_mk (h : supp v₁ = supp v₂) (r : R) (hr : r ∉ supp v₁):
+(valfield_units_equiv_units_of_eq_supp h).to_equiv (units_valfield.mk v₁ r hr) =
+units_valfield.mk v₂ r (h ▸ hr) := units_valfield_of_units_valfield_of_eq_supp_mk h r hr
+
+
+
+def valfield_units_preorder_equiv (h : v₁.is_equiv v₂) :
+  preorder_equiv (units (valuation_field v₁)) (units (valuation_field v₂)) :=
+{ preorder_iso := λ u v, @preorder_equiv.preorder_iso _ _ _ _ (valfield.preorder_equiv h) u.val v.val,
+  ..valfield_units_equiv_units_of_eq_supp (h.supp_eq)
+ }
 
 -- This explicit instance helps type class inference; it's a shortcut.
 -- The "by apply_instance" proof needs
@@ -647,9 +689,11 @@ begin
   refl,
 end
 
-lemma is_equiv.norm_one_eq_norm_one (h : is_equiv v₁ v₂) : valuation_field_norm_one v₁ =
-  valfield_units_of_valfield_units_of_eq_supp (is_equiv.supp_eq h) ⁻¹'
-  valuation_field_norm_one v₂ :=
+lemma is_equiv.norm_one_eq_norm_one (h : is_equiv v₁ v₂) :
+  valfield_units_of_valfield_units_of_eq_supp (is_equiv.supp_eq h) ⁻¹' valuation_field_norm_one v₂
+  =
+  valuation_field_norm_one v₁
+  :=
 begin
   ext x,
   rw [set.mem_preimage_eq, val_one_iff_unit_val_one x,
@@ -657,319 +701,28 @@ begin
   refl,
 end
 
-def is_equiv.value_group_equiv_aux (h : is_equiv v₁ v₂) : group_equiv (value_group v₁)
-  (quotient_group.quotient
-    ((valfield_units_of_valfield_units_of_eq_supp (is_equiv.supp_eq h)) ⁻¹'
-      (valuation_field_norm_one v₂))) :=
-group_equiv.quot_eq_of_eq $ h.norm_one_eq_norm_one
+-- TODO -- make this a preorder_equiv. This is the heart of the problem
+--def is_equiv.value_group_equiv_aux (h : is_equiv v₁ v₂) : group_equiv (value_group v₁)
+--  (quotient_group.quotient
+--    ((valfield_units_of_valfield_units_of_eq_supp (is_equiv.supp_eq h)) ⁻¹'
+--      (valuation_field_norm_one v₂))) :=
+--group_equiv.quot_eq_of_eq $ h.norm_one_eq_norm_one
 
 -- group part of Wedhorn 1.27 (iii) -> (i)
 def is_equiv.value_group_equiv (h : is_equiv v₁ v₂) :
-group_equiv (value_group v₁) (value_group v₂) :=
-group_equiv.trans (h.value_group_equiv_aux) $
-  group_equiv.quotient
-    (valfield_units_equiv_units_of_eq_supp (is_equiv.supp_eq h)) (valuation_field_norm_one v₂)
+group_equiv (value_group v₁) (value_group v₂) := group_equiv.quotient
+  (valfield_units_equiv_units_of_eq_supp h.supp_eq)
+  (valuation_field_norm_one v₁)
+  (valuation_field_norm_one v₂) $ is_equiv.norm_one_eq_norm_one h
 
 -- ordering part of 1.27 (iii) -> (i)
 def is_equiv.value_group_order_equiv (h : is_equiv v₁ v₂) (x y : value_group v₁) (h2 : x ≤ y) :
   h.value_group_equiv.to_equiv x ≤ h.value_group_equiv.to_equiv y :=
 begin
-  induction x, induction y, swap, refl, swap, refl,
-  have h3 := (is_equiv.on_valuation_field_is_equiv h x y).1 h2,
---  convert h3,
-  sorry,
+  induction x with x, induction y, swap, refl, swap, refl,
+  exact (is_equiv.on_valuation_field_is_equiv h x y).1 h2,
 end
 
 end -- section
 
 end valuation
-
-#exit
-
-def is_equiv.value_group_order_equiv (h : is_equiv v₁ v₂) (x y : value_group v₁) (h2 : x ≤ y) :
-  h.value_group_equiv.to_equiv x ≤ h.value_group_equiv.to_equiv y :=
-begin
-  -- ...
-  rcases canonical_valuation.value_group.is_ratio v₁ x with ⟨rx, sx, hrx, hsx, hx⟩,
-  rcases canonical_valuation.value_group.is_ratio v₁ y with ⟨ry, sy, hry, hsy, hy⟩,
-  let cv₁ := canonical_valuation v₁,
-  have hsx0 : 0 < cv₁ sx,
-  { apply lt_of_not_ge,
-    intro hv, apply hsx,
-    have hv' : cv₁ sx = 0 := (eq_zero_iff_le_zero cv₁).2 (by rw is_valuation.map_zero cv₁; exact hv),
-    exact (eq_zero_iff_le_zero v₁).2
-      ((v₁.canonical_valuation_is_equiv sx 0).1 ((eq_zero_iff_le_zero cv₁).1 hv')),
-  },
-  have hsy0 : 0 < cv₁ sy,
-  { apply lt_of_not_ge,
-    intro hv, apply hsy,
-    have hv' : cv₁ sy = 0 := (eq_zero_iff_le_zero cv₁).2 (by rw is_valuation.map_zero cv₁; exact hv),
-    exact (eq_zero_iff_le_zero v₁).2
-      ((v₁.canonical_valuation_is_equiv sy 0).1 ((eq_zero_iff_le_zero cv₁).1 hv')),
-  },
-  have : cv₁ (rx * sy) ≤ cv₁ (ry * sx),
-  calc cv₁ (rx * sy) = cv₁ rx * cv₁ sy : cv₁.map_mul _ _
-  ...                = (cv₁ sx * x) * cv₁ sy : by rw hx
-  ...                = (cv₁ sx * x) * cv₁ sy : by rw hx
-  ...                ≤ (cv₁ sx * y) * cv₁ sy :
-                         (linear_ordered_comm_monoid.mul_le_mul_right
-                           ((linear_ordered_comm_monoid.mul_le_mul_left
-                             (with_zero.some_le_some_of_le h2)) _) _)
-  ...                = cv₁ sy * y * cv₁ sx : by rw [mul_comm, mul_comm (cv₁ sx), mul_assoc]
-  ...                = cv₁ ry * cv₁ sx : by rw hy
-  ...                = cv₁ (ry * sx) : (cv₁.map_mul _ _).symm,
-  replace this := (v₁.canonical_valuation_is_equiv (rx * sy) (ry * sx)).1 this,
-  replace this := (h (rx * sy) (ry * sx)).1 this,
-  replace this := (v₂.canonical_valuation_is_equiv (rx * sy) (ry * sx)).2 this,
-
-  -- Goal should now follow from this and a similar calc calculation,
-  -- except that we need to know that is_equiv.value_group_equiv sends v1 to v2.
-
-  --induction x,
-  --  swap, refl,
-  --cases x with x1 x2 h12 h21,
-  --dsimp [setoid.r] at h2,
-  unfold coe_fn has_coe_to_fun.coe is_equiv.value_group_equiv group_equiv.trans,
-  dsimp,
-  unfold equiv.trans,
-  dsimp,
-  unfold is_equiv.value_group_equiv_aux group_equiv.quot_eq_of_eq,
-  dsimp,
-  rcases canonical_valuation.value_group.is_ratio v₁ x with ⟨rx, sx, hx⟩,
-  sorry
-end
-
-
-end -- some random section I guess?
-
-end valuation
-
-/-
-
-File ends here. Below are some comments, mostly dealt with now.
-
-/- quotes from zulip (mostly Mario) (all 2018)
-
-https://leanprover.zulipchat.com/#narrow/stream/116395-maths/topic/Perfectoid.20spaces/near/129009961
-
-class is_valuation {α : Type*} [linear_ordered_comm_group α]
-  {R : Type*} [comm_ring R] (f : R → option α) : Prop :=
-(map_zero : f 0 = 0)
-(map_one  : f 1 = 1)
-(map_mul  : ∀ x y, f (x * y) = f x * f y)
-(map_add  : ∀ x y, f (x + y) ≤ f x ∨ f (x + y) ≤ f y)
-
-namespace is_valuation
-
-...
-
-structure valuation (R : Type*) [comm_ring R] (α : Type*) [Hα : linear_ordered_comm_group α] :=
-(f : R → option α)
-(Hf : is_valuation f)
-
-...
-
-**All 03 Jul 2018** Mario + comments from me
-
-MC: What's wrong, again, with defining Spv as the collection of all valuation relations?
-KB: All proofs need an actual valuation
-MC: You can define your own version of quot.lift and quot.mk that take valuations
-MC: valuation functions that is
-[quot.lift is the statement that if I have a function on valuations which is constant
-on equiv classes then I can produce a function on Spv]
-MC: You only use the relations as inhabitants of the type so that the universe isn't pushed up,
-    but all the work uses functions
-MC: You will need to prove the computation rule, so it won't be definitional, but otherwise it
-    should work smoothly if your API is solid
-MC: No equivalence class needed either
-MC: quot.mk takes a valuation function and produces an element of Spv
-MC: quot.lift takes a function defined on valuation functions and produces a function defined on Spv
-KB: So what about proofs which go "Spv(R) is compact. Proof: take an element of Spv(R), call it v or
-    f or whatever, and now manipulate f in the following way..."
-MC: That's quot.lift
-MC: Actually you will want quot.ind as well
-["any subset of the quotient type containing the image of quot.mk is everything"]
-or equivalently quot.exists_rep
-[lemma exists_rep {α : Sort u} {r : α → α → Prop} (q : quot r) : ∃ a : α, (quot.mk r a) = q :=
-]
-MC: that is, for every element of Spv there is a valuation function that quot.mk's to it
-MC: Note it's not actually a function producing valuation functions, it's an exists
-MC: if you prove analogues of those theorems for your type, then you have constructed the
-    quotient up to isomorphism
-MC: This all has a category theoretic interpretation as a coequalizer, and all constructions
-    are natural in that category
-MC: As opposed to, say, quot.out, which picks an element from an equivalence class
-MC: Although in your case if I understand correctly you also have a canonical way to define quot.out
-    satisfying some other universal property to do with the ordered group
-    where the valuation and ring have to share the same universe.
-    You can prove that the universe need not be the same as part of the universal properties
-    i.e. Spv.mk takes as input a valuation function  (v : valuation R A) where {R : Type u} and
-    {A : Type v} (so it isn't just instantiating the exists)
-KB: "If you want to be polymorphic" -- I just want to do maths. I have no idea if I want to be polymorphic.
-     If I just want to define a perfectoid space, do I want to be polymorphic?
-MC : In lean, you should usually be polymorphic
-     at least in contravariant positions (i.e. the inputs should be maximally polymorphic, the output should
-      be minimally polymorphic)
-     This is why we don't have nat : Type u
-     The general rule is to keep types out of classes if at all possible. Lean behaves better when the
-     types are given as "alpha" rather than "the type inside v", particularly if you start manipulating
-     the functions (adding them, say).
-     It is the same things that make the difference between bundled vs unbundled groups. When
-     working "internally", i.e. calculations using the monoid structure, it is better for the type
-     to be exposed as a variable
--/
-
-DEAD CODE
-
-DEAD CODE 1) Old definition of value group.
-
--- The value group of v is the smallest subgroup Γ_v of Γ for which v takes
--- values in {0} ∪ Γ_v
-definition value_group := group.closure {a : Γ | ∃ r : R, v r = some a}
-
-definition value_group_v (v : R → with_zero Γ) [is_valuation v] :=
-group.closure ({a : Γ | ∃ r : R, v r = some a})
-
-instance : group (value_group v) :=
-@subtype.group _ _ (value_group v) (group.closure.is_subgroup {a : Γ | ∃ r : R, v r = some a})
-
-instance valuation.group_v (v : R → with_zero Γ) [is_valuation v] : group (value_group_v v) :=
-  @subtype.group _ _ (value_group_v v) (group.closure.is_subgroup {a : Γ | ∃ r : R, v r = some a})
-
-DEAD CODE 2) Old definition of minimal valuation, now replaced by canonical valuation
-[minimal valuation is isomorphic to canonical valuation, but canonical valuation
-is a much neater way to do it]
-
-namespace valuation
-open quotient_group
-
--- This structure is scary because it has a random Γ : Type u₀ inside, but
--- we don't use it very often; it's an intermediate thing.
-structure minimal_valuation.parametrized_subgroup (Γ' : Type u) [linear_ordered_comm_group Γ'] :=
-(Γ : Type u₀)
-[grp : comm_group Γ]
-(inc : Γ → Γ')
-[hom : is_group_hom inc]
-(inj : function.injective inc)
-
-local attribute [instance] parametrized_subgroup.grp
-local attribute [instance] parametrized_subgroup.hom
-
-variables {Γ : Type u} [linear_ordered_comm_group Γ]
-variables (v : valuation R Γ)
-
-include R v
-
--- Why do we need this?
-set_option class.instance_max_depth 69
-
-def of_free_group_aux (r : R) : Γ := option.get_or_else (v r) 1
-
-def of_free_group : multiplicative (R →₀ ℤ) → Γ :=
-λ f, finsupp.prod f (λ r n, (of_free_group_aux v r) ^ n)
-
-instance of_free_group.is_group_hom : is_group_hom (of_free_group v) :=
-⟨λ f₁ f₂, finsupp.prod_add_index (λ _, rfl) $ λ _ _ _, gpow_add _ _ _⟩
-
--- This definition helps resolve the set-theoretic issues caused by the
--- fact that the adic spectrum of R is all equivalence classes of
--- valuations, where the value group can vary in an arbitrary universe. It shows
--- that if v : R → {0} ∪ Γ and if R has type Type u₀ then v is equivalent
--- to a valuation taking values in {0} ∪ Γ₀ with Γ₀ also of type u₀.
-def minimal_value_group : minimal_valuation.parametrized_subgroup Γ :=
-{ Γ     := quotient (is_group_hom.ker (of_free_group v)),
-  inc   := ker_lift (of_free_group v),
-  hom   := by apply_instance,
-  inj   := injective_ker_lift (of_free_group v) }
-
-namespace minimal_value_group
-
--- This function eats an arbitrary valuation and returns an auxiliary
--- function from R to the minimal value group, a group in the same universe as R.
--- Note that it is not a valuation, as the value 0 is not allowed; stuff in the
--- support of v gets sent to 1 not 0. This is an auxiliary function which
--- we probably won't be using outside this file if we get the API right.
-def mk (r : R) : (minimal_value_group v).Γ :=
-quotient_group.mk (finsupp.single r (1 : ℤ))
-
--- the auxiliary function agrees with v away from the support.
-lemma mk_some {r : R} {g : Γ} (h : v r = some g) :
-  v r = some ((minimal_value_group v).inc (mk v r)) :=
-begin
-  rw h,
-  congr' 1,
-  dsimp [ker_lift, minimal_value_group, minimal_value_group.mk, of_free_group, of_free_group_aux],
-  erw finsupp.prod_single_index; finish
-end
-
--- the minimal value group is isomorphic to a subgroup of Γ so inherits an order.
-instance : linear_ordered_comm_group (minimal_value_group v).Γ :=
-begin
-  cases minimal_value_group v with Γ₀ _ ψ _ inj,
-
-  letI Γ₁linord : linear_order Γ₀ :=
-  { le := λ g h, ψ g ≤ ψ h,
-    le_refl := λ _, le_refl _,
-    le_trans := λ _ _ _ hab hbc, le_trans hab hbc,
-    le_antisymm := λ g h Hgh Hhg, inj $ le_antisymm Hgh Hhg,
-    le_total := λ g h, le_total _ _ },
-  exact ⟨λ a b H c,
-    begin
-      change ψ (c * a) ≤ ψ (c * b),
-      rw [is_group_hom.mul ψ c b, is_group_hom.mul ψ c a],
-      exact linear_ordered_comm_group.mul_le_mul_left H _,
-    end⟩
-end
-
-end minimal_value_group
-
--- This is function taking a valuation v to a u₁-universe-valued valuation equivalent to it.
--- This is the final resolution of the set-theoretic issues caused by quantifying
--- over all value groups. This function is also correct on the support.
-definition minimal_valuation.val (r : R) : with_zero ((minimal_value_group v).Γ) :=
-match v r with
-| some _ := some (minimal_value_group.mk v r)
-| 0 := 0
-end
-
-namespace minimal_valuation
-
-@[simp] lemma zero {r} (h : v r = 0) : val v r = 0 :=
-by simp [val, h]
-
-lemma some {r} {g} (h : v r = some g) : val v r = some (minimal_value_group.mk v r) :=
-by simp [val, h]
-
-lemma map (r : R) :
-with_zero.map (minimal_value_group v).inc (val v r) = v r :=
-begin
-  destruct (v r),
-  { intro h, change v r = 0 at h,
-    simp [zero v h, h], },
-  { intros g h,
-    rw [minimal_value_group.mk_some v h, some v h, with_zero.map_some] },
-end
-
-end minimal_valuation
-
--- the map from valuations to minimal valuations
-def minimal_valuation : valuation R (minimal_value_group v).Γ :=
-{ val := minimal_valuation.val v,
-  property := let Γ₁ := minimal_value_group v in
-    valuation_of_valuation (minimal_valuation.map v) (λ g h, iff.refl _) Γ₁.inj (v.property) }
-
-end valuation
-
--- Theorem that valuation v is equivalent to the associated minimal valuation.
-lemma minimal_valuation_is_equiv (v : valuation R Γ) :
-  v.minimal_valuation.is_equiv v :=
-le_of_le (minimal_valuation.map v) (λ g h, iff.refl _)
-
--- lemma ker_eq_ker_of_equiv (h : v₁.is_equiv v₂) :
---   ker (of_free_group v₁) = ker (of_free_group v₂) :=
--- begin
---   ext f,
---   split; rw [mem_ker, mem_ker]; intro hf,
--- end
-
--/
