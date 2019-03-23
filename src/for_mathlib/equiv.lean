@@ -111,12 +111,14 @@ variables [group α] [group β] [group γ]
 
 @[trans] def trans : group_equiv α β → group_equiv β γ → group_equiv α γ := mul_equiv.trans
 
+--definition with_zero.map_comp := is_lawful_functor.map_comp
+
 def to_with_zero_monoid_equiv (h : group_equiv α β) : monoid_equiv (with_zero α) (with_zero β) :=
 { to_fun := option.map (h.to_equiv),
   inv_fun := option.map (h.to_equiv.symm),
-  left_inv := begin rw option.map_comp,
-  right_inv := _,
-  mul_hom := _ }
+  left_inv := begin  sorry, end,
+  right_inv := sorry,
+  mul_hom := sorry }
 
 end group_equiv
 
