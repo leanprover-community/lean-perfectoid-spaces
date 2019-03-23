@@ -40,6 +40,7 @@ lemma is_equiv.is_continuous_iff (h : v₁.is_equiv v₂) :
   ⊢ ⇑(canonical_valuation v₂) r < ↑(⇑((is_equiv.value_group_equiv h).to_equiv) g) ↔
     ⇑(canonical_valuation v₁) r < ↑g
   -/
+  sorry
 end
 /-
 ⊢ (∀ (g : value_group v₁), is_open {r : R | ⇑(canonical_valuation v₁) r < ↑g}) ↔

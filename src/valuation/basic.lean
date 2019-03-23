@@ -5,7 +5,6 @@ import ring_theory.subring
 
 import for_mathlib.monotone
 import for_mathlib.rings
-import for_mathlib.with_zero
 import for_mathlib.linear_ordered_comm_group
 import for_mathlib.order -- preorder.comap
 import for_mathlib.equiv

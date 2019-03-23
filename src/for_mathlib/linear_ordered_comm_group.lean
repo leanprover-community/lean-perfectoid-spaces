@@ -3,7 +3,6 @@ import group_theory.subgroup
 import set_theory.cardinal
 import for_mathlib.subrel
 import for_mathlib.option_inj
-import for_mathlib.with_zero
 import tactic.abel
 
 universes u v
