@@ -69,7 +69,6 @@ variables [has_mul α] [has_mul β] [has_mul γ]
 
 end mul_equiv
 
--- equiv of monoids
 namespace mul_equiv
 
 variables [monoid α] [monoid β] [monoid γ]
@@ -84,6 +83,21 @@ instance is_monoid_hom (h : α ≃* β) : is_monoid_hom h.to_equiv := {
 
 end mul_equiv
 
+-- equiv of monoids
+
+def monoid_equiv (α : Type*) (β : Type*) [monoid α] [monoid β] := mul_equiv α β
+
+namespace monoid_equiv
+variables [monoid α] [monoid β] [monoid γ]
+
+@[refl] def refl (α : Type*) [monoid α] : monoid_equiv α α := mul_equiv.refl α
+
+@[symm] def symm : monoid_equiv α β → monoid_equiv β α := mul_equiv.symm
+
+@[trans] def trans : monoid_equiv α β → monoid_equiv β γ → monoid_equiv α γ := mul_equiv.trans
+
+end monoid_equiv
+
 -- equiv of groups
 
 def group_equiv (α : Type*) (β : Type*) [group α] [group β] := mul_equiv α β
@@ -96,6 +110,13 @@ variables [group α] [group β] [group γ]
 @[symm] def symm : group_equiv α β → group_equiv β α := mul_equiv.symm
 
 @[trans] def trans : group_equiv α β → group_equiv β γ → group_equiv α γ := mul_equiv.trans
+
+def to_with_zero_monoid_equiv (h : group_equiv α β) : monoid_equiv (with_zero α) (with_zero β) :=
+{ to_fun := option.map (h.to_equiv),
+  inv_fun := option.map (h.to_equiv.symm),
+  left_inv := begin rw option.map_comp,
+  right_inv := _,
+  mul_hom := _ }
 
 end group_equiv
 

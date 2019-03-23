@@ -706,6 +706,10 @@ group_equiv (value_group v₁) (value_group v₂) := group_equiv.quotient
   (valuation_field_norm_one v₁)
   (valuation_field_norm_one v₂) $ is_equiv.norm_one_eq_norm_one h
 
+def is_equiv.with_zero_value_group_equiv (h : is_equiv v₁ v₂) :
+monoid_equiv (with_zero (value_group v₁)) (with_zero (value_group v₂)) :=
+
+
 -- ordering part of 1.27 (iii) -> (i)
 def is_equiv.value_group_order_equiv_aux (h : is_equiv v₁ v₂) (x y : value_group v₁) (h2 : x ≤ y) :
   h.value_group_equiv.to_equiv x ≤ h.value_group_equiv.to_equiv y :=
@@ -723,7 +727,7 @@ def is_equiv.value_group_order_equiv (h : is_equiv v₁ v₂) (x y : value_group
 def is_equiv.value_group_equiv_monotone (h : is_equiv v₁ v₂) :
   monotone (h.value_group_equiv.to_equiv) := λ x y, (is_equiv.value_group_order_equiv h x y).2
 
--- TODO : switch iff sides
+-- TODO : switch iff sides?
 def is_equiv.with_zero_value_group_order_equiv (h : is_equiv v₁ v₂)
   (x y : with_zero (value_group v₁)) : x ≤ y ↔
   with_zero.map h.value_group_equiv.to_equiv x ≤
@@ -743,6 +747,14 @@ begin
   rw with_zero.some_le_some,
   rw with_zero.some_le_some,
   exact (is_equiv.value_group_order_equiv h x y).symm
+end
+
+def is_equiv.with_zero_value_group_has_lt_equiv (h : is_equiv v₁ v₂)
+  (x y : with_zero (value_group v₁)) : x < y ↔
+  with_zero.map h.value_group_equiv.to_equiv x <
+  with_zero.map h.value_group_equiv.to_equiv y :=
+begin
+  exact equiv.lt_map_of_le_map h.value_group_equiv.to_equiv
 end
 
 end -- section

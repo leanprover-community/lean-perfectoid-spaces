@@ -22,7 +22,8 @@ def is_continuous (v : valuation R Γ) : Prop :=
   canonical_valuation v₂ r
   -- This is pulling back a valuation along a map of groups.
 
-  2) with_zero.map (value_group_equiv h) is monotonic. [follows from mono of value_group_equiv]
+  DONE 2) with_zero.map (value_group_equiv h) is monotonic. [follows from mono of value_group_equiv]
+  is_equiv.with_zero_value_group_order_equiv
 
   3) (follows from 2) it's strictly monotonic. [done: equiv.lt_map_of_le_map]
 -/

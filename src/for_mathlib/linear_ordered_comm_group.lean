@@ -175,15 +175,20 @@ theorem some_le_some_of_le [partial_order α] {x y : α} (h : x ≤ y) :
 theorem some_le_some [partial_order α] {x y : α} : (x : with_zero α) ≤ (y : with_zero α) ↔ x ≤ y :=
 ⟨λ h, by rcases (h x rfl) with ⟨z, ⟨h2⟩, h3⟩; exact h3, some_le_some_of_le⟩
 
-def map (f : α → β) : with_zero α → with_zero β := option.map f
-
 @[simp] theorem le_zero_iff_eq_zero [partial_order α] {x : with_zero α} : x ≤ 0 ↔ x = 0 :=
 by cases x; simp; try {refl}; {intro h, exact option.no_confusion h}
+
+def map (f : α → β) : with_zero α → with_zero β := option.map f
 
 @[simp] lemma map_zero {f : α → β} : map f 0 = 0 := option.map_none'
 @[simp] lemma map_none {f : α → β} : map f none = 0 := option.map_none'
 
 @[simp] lemma map_some {f : α → β} {a : α} : map f (some a) = some (f a) := option.map_some'
+
+lemma map_id {α : Type*} : map (id : α → α) = id := option.map_id
+
+lemma map_comp {α : Type*} {β : Type*} {γ : Type*} (f : α → β) (g : β → γ) :
+  with_zero.map
 
 lemma map_eq_zero_iff {f : α → β} {a : with_zero α} : map f a = 0 ↔ a = 0 :=
 begin
