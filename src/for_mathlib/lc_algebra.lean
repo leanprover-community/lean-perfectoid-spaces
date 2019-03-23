@@ -30,7 +30,6 @@ by simp [one_def, mul_def, sum_single_index]
 
 lemma mul_assoc : (f * g) * h = f * (g * h) :=
 begin
-  simp only [mul_def],
   repeat {rw mul_def},
   rw sum_sum_index,
   { congr' 1,
@@ -75,10 +74,6 @@ instance : ring (lc R A) :=
   right_distrib := right_distrib,
   ..lc.monoid,
   ..lc.add_comm_group }
-
-/-
-TODO(jmc): if A is commutative, then so is `lc R A`
--/
 
 instance single.is_ring_hom : is_ring_hom (single 1 : R → lc R A) :=
 { map_one := rfl,
@@ -155,5 +150,24 @@ begin
 end
 
 end
+
+end lc
+
+namespace lc
+open finsupp finset
+variables {R : Type*} {A : Type*} [comm_ring R] [comm_ring A] [algebra R A]
+variables (f g : lc R A)
+
+lemma mul_comm : f * g = g * f :=
+begin
+  simp only [mul_def, finsupp.sum],
+  rw sum_comm,
+  iterate 2 {congr' 1, funext},
+  congr' 1; rw mul_comm,
+end
+
+instance : comm_ring (lc R A) :=
+{ mul_comm := mul_comm,
+  ..lc.ring }
 
 end lc
