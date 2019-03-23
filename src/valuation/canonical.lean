@@ -691,9 +691,7 @@ end
 
 lemma is_equiv.norm_one_eq_norm_one (h : is_equiv v₁ v₂) :
   valfield_units_of_valfield_units_of_eq_supp (is_equiv.supp_eq h) ⁻¹' valuation_field_norm_one v₂
-  =
-  valuation_field_norm_one v₁
-  :=
+  = valuation_field_norm_one v₁ :=
 begin
   ext x,
   rw [set.mem_preimage_eq, val_one_iff_unit_val_one x,
@@ -716,15 +714,14 @@ begin
   exact (is_equiv.on_valuation_field_is_equiv h x y).1 h2,
 end
 
--- TODO : switch iff sides
-def is_equiv.value_group_order_equiv (h : is_equiv v₁ v₂) : ∀ (x y : value_group v₁),
-  x ≤ y ↔ h.value_group_equiv.to_equiv x ≤ h.value_group_equiv.to_equiv y :=
-linear_order_le_iff_of_monotone_injective
+def is_equiv.value_group_order_equiv (h : is_equiv v₁ v₂) (x y : value_group v₁) :
+  h.value_group_equiv.to_equiv x ≤ h.value_group_equiv.to_equiv y ↔ x ≤ y :=
+(linear_order_le_iff_of_monotone_injective
   (h.value_group_equiv.to_equiv.bijective.1)
-  (is_equiv.value_group_order_equiv_aux h)
+  (is_equiv.value_group_order_equiv_aux h) x y).symm
 
 def is_equiv.value_group_equiv_monotone (h : is_equiv v₁ v₂) :
-  monotone (h.value_group_equiv.to_equiv) := λ x y, (is_equiv.value_group_order_equiv h x y).1
+  monotone (h.value_group_equiv.to_equiv) := λ x y, (is_equiv.value_group_order_equiv h x y).2
 
 -- TODO : switch iff sides
 def is_equiv.with_zero_value_group_order_equiv (h : is_equiv v₁ v₂)
@@ -745,7 +742,7 @@ begin
     ((((is_equiv.value_group_equiv h).to_equiv) y) : with_zero $ value_group v₂),
   rw with_zero.some_le_some,
   rw with_zero.some_le_some,
-  exact (is_equiv.value_group_order_equiv h x y)
+  exact (is_equiv.value_group_order_equiv h x y).symm
 end
 
 end -- section
