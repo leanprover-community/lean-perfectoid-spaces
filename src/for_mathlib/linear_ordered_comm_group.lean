@@ -187,8 +187,17 @@ def map (f : α → β) : with_zero α → with_zero β := option.map f
 
 lemma map_id {α : Type*} : map (id : α → α) = id := option.map_id
 
-lemma map_comp {α : Type*} {β : Type*} {γ : Type*} (f : α → β) (g : β → γ) :
-  with_zero.map
+lemma map_comp {α : Type*} {β : Type*} {γ : Type*} (f : α → β) (g : β → γ) (r : with_zero α) :
+  with_zero.map (g ∘ f) r = (with_zero.map g) ((with_zero.map f) r) := sorry
+--is_lawful_functor.comp_map f g r -- error involving <$>
+/-
+  type mismatch, term
+    comp_map ?m_7 ?m_8 ?m_9
+  has type
+    (?m_6 ∘ ?m_7) <$> ?m_8 = ?m_6 <$> ?m_7 <$> ?m_8
+  but is expected to have type
+    map (g ∘ f) r = map g (map f r)
+-/
 
 lemma map_eq_zero_iff {f : α → β} {a : with_zero α} : map f a = 0 ↔ a = 0 :=
 begin
