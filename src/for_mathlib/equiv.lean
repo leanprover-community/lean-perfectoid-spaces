@@ -1,7 +1,15 @@
 import data.equiv.basic algebra.group
 import order.basic logic.basic -- needed for order stuff
+import for_mathlib.with_zero
 
--- A lot of this is in PR 789
+def equiv.with_zero_equiv {α β : Type*} (h : α ≃ β) : (with_zero α) ≃ (with_zero β) :=
+{ to_fun := with_zero.map h,
+  inv_fun := with_zero.map h.symm,
+  left_inv := λ x, begin cases x, refl, show some _ = some _, congr, exact h.left_inv x end,
+  right_inv := λ x, begin cases x, refl, show some _ = some _, congr, exact h.right_inv x end,
+}
+
+-- A bit of this is in PR 789
 
 variables {α : Type*} {β : Type*} {γ : Type*}
 
@@ -83,6 +91,12 @@ instance is_monoid_hom (h : α ≃* β) : is_monoid_hom h.to_equiv := {
 
 end mul_equiv
 
+-- equiv of semigroups
+
+def semigroup_equiv (α β : Type*) [semigroup α] [semigroup β] := mul_equiv α β
+
+
+
 -- equiv of monoids
 
 def monoid_equiv (α : Type*) (β : Type*) [monoid α] [monoid β] := mul_equiv α β
@@ -95,6 +109,16 @@ variables [monoid α] [monoid β] [monoid γ]
 @[symm] def symm : monoid_equiv α β → monoid_equiv β α := mul_equiv.symm
 
 @[trans] def trans : monoid_equiv α β → monoid_equiv β γ → monoid_equiv α γ := mul_equiv.trans
+
+def to_with_zero_monoid_equiv (h : monoid_equiv α β) : monoid_equiv (with_zero α) (with_zero β) :=
+{ mul_hom := λ x y, begin cases x; cases y,
+  { refl},
+  { refl},
+  { refl},
+  { show some _ = some _, congr, exact h.mul_hom x y}
+  end
+  ..h.to_equiv.with_zero_equiv
+}
 
 end monoid_equiv
 
@@ -110,15 +134,6 @@ variables [group α] [group β] [group γ]
 @[symm] def symm : group_equiv α β → group_equiv β α := mul_equiv.symm
 
 @[trans] def trans : group_equiv α β → group_equiv β γ → group_equiv α γ := mul_equiv.trans
-
---definition with_zero.map_comp := is_lawful_functor.map_comp
-
-def to_with_zero_monoid_equiv (h : group_equiv α β) : monoid_equiv (with_zero α) (with_zero β) :=
-{ to_fun := option.map (h.to_equiv),
-  inv_fun := option.map (h.to_equiv.symm),
-  left_inv := begin  sorry, end,
-  right_inv := sorry,
-  mul_hom := sorry }
 
 end group_equiv
 
@@ -158,10 +173,16 @@ end units
 
 -- from here on -- should this go in data.equiv.order?
 
-structure preorder_equiv (α β : Type*) [preorder α] [preorder β] extends α ≃ β :=
-(le_map : ∀ {x y}, x ≤ y ↔ to_fun x ≤ to_fun y)
+structure le_equiv (α β : Type*) [has_le α] [has_le β] extends α ≃ β :=
+(le_map : ∀ ⦃x y⦄, x ≤ y ↔ to_fun x ≤ to_fun y)
 
-infix ` ≃≤ `:50 := preorder_equiv
+def preorder_equiv (α β : Type*) [preorder α] [preorder β] := le_equiv α β
+
+structure lt_equiv (α β : Type*) [has_lt α] [has_lt β] extends α ≃ β :=
+(lt_map : ∀ ⦃x y⦄, x < y ↔ to_fun x < to_fun y)
+
+infix ` ≃≤ `:50 := le_equiv
+infix ` ≃< `:50 := lt_equiv
 
 -- iff for ordering -- is this in mathlib?
 def linear_order_le_iff_of_monotone_injective {α : Type*} {β : Type*}
@@ -182,7 +203,7 @@ variables [preorder α] [preorder β] [preorder γ]
 
 @[symm] def symm (h : α ≃≤ β) : β ≃≤ α :=
 { le_map := λ x y, begin
-    convert (@le_map _ _ _ _ h (h.to_equiv.symm x) (h.to_equiv.symm y)).symm,
+    convert (@le_equiv.le_map _ _ _ _ h (h.to_equiv.symm x) (h.to_equiv.symm y)).symm,
     { exact (h.right_inv x).symm},
     { exact (h.right_inv y).symm},
   end
@@ -190,7 +211,8 @@ variables [preorder α] [preorder β] [preorder γ]
 
 @[trans] def trans (h1 : α ≃≤ β) (h2 : β ≃≤ γ) : (α ≃≤ γ) :=
 { le_map := λ x y,
-    iff.trans (@le_map _ _ _ _ h1 x y) (@le_map _ _ _ _ h2 (h1.to_equiv x) (h1.to_equiv y)),
+    iff.trans (@le_equiv.le_map _ _ _ _ h1 x y)
+      (@le_equiv.le_map _ _ _ _ h2 (h1.to_equiv x) (h1.to_equiv y)),
   ..equiv.trans h1.to_equiv h2.to_equiv }
 
 end preorder_equiv
@@ -203,3 +225,12 @@ def equiv.le_map_iff_lt_map {α : Type*} {β : Type*} [partial_order α] [partia
   (he : α ≃ β) : (∀ x y, x ≤ y ↔ he x ≤ he y) ↔ (∀ x y, x < y ↔ he x < he y) :=
 ⟨equiv.lt_map_of_le_map he, λ hlt x y, by rw [le_iff_eq_or_lt, le_iff_eq_or_lt];
   exact or_congr (by simp) (hlt x y)⟩
+
+def preorder_equiv.to_has_lt_equiv {α : Type*} {β : Type*} [preorder α] [preorder β]
+  (he : α ≃≤ β) : α ≃< β := {lt_map := he.to_equiv.lt_map_of_le_map he.le_map
+  ..he.to_equiv}
+
+def preorder_equiv.to_with_zero_preorder_equiv {α : Type*} {β : Type*} [preorder α] [preorder β]
+  (he : α ≃≤ β) : (with_zero α) ≃≤ (with_zero β) :=
+  { le_map := with_zero.map_le he.le_map
+    ..he.to_equiv.with_zero_equiv}

@@ -5,6 +5,8 @@ import for_mathlib.subrel
 import for_mathlib.option_inj
 import tactic.abel
 
+import for_mathlib.with_zero
+
 universes u v
 
 class linear_ordered_comm_monoid (α : Type*) extends comm_monoid α, linear_order α :=
@@ -37,6 +39,7 @@ variables {β : Type v} [linear_ordered_comm_group β]
 class is_hom (f : α → β) extends is_group_hom f : Prop :=
 (ord : ∀ {a b : α}, a ≤ b → f a ≤ f b)
 
+-- this is Kenny's; I think we should have iff
 structure equiv extends equiv α β :=
 (is_hom : is_hom to_fun)
 
@@ -133,9 +136,12 @@ def ker (f : α → β) (hf : is_hom f) : set α :=
 
 theorem ker.is_convex (f : α → β) (hf : is_hom f) : is_convex (ker f hf) :=
 { one_mem := is_group_hom.one f,
-  mul_mem := λ x y hx hy, show f (x * y) = 1, by dsimp [ker] at hx hy; rw [(hf.1).mul, hx, hy, mul_one],
-  inv_mem := λ x hx, show f x⁻¹ = 1, by dsimp [ker] at hx; rw [@is_group_hom.inv _ _ _ _ f (hf.1) x, hx, one_inv],
-  mem_of_between := λ x y hxy hy1 hx, le_antisymm (is_group_hom.one f ▸ is_hom.ord _ hy1) (hx ▸ is_hom.ord _ hxy) }
+  mul_mem := λ x y hx hy, show f (x * y) = 1, by dsimp [ker] at hx hy; rw
+    [(hf.1).mul, hx, hy, mul_one],
+  inv_mem := λ x hx, show f x⁻¹ = 1, by dsimp [ker] at hx;
+    rw [@is_group_hom.inv _ _ _ _ f (hf.1) x, hx, one_inv],
+  mem_of_between := λ x y hxy hy1 hx,
+    le_antisymm (is_group_hom.one f ▸ is_hom.ord _ hy1) (hx ▸ is_hom.ord _ hxy) }
 
 def height (α : Type) [linear_ordered_comm_group α] : cardinal :=
 cardinal.mk {S : set α // is_proper_convex S}
@@ -145,102 +151,6 @@ end linear_ordered_comm_group
 namespace with_zero
 
 variables {α : Type u} {β : Type v}
-
-theorem XXX (α : Type*) [partial_order α] : partial_order (with_zero α) := by apply_instance
-#print XXX
-#print with_zero.partial_order
-
-@[simp] theorem zero_le [partial_order α] {x : with_zero α} : 0 ≤ x :=
-begin
-  cases x,
-  exact le_refl 0,
-  exact le_of_lt (with_bot.bot_lt_some x)
-end
-
-@[simp] theorem zero_lt_some [partial_order α] {a : α} :
-  @has_lt.lt (with_zero α) _ 0 (some a : with_zero α) :=
-with_bot.bot_lt_some _
-
-@[simp] theorem none_le [partial_order α] {x : with_zero α} :
-@has_le.le (with_zero α) _ none x := zero_le
-
-@[simp] theorem not_some_le_zero [partial_order α] {x : α} :
-¬ @has_le.le (with_zero α) _ (some x) 0 :=
-λ h, option.no_confusion (le_antisymm h zero_le)
-
-@[simp] theorem not_some_le_none [partial_order α] {x : α} :
-¬ @has_le.le (with_zero α) _ (some x) none :=
-λ h, option.no_confusion (le_antisymm h zero_le)
-
-@[simp] theorem not_some_eq_none [partial_order α] {x : α} :
-¬ (some x : with_zero α) = (0 : with_zero α) := by apply option.no_confusion
-
-theorem some_le_some_of_le [partial_order α] {x y : α} (h : x ≤ y) :
-(x : with_zero α) ≤ y :=
-λ a ha, ⟨y, rfl, by cases ha; assumption⟩
-
-theorem some_le_some [partial_order α] {x y : α} : (x : with_zero α) ≤ (y : with_zero α) ↔ x ≤ y :=
-⟨λ h, by rcases (h x rfl) with ⟨z, ⟨h2⟩, h3⟩; exact h3, some_le_some_of_le⟩
-
-@[simp] theorem le_zero_iff_eq_zero [partial_order α] {x : with_zero α} : x ≤ 0 ↔ x = 0 :=
-begin
-  cases x,
-  { change (0 : with_zero α) ≤ 0 ↔ (0 : with_zero α) = 0,
-    simp
-  },
-  { convert iff.refl false; simp
-  }
-end
-
-def map (f : α → β) : with_zero α → with_zero β := option.map f
-
-@[simp] lemma map_zero {f : α → β} : map f 0 = 0 := option.map_none'
-@[simp] lemma map_none {f : α → β} : map f none = 0 := option.map_none'
-
-@[simp] lemma map_some {f : α → β} {a : α} : map f (some a) = some (f a) := option.map_some'
-
-lemma map_id {α : Type*} : map (id : α → α) = id := option.map_id
-
-lemma map_comp {α β γ : Type*} (f : α → β) (g : β → γ) (r : with_zero α) :
-  with_zero.map (g ∘ f) r = (with_zero.map g) ((with_zero.map f) r) :=
-by cases r; refl
-
-lemma map_eq_zero_iff {f : α → β} {a : with_zero α} : map f a = 0 ↔ a = 0 :=
-begin
-  split; intro h,
-  { cases a, {refl}, rw map_some at h, revert h, exact dec_trivial },
-  { rw h, exact map_zero }
-end
-
-theorem map_inj {f : α → β} (H : function.injective f) :
-function.injective (map f) := option.map_inj H
-
-theorem map_monotone [partial_order α] [partial_order β] {f : α → β} (H : monotone f) :
-  monotone (map f) :=
-begin
-  intros x y,
-  cases x; cases y; try {simp},
-  { intro h, exact H h }
-end
-
-theorem map_strict_mono [linear_order α] [partial_order β] {f : α → β} (H : ∀ a b, a < b → f a < f b) :
-  ∀ a b, a < b → (map f) a < (map f) b :=
-begin
-  intros x y,
-  cases x; cases y; try {simp},
-  { exact H _ _ }
-end
-
-theorem map_le [partial_order α] [partial_order β] {f : α → β}
-  (H : ∀ a b : α, a ≤ b ↔ f a ≤ f b) (x y : with_zero α) :
-x ≤ y ↔ map f x ≤ map f y :=
-begin
-  cases x; cases y,
-  { convert iff.refl true; simp},
-  { convert iff.refl true; simp},
-  { convert iff.refl false; simp},
-  { simp [H x y]}
-end
 
 variables [linear_ordered_comm_group α] [linear_ordered_comm_group β]
 
@@ -323,6 +233,5 @@ begin
     rw mul_left_comm,
     simp, },
 end
-
 
 end with_zero

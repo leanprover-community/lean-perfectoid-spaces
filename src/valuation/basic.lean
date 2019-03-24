@@ -170,7 +170,7 @@ theorem le_of_le (r s : R) : v₁ r ≤ v₁ s ↔ v₂ r ≤ v₂ s :=
 begin
   rw ←H12 r, rw ←H12 s,
   cases v₁ r; cases v₁ s,
-  swap 3,{ simpa [Hle] using @with_zero.coe_ne_zero _ (ψ val), },
+  swap 3,{ simp [Hle, @with_zero.coe_ne_zero _ (ψ val)], },
   all_goals { simp [Hle] },
 end
 

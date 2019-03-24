@@ -661,7 +661,7 @@ units_valfield.mk v₂ r (h ▸ hr) := units_valfield_of_units_valfield_of_eq_su
 
 def valfield_units_preorder_equiv (h : v₁.is_equiv v₂) :
   preorder_equiv (units (valuation_field v₁)) (units (valuation_field v₂)) :=
-{ le_map := λ u v, @preorder_equiv.le_map _ _ _ _ (valfield.preorder_equiv h) u.val v.val,
+{ le_map := λ u v, @le_equiv.le_map _ _ _ _ (valfield.preorder_equiv h) u.val v.val,
   ..valfield_units_equiv_units_of_eq_supp (h.supp_eq)
  }
 
@@ -707,7 +707,8 @@ group_equiv (value_group v₁) (value_group v₂) := group_equiv.quotient
   (valuation_field_norm_one v₂) $ is_equiv.norm_one_eq_norm_one h
 
 def is_equiv.with_zero_value_group_equiv (h : is_equiv v₁ v₂) :
-monoid_equiv (with_zero (value_group v₁)) (with_zero (value_group v₂)) := sorry
+  monoid_equiv (with_zero (value_group v₁)) (with_zero (value_group v₂)) :=
+monoid_equiv.to_with_zero_monoid_equiv $ is_equiv.value_group_equiv h
 
 -- ordering part of 1.27 (iii) -> (i)
 def is_equiv.value_group_order_equiv_aux (h : is_equiv v₁ v₂) (x y : value_group v₁) (h2 : x ≤ y) :
@@ -717,45 +718,20 @@ begin
   exact (is_equiv.on_valuation_field_is_equiv h x y).1 h2,
 end
 
-def is_equiv.value_group_order_equiv (h : is_equiv v₁ v₂) (x y : value_group v₁) :
-  h.value_group_equiv.to_equiv x ≤ h.value_group_equiv.to_equiv y ↔ x ≤ y :=
-(linear_order_le_iff_of_monotone_injective
+def is_equiv.value_group_le_equiv (h : is_equiv v₁ v₂) :
+  (value_group v₁) ≃≤ (value_group v₂) :=
+{ le_map := λ x y, linear_order_le_iff_of_monotone_injective
   (h.value_group_equiv.to_equiv.bijective.1)
-  (is_equiv.value_group_order_equiv_aux h) x y).symm
+  (is_equiv.value_group_order_equiv_aux h) x y
+   ..h.value_group_equiv.to_equiv}
 
 def is_equiv.value_group_equiv_monotone (h : is_equiv v₁ v₂) :
-  monotone (h.value_group_equiv.to_equiv) := λ x y, (is_equiv.value_group_order_equiv h x y).2
+  monotone (h.value_group_equiv.to_equiv) := λ x y,
+  (@@le_equiv.le_map _ _ (is_equiv.value_group_le_equiv h)).1
 
--- TODO : switch iff sides?
-def is_equiv.with_zero_value_group_order_equiv (h : is_equiv v₁ v₂)
-  (x y : with_zero (value_group v₁)) : x ≤ y ↔
-  with_zero.map h.value_group_equiv.to_equiv x ≤
-  with_zero.map h.value_group_equiv.to_equiv y :=
-begin
-  cases x with x,
-  { show _ ↔ none ≤ _,
-    split; intros; exact with_zero.zero_le,
-  },
-  cases y with y,
-  { show _ ↔ some _ ≤ none,
-    split; {intro h, exfalso, revert h, simp},
-  },
-  show (x : with_zero $ value_group v₁) ≤ (y : with_zero $ value_group v₁) ↔
-    ((((is_equiv.value_group_equiv h).to_equiv) x) : with_zero $ value_group v₂) ≤
-    ((((is_equiv.value_group_equiv h).to_equiv) y) : with_zero $ value_group v₂),
-  rw with_zero.some_le_some,
-  rw with_zero.some_le_some,
-  exact (is_equiv.value_group_order_equiv h x y).symm
-end
-
-def is_equiv.with_zero_value_group_has_lt_equiv (h : is_equiv v₁ v₂)
-  (x y : with_zero (value_group v₁)) : x < y ↔
-  with_zero.map h.value_group_equiv.to_equiv x <
-  with_zero.map h.value_group_equiv.to_equiv y :=
-begin
-  sorry
---  exact equiv.lt_map_of_le_map h.value_group_equiv.to_equiv (is_equiv.with_zero_value_group_order_equiv h)
-end
+def is_equiv.with_zero_value_group_le_equiv (h : is_equiv v₁ v₂) :
+  (with_zero (value_group v₁)) ≃≤ (with_zero (value_group v₂)) :=
+preorder_equiv.to_with_zero_preorder_equiv h.value_group_le_equiv
 
 end -- section
 
