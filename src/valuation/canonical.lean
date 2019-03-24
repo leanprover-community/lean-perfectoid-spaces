@@ -707,8 +707,7 @@ group_equiv (value_group v₁) (value_group v₂) := group_equiv.quotient
   (valuation_field_norm_one v₂) $ is_equiv.norm_one_eq_norm_one h
 
 def is_equiv.with_zero_value_group_equiv (h : is_equiv v₁ v₂) :
-monoid_equiv (with_zero (value_group v₁)) (with_zero (value_group v₂)) :=
-
+monoid_equiv (with_zero (value_group v₁)) (with_zero (value_group v₂)) := sorry
 
 -- ordering part of 1.27 (iii) -> (i)
 def is_equiv.value_group_order_equiv_aux (h : is_equiv v₁ v₂) (x y : value_group v₁) (h2 : x ≤ y) :
@@ -754,7 +753,8 @@ def is_equiv.with_zero_value_group_has_lt_equiv (h : is_equiv v₁ v₂)
   with_zero.map h.value_group_equiv.to_equiv x <
   with_zero.map h.value_group_equiv.to_equiv y :=
 begin
-  exact equiv.lt_map_of_le_map h.value_group_equiv.to_equiv
+  sorry
+--  exact equiv.lt_map_of_le_map h.value_group_equiv.to_equiv (is_equiv.with_zero_value_group_order_equiv h)
 end
 
 end -- section

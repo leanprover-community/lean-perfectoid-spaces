@@ -146,6 +146,10 @@ namespace with_zero
 
 variables {α : Type u} {β : Type v}
 
+theorem XXX (α : Type*) [partial_order α] : partial_order (with_zero α) := by apply_instance
+#print XXX
+#print with_zero.partial_order
+
 @[simp] theorem zero_le [partial_order α] {x : with_zero α} : 0 ≤ x :=
 begin
   cases x,
@@ -168,6 +172,9 @@ with_bot.bot_lt_some _
 ¬ @has_le.le (with_zero α) _ (some x) none :=
 λ h, option.no_confusion (le_antisymm h zero_le)
 
+@[simp] theorem not_some_eq_none [partial_order α] {x : α} :
+¬ (some x : with_zero α) = (0 : with_zero α) := by apply option.no_confusion
+
 theorem some_le_some_of_le [partial_order α] {x y : α} (h : x ≤ y) :
 (x : with_zero α) ≤ y :=
 λ a ha, ⟨y, rfl, by cases ha; assumption⟩
@@ -176,7 +183,14 @@ theorem some_le_some [partial_order α] {x y : α} : (x : with_zero α) ≤ (y :
 ⟨λ h, by rcases (h x rfl) with ⟨z, ⟨h2⟩, h3⟩; exact h3, some_le_some_of_le⟩
 
 @[simp] theorem le_zero_iff_eq_zero [partial_order α] {x : with_zero α} : x ≤ 0 ↔ x = 0 :=
-by cases x; simp; try {refl}; {intro h, exact option.no_confusion h}
+begin
+  cases x,
+  { change (0 : with_zero α) ≤ 0 ↔ (0 : with_zero α) = 0,
+    simp
+  },
+  { convert iff.refl false; simp
+  }
+end
 
 def map (f : α → β) : with_zero α → with_zero β := option.map f
 
@@ -187,17 +201,9 @@ def map (f : α → β) : with_zero α → with_zero β := option.map f
 
 lemma map_id {α : Type*} : map (id : α → α) = id := option.map_id
 
-lemma map_comp {α : Type*} {β : Type*} {γ : Type*} (f : α → β) (g : β → γ) (r : with_zero α) :
-  with_zero.map (g ∘ f) r = (with_zero.map g) ((with_zero.map f) r) := sorry
---is_lawful_functor.comp_map f g r -- error involving <$>
-/-
-  type mismatch, term
-    comp_map ?m_7 ?m_8 ?m_9
-  has type
-    (?m_6 ∘ ?m_7) <$> ?m_8 = ?m_6 <$> ?m_7 <$> ?m_8
-  but is expected to have type
-    map (g ∘ f) r = map g (map f r)
--/
+lemma map_comp {α β γ : Type*} (f : α → β) (g : β → γ) (r : with_zero α) :
+  with_zero.map (g ∘ f) r = (with_zero.map g) ((with_zero.map f) r) :=
+by cases r; refl
 
 lemma map_eq_zero_iff {f : α → β} {a : with_zero α} : map f a = 0 ↔ a = 0 :=
 begin
@@ -225,14 +231,15 @@ begin
   { exact H _ _ }
 end
 
-@[simp] theorem map_le [partial_order α] [partial_order β] {f : α → β}
-(H : ∀ a b : α, a ≤ b ↔ f a ≤ f b) :
-∀ x y : with_zero α, x ≤ y ↔ map f x ≤ map f y :=
+theorem map_le [partial_order α] [partial_order β] {f : α → β}
+  (H : ∀ a b : α, a ≤ b ↔ f a ≤ f b) (x y : with_zero α) :
+x ≤ y ↔ map f x ≤ map f y :=
 begin
-  intros x y,
-  cases x; cases y; intros; try {simp},
-  { intro oops, exact option.no_confusion oops },
-  { exact H x y }
+  cases x; cases y,
+  { convert iff.refl true; simp},
+  { convert iff.refl true; simp},
+  { convert iff.refl false; simp},
+  { simp [H x y]}
 end
 
 variables [linear_ordered_comm_group α] [linear_ordered_comm_group β]
