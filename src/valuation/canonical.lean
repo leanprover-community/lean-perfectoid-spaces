@@ -171,8 +171,8 @@ strict_mono_of_monotone_of_injective
 -- First define a valuation on K
 definition valuation_field.canonical_valuation_v :
 valuation_field v → with_zero (value_group v) :=
-λ k, dite (k = 0) (λ _, 0)
-  (λ h, value_group_quotient v ⟨k,k⁻¹,mul_inv_cancel h, inv_mul_cancel h⟩)
+λ k, if h : (k = 0) then 0 else
+  value_group_quotient v ⟨k,k⁻¹,mul_inv_cancel h, inv_mul_cancel h⟩
 
 instance valuation_field.canonical_valuation_v.is_valuation :
 is_valuation (valuation_field.canonical_valuation_v v) :=
@@ -223,7 +223,7 @@ valuation (valuation_field v) (value_group v) :=
 lemma valuation_field.canonical_valuation_unit :
 unit_map (valuation_field.canonical_valuation v) = value_group_quotient v :=
 begin
-  -- really hard to get to the dite
+  -- really hard to get to the if
   ext x,
   rw ←option.some_inj,
   rw unit_map_eq,
@@ -258,14 +258,12 @@ definition canonical_valuation (v : valuation R Γ) :
 comap (quotient.canonical_valuation v) (ideal.quotient.mk (supp v))
 
 lemma canonical_valuation_eq (v : valuation R Γ) (r : R) : v.canonical_valuation r =
-  dite (v.valuation_field_mk r = 0)
-      (λ (h : v.valuation_field_mk r = 0), 0)
-      (λ (h : ¬v.valuation_field_mk r = 0),
+  if h : (v.valuation_field_mk r = 0) then 0 else
          some (value_group_quotient v
               {val := v.valuation_field_mk r,
                inv := (v.valuation_field_mk r)⁻¹,
                val_inv := mul_inv_cancel h,
-               inv_val := inv_mul_cancel h}))
+               inv_val := inv_mul_cancel h})
    := rfl
 
 lemma canonical_valuation_not_mem_supp_eq (v : valuation R Γ) (r : R) (hr : r ∉ supp v) :
@@ -783,7 +781,7 @@ lemma is_equiv.with_zero_value_group_equiv_mk_eq_mk (h : v₁.is_equiv v₂) (r 
   with_zero.map h.value_group_equiv.to_equiv (canonical_valuation v₁ r) =
   canonical_valuation v₂ r :=
 begin
-  cases classical.em (r ∈ supp v₁) with h1 h1,
+  by_cases h1 : (r ∈ supp v₁),
   { -- zero case
     have hs1 : r ∈ supp (canonical_valuation v₁) := by rwa v₁.canonical_valuation_supp,
     have hs2 : r ∈ supp (canonical_valuation v₂),

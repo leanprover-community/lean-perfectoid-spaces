@@ -165,7 +165,7 @@ end
 
 end Spv
 
-#exit
+/- ideas for a computable out below. KMB doesn't really know if we care.
 
 -- jmc: I now think the following section is basically useless.
 -- Mario clearly said that computable out is not really worth anything.
@@ -316,7 +316,7 @@ and the proof comes from h.
 
 
 def on_quot (v : Spv R) : Spv (supp v).quotient :=
-{ val := @quotient.lift₂ _ _ _ ((supp v).quotient_rel) ((supp v).quotient_rel) v.1 $
+{/ val := @quotient.lift₂ _ _ _ ((supp v).quotient_rel) ((supp v).quotient_rel) v.1 $
     λ r₁ s₁ r₂ s₂ hr hs,
     begin
       have hr' : r₁ - r₂ ∈ supp v := hr,
