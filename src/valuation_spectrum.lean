@@ -102,6 +102,16 @@ theorem lift_eq {X}
   lift f₀ (mk v) = f v :=
 h _ (out_mk v)
 
+/-- Prop-valued version of computation principle for Spv -/
+theorem lift_eq'
+  (f₀ : Π ⦃Γ₀ : Type u₀⦄ [linear_ordered_comm_group Γ₀], valuation R Γ₀ → Prop)
+  (f : Π ⦃Γ : Type u⦄ [linear_ordered_comm_group Γ], valuation R Γ → Prop)
+  (v : valuation R Γ)
+  (h : ∀ ⦃Γ₀ : Type u₀⦄ [linear_ordered_comm_group Γ₀] (v₀ : valuation R Γ₀),
+    v₀.is_equiv v → (f₀ v₀ ↔ f v)) :
+  lift f₀ (mk v) ↔ f v :=
+h _ (out_mk v)
+
 lemma exists_rep (v : Spv R) :
   ∃ {Γ₀ : Type u₀} [linear_ordered_comm_group Γ₀], by exactI ∃ (v₀ : valuation R Γ₀),
   mk v₀ = v :=

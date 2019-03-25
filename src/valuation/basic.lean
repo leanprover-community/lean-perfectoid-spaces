@@ -616,22 +616,38 @@ by delta valuation_ID; apply_instance
 
 instance : preorder (valuation_ID v) := (v.on_quot (le_refl _)).to_preorder
 
+def valuation_ID_mk : R → valuation_ID v := ideal.quotient.mk (supp v)
+
+-- need that it's a ring hom, need that its kernel is whatever
+
+instance : is_ring_hom (v.valuation_ID_mk) := by unfold valuation_ID_mk; apply_instance
+
+lemma valuation_ID_mk_ker (r : R) : v.valuation_ID_mk r = 0 ↔ r ∈ supp v :=
+ideal.quotient.eq_zero_iff_mem
+
 definition valuation_field := localization.fraction_ring (valuation_ID v)
 
 instance : discrete_field (valuation_field v) := by delta valuation_field; apply_instance
 
+def valuation_field_mk (r : R) : valuation_field v := localization.of (v.valuation_ID_mk r)
+
+lemma valuation_field_mk_ker (r : R) : v.valuation_field_mk r = 0 ↔ r ∈ supp v :=
+⟨λ h, (v.valuation_ID_mk_ker r).1 $ localization.fraction_ring.eq_zero_of _ h,
+ λ h, show localization.of _ = 0, by rw (v.valuation_ID_mk_ker r).2 h; apply is_ring_hom.map_zero⟩
+
 instance valuation.valfield_preorder : preorder (valuation_field v) :=
   ((v.on_quot (le_refl _)).on_frac $ quot_supp_zero v).to_preorder
 
-def units_valfield.mk (r : R) (h : r ∉ supp v) : units (valuation_field v) :=
-⟨localization.of (ideal.quotient.mk (supp v) r),
- (localization.of (ideal.quotient.mk (supp v) r))⁻¹,
+def units_valfield_mk (r : R) (h : r ∉ supp v) : units (valuation_field v) :=
+⟨v.valuation_field_mk r,
+ (v.valuation_field_mk r)⁻¹,
  mul_inv_cancel (λ h2, h $ ideal.quotient.eq_zero_iff_mem.1 $
    localization.fraction_ring.eq_zero_of _ h2),
  inv_mul_cancel (λ h2, h $ ideal.quotient.eq_zero_iff_mem.1 $
    localization.fraction_ring.eq_zero_of _ h2)⟩
 
-instance valuation.units_valfield_preorder : preorder (units (valuation_field v)) := preorder.lift (λ u, u.val)
+instance valuation.units_valfield_preorder :
+  preorder (units (valuation_field v)) := preorder.lift (λ u, u.val)
 
 -- on_frac_quot_comap_eq needs more class.instance_max_depth to compile if
 -- this instance is not explicitly given as a hint

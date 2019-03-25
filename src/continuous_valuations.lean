@@ -16,14 +16,6 @@ variables {v₁ : valuation R Γ₁} {v₂ : valuation R Γ₂}
 def is_continuous (v : valuation R Γ) : Prop :=
 ∀ g : value_group v, is_open {r : R | canonical_valuation v r < g}
 
-/- need :
-  1) for all r : R,
-  with_zero.map (value_group_equiv h).to_fun (⇑(canonical_valuation v₁) r =
-  canonical_valuation v₂ r
-  -- This says that pulling back a canonical valuation on R along a map of groups
-  value_group v₁ → value_group v₂ gives the other canonical valuation on R.
-
--/
 lemma is_equiv.is_continuous_iff (h : v₁.is_equiv v₂) :
   v₁.is_continuous ↔ v₂.is_continuous := begin
   unfold valuation.is_continuous,
@@ -33,55 +25,13 @@ lemma is_equiv.is_continuous_iff (h : v₁.is_equiv v₂) :
   convert iff.rfl,
   funext r,
   apply propext,
-  /-
-  ⊢ ⇑(canonical_valuation v₂) r < ↑(⇑((is_equiv.value_group_equiv h).to_equiv) g) ↔
-    ⇑(canonical_valuation v₁) r < ↑g
-  -/
   rw h.with_zero_value_group_lt_equiv.lt_map,
   convert iff.rfl,
-  /-
-  ⊢ ((is_equiv.with_zero_value_group_lt_equiv h).to_equiv).to_fun (⇑(canonical_valuation v₁) r) =
-    ⇑(canonical_valuation v₂) r
-  -/
-  sorry
+  exact h.with_zero_value_group_equiv_mk_eq_mk r,
 end
-/-
-⊢ (∀ (g : value_group v₁), is_open {r : R | ⇑(canonical_valuation v₁) r < ↑g}) ↔
-    ∀ (g : value_group v₂), is_open {r : R | ⇑(canonical_valuation v₂) r < ↑g}
--/
-/-
-begin
-  unfold is_continuous,
-  split; intros H g,
-  { convert H (h.value_group_equiv.symm.to_equiv g),
-    symmetry,
-    funext,
-    apply propext,
-    cases classical.em (r ∈ supp v₁),
-    { -- comap (quotient.canonical_valuation v) (ideal.quotient.mk (supp v))
-      show (quotient.canonical_valuation v₁) (ideal.quotient.mk (supp v₁) r) < _
-        ↔ (quotient.canonical_valuation v₂) (ideal.quotient.mk (supp v₂) r) < _,
-      rw (ideal.quotient.eq_zero_iff_mem).2 h_1,
-      rw (ideal.quotient.eq_zero_iff_mem).2 (h.supp_eq ▸ h_1 : r ∈ supp v₂),
-      rw valuation.map_zero,
-      rw valuation.map_zero,
-      show 0 < some _ ↔ 0 < some _,
-      split;intro H; exact with_zero.zero_lt_some,
-    },
-    { -- goal in this one is to get hold of element of value_group
-      -- corresponding to g
-     sorry
-    }
-    rw lt_iff_not_ge,
-    rw lt_iff_not_ge,
-    apply not_iff_not_of_iff,
-    sorry },
-  { convert H (h.value_group_equiv.to_equiv g),
-    funext,
-    apply propext,
-    sorry }
-end
--/
+
+/- Alternative def which KMB has now commented out.
+
 -- jmc: Is this definition equivalent?
 -- KMB: I guess so. The extra edge cases are s₁ or s₂ in supp(v)
 -- and in these cases the modified definition is furthermore asking
@@ -93,9 +43,11 @@ end
 -- and also true for x=some(k) (it follows from the axiom)
 -- although I glanced through the API
 -- and couldn't find it.
+
 def is_continuous' (v : valuation R Γ) : Prop :=
 ∀ s₁ s₂, is_open {r : R | v r * v s₁ < v s₂}
 
+-- KMB never finished this and I don't think we need it any more.
 lemma continuous_iff_continuous' {v : valuation R Γ} :
 is_continuous' v ↔ is_continuous v :=
 begin
@@ -131,18 +83,19 @@ begin
     rw [← map_mul v₁, ← map_mul v₂],
     apply h }
 end
-
+-/
 end valuation
 
 namespace Spv
+
 variables {R : Type u₀} [comm_ring R] [topological_space R] [topological_ring R]
 
 def is_continuous : Spv R → Prop := lift (@valuation.is_continuous _ _ _ _)
 
 end Spv
 
--- KMB has not looked below this point.
-#exit
+/- KMB proposes removing Valuation completely because of universe issues
+
 namespace Valuation
 variables {R : Type u₁} [comm_ring R] [topological_space R] [topological_ring R] [decidable_eq R]
 
@@ -153,9 +106,12 @@ valuation.is_continuous_of_equiv_is_continuous heq H
 
 end Valuation
 
+-/
+
 namespace Spv
 
 variables {R : Type u₁} [comm_ring R] [topological_space R] [topological_ring R] [decidable_eq R]
+variables {Γ : Type u} [linear_ordered_comm_group Γ]
 
 /-
 theorem forall_continuous {R : Type*} [comm_ring R] [topological_space R] [topological_ring R]
@@ -190,13 +146,19 @@ end
 -/
 
 variable (R)
-def Cont := {v : Spv R | (v : Valuation R).is_continuous}
+
+def Cont := {v : Spv R | v.is_continuous}
+
 variable {R}
 
-def mk_mem_Cont {v : Valuation R} : mk v ∈ Cont R ↔ v.is_continuous :=
+def mk_mem_Cont {v : valuation R Γ} : mk v ∈ Cont R ↔ v.is_continuous :=
 begin
-split; intro h; refine Valuation.is_continuous_of_equiv_is_continuous _ h,
-exact out_mk, exact (setoid.symm out_mk),
+  show Spv.lift (by exactI (λ _ _, by exactI valuation.is_continuous)) (Spv.mk v)
+    ↔ valuation.is_continuous v,
+  refine (lift_eq' _ _ _ _),
+  intros _ _ _ h,
+  resetI,
+  exact h.is_continuous_iff,
 end
 
 instance Cont.topological_space : topological_space (Cont R) := by apply_instance
@@ -208,5 +170,5 @@ Wedhorn p59:
   A valuation v on A is continuous if and only if for all γ ∈ Γ_v (the value group),
   the set A_{≤γ} := { a ∈ A ; v(a) ≥ γ } is open in A.
 
-  This is a typo -- should be v(a) ≤ γ.
+  This is a typo -- should be v(a) ≤ γ. [KMB agrees]
 -/

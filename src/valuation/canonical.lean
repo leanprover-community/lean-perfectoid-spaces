@@ -257,6 +257,27 @@ definition canonical_valuation (v : valuation R Γ) :
   valuation R (value_group v) :=
 comap (quotient.canonical_valuation v) (ideal.quotient.mk (supp v))
 
+lemma canonical_valuation_eq (v : valuation R Γ) (r : R) : v.canonical_valuation r =
+  dite (v.valuation_field_mk r = 0)
+      (λ (h : v.valuation_field_mk r = 0), 0)
+      (λ (h : ¬v.valuation_field_mk r = 0),
+         some (value_group_quotient v
+              {val := v.valuation_field_mk r,
+               inv := (v.valuation_field_mk r)⁻¹,
+               val_inv := mul_inv_cancel h,
+               inv_val := inv_mul_cancel h}))
+   := rfl
+
+lemma canonical_valuation_not_mem_supp_eq (v : valuation R Γ) (r : R) (hr : r ∉ supp v) :
+  v.canonical_valuation r = some (value_group_quotient v (units_valfield_mk v r hr)) :=
+begin
+  rw canonical_valuation_eq,
+  split_ifs, swap, refl,
+  exfalso,
+  apply hr,
+  exact (v.valuation_field_mk_ker r).1 h
+end
+
 end canonical_equivalent_valuation
 
 namespace canonical_valuation
@@ -401,6 +422,7 @@ begin
   exact canonical_valuation.to_Γ v,
 end
 
+
 namespace is_equiv
 
 -- Various lemmas about valuations being equivalent.
@@ -454,6 +476,7 @@ calc r ∈ supp v₁ ↔ v₁ r = 0    : mem_supp_iff' _ _
              ... ↔ v₂ r = 0    : (eq_zero_iff_le_zero _).symm
              ... ↔ r ∈ supp v₂ : (mem_supp_iff' _ _).symm
 
+
 lemma v_eq_one_of_v_eq_one (h : v₁.is_equiv v₂) {r : R} : v₁ r = 1 → v₂ r = 1 :=
 begin
   rw [←v₁.map_one, ←v₂.map_one],
@@ -464,7 +487,19 @@ end
 lemma v_eq_one (h : v₁.is_equiv v₂) (r : R) : v₁ r = 1 ↔ v₂ r = 1 :=
 ⟨v_eq_one_of_v_eq_one h,v_eq_one_of_v_eq_one h.symm⟩
 
+lemma canonical_equiv_of_is_equiv (h : v₁.is_equiv v₂) :
+  (canonical_valuation v₁).is_equiv (canonical_valuation v₂) :=
+begin
+  refine is_equiv.trans v₁.canonical_valuation_is_equiv _,
+  refine is_equiv.trans h _,
+  apply is_equiv.symm,
+  exact v₂.canonical_valuation_is_equiv
+end
+
 end is_equiv
+
+lemma canonical_valuation_supp (v : valuation R Γ) :
+  supp (v.canonical_valuation) = supp v := (canonical_valuation_is_equiv v).supp_eq
 
 section
 
@@ -644,8 +679,8 @@ by unfold valfield_units_of_valfield_units_of_eq_supp; apply_instance
 
 lemma units_valfield_of_units_valfield_of_eq_supp_mk
   (h : supp v₁ = supp v₂) (r : R) (hr : r ∉ supp v₁) :
-  valfield_units_of_valfield_units_of_eq_supp h (units_valfield.mk v₁ r hr)
-  = units_valfield.mk v₂ r (h ▸ hr) := units.ext $ valfield_equiv_valfield_mk_eq_mk h r
+  valfield_units_of_valfield_units_of_eq_supp h (units_valfield_mk v₁ r hr)
+  = units_valfield_mk v₂ r (h ▸ hr) := units.ext $ valfield_equiv_valfield_mk_eq_mk h r
 
 def valfield_units_equiv_units_of_eq_supp (h : supp v₁ = supp v₂) :
 group_equiv (units (valuation_field v₁)) (units (valuation_field v₂)) :=
@@ -654,10 +689,8 @@ by letI := h'.hom; exact units.map_equiv {mul_hom := h'.hom.map_mul, ..h'}
 end
 
 lemma valfield_units_equiv_units_mk_eq_mk (h : supp v₁ = supp v₂) (r : R) (hr : r ∉ supp v₁):
-(valfield_units_equiv_units_of_eq_supp h).to_equiv (units_valfield.mk v₁ r hr) =
-units_valfield.mk v₂ r (h ▸ hr) := units_valfield_of_units_valfield_of_eq_supp_mk h r hr
-
-
+(valfield_units_equiv_units_of_eq_supp h).to_equiv (units_valfield_mk v₁ r hr) =
+units_valfield_mk v₂ r (h ▸ hr) := units_valfield_of_units_valfield_of_eq_supp_mk h r hr
 
 def valfield_units_preorder_equiv (h : v₁.is_equiv v₂) :
   preorder_equiv (units (valuation_field v₁)) (units (valuation_field v₂)) :=
@@ -706,6 +739,15 @@ group_equiv (value_group v₁) (value_group v₂) := group_equiv.quotient
   (valuation_field_norm_one v₁)
   (valuation_field_norm_one v₂) $ is_equiv.norm_one_eq_norm_one h
 
+
+lemma value_group_equiv_units_mk_eq_mk (h : is_equiv v₁ v₂) (r : R) (hr : r ∉ supp v₁) :
+  (h.value_group_equiv).to_equiv (value_group_quotient v₁ (units_valfield_mk v₁ r hr)) =
+  value_group_quotient v₂ (units_valfield_mk v₂ r (h.supp_eq ▸ hr)) :=
+begin
+  rw ←valfield_units_equiv_units_mk_eq_mk (h.supp_eq) r hr,
+  refl,
+end
+
 def is_equiv.with_zero_value_group_equiv (h : is_equiv v₁ v₂) :
   monoid_equiv (with_zero (value_group v₁)) (with_zero (value_group v₂)) :=
 monoid_equiv.to_with_zero_monoid_equiv $ is_equiv.value_group_equiv h
@@ -736,6 +778,28 @@ preorder_equiv.to_with_zero_preorder_equiv h.value_group_le_equiv
 def is_equiv.with_zero_value_group_lt_equiv (h : is_equiv v₁ v₂) :
   (with_zero (value_group v₁)) ≃< (with_zero (value_group v₂)) :=
 preorder_equiv.to_lt_equiv h.with_zero_value_group_le_equiv
+
+lemma is_equiv.with_zero_value_group_equiv_mk_eq_mk (h : v₁.is_equiv v₂) (r : R) :
+  with_zero.map h.value_group_equiv.to_equiv (canonical_valuation v₁ r) =
+  canonical_valuation v₂ r :=
+begin
+  cases classical.em (r ∈ supp v₁) with h1 h1,
+  { -- zero case
+    have hs1 : r ∈ supp (canonical_valuation v₁) := by rwa v₁.canonical_valuation_supp,
+    have hs2 : r ∈ supp (canonical_valuation v₂),
+      rwa is_equiv.supp_eq h.canonical_equiv_of_is_equiv at hs1,
+    rw (mem_supp_iff _ r).1 hs1,
+    rw (mem_supp_iff _ r).1 hs2,
+    refl,
+  },
+  { -- not in supp case
+    have h2 : r ∉ supp v₂ := by rwa ←h.supp_eq,
+    rw v₁.canonical_valuation_not_mem_supp_eq _ h1,
+    rw v₂.canonical_valuation_not_mem_supp_eq _ h2,
+    show some _ = some _, congr,
+    exact value_group_equiv_units_mk_eq_mk h r h1,
+  }
+end
 
 end -- section
 

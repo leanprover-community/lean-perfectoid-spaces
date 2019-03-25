@@ -173,12 +173,38 @@ end units
 structure le_equiv (α β : Type*) [has_le α] [has_le β] extends α ≃ β :=
 (le_map : ∀ ⦃x y⦄, x ≤ y ↔ to_fun x ≤ to_fun y)
 
+infix ` ≃≤ `:50 := le_equiv
+
+namespace le_equiv
+
+variables (X : Type*) [has_le X] (Y : Type*) [has_le Y] (Z : Type*) [has_le Z]
+
+variables {X} {Y} {Z}
+
+@[refl] def refl (X : Type*) [has_le X] : X ≃≤ X :=
+{ le_map := λ _ _, iff.rfl,
+  ..equiv.refl _}
+
+@[symm] def symm (h : X ≃≤ Y) : Y ≃≤ X :=
+{ le_map := λ x₁ x₂, begin
+    convert (@le_equiv.le_map _ _ _ _ h (h.to_equiv.symm x₁) (h.to_equiv.symm x₂)).symm,
+    exact (h.right_inv x₁).symm, exact (h.right_inv x₂).symm end,
+  ..h.to_equiv.symm
+}
+
+@[trans] def trans (h1 : X ≃≤ Y) (h2 : Y ≃≤ Z) : X ≃≤ Z :=
+{ le_map := λ x₁ x₂, iff.trans (@le_equiv.le_map _ _ _ _ h1 x₁ x₂)
+    (@le_equiv.le_map _ _ _ _ h2 (h1.to_fun x₁) (h1.to_fun x₂)),
+  ..equiv.trans h1.to_equiv h2.to_equiv
+}
+
+end le_equiv
+
 def preorder_equiv (α β : Type*) [preorder α] [preorder β] := le_equiv α β
 
 structure lt_equiv (α β : Type*) [has_lt α] [has_lt β] extends α ≃ β :=
 (lt_map : ∀ ⦃x y⦄, x < y ↔ to_fun x < to_fun y)
 
-infix ` ≃≤ `:50 := le_equiv
 infix ` ≃< `:50 := lt_equiv
 
 -- iff for ordering -- is this in mathlib?
