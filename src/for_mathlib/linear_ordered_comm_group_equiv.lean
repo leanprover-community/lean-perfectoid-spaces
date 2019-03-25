@@ -1,3 +1,7 @@
+#exit
+
+-- this is mostly, but not all, elsewhere
+
 import for_mathlib.linear_ordered_comm_group
 import for_mathlib.equiv
 

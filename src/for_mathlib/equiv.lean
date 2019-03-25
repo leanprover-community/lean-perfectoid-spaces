@@ -95,8 +95,6 @@ end mul_equiv
 
 def semigroup_equiv (α β : Type*) [semigroup α] [semigroup β] := mul_equiv α β
 
-
-
 -- equiv of monoids
 
 def monoid_equiv (α : Type*) (β : Type*) [monoid α] [monoid β] := mul_equiv α β
@@ -155,7 +153,6 @@ variables [add_group α] [add_group β] [add_group γ]
 instance is_add_group_hom (h : α ≃+ β) : is_add_group_hom h.to_equiv := ⟨h.add_hom⟩
 
 end add_equiv
-
 
 namespace units
 
@@ -226,7 +223,7 @@ def equiv.le_map_iff_lt_map {α : Type*} {β : Type*} [partial_order α] [partia
 ⟨equiv.lt_map_of_le_map he, λ hlt x y, by rw [le_iff_eq_or_lt, le_iff_eq_or_lt];
   exact or_congr (by simp) (hlt x y)⟩
 
-def preorder_equiv.to_has_lt_equiv {α : Type*} {β : Type*} [preorder α] [preorder β]
+def preorder_equiv.to_lt_equiv {α : Type*} {β : Type*} [preorder α] [preorder β]
   (he : α ≃≤ β) : α ≃< β := {lt_map := he.to_equiv.lt_map_of_le_map he.le_map
   ..he.to_equiv}
 

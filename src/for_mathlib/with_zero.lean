@@ -19,7 +19,8 @@ instance {α : Type*} [preorder α] : preorder (with_bot α) :=
 
 namespace with_zero
 
-instance {α : Type*} [preorder α] : preorder (with_zero α) := show preorder (with_bot α), by apply_instance
+instance {α : Type*} [preorder α] : preorder (with_zero α) :=
+show preorder (with_bot α), by apply_instance
 
 variables {α : Type u} {β : Type v}
 

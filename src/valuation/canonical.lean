@@ -733,6 +733,10 @@ def is_equiv.with_zero_value_group_le_equiv (h : is_equiv v₁ v₂) :
   (with_zero (value_group v₁)) ≃≤ (with_zero (value_group v₂)) :=
 preorder_equiv.to_with_zero_preorder_equiv h.value_group_le_equiv
 
+def is_equiv.with_zero_value_group_lt_equiv (h : is_equiv v₁ v₂) :
+  (with_zero (value_group v₁)) ≃< (with_zero (value_group v₂)) :=
+preorder_equiv.to_lt_equiv h.with_zero_value_group_le_equiv
+
 end -- section
 
 end valuation

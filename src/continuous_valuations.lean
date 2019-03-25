@@ -20,14 +20,10 @@ def is_continuous (v : valuation R Γ) : Prop :=
   1) for all r : R,
   with_zero.map (value_group_equiv h).to_fun (⇑(canonical_valuation v₁) r =
   canonical_valuation v₂ r
-  -- This is pulling back a valuation along a map of groups.
+  -- This says that pulling back a canonical valuation on R along a map of groups
+  value_group v₁ → value_group v₂ gives the other canonical valuation on R.
 
-  DONE 2) with_zero.map (value_group_equiv h) is monotonic. [follows from mono of value_group_equiv]
-  is_equiv.with_zero_value_group_order_equiv
-
-  3) (follows from 2) it's strictly monotonic. [done: equiv.lt_map_of_le_map]
 -/
--- We could probably prove this now, but I didn't do it yet.
 lemma is_equiv.is_continuous_iff (h : v₁.is_equiv v₂) :
   v₁.is_continuous ↔ v₂.is_continuous := begin
   unfold valuation.is_continuous,
@@ -40,6 +36,12 @@ lemma is_equiv.is_continuous_iff (h : v₁.is_equiv v₂) :
   /-
   ⊢ ⇑(canonical_valuation v₂) r < ↑(⇑((is_equiv.value_group_equiv h).to_equiv) g) ↔
     ⇑(canonical_valuation v₁) r < ↑g
+  -/
+  rw h.with_zero_value_group_lt_equiv.lt_map,
+  convert iff.rfl,
+  /-
+  ⊢ ((is_equiv.with_zero_value_group_lt_equiv h).to_equiv).to_fun (⇑(canonical_valuation v₁) r) =
+    ⇑(canonical_valuation v₂) r
   -/
   sorry
 end
