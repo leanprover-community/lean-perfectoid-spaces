@@ -161,7 +161,7 @@ H = J.adic_topology
 notation `is-`J`-adic` := is_ideal_adic J
 
 lemma is_ideal_adic_iff [topological_space R] [topological_ring R] (J : ideal R) :
-  is-J-adic ↔ (∀ n : ℕ, is_open (J^n).carrier) ∧ (∀ s ∈ nhds (0 : R), ∃ n : ℕ, ↑(J^n) ⊆ s) :=
+  is-J-adic ↔ (∀ n : ℕ, is_open (↑(J^n) : set R)) ∧ (∀ s ∈ nhds (0 : R), ∃ n : ℕ, ↑(J^n) ⊆ s) :=
 begin
   split,
   { intro H,
