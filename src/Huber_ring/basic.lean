@@ -4,8 +4,8 @@ import group_theory.subgroup
 
 import power_bounded
 
--- f-adic rings are called Huber rings by Scholze.
--- Topological ring A contains on open subring A0 such that the subspace topology on A0 is
+-- f-adic rings are called Huber rings by Scholze. A Huber ring is a topological
+-- ring A which contains an open subring A0 such that the subspace topology on A0 is
 -- I-adic, where I is a finitely generated ideal of A0 .
 
 local attribute [instance, priority 0] classical.prop_decidable
