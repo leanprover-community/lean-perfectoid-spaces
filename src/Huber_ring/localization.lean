@@ -411,6 +411,31 @@ topology_of_submodules_comm
 (λ U : open_add_subgroups A, span D (of_id A ATs '' U.1))
 (directed T s) (mul_left T s hT) (mul_subset T s Huber_ring.nonarchimedean)
 
+instance (hT : is_open (↑(ideal.span T) : set A)) :
+  ring_with_zero_nhd ATs :=
+of_submodules_comm
+(λ U : open_add_subgroups A, span D (of_id A ATs '' U.1))
+(directed T s) (mul_left T s hT) (mul_subset T s Huber_ring.nonarchimedean)
+
+section
+variables {B : Type*} [comm_ring B] [topological_space B] [topological_ring B]
+variables (hB : nonarchimedean B) {f : A → B} [is_ring_hom f] (hf : continuous f)
+variables {s_inv : units B} (hs : s_inv.inv = f s)
+variables (hT : is_open (↑(ideal.span T) : set A))
+variables (hTB : is_power_bounded_subset {x | ∃ t ∈ T, x = f t * s_inv})
+
+include hs
+lemma is_unit : is_unit (f s) :=
+by rw [← hs, ← units.coe_inv]; exact is_unit_unit _
+
+noncomputable def lift : ATs → B := localization.away.lift f (is_unit s hs)
+
+include hB hf hT hTB
+lemma lift_continuous : @continuous _ _ (away.topological_space T s hT) _ (lift T s hs) :=
+sorry
+
+end
+
 end away
 
 end Huber_ring
