@@ -1,4 +1,5 @@
 import data.set.lattice
+import group_theory.subgroup
 
 namespace set
 
@@ -89,5 +90,20 @@ instance [comm_monoid α] : comm_semiring (set α) :=
 { mul_comm := λ s t,
   by ext a; split; rintros ⟨_, _, _, _, rfl⟩; rw mul_comm; exact ⟨_, ‹_›, _, ‹_›, rfl⟩,
   ..set.semiring }
+
+variables {β : Type*} (f : α → β) [monoid α] [monoid β] [is_monoid_hom f]
+
+instance : is_semiring_hom (image f) :=
+{ map_zero := image_empty _,
+  map_one := by erw [image_singleton, is_monoid_hom.map_one f]; refl,
+  map_add := image_union _,
+  map_mul := λ s t,
+  begin
+    erw [mul_eq_image, mul_eq_image, prod_image_image_eq, ← image_comp, ← image_comp],
+    congr' 1,
+    funext x,
+    change f (_ * _) = f _ * f _,
+    erw [is_monoid_hom.map_mul f]
+  end }
 
 end set
