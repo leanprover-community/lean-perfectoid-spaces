@@ -6,6 +6,8 @@ import tactic.tidy
 import for_mathlib.rings
 import for_mathlib.top_ring
 
+import for_mathlib.data.set.monoid
+
 namespace localization
 variables {R : Type*} [comm_ring R] (s : set R) [is_submonoid s]
 
@@ -164,35 +166,6 @@ lemma lmul_left_units_le_iff (a : units A) :
   M.map (lmul_left _ _ a) ≤ N ↔ M ≤ N.map (lmul_left _ _ ↑a⁻¹) :=
 by rw [map_le_iff_le_comap, map_lmul_left_inv]
 
-/-
-TODO(jmc):
-* Introduce submodule.principal (R) (m : M) : submodule R M for every module R M.
-* (Maybe show some results for the special case ideal.principal.)
-* Prove that submodule R A is a (comm) ring. We currently only have (comm) semigroup.
-* Show that principal R : A → submodule R A is a monoid hom.
--/
-
--- TODO(jmc): Uncommenting these lines breaks things down the file.
--- I have not yet investigated.
-
--- def one : submodule R A :=
--- submodule.map (of_id R A).to_linear_map (1 : ideal R)
-
--- instance : monoid (submodule R A) :=
--- { one := one,
---   one_mul :=
---   begin
---     intro M,
---     apply le_antisymm,
---     { rw mul_le,
---       sorry },
---     { sorry }
---   end,
---   mul_one := sorry,
---   ..algebra.semigroup }
-
--- TODO: comm_monoid if A is comm_ring
-
 end
 
 end submodule
@@ -219,3 +192,79 @@ lemma of_submodules_comm.nhds_zero (U : set A) :
 of_subgroups.nhds_zero _ _ _ _ _ _
 
 end comm_algebra
+
+namespace submodule
+open algebra
+variables {R : Type*} {S : Type*} {A : Type*} {M : Type*} [comm_ring R] [comm_ring S] [ring A]
+variables [algebra R S] [algebra S A]
+variables [add_comm_group M] [module A M]
+
+def one : submodule S A :=
+submodule.map (of_id S A).to_linear_map (1 : ideal S)
+
+instance : monoid (submodule S A) :=
+{ one := one,
+  one_mul :=
+  begin
+    intro M,
+    apply le_antisymm,
+    { rw mul_le,
+      intros s hs m hm,
+      erw submodule.mem_map at hs,
+      rcases hs with ⟨s, hs, rfl⟩,
+      erw ← smul_def,
+      apply smul_mem _ _ hm },
+    { intros m hm,
+      rw ← one_mul m,
+      apply mul_mem_mul _ hm,
+      erw submodule.mem_map,
+      use 1,
+      simp }
+  end,
+  mul_one :=
+  begin
+    intro M,
+    apply le_antisymm,
+    { rw mul_le,
+      intros m hm s hs,
+      erw submodule.mem_map at hs,
+      rcases hs with ⟨s, hs, rfl⟩,
+      erw [commutes, ← smul_def],
+      apply smul_mem _ _ hm },
+    { intros m hm,
+      rw ← mul_one m,
+      apply mul_mem_mul hm,
+      erw submodule.mem_map,
+      use 1,
+      simp }
+  end,
+  ..algebra.semigroup }
+
+instance : semiring (submodule S A) :=
+{ ..submodule.add_comm_monoid,
+  ..algebra.mul_zero_class,
+  ..algebra.distrib,
+  ..submodule.monoid }
+
+instance : is_semiring_hom (submodule.span S : set A → submodule S A) :=
+{ map_zero := span_empty,
+  map_one := show _ = map _ ⊤,
+    by erw [← ideal.span_singleton_one, ← span_image, set.image_singleton, alg_hom.map_one]; refl,
+  map_add := span_union,
+  map_mul := λ s t, by erw [span_mul_span, set.mul_eq_image] }
+
+/-
+TODO(jmc):
+* Introduce submodule.principal (R) (m : M) : submodule R M for every module R M.
+* (Maybe show some results for the special case ideal.principal.)
+* Prove that submodule R A is a (comm) ring. We currently only have (comm) semigroup.
+* Show that principal R : A → submodule R A is a monoid hom.
+-/
+
+-- TODO(jmc): Uncommenting these lines breaks things down the file.
+-- I have not yet investigated.
+
+
+-- TODO: comm_monoid if A is comm_ring
+
+end submodule
