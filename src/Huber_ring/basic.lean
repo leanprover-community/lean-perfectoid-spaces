@@ -6,7 +6,8 @@ import power_bounded
 
 -- f-adic rings are called Huber rings by Scholze. A Huber ring is a topological
 -- ring A which contains an open subring A0 such that the subspace topology on A0 is
--- I-adic, where I is a finitely generated ideal of A0 .
+-- I-adic, where I is a finitely generated ideal of A0. The pair (A0, I) is called
+-- a pair of definition (pod) and is not part of the data.
 
 local attribute [instance, priority 0] classical.prop_decidable
 
@@ -27,7 +28,7 @@ structure Huber_ring.ring_of_definition
 
 class Huber_ring (A : Type u) extends comm_ring A, topological_space A, topological_ring A :=
 (pod : ∃ (A₀ : Type u) [comm_ring A₀] [topological_space A₀] [topological_ring A₀],
-  by resetI; exact nonempty (Huber_ring.ring_of_definition A₀ A))
+  by exactI nonempty (Huber_ring.ring_of_definition A₀ A))
 
 end
 
