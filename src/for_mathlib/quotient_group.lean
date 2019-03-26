@@ -40,11 +40,11 @@ group_equiv (quotient_group.quotient (h.to_equiv ⁻¹' K)) (quotient_group.quot
     convert map_id _ g,
     ext x, exact h.right_inv x
   end,
-  mul_hom := begin
+  hom := ⟨begin
     have H : is_group_hom (map (h.to_equiv ⁻¹' K) K h.to_fun (le_refl (h.to_equiv ⁻¹' K))) :=
     by apply_instance,
     cases H with H, exact H,
-  end}
+  end⟩}
 
 lemma quotient_group.ker_mk {G : Type*} [group G] (N : set G) [normal_subgroup N] :
   is_group_hom.ker (quotient_group.mk : G → quotient_group.quotient N) = N :=
@@ -97,9 +97,9 @@ group_equiv (quotient_group.quotient J) (quotient_group.quotient K) :=
     end,
     refl, refl,
   end,
-  mul_hom := begin
+  hom := ⟨begin
     have H := quotient_group.is_group_hom_quotient_lift J _ _,
     cases H with H,
     exact H, -- !
-  end
+  end⟩
   }

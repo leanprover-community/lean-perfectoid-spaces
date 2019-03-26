@@ -683,7 +683,7 @@ lemma units_valfield_of_units_valfield_of_eq_supp_mk
 def valfield_units_equiv_units_of_eq_supp (h : supp v₁ = supp v₂) :
 group_equiv (units (valuation_field v₁)) (units (valuation_field v₂)) :=
 let h' := valfield_equiv_valfield_of_eq_supp h in
-by letI := h'.hom; exact units.map_equiv {mul_hom := h'.hom.map_mul, ..h'}
+by letI := h'.hom; exact units.map_equiv {hom := ⟨h'.hom.map_mul⟩, ..h'}
 end
 
 lemma valfield_units_equiv_units_mk_eq_mk (h : supp v₁ = supp v₂) (r : R) (hr : r ∉ supp v₁):
