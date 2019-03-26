@@ -33,11 +33,11 @@ def group_equiv.quot_eq_of_eq {G1 : set G} [normal_subgroup G1] {G2 : set G} [no
   end,
   left_inv := λ x, by induction x; refl,
   right_inv := λ x, by induction x; refl,
-  mul_hom := λ a b, begin
+  hom := ⟨λ a b, begin
     let f : G → quotient G2 := quotient_group.mk,
     have h2 := quotient_group.is_group_hom_quotient_lift G1 f,
     have h3 := h2 (λ x hx, by rwa [←is_group_hom.mem_ker f, quotient_group.ker G2, ←h]),
     have h4 := h3.mul,
     exact h4 a b,
-  end
+  end⟩
   }
