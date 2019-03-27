@@ -12,6 +12,7 @@ import for_mathlib.lc_algebra
 import for_mathlib.top_ring
 import for_mathlib.submodule
 import for_mathlib.subgroup
+import for_mathlib.data.set.pointwise_mul
 
 universes u v
 
@@ -100,18 +101,33 @@ begin
     apply is_add_submonoid.zero_mem }
 end
 
+lemma mul_le (h : nonarchimedean A) (U : open_add_subgroups A) :
+∃ (V : open_add_subgroups A),
+    (span ↥D (⇑(of_id A ATs) '' V.val)) * span ↥D (⇑(of_id A ATs) '' V.val) ≤
+      span ↥D (⇑(of_id A ATs) '' U.val) :=
+begin
+  rcases nonarchimedean.mul_subset h U with ⟨V, hV⟩,
+  use V,
+  rw [span_mul_span, ← set.mul_eq_image],
+  rw ← mul_eq_image at hV,
+  apply span_mono,
+  rw ← is_semiring_hom.map_mul (image _),
+  { exact image_subset _ hV },
+  apply_instance
+end
+
 /-For every open subgroup `U` of `A`, there exists an open subgroup `V` of `A`,
 such that the multiplication map sends the `D`-span of `V` into the `D`-span of `U`.-/
 lemma mul_subset (h : nonarchimedean A) (U : open_add_subgroups A) :
 ∃ (V : open_add_subgroups A),
-    (λ (x : away T s × away T s), x.fst * x.snd) ''
-        set.prod ↑(span ↥D (⇑(of_id A ATs) '' V.val))
-          ↑(span ↥D (⇑(of_id A ATs) '' V.val)) ≤
+    (↑(span ↥D (⇑(of_id A ATs) '' V.val)) : set ATs) * ↑(span ↥D (⇑(of_id A ATs) '' V.val)) ≤
       ↑(span ↥D (⇑(of_id A ATs) '' U.val)) :=
 begin
   rcases nonarchimedean.mul_subset h U with ⟨V, hV⟩,
   use V,
+  rw ← mul_eq_image at hV,
   refine set.subset.trans _ (span_mono $ image_subset _ hV),
+  rw span_mul_span,
   rw [← image_comp, function.comp],
   simp only [alg_hom.map_mul (of_id _ _)],
   rw image_subset_iff,
@@ -145,18 +161,15 @@ begin
 end
 
 lemma K.aux (L : finset A) (h : (↑L : set A) ⊆ ideal.span T) :
-  ∃ (K : finset A),
-  (↑L : set A) ⊆ add_group.closure {x | ∃ (t ∈ T) (k ∈ (↑K : set A)), x = t * k} :=
+  ∃ (K : finset A), (↑L : set A) ⊆ add_group.closure (T * ↑K) :=
 begin
   delta ideal.span at h,
   erw span_eq_map_lc at h,
   choose s hs using finset.exists_finset_of_subset_image L _ _ h,
-  use s.bind (λ f, f.frange),
+  use s.bind (finsupp.frange),
+  rcases hs with ⟨rfl, hs⟩,
   intros l hl,
-  cases hs with h' hs,
-  subst h',
-  erw finset.mem_image at hl,
-  rcases hl with ⟨f, hf, rfl⟩,
+  rcases finset.mem_image.mp hl with ⟨f, hf, rfl⟩,
   apply add_group.mclosure_subset,
   apply add_monoid.sum_mem_closure,
   intros t ht,
@@ -222,7 +235,9 @@ begin
   refine ⟨⟨to_fun A '' ↑(I^(n+m)), _, _⟩, _⟩,
   work_on_goal 2 { assumption },
   all_goals { try {apply_instance} },
-  { exact embedding_open emb hf (H₁ _) },
+  { -- this is failing because H₁ is taking I^(n+m) as power of submodules instead of ideals.
+    -- and currently those methods aren't defeq.
+    exact embedding_open emb hf (H₁ (n + m)) },
   have hIm :
     (add_group.closure {x | ∃ t ∈ T, ∃ ki ∈
       add_group.closure {ki | ∃ k ∈ K, ∃ i ∈ ((to_fun A : A₀ → A) '' ↑(I^m)), ki = k * i},
