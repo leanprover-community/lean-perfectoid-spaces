@@ -5,6 +5,7 @@ import tactic.tidy
 
 import for_mathlib.rings
 import for_mathlib.top_ring
+import for_mathlib.submodule
 
 import for_mathlib.data.set.pointwise_mul
 
@@ -173,18 +174,48 @@ end submodule
 section comm_algebra
 open algebra
 
+local attribute [instance] set.pointwise_mul_semiring
+
 variables {R : Type*} {A: Type*} [comm_ring R] [comm_ring A] [algebra R A]
   {ι : Type*} [inhabited ι] (M : ι → submodule R A)
   (h_directed : ∀ i j, ∃ k, M k ≤ M i ⊓ M j)
-  (h_left_mul : ∀ x i, ∃ j, (M j).map (lmul_left _ _ x) ≤ M i)
-  (h_mul : ∀ i, ∃ j, (λ x : A × A, x.1*x.2) '' (set.prod (M j) (M j)) ≤ M i)
+  (h_left_mul : ∀ x i, ∃ j, ({x} : set A) • (M j) ≤ M i)
+  (h_mul : ∀ i, ∃ j, ((M j) * (M j)) ≤ M i)
 include h_directed h_left_mul h_mul
 
 def of_submodules_comm : ring_with_zero_nhd A :=
-of_subgroups_comm (λ i, (M i : set A)) h_directed h_left_mul h_mul
+of_subgroups_comm (λ i, (M i : set A)) h_directed
+begin
+  intros x i,
+  cases h_left_mul x i with j hj,
+  use j,
+  rwa submodule.smul_singleton at hj
+end
+begin
+  intro i,
+  cases h_mul i with j hj,
+  use j,
+  rintros _ ⟨x, hx, y, hy, rfl⟩,
+  apply hj,
+  exact mul_mem_mul hx hy,
+end
 
 def topology_of_submodules_comm : topological_space A :=
-topology_of_subgroups_comm (λ i, (M i : set A)) h_directed h_left_mul h_mul
+topology_of_subgroups_comm (λ i, (M i : set A)) h_directed
+begin
+  intros x i,
+  cases h_left_mul x i with j hj,
+  use j,
+  rwa submodule.smul_singleton at hj
+end
+begin
+  intro i,
+  cases h_mul i with j hj,
+  use j,
+  rintros _ ⟨x, hx, y, hy, rfl⟩,
+  apply hj,
+  exact mul_mem_mul hx hy,
+end
 
 lemma of_submodules_comm.nhds_zero (U : set A) :
   U ∈ @nhds A (topology_of_submodules_comm _ h_directed h_left_mul h_mul)
@@ -246,12 +277,14 @@ instance : semiring (submodule S A) :=
   ..algebra.distrib,
   ..submodule.monoid }
 
+local attribute [instance] set.pointwise_mul_semiring
+
 instance : is_semiring_hom (submodule.span S : set A → submodule S A) :=
 { map_zero := span_empty,
   map_one := show _ = map _ ⊤,
     by erw [← ideal.span_singleton_one, ← span_image, set.image_singleton, alg_hom.map_one]; refl,
   map_add := span_union,
-  map_mul := λ s t, by erw [span_mul_span, set.mul_eq_image] }
+  map_mul := λ s t, by erw [span_mul_span, set.pointwise_mul_eq_image] }
 
 /-
 TODO(jmc):
@@ -268,3 +301,15 @@ TODO(jmc):
 -- TODO: comm_monoid if A is comm_ring
 
 end submodule
+
+namespace ring
+variables {R : Type*} [ring R]
+
+instance : algebra ℤ R :=
+{ to_fun := λ n, n,
+  hom := int.cast.is_ring_hom,
+  commutes' := λ _ _, int.mul_cast_comm _ _,
+  smul_def' := λ _ _, gsmul_eq_mul _ _,
+  ..add_comm_group.module }
+
+end ring

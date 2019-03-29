@@ -18,6 +18,8 @@ universes u v
 
 local attribute [instance, priority 0] classical.prop_decidable
 
+local attribute [instance] set.pointwise_mul_semiring
+
 namespace Huber_ring
 open localization algebra topological_ring submodule set
 variables {A  : Type u} [comm_ring A] [topological_space A ] [topological_ring A]
@@ -108,8 +110,8 @@ lemma mul_le (h : nonarchimedean A) (U : open_add_subgroups A) :
 begin
   rcases nonarchimedean.mul_subset h U with ⟨V, hV⟩,
   use V,
-  rw [span_mul_span, ← set.mul_eq_image],
-  rw ← mul_eq_image at hV,
+  rw span_mul_span,
+  rw ← pointwise_mul_eq_image at hV ⊢,
   apply span_mono,
   rw ← is_semiring_hom.map_mul (image _),
   { exact image_subset _ hV },
@@ -123,45 +125,15 @@ lemma mul_subset (h : nonarchimedean A) (U : open_add_subgroups A) :
     (↑(span ↥D (⇑(of_id A ATs) '' V.val)) : set ATs) * ↑(span ↥D (⇑(of_id A ATs) '' V.val)) ≤
       ↑(span ↥D (⇑(of_id A ATs) '' U.val)) :=
 begin
-  rcases nonarchimedean.mul_subset h U with ⟨V, hV⟩,
+  rcases mul_le T s h U with ⟨V, hV⟩,
   use V,
-  rw ← mul_eq_image at hV,
-  refine set.subset.trans _ (span_mono $ image_subset _ hV),
-  rw span_mul_span,
-  rw [← image_comp, function.comp],
-  simp only [alg_hom.map_mul (of_id _ _)],
-  rw image_subset_iff,
-  intro x,
-  rw set.mem_prod,
-  rintros ⟨h₁, h₂⟩,
-  rw mem_preimage_eq,
-  erw mem_span_iff_lc at h₁ h₂ ⊢,
-  rcases h₁ with ⟨lc₁, H₁, hx₁⟩,
-  rcases h₂ with ⟨lc₂, H₂, hx₂⟩,
-  refine ⟨lc₁ * lc₂, _, _⟩,
-  work_on_goal 0 {
-    rw lc.mem_supported at H₁ H₂ ⊢,
-    refine subset.trans (lc.support_mul _ _) _,
-    intros a' ha,
-    erw finset.mem_image at ha,
-    rcases ha with ⟨y, hy₁, hy₂⟩,
-    rw finset.mem_product at hy₁,
-    rw ← hy₂,
-    have ha₁ := H₁ hy₁.left,
-    have hb₁ := H₂ hy₁.right,
-    rw mem_image at ha₁ hb₁ ⊢,
-    rcases ha₁ with ⟨a₀, _, _⟩,
-    rcases hb₁ with ⟨b₀, _, _⟩,
-    use (a₀, b₀),
-    split,
-    { rw set.mem_prod, split; assumption },
-    { simp * } },
-  { rw [← hx₁, ← hx₂],
-    exact lc.atotal.map_mul _ _ }
+  rintros _ ⟨x, hx, y, hy, rfl⟩,
+  apply hV,
+  exact mul_mem_mul hx hy
 end
 
 lemma K.aux (L : finset A) (h : (↑L : set A) ⊆ ideal.span T) :
-  ∃ (K : finset A), (↑L : set A) ⊆ add_group.closure (T * ↑K) :=
+  ∃ (K : finset A), (↑L : set A) ⊆ (↑(span ℤ (T * ↑K)) : set A) :=
 begin
   delta ideal.span at h,
   erw span_eq_map_lc at h,
@@ -170,8 +142,7 @@ begin
   rcases hs with ⟨rfl, hs⟩,
   intros l hl,
   rcases finset.mem_image.mp hl with ⟨f, hf, rfl⟩,
-  apply add_group.mclosure_subset,
-  apply add_monoid.sum_mem_closure,
+  apply submodule.sum_mem_span,
   intros t ht,
   refine ⟨t, _, _, _, mul_comm _ _⟩,
   { replace hf := hs hf,
@@ -198,11 +169,13 @@ namespace away
 local notation `ATs` := away T s
 local notation `D` := aux T s
 
+local attribute [instance] set.pointwise_mul_semiring
+
 set_option class.instance_max_depth 150
 
 /- Wedhorn 6.20 for n = 1-/
 lemma mul_T_open (hT : is_open (↑(ideal.span T) : set A)) (U : open_add_subgroups A) :
-  is_open (add_group.closure {x | ∃ t ∈ T, ∃ u ∈ U.val, x = t * u}) :=
+  is_open (↑(span ℤ (T * U.val)) : set A) :=
 begin
   -- we need to remember that A is nonarchimedean, before we destruct the Huber ring instance
   have nonarch : nonarchimedean A := Huber_ring.nonarchimedean,
@@ -212,15 +185,13 @@ begin
   rcases (is_ideal_adic_iff I).mp top with ⟨H₁, H₂⟩,
   cases H₂ _ (mem_nhds_sets (emb.continuous _ hT) _) with n hn,
   work_on_goal 1 {
-    rw mem_preimage_eq,
-    erw is_ring_hom.map_zero (to_fun A),
+    erw [mem_preimage_eq, is_ring_hom.map_zero (to_fun A)],
     { exact (ideal.span _).zero_mem },
     apply_instance },
   cases fg_pow I fg n with L hL,
   rw ← hL at hn,
   have Lsub := set.subset.trans subset_span hn,
-  rw ← image_subset_iff at Lsub,
-  rw ← finset.coe_image at Lsub,
+  rw [← image_subset_iff, ← finset.coe_image] at Lsub,
   cases K.aux _ _ Lsub with K hK,
   let V := K.inf (λ a : A, classical.some (nonarch.left_mul_subset U a)),
   cases H₂ _ (mem_nhds_sets (emb.continuous _ V.2.2) _) with m hm,
@@ -231,17 +202,16 @@ begin
     apply_instance },
   rw ← image_subset_iff at hm,
   apply @open_add_subgroups.is_open_of_open_add_subgroup A _ _ _ _
-    (add_group.closure.is_add_subgroup _),
+    (submodule.submodule_is_add_subgroup _),
   refine ⟨⟨to_fun A '' ↑(I^(n+m)), _, _⟩, _⟩,
   work_on_goal 2 { assumption },
   all_goals { try {apply_instance} },
-  { -- this is failing because H₁ is taking I^(n+m) as power of submodules instead of ideals.
+  { sorry },
+    -- ↑ this is failing because H₁ is taking I^(n+m) as power of submodules instead of ideals.
     -- and currently those methods aren't defeq.
-    exact embedding_open emb hf (H₁ (n + m)) },
+    -- exact embedding_open emb hf (H₁ (n + m)) },
   have hIm :
-    (add_group.closure {x | ∃ t ∈ T, ∃ ki ∈
-      add_group.closure {ki | ∃ k ∈ K, ∃ i ∈ ((to_fun A : A₀ → A) '' ↑(I^m)), ki = k * i},
-        x = t * ki}) ⊆ _ := _,
+    T • ↑K • (submodule.map (of_id A₀ A).to_linear_map (I^m)) ≤ _ := _,
   work_on_goal 0 { refine set.subset.trans _ hIm, clear hIm },
   work_on_goal 1 {
     apply add_group.closure_mono,
@@ -424,13 +394,19 @@ instance (hT : is_open (↑(ideal.span T) : set A)) :
   topological_space ATs :=
 topology_of_submodules_comm
 (λ U : open_add_subgroups A, span D (of_id A ATs '' U.1))
-(directed T s) (mul_left T s hT) (mul_subset T s Huber_ring.nonarchimedean)
+(directed T s) (mul_left T s hT) (mul_le T s Huber_ring.nonarchimedean)
 
 instance (hT : is_open (↑(ideal.span T) : set A)) :
   ring_with_zero_nhd ATs :=
 of_submodules_comm
 (λ U : open_add_subgroups A, span D (of_id A ATs '' U.1))
-(directed T s) (mul_left T s hT) (mul_subset T s Huber_ring.nonarchimedean)
+(directed T s) (mul_left T s hT) (mul_le T s Huber_ring.nonarchimedean)
+
+lemma of_continuous (hT : is_open (↑(ideal.span T) : set A)) :
+  @continuous _ _ (away.topological_space T s hT) _ (of : A → ATs) :=
+begin
+  sorry
+end
 
 section
 variables {B : Type*} [comm_ring B] [topological_space B] [topological_ring B]
@@ -447,7 +423,9 @@ noncomputable def lift : ATs → B := localization.away.lift f (is_unit s hs)
 
 include hB hf hT hTB
 lemma lift_continuous : @continuous _ _ (away.topological_space T s hT) _ (lift T s hs) :=
-sorry
+begin
+  sorry
+end
 
 end
 

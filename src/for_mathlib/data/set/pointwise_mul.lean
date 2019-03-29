@@ -27,6 +27,13 @@ local attribute [instance] pointwise_one pointwise_mul
 lemma mem_pointwise_mul [has_mul α] {s t : set α} {a : α} :
   a ∈ s * t ↔ ∃ x ∈ s, ∃ y ∈ t, a = x * y := iff.rfl
 
+@[to_additive set.pointwise_add_eq_image]
+lemma pointwise_mul_eq_image [has_mul α] {s t : set α} :
+  s * t = (λ x : α × α, x.fst * x.snd) '' s.prod t :=
+set.ext $ λ a,
+⟨ by { rintros ⟨_, _, _, _, rfl⟩, exact ⟨(_, _), mem_prod.mpr ⟨‹_›, ‹_›⟩, rfl⟩ },
+  by { rintros ⟨_, _, rfl⟩, exact ⟨_, (mem_prod.mp ‹_›).1, _, (mem_prod.mp ‹_›).2, rfl⟩ }⟩
+
 def pointwise_mul_semigroup [semigroup α] : semigroup (set α) :=
 { mul_assoc := λ s t u,
   begin

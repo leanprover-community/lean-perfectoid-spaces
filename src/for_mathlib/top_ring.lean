@@ -4,6 +4,8 @@ import topology.algebra.group
 import topology.algebra.ring
 import order.filter.lift
 
+import for_mathlib.data.set.pointwise_mul
+
 import tactic.where
 
 section bases
@@ -117,11 +119,14 @@ end ring_with_zero_nhd
 
 section
 open filter set lattice add_group_with_zero_nhd
+
+local attribute [instance] set.pointwise_mul_semiring
+
 variables {A : Type*} [ring A] {ι : Type*} [inhabited ι] (G : ι → set A) [∀ i, is_add_subgroup $ G i]
   (h_directed : ∀ i j, ∃ k, G k ⊆ G i ∩ G j)
   (h_left_mul : ∀ x i, ∃ j, (λ y : A, x*y) '' (G j) ⊆ G i)
   (h_right_mul : ∀ x i, ∃ j, (λ y : A, y*x) '' (G j) ⊆ G i)
-  (h_mul : ∀ i, ∃ j, (λ x : A × A, x.1*x.2) '' (set.prod (G j) (G j)) ⊆ G i)
+  (h_mul : ∀ i, ∃ j, ((G j) * (G j)) ⊆ G i)
 include h_directed h_left_mul h_right_mul h_mul
 
 def of_subgroups : ring_with_zero_nhd A :=
@@ -170,8 +175,8 @@ def of_subgroups : ring_with_zero_nhd A :=
                 use ineq (mem_principal_self $ G j),
                 intros x y x_in y_in,
                 apply W_in,
-                rw image_subset_iff at hj,
-                exact hj (⟨x_in, y_in⟩ : (x, y) ∈ set.prod (G j) (G j)),
+                apply hj,
+                exact ⟨_, x_in, _, y_in, rfl⟩
               end,
   to_ring := ‹ring A› }
 
@@ -224,10 +229,12 @@ end
 
 section comm_ring
 
+local attribute [instance] set.pointwise_mul_semiring
+
 variables {A : Type*} [comm_ring A] {ι : Type*} [inhabited ι] (G : ι → set A) [∀ i, is_add_subgroup $ G i]
   (h_directed : ∀ i j, ∃ k, G k ⊆ G i ∩ G j)
   (h_left_mul : ∀ x i, ∃ j, (λ y : A, x*y) '' (G j) ⊆ G i)
-  (h_mul : ∀ i, ∃ j, (λ x : A × A, x.1*x.2) '' (set.prod (G j) (G j)) ⊆ G i)
+  (h_mul : ∀ i, ∃ j, ((G j) * (G j)) ⊆ G i)
 include h_directed h_left_mul h_mul
 
 def of_subgroups_comm : ring_with_zero_nhd A :=
