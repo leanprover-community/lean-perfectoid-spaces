@@ -70,8 +70,8 @@ begin
     intro t,
     apply forall_congr,
     intro ht,
-    apply out_mk, },
-  { apply (out_mk v).ne_zero, },
+    apply out_mk },
+  { apply (out_mk v).ne_zero }
 end
 
 definition rational_open_bInter (s : A) (T : set A) :
