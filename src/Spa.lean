@@ -29,7 +29,7 @@ begin
     apply forall_congr,
     intro hr,
     convert (out_mk v) r 1;
-    rw [valuation.map_one], }
+    rw [valuation.map_one] }
 end
 
 namespace Spa
@@ -62,6 +62,15 @@ set.ext $ λ v, ⟨λ h, h.right, λ h, ⟨le_refl _, h⟩⟩
 definition rational_open (s : A) (T : set A) : set (Spa A) :=
 {v | (∀ t ∈ T, (v t ≤ v s)) ∧ (v s ≠ 0)}
 
+structure rational_open_data (A : Huber_pair) :=
+(s : A)
+(T : set A)
+(Hfin : fintype T)
+(Hopen : is_open ((ideal.span T) : set A))
+
+def rational_open_data.open (rod : rational_open_data A) : set (Spa A) :=
+{v | (∀ t ∈ rod.T, (v t ≤ v rod.s)) ∧ (v rod.s ≠ 0)}
+
 lemma mk_mem_rational_open {s : A} {T : set A} {v : valuation A Γ} {hv : mk v ∈ Spa A} :
   (⟨mk v, hv⟩ : Spa A) ∈ rational_open s T ↔ (∀ t ∈ T, (v t ≤ v s)) ∧ (v s ≠ 0) :=
 begin
@@ -70,8 +79,8 @@ begin
     intro t,
     apply forall_congr,
     intro ht,
-    apply out_mk, },
-  { apply (out_mk v).ne_zero, },
+    apply out_mk },
+  { apply (out_mk v).ne_zero }
 end
 
 definition rational_open_bInter (s : A) (T : set A) :
@@ -196,10 +205,9 @@ begin
   exact ⟨_, ⟨t₁, mem_insert_of_mem _ ht₁, rfl⟩, ⟨t₂, mem_insert_of_mem _ ht₂, ht⟩⟩
 end
 
--- Note: this lemma cannot be of any use to us because we're missing the
--- assumption that <T> is open.
--- jmc: the above remark is now out of date.
 -- Current status: proof is broken with 2 sorries.
+-- KMB remarks that we don't need this result yet so he's commenting it out
+/-
 lemma rational_basis.is_basis : topological_space.is_topological_basis (rational_basis A) :=
 begin
 split,
@@ -240,11 +248,10 @@ split,
     exact rational_open.is_open s T,
   } }
 end
+-/
 
-
-/-
-The presheaf will be defined as the extension of a presheaf on the basis of rational opens.
-So we will now first define a presheaf on this basis.
+/- The value of the presheaf on a rational open given by T and s is isomorphic
+to R<T/s>. Here is the construction
 -/
 
 namespace rational_open
@@ -254,12 +261,10 @@ def presheaf.aux (s : A) (T : set A) := localization.away s
 instance (s : A) (T : set A) : comm_ring (presheaf.aux s T) :=
 by delta presheaf.aux; apply_instance
 
-/- This doesn't compile so I commented it out.
-
 -- Definition of A\left(\frac T s\right) as a topological ring
-def presheaf.topology (s : A) (T : set A) [Hfin : fintype T]
-  (Hopen : _root_.is_open ((ideal.span T) : set A)) :
-  topological_space (presheaf.aux s T) :=
+def presheaf.topology (rod : rational_open_data A) :
+  topological_space (presheaf.aux rod.s rod.T) := sorry
+/-
 let As := presheaf.aux s T in
 let S₁ : set As := localization.of '' A.RHuber.A₀ in
 let T' : set As := localization.of '' T in
@@ -274,13 +279,23 @@ adic_topology (I * D)
    let nhd := λ n : ℕ, mul_ideal (pow_ideal ((localize s) '' A.Rplus) n) D,
   sorry
 end-/
-
-
-def presheaf (s : A) (T : set A) [Hfin : fintype T]
-  (Hopen : _root_.is_open ((ideal.span T) : set A)) :=
-sorry -- ring_completion presheaf.aux s T
 -/
+
+def presheaf' (s : A) (T : set A) [Hfin : fintype T]
+  (Hopen : _root_.is_open ((ideal.span T) : set A)) : Type* := sorry
+-- ring_completion presheaf.aux s T
+
+def presheaf (rod : rational_open_data A) : Type* := sorry
+-- ring_completion presheaf.aux rod.s rod.T
+
 end rational_open
+
+def rational_open_subsets_data (U : set (Spa A)) (HU : is_open U) :=
+{ rod : rational_open_data A // rod.open ⊆ U}
+
+def presheaf (U : set (Spa A)) (HU : is_open U) :=
+{f : Π (rosd : rational_open_subsets_data U HU), Spa.rational_open.presheaf rosd.1 //
+   sorry} -- agrees on overlaps
 
 end Spa
 
