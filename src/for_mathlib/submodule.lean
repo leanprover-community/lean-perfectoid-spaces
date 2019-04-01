@@ -74,11 +74,21 @@ instance semimodule_set : semimodule (set A) (submodule R A) :=
   add_smul := λ s t P, show span R (s ⊔ t) * P = _, by { erw [span_union, right_distrib] },
   mul_smul := λ s t P, show _ = _ * (_ * _),
     by { rw [← mul_assoc, span_mul_span, set.pointwise_mul_eq_image] },
-  one_smul := sorry,
+  one_smul := λ P, show span R {(1 : A)} * P = _,
+  begin
+    conv_lhs {erw ← span_eq P},
+    erw [span_mul_span, ← set.pointwise_mul_eq_image, one_mul, span_eq],
+  end,
   zero_smul := λ P, show span R ∅ * P = ⊥, by erw [span_empty, bot_mul],
   smul_zero := λ _, mul_bot _ }
 
 variables {R A}
+
+set_option class.instance_max_depth 40
+
+lemma smul_le_smul {s t : set A} {M N : submodule R A} (h₁ : s ≤ t) (h₂ : M ≤ N) :
+  s • M ≤ t • N :=
+algebra.mul_le_mul (span_mono h₁) h₂
 
 lemma smul_singleton (a : A) (M : submodule R A) :
   ({a} : set A) • M = M.map (lmul_left _ _ a) :=
@@ -96,10 +106,10 @@ begin
     exact ⟨a, set.mem_singleton _, _, ‹_›, rfl⟩ }
 end
 
--- instance mul_action_algebra : mul_action A (submodule R A) :=
--- { smul := λ a M, {a} • M,
---   -- mul_smul := λ s t P, show _ = _ * (_ * _),
---   --   by { rw [← mul_assoc, algebra.span_mul_span, set.pointwise_mul_eq_image] },
---   -- one_smul := sorry }
+instance mul_action_algebra : mul_action A (submodule R A) :=
+{ smul := λ a M, ({a} : set A) • M,
+  mul_smul := λ s t P, show ({s * t} : set A) • _ = _,
+    by { rw [is_monoid_hom.map_mul (singleton : A → set A)], apply mul_smul },
+  one_smul := one_smul _ }
 
 end submodule

@@ -17,11 +17,14 @@ definition nonarchimedean (G : Type*)
 ∀ U ∈ nhds (0 : G), ∃ V : set G, is_add_subgroup V ∧ is_open V ∧ V ⊆ U
 
 namespace of_subgroups
+
+local attribute [instance] set.pointwise_mul_semiring
+
 variables {A : Type*} [ring A] {ι : Type*} [inhabited ι] (G : ι → set A) [∀ i, is_add_subgroup $ G i]
   (h_directed : ∀ i j, ∃ k, G k ⊆ G i ∩ G j)
   (h_left_mul : ∀ x i, ∃ j, (λ y : A, x*y) '' (G j) ⊆ G i)
   (h_right_mul : ∀ x i, ∃ j, (λ y : A, y*x) '' (G j) ⊆ G i)
-  (h_mul : ∀ i, ∃ j, (λ x : A × A, x.1*x.2) '' (set.prod (G j) (G j)) ⊆ G i)
+  (h_mul : ∀ i, ∃ j, ((G j) * (G j)) ⊆ G i)
 include h_directed h_left_mul h_right_mul h_mul
 
 def nonarchimedean.aux : ring_with_zero_nhd A :=

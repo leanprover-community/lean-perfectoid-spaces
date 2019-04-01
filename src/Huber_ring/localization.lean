@@ -49,9 +49,11 @@ instance : algebra A ATs := by delta away; apply_instance
 /--An auxiliary subring, used to define the topology on `away T s`-/
 def aux : subalgebra A ATs :=
 let s_inv : ATs := ((to_units ⟨s, ⟨1, by simp⟩⟩)⁻¹ : units ATs) in
-adjoin A {x | ∃ t ∈ T, x = of t * s_inv }
+adjoin A (s_inv • of_id A ATs '' T)
 
 local notation `D` := aux T s
+
+local notation `Dspan` s := span D (of_id A ATs '' s)
 
 /-
 To put a topology on `away T s` we want to use the construction
@@ -68,8 +70,7 @@ set_option class.instance_max_depth 80
 
 /-The submodules spanned by the open subgroups of `A` form a directed family-/
 lemma directed (U₁ U₂ : open_add_subgroups A) :
-  ∃ (U : open_add_subgroups A), span ↥D (⇑(of_id A ATs) '' U.val) ≤
-    span ↥D (⇑(of_id A ATs) '' U₁.val) ⊓ span ↥D (⇑(of_id A ATs) '' U₂.val) :=
+  ∃ (U : open_add_subgroups A), (Dspan U.val) ≤ (Dspan U₁.val) ⊓ (Dspan U₂.val) :=
 begin
   let U₃ : open_add_subgroups A :=
     ⟨U₁.1 ∩ U₂.1, ⟨is_add_subgroup.inter _ _, is_open_inter U₁.2.2 U₂.2.2⟩⟩,
@@ -84,29 +85,26 @@ end
 
 /-For every open subgroup `U` of `A` and every `a : A`,
 there exists an open subgroup `V` of `A`,
-such that `a . (span D V)` is contained in the `D`-span of `U`.-/
+such that `a • (span D V)` is contained in the `D`-span of `U`.-/
 lemma exists_mul_left_subset (h : nonarchimedean A) (U : open_add_subgroups A) (a : A) :
-  ∃ V : open_add_subgroups A,
-    (span ↥D (of_id A ATs '' V.1)).map (lmul_left _ ATs ((of_id A ATs : A → ATs) a)) ≤
-    (span ↥D (of_id A ATs '' U.1)) :=
+  ∃ V : open_add_subgroups A, ((of_id A ATs : A → ATs) a) • (Dspan V.val) ≤ (Dspan U.val) :=
 begin
   rcases h _ _ with ⟨V, h₁, h₂, h₃⟩,
-  let W : open_add_subgroups A := ⟨V, h₁, h₂⟩,
-  use W,
+  refine ⟨⟨V, h₁, h₂⟩, _⟩,
   work_on_goal 0 {
-    erw [← span_image, span_le, ← image_comp, ← algebra.map_lmul_left, image_comp],
+    erw [smul_singleton, ← span_image, span_le, ← image_comp, ← algebra.map_lmul_left, image_comp],
     refine subset.trans (image_subset (of_id A ATs : A → ATs) _) subset_span,
     rw image_subset_iff,
     exact h₃ },
   apply mem_nhds_sets (continuous_mul_left _ _ U.2.2),
-  { rw [mem_preimage_eq, mul_zero],
-    apply is_add_submonoid.zero_mem }
+  rw [mem_preimage_eq, mul_zero],
+  apply is_add_submonoid.zero_mem
 end
 
+/-For every open subgroup `U` of `A`, there exists an open subgroup `V` of `A`,
+such that the multiplication map sends the `D`-span of `V` into the `D`-span of `U`.-/
 lemma mul_le (h : nonarchimedean A) (U : open_add_subgroups A) :
-∃ (V : open_add_subgroups A),
-    (span ↥D (⇑(of_id A ATs) '' V.val)) * span ↥D (⇑(of_id A ATs) '' V.val) ≤
-      span ↥D (⇑(of_id A ATs) '' U.val) :=
+∃ (V : open_add_subgroups A), (Dspan V.val) * (Dspan V.val) ≤ (Dspan U.val) :=
 begin
   rcases nonarchimedean.mul_subset h U with ⟨V, hV⟩,
   use V,
@@ -118,19 +116,17 @@ begin
   apply_instance
 end
 
-/-For every open subgroup `U` of `A`, there exists an open subgroup `V` of `A`,
-such that the multiplication map sends the `D`-span of `V` into the `D`-span of `U`.-/
-lemma mul_subset (h : nonarchimedean A) (U : open_add_subgroups A) :
-∃ (V : open_add_subgroups A),
-    (↑(span ↥D (⇑(of_id A ATs) '' V.val)) : set ATs) * ↑(span ↥D (⇑(of_id A ATs) '' V.val)) ≤
-      ↑(span ↥D (⇑(of_id A ATs) '' U.val)) :=
-begin
-  rcases mul_le T s h U with ⟨V, hV⟩,
-  use V,
-  rintros _ ⟨x, hx, y, hy, rfl⟩,
-  apply hV,
-  exact mul_mem_mul hx hy
-end
+-- lemma mul_subset (h : nonarchimedean A) (U : open_add_subgroups A) :
+-- ∃ (V : open_add_subgroups A),
+--     (↑(span ↥D (⇑(of_id A ATs) '' V.val)) : set ATs) * ↑(span ↥D (⇑(of_id A ATs) '' V.val)) ≤
+--       ↑(span ↥D (⇑(of_id A ATs) '' U.val)) :=
+-- begin
+--   rcases mul_le T s h U with ⟨V, hV⟩,
+--   use V,
+--   rintros _ ⟨x, hx, y, hy, rfl⟩,
+--   apply hV,
+--   exact mul_mem_mul hx hy
+-- end
 
 lemma K.aux (L : finset A) (h : (↑L : set A) ⊆ ideal.span T) :
   ∃ (K : finset A), (↑L : set A) ⊆ (↑(span ℤ (T * ↑K)) : set A) :=
@@ -168,6 +164,7 @@ namespace away
 
 local notation `ATs` := away T s
 local notation `D` := aux T s
+local notation `Dspan` s := span D (of_id A ATs '' s)
 
 local attribute [instance] set.pointwise_mul_semiring
 
@@ -175,7 +172,7 @@ set_option class.instance_max_depth 150
 
 /- Wedhorn 6.20 for n = 1-/
 lemma mul_T_open (hT : is_open (↑(ideal.span T) : set A)) (U : open_add_subgroups A) :
-  is_open (↑(span ℤ (T * U.val)) : set A) :=
+  is_open (↑(T • span ℤ U.val) : set A) :=
 begin
   -- we need to remember that A is nonarchimedean, before we destruct the Huber ring instance
   have nonarch : nonarchimedean A := Huber_ring.nonarchimedean,
@@ -203,32 +200,38 @@ begin
   rw ← image_subset_iff at hm,
   apply @open_add_subgroups.is_open_of_open_add_subgroup A _ _ _ _
     (submodule.submodule_is_add_subgroup _),
-  refine ⟨⟨to_fun A '' ↑(I^(n+m)), _, _⟩, _⟩,
-  work_on_goal 2 { assumption },
-  all_goals { try {apply_instance} },
-  { sorry },
+  refine ⟨⟨of_id A₀ A '' ↑(I^(n+m)), _, _⟩, _⟩,
+  { apply_instance },
+  { -- exact embedding_open emb hf (H₁ (n + m)) },
+    sorry },
     -- ↑ this is failing because H₁ is taking I^(n+m) as power of submodules instead of ideals.
     -- and currently those methods aren't defeq.
-    -- exact embedding_open emb hf (H₁ (n + m)) },
+  change of_id A₀ A '' _ ⊆ _,
   have hIm :
-    T • ↑K • (submodule.map (of_id A₀ A).to_linear_map (I^m)) ≤ _ := _,
+    (↑(T • (↑K : set A) • span ℤ (of_id A₀ A '' ↑(I^m))) : set A) ⊆ _ := _,
   work_on_goal 0 { refine set.subset.trans _ hIm, clear hIm },
   work_on_goal 1 {
-    apply add_group.closure_mono,
-    rintros _ ⟨t, ht, ki, hki, rfl⟩,
-    use [t, ht],
-    refine ⟨_, _, rfl⟩,
-    apply add_group.in_closure.rec_on hki,
-    { rintros _ ⟨k, hk, i, hi, rfl⟩,
-      replace hi := hm hi,
-      have H : V ≤ classical.some (nonarch.left_mul_subset U k) := finset.inf_le hk,
-      replace hi := H hi,
-      apply classical.some_spec (nonarch.left_mul_subset U k),
-      use [i, hi] },
-    { apply is_add_submonoid.zero_mem },
-    { intros, apply is_add_subgroup.neg_mem, assumption },
-    { intros, apply is_add_submonoid.add_mem; assumption } },
-  { have := set.prod_mono hK (set.subset.refl (to_fun A '' ↑(I^m))),
+    erw ← le_def,
+    apply smul_le_smul (le_refl _),
+    change span _ _ * span _ _ ≤ _,
+    erw span_mul_span,
+    apply span_mono,
+    erw ← set.pointwise_mul_eq_image,
+    rintros _ ⟨k, hk, i, hi, rfl⟩,
+    apply classical.some_spec (nonarch.left_mul_subset U k),
+    have H : V ≤ classical.some (nonarch.left_mul_subset U k) := finset.inf_le hk,
+    refine ⟨i, H _, rfl⟩,
+    apply hm,
+    convert hi,
+    sorry -- ← is fixed in a current PR
+},
+  { clear hm V,
+    erw [pow_add, ← mul_smul],
+    suffices : (of_id A₀ A) '' (↑L • I ^ m) ⊆ ↑((T * ↑K) • span ℤ (of_id A₀ A '' ↑(I ^ m))),
+    { rw hL at this,
+
+    },
+have := set.prod_mono hK (set.subset.refl (to_fun A '' ↑(I^m))),
     replace := set.image_subset (λ x : A × A, x.1 * x.2) this,
     replace := add_group.closure_mono this,
     convert this using 1,
@@ -312,10 +315,8 @@ end
 
 set_option class.instance_max_depth 150
 
-lemma mul_left (hT : is_open (↑(ideal.span T) : set A)) (a : away T s) (U : open_add_subgroups A) :
-  ∃ (V : open_add_subgroups A),
-    map (lmul_left ↥D ATs a) (span ↥D (⇑(of_id A ATs) '' V.val)) ≤
-      span ↥D (⇑(of_id A ATs) '' U.val) :=
+lemma mul_left (hT : is_open (↑(ideal.span T) : set A)) (a : ATs) (U : open_add_subgroups A) :
+  ∃ (V : open_add_subgroups A), a • (Dspan V.val) ≤ (Dspan U.val) :=
 begin
   apply localization.induction_on a,
   intros a' s',
@@ -402,11 +403,12 @@ of_submodules_comm
 (λ U : open_add_subgroups A, span D (of_id A ATs '' U.1))
 (directed T s) (mul_left T s hT) (mul_le T s Huber_ring.nonarchimedean)
 
-lemma of_continuous (hT : is_open (↑(ideal.span T) : set A)) :
-  @continuous _ _ (away.topological_space T s hT) _ (of : A → ATs) :=
-begin
-  sorry
-end
+-- type class search is maxing out on this one. Why???!!!
+-- lemma of_continuous (hT : is_open (↑(ideal.span T) : set A)) :
+--   @continuous _ _ (away.topological_space T s hT) _ (of : A → ATs) :=
+-- begin
+--   sorry
+-- end
 
 section
 variables {B : Type*} [comm_ring B] [topological_space B] [topological_ring B]

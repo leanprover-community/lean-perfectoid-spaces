@@ -69,9 +69,6 @@ lemma lmul_left_mul (a b : A) :
   lmul_left R A (a * b) = (lmul_left R A a).comp (lmul_left R A b) :=
 linear_map.ext $ λ _, mul_assoc _ _ _
 
--- This can be removed after updating mathlib
-local attribute [instance] linear_map.endomorphism_ring
-
 instance : is_monoid_hom (lmul_left R A) :=
 { map_one := linear_map.ext $ λ _, one_mul _,
   map_mul := lmul_left_mul }
@@ -127,9 +124,6 @@ begin
   { exact ⟨_, h, f.apply_symm_apply x⟩ }
 end
 
--- This can be removed after updating mathlib
-local attribute [instance] linear_map.endomorphism_ring
-
 def linear_equiv_of_units {M : Type*} [add_comm_group M] [module R M]
   (f : units (M →ₗ[R] M)) : (M ≃ₗ[R] M) :=
 { inv_fun := f.inv.to_fun,
@@ -179,9 +173,11 @@ local attribute [instance] set.pointwise_mul_semiring
 variables {R : Type*} {A: Type*} [comm_ring R] [comm_ring A] [algebra R A]
   {ι : Type*} [inhabited ι] (M : ι → submodule R A)
   (h_directed : ∀ i j, ∃ k, M k ≤ M i ⊓ M j)
-  (h_left_mul : ∀ x i, ∃ j, ({x} : set A) • (M j) ≤ M i)
-  (h_mul : ∀ i, ∃ j, ((M j) * (M j)) ≤ M i)
+  (h_left_mul : ∀ (a : A) i, ∃ j, a • M j ≤ M i)
+  (h_mul      : ∀ i, ∃ j, M j * M j ≤ M i)
 include h_directed h_left_mul h_mul
+
+#print submodule.mul_action_algebra
 
 def of_submodules_comm : ring_with_zero_nhd A :=
 of_subgroups_comm (λ i, (M i : set A)) h_directed
@@ -189,7 +185,8 @@ begin
   intros x i,
   cases h_left_mul x i with j hj,
   use j,
-  rwa submodule.smul_singleton at hj
+  erw submodule.smul_singleton at hj,
+  exact hj
 end
 begin
   intro i,
@@ -206,7 +203,8 @@ begin
   intros x i,
   cases h_left_mul x i with j hj,
   use j,
-  rwa submodule.smul_singleton at hj
+  erw submodule.smul_singleton at hj,
+  exact hj
 end
 begin
   intro i,

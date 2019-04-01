@@ -1,6 +1,7 @@
 import data.set.lattice
 import algebra.group
 import group_theory.subgroup
+import group_theory.group_action
 
 namespace set
 open function
@@ -170,5 +171,32 @@ instance : is_semiring_hom (image f) :=
       refine ⟨_, ⟨_, ‹_›, _, ‹_›, rfl⟩, _⟩,
       apply is_monoid_hom.map_mul f }
   end }
+
+instance : is_monoid_hom (singleton : α → set α) :=
+{ map_one := rfl,
+  map_mul := λ a b, le_antisymm
+    (set.singleton_subset_iff.mpr $ ⟨_, set.mem_singleton _, _, set.mem_singleton _, rfl⟩)
+    (by {rintros _ ⟨_, _, _, _, rfl⟩, simp only [set.mem_singleton_iff, *] at * }) }
+
+instance : mul_action α (set α) :=
+{ smul := λ a s, ({a} : set α) * s,
+  one_smul := one_mul,
+  mul_smul := λ _ _ _, show {_} * _ = _,
+    by { erw is_monoid_hom.map_mul (singleton : α → set α), apply mul_assoc } }
+
+lemma mem_smul_set {a : α} {s : set α} {x : α} :
+  x ∈ a • s ↔ ∃ y ∈ s, x = a * y :=
+by { erw mem_pointwise_mul, simp }
+
+lemma smul_set_eq_image {a : α} {s : set α} :
+  a • s = (λ b, a * b) '' s :=
+set.ext $ λ x,
+begin
+  simp only [mem_smul_set, exists_prop, mem_image],
+  apply exists_congr,
+  intro y,
+  apply and_congr iff.rfl,
+  split; exact eq.symm
+end
 
 end set
