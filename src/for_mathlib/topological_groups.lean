@@ -6,6 +6,7 @@ import for_mathlib.topology
 
 universes u v
 
+section
 variables {G : Type u} [add_comm_group G]
 
 open filter set
@@ -53,8 +54,42 @@ def of_open_add_subgroup {G : Type u} [str : add_comm_group G] (H : set G) [is_a
 @add_group_with_zero_nhd.topological_space G
   (add_group_with_zero_nhd.of_open_add_subgroup H t h)
 
+end
+
+namespace topological_group
+open filter
+variables {G : Type*} {H : Type*}
+variables [group G] [topological_space G] [topological_group G]
+variables [group H] [topological_space H] [topological_group H]
+variables (f : G → H) [is_group_hom f]
+
+@[to_additive topological_add_group.continuous_of_continuous_at_zero]
+lemma continuous_of_continuous_at_one (h : continuous_at f 1) :
+  continuous f :=
+begin
+  rw continuous_iff_continuous_at,
+  intro g,
+  have hg : continuous (λ x, g⁻¹ * x) :=
+    continuous_mul continuous_const continuous_id,
+  have hfg : continuous (λ x, f g  * x) :=
+    continuous_mul continuous_const continuous_id,
+  convert tendsto.comp _ (tendsto.comp h _),
+  swap 4,
+  { simpa only [mul_left_inv] using hg.tendsto g },
+  swap 3,
+  { dsimp [function.comp],
+    simpa only [mul_left_inv] using hfg.tendsto (f 1) },
+  { funext x,
+    delta function.comp,
+    rw [is_group_hom.mul f, is_group_hom.inv f, ← mul_assoc, mul_right_inv, one_mul] },
+end
+
+end topological_group
+
+
 section
-variables (G) [topological_space G] [topological_add_group G]
+open set
+variables (G : Type u) [add_comm_group G] [topological_space G] [topological_add_group G]
 
 -- This is a hack. That is why it is confined to a section.
 -- Making this an attribute on a wider scope is dangerous!

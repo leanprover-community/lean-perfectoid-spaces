@@ -7,6 +7,7 @@ import tactic.abel tactic.chain
 import for_mathlib.data.set.pointwise_mul
 import for_mathlib.subgroup
 import for_mathlib.submodule
+import for_mathlib.topological_groups
 
 local attribute [instance] set.pointwise_mul_semiring
 
@@ -538,8 +539,9 @@ variables (f : α → A) [is_add_group_hom f]
 lemma of_subgroups.continuous (h : ∀ i, is_open (f ⁻¹' (G i))) :
   @continuous _ _ _ (topology_of_subgroups G h_directed h_left_mul h_right_mul h_mul) f :=
 begin
+  letI rnz := (of_subgroups _ h_directed h_left_mul h_right_mul h_mul),
+  apply topological_add_group.continuous_of_continuous_at_zero f,
   sorry
-  -- use continuous_of_continuous_at_zero
 end
 
 end
