@@ -67,6 +67,7 @@ end add_monoid
 
 -- This is all in PR #790
 
+/-
 namespace is_group_hom
 variables {α : Type*} {β : Type*} [group α] [group β]
 
@@ -92,6 +93,7 @@ lemma inv_iff_ker' (f : α → β) [w : is_group_hom f] (a b : α) : f a = f b �
 by rw [mem_ker]; exact one_iff_ker_inv' _ _ _
 
 end is_group_hom
+-/
 
 section
 variables {α : Type*} [comm_monoid α] {β : Type*}
