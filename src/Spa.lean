@@ -65,11 +65,30 @@ definition rational_open (s : A) (T : set A) : set (Spa A) :=
 structure rational_open_data (A : Huber_pair) :=
 (s : A)
 (T : set A)
-(Hfin : fintype T)
+(Hfin : finite T)
 (Hopen : is_open ((ideal.span T) : set A))
 
 def rational_open_data.open (rod : rational_open_data A) : set (Spa A) :=
 {v | (∀ t ∈ rod.T, (v t ≤ v rod.s)) ∧ (v rod.s ≠ 0)}
+
+def rational_open_data.insert_s (rod : rational_open_data A) : rational_open_data A :=
+{ s := rod.s,
+  T := insert rod.s rod.T,
+  Hfin := set.finite_insert _ rod.Hfin,
+  Hopen := sorry -- need "an ideal is open if it contains an open sub-ideal"
+}
+
+def rational_open_data.inter_aux (r1 r2 : rational_open_data A) : rational_open_data A :=
+{ s := r1.s * r2.s,
+  T := ((*) <$> r1.T <*> r2.T),
+  Hfin := sorry, -- need "product of finite sets is finite"
+  Hopen := sorry /-
+    need "product of open subgroups is open in a Huber ring" (because subgroup is open
+    iff it contains I^N for some ideal of definition)
+  -/
+}
+
+
 
 lemma mk_mem_rational_open {s : A} {T : set A} {v : valuation A Γ} {hv : mk v ∈ Spa A} :
   (⟨mk v, hv⟩ : Spa A) ∈ rational_open s T ↔ (∀ t ∈ T, (v t ≤ v s)) ∧ (v s ≠ 0) :=
