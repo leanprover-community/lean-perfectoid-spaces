@@ -46,18 +46,6 @@ group_equiv (quotient_group.quotient (h.to_equiv ⁻¹' K)) (quotient_group.quot
     cases H with H, exact H,
   end⟩}
 
-lemma quotient_group.ker_mk {G : Type*} [group G] (N : set G) [normal_subgroup N] :
-  is_group_hom.ker (quotient_group.mk : G → quotient_group.quotient N) = N :=
-begin
-  ext g,
-  show quotient.mk' g ∈ {(1 : quotient_group.quotient N)} ↔ g ∈ N,
-  rw set.mem_singleton_iff,
-  show _ = quotient.mk' (1 : G) ↔ _,
-  rw quotient.eq',
-  show g⁻¹ * 1 ∈ N ↔ _,
-  rw [mul_one, is_subgroup.inv_mem_iff],
-end
-
 -- This version is better, but Mario points out that really I shuold be using a
 -- relation rather than h2 : he.to_equiv ⁻¹' K = J.
 def group_equiv.quotient {G : Type*} {H : Type*} [group G] [group H]
