@@ -8,6 +8,8 @@ import for_mathlib.top_ring
 
 import for_mathlib.data.set.pointwise_mul
 
+local attribute [instance] set.pointwise_mul_semiring
+
 namespace localization
 variables {R : Type*} [comm_ring R] (s : set R) [is_submonoid s]
 
@@ -251,7 +253,7 @@ instance : is_semiring_hom (submodule.span S : set A → submodule S A) :=
   map_one := show _ = map _ ⊤,
     by erw [← ideal.span_singleton_one, ← span_image, set.image_singleton, alg_hom.map_one]; refl,
   map_add := span_union,
-  map_mul := λ s t, by erw [span_mul_span, set.mul_eq_image] }
+  map_mul := λ s t, by erw [span_mul_span, set.pointwise_mul_eq_image] }
 
 /-
 TODO(jmc):
