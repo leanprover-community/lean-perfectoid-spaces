@@ -1,6 +1,7 @@
 import order.filter.lift
 import topology.algebra.ring
 import ring_theory.algebra
+import ring_theory.ideal_operations
 
 import tactic.abel tactic.chain
 
@@ -541,7 +542,13 @@ lemma of_subgroups.continuous (h : ∀ i, is_open (f ⁻¹' (G i))) :
 begin
   letI rnz := (of_subgroups _ h_directed h_left_mul h_right_mul h_mul),
   apply topological_add_group.continuous_of_continuous_at_zero f,
-  sorry
+  intros U hU,
+  rw [is_add_group_hom.zero f, of_subgroups.nhds_zero] at hU,
+  cases hU with i hi,
+  rw mem_map_sets_iff,
+  refine ⟨f ⁻¹' G i, mem_nhds_sets (h i) _, set.subset.trans _ hi⟩,
+  { apply is_add_submonoid.zero_mem },
+  { apply image_preimage_subset }
 end
 
 end
@@ -573,6 +580,16 @@ variables {G h_directed h_left_mul h_mul}
 lemma of_subgroups_comm.is_open (i : ι) :
   @is_open A (topology_of_subgroups_comm G h_directed h_left_mul h_mul) (G i) :=
 of_subgroups.is_open i
+
+section
+variables {α : Type*} [add_group α] [topological_space α] [topological_add_group α]
+variables (f : α → A) [is_add_group_hom f]
+
+lemma of_subgroups_comm.continuous (h : ∀ i, is_open (f ⁻¹' (G i))) :
+  @continuous _ _ _ (topology_of_subgroups_comm G h_directed h_left_mul h_mul) f :=
+of_subgroups.continuous f h
+
+end
 
 end comm_ring
 
@@ -635,6 +652,22 @@ lemma of_submodules_comm.is_open (i : ι) :
   @is_open A (topology_of_submodules_comm M h_directed h_left_mul h_mul) (M i) :=
 by convert of_subgroups_comm.is_open i
 
+lemma of_submodules_comm.nonarchimedean :
+  @topological_add_group.nonarchimedean A _
+  (topology_of_submodules_comm M h_directed h_left_mul h_mul)
+  (by letI := of_submodules_comm M h_directed h_left_mul h_mul; apply_instance) :=
+of_subgroups.nonarchimedean
+
+section
+variables {α : Type*} [add_group α] [topological_space α] [topological_add_group α]
+variables (f : α → A) [is_add_group_hom f]
+
+lemma of_submodules_comm.continuous (h : ∀ i, is_open (f ⁻¹' (M i))) :
+  @continuous _ _ _ (topology_of_submodules_comm M h_directed h_left_mul h_mul) f :=
+of_subgroups.continuous f h
+
+end
+
 end comm_algebra
 
 namespace submodule
@@ -653,16 +686,37 @@ end
 end submodule
 
 namespace ideal
+open lattice
 variables {R : Type*} [comm_ring R]
 
 def adic_topology (I : ideal R) : topological_space R :=
-topology_of_submodules_comm (λ n : ℕ, I^n)
-(by { intros i j, use (max i j),
---apply lattice.le_inf,
-sorry })
-sorry sorry
+topology_of_submodules_comm
+  (λ n : ℕ, I^n)
+  (by { intros i j, use (i + j), rw pow_add, exact mul_le_inf })
+  (by { intros r i, use i, exact le_trans mul_le_inf inf_le_right })
+  (by { intro i, use i, exact le_trans mul_le_inf inf_le_left })
 
 def adic_ring (I : ideal R) := R
+
+namespace adic_ring
+variable (I : ideal R)
+
+instance : ring_with_zero_nhd I.adic_ring :=
+by delta adic_ring; exact
+of_submodules_comm
+  (λ n : ℕ, I^n)
+  (by { intros i j, use (i + j), rw pow_add, exact mul_le_inf })
+  (by { intros r i, use i, exact le_trans mul_le_inf inf_le_right })
+  (by { intro i, use i, exact le_trans mul_le_inf inf_le_left })
+
+instance : topological_space I.adic_ring := by apply_instance
+
+instance : topological_ring I.adic_ring := by apply_instance
+
+lemma nonarchimedean : topological_add_group.nonarchimedean I.adic_ring :=
+of_submodules_comm.nonarchimedean
+
+end adic_ring
 
 section
 variables [topological_space R] [topological_ring R]
@@ -681,15 +735,6 @@ end ideal
 #exit
 
 variables {R : Type*} [comm_ring R]
-
-lemma adic_ring.nonarchimedean (I : ideal R) :
-  topological_add_group.nonarchimedean (I.adic_ring) :=
-begin
-  intros U hU,
-  rw adic_ring.mem_nhds_zero_iff at hU,
-  rcases hU with ⟨n, hn⟩,
-  exact ⟨_, submodule.submodule_is_add_subgroup _, adic_ring.is_open_pow_ideal _, hn⟩,
-end
 
 variables [topological_space R] [topological_ring R]
 
