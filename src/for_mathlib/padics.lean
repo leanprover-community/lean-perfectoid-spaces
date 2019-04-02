@@ -3,7 +3,7 @@
 
 import data.padics
 
-import for_mathlib.adic_topology
+import for_mathlib.nonarchimedean.basic
 
 local attribute [simp] nat.prime.ne_zero
 

@@ -3,7 +3,7 @@ import ring_theory.subring
 import continuous_valuations
 import Huber_pair
 
-import for_mathlib.adic_topology
+import for_mathlib.nonarchimedean.basic
 import for_mathlib.data.set.finite
 
 universes u₁ u₂ u₃

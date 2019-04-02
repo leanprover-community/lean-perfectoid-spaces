@@ -5,8 +5,6 @@ import ring_theory.subring
 import tactic.ring
 
 import for_mathlib.submonoid
--- import for_mathlib.adic_topology
--- import nonarchimedean_ring
 import for_mathlib.topological_rings
 import for_mathlib.nonarchimedean.basic
 import for_mathlib.data.set.pointwise_mul
