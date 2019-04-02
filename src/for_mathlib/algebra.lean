@@ -6,7 +6,7 @@ import tactic.tidy
 import for_mathlib.rings
 import for_mathlib.top_ring
 
-import for_mathlib.data.set.monoid
+import for_mathlib.data.set.pointwise_mul
 
 namespace localization
 variables {R : Type*} [comm_ring R] (s : set R) [is_submonoid s]
