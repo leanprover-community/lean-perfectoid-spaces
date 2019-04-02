@@ -55,9 +55,9 @@ instance preadic_space_restriction {X : Type*} [preadic_space X] {U : opens X} :
 
 -- unwritten
 class adic_space (X : Type*) extends preadic_space X
+-- note Wedhorn remark 8.19; being a sheaf of top rings involves a topological condition
 
 -- a preadic_space_equiv is just an isom in 𝓥pre, or an isomorphism of preadic spaces.
--- is homeo in Lean yet?
 -- unwritten
 structure preadic_space_equiv (X Y : Type*) [AX : preadic_space X] [AY : preadic_space Y] extends equiv X Y
 
