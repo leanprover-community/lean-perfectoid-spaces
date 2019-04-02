@@ -5,7 +5,7 @@ import topology.algebra.ring
 import order.filter.lift
 
 import tactic.where
-
+/-
 section bases
 open filter set
 variables {α : Type*} {ι : Type*} {s : ι → set α} [inhabited ι]
@@ -237,3 +237,4 @@ def topology_of_subgroups_comm : topological_space A :=
 topology_of_subgroups G h_directed h_left_mul (by simpa only [mul_comm]) h_mul
 
 end comm_ring
+-/

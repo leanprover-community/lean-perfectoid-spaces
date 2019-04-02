@@ -4,7 +4,7 @@ import ring_theory.localization
 import tactic.tidy
 
 import for_mathlib.rings
-import for_mathlib.top_ring
+-- import for_mathlib.top_ring
 
 import for_mathlib.data.set.pointwise_mul
 
@@ -172,6 +172,7 @@ end
 
 end submodule
 
+/-
 section comm_algebra
 open algebra
 
@@ -194,6 +195,7 @@ lemma of_submodules_comm.nhds_zero (U : set A) :
 of_subgroups.nhds_zero _ _ _ _ _ _
 
 end comm_algebra
+-/
 
 namespace submodule
 open algebra

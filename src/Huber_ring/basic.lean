@@ -33,14 +33,14 @@ class Huber_ring (A : Type u) extends comm_ring A, topological_space A, topologi
 end
 
 namespace Huber_ring
-
+open topological_add_group
 variables {A : Type u} [Huber_ring A]
 
 protected lemma nonarchimedean : nonarchimedean A :=
 begin
   rcases Huber_ring.pod A with ⟨A₀, H₁, H₂, H₃, H₄, emb, hf, J, Hfin, Htop⟩,
   resetI,
-  apply nonarchimedean_of_nonarchimedean_embedding (algebra_map A) emb hf,
+  apply nonarchimedean_of_nonarchimedean_open_embedding (algebra_map A) emb hf,
   exact Htop.nonarchimedean,
 end
 

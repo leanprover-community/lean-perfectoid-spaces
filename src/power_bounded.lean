@@ -5,10 +5,13 @@ import ring_theory.subring
 import tactic.ring
 
 import for_mathlib.submonoid
-import for_mathlib.adic_topology
+-- import for_mathlib.adic_topology
+-- import nonarchimedean_ring
 import for_mathlib.topological_rings
+import for_mathlib.nonarchimedean.basic
+import for_mathlib.data.set.pointwise_mul
 
-import nonarchimedean_ring
+local attribute [instance] set.pointwise_mul_semiring
 
 /- The theory of topologically nilpotent, bounded, and power-bounded
    elements and subsets of topological rings.
@@ -21,12 +24,12 @@ variables {R : Type*} [comm_ring R] [topological_space R] [topological_ring R]
 definition is_topologically_nilpotent (r : R) : Prop :=
 ∀ U ∈ (nhds (0 : R)), ∃ N : ℕ, ∀ n : ℕ, n > N → r^n ∈ U
 
-def monoid.set_pow {R : Type*} [monoid R] (T : set R) : ℕ → set R
-| 0 := {1}
-| (n + 1) := ((*) <$> monoid.set_pow n <*> T)
+-- def monoid.set_pow {R : Type*} [monoid R] (T : set R) : ℕ → set R
+-- | 0 := {1}
+-- | (n + 1) := ((*) <$> monoid.set_pow n <*> T)
 
 def is_topologically_nilpotent_subset (T : set R) : Prop :=
-∀ U ∈ (nhds (0 : R)), ∃ n : ℕ, monoid.set_pow T n ⊆ U
+∀ U ∈ (nhds (0 : R)), ∃ n : ℕ, T ^ n ⊆ U
 
 namespace topologically_nilpotent
 
@@ -39,6 +42,7 @@ definition is_bounded (B : set R) : Prop :=
 ∀ U ∈ (nhds (0 : R)), ∃ V ∈ (nhds (0 : R)), ∀ v ∈ V, ∀ b ∈ B, v*b ∈ U
 
 namespace bounded
+open topological_add_group
 
 lemma subset {B C : set R} (h : B ⊆ C) (hC : is_bounded C) : is_bounded B :=
 λ U hU, exists.elim (hC U hU) $ λ V ⟨hV, hC⟩, ⟨V, hV, λ v hv b hb, hC v hv b $ h hb⟩
@@ -60,36 +64,27 @@ lemma add_group.closure (hR : nonarchimedean R) (T : set R)
 begin
   intros U hU,
   -- find subgroup U' in U
-  rcases hR U hU with ⟨U', hU', hoU', hsU'⟩,
+  rcases hR U hU with ⟨U', hU'⟩,
   -- U' still a nhd
-  resetI,
-  have hnU' : U' ∈ nhds (0 : R) := is_add_submonoid.mem_nhds_zero U' hoU',
   -- Use boundedness hypo for T with U' to get V
-  rcases hT U' hnU' with ⟨V, hV, hB⟩,
+  rcases hT (U' : set R) U'.mem_nhds_zero with ⟨V, hV, hB⟩,
   -- find subgroup V' in V
-  rcases hR V hV with ⟨V', hV', hoV', hsV'⟩,
-  -- it's still a nhd
-  haveI := hV',
---  resetI,
-  have hnV' : V' ∈ nhds (0 : R) := is_add_submonoid.mem_nhds_zero V' hoV',
+  rcases hR V hV with ⟨V', hV'⟩,
   -- V' works for our proof
-  use V', use hnV',
+  use [V', V'.mem_nhds_zero],
   intros v hv b hb,
   -- Suffices to prove we're in U'
-  apply hsU',
+  apply hU',
   -- Prove the result by induction
   apply add_group.in_closure.rec_on hb,
   { intros t ht,
-    exact hB v (hsV' hv) t ht,
-  },
-  { rw mul_zero, exact mem_of_nhds hnU'},
+    exact hB v (hV' hv) t ht },
+  { rw mul_zero, exact U'.zero_mem },
   { intros a Ha Hv,
-    rwa [←neg_mul_comm, neg_mul_eq_neg_mul_symm, is_add_subgroup.neg_mem_iff],
-  },
+    rwa [←neg_mul_comm, neg_mul_eq_neg_mul_symm, is_add_subgroup.neg_mem_iff] },
   { intros a b ha hb Ha Hb,
     rw [mul_add],
-    exact is_add_submonoid.add_mem Ha Hb,
-  }
+    exact U'.add_mem Ha Hb }
 end
 
 end bounded
@@ -99,6 +94,7 @@ definition is_power_bounded (r : R) : Prop := is_bounded (powers r)
 definition is_power_bounded_subset (T : set R) : Prop := is_bounded (monoid.closure T)
 
 namespace power_bounded
+open topological_add_group
 
 lemma zero : is_power_bounded (0 : R) :=
 λ U hU, ⟨U,
@@ -221,6 +217,7 @@ definition power_bounded_subring := {r : R | is_power_bounded r}
 variable {R}
 
 namespace power_bounded_subring
+open topological_add_group
 
 instance : has_coe (power_bounded_subring R) R := ⟨subtype.val⟩
 

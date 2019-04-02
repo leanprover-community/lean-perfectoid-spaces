@@ -60,6 +60,9 @@ protected lemma inv_mem {g : G} (h : g ∈ U) : g⁻¹ ∈ U :=
 
 protected lemma mul_mem {g₁ g₂ : G} (h₁ : g₁ ∈ U) (h₂ : g₂ ∈ U) : g₁ * g₂ ∈ U :=
   @is_submonoid.mul_mem G _ U _ g₁ g₂ h₁ h₂
+
+lemma mem_nhds_one : (U : set G) ∈ nhds (1 : G) :=
+mem_nhds_sets U.is_open U.one_mem
 variable {U}
 
 instance : inhabited (open_subgroup G) :=
@@ -146,6 +149,12 @@ attribute [to_additive open_add_subgroup.neg_mem] open_subgroup.inv_mem
 protected lemma add_mem {g₁ g₂ : G} (h₁ : g₁ ∈ U) (h₂ : g₂ ∈ U) : g₁ + g₂ ∈ U :=
   @is_add_submonoid.add_mem G _ U _ g₁ g₂ h₁ h₂
 attribute [to_additive open_add_subgroup.add_mem] open_subgroup.mul_mem
+
+lemma mem_nhds_zero : (U : set G) ∈ nhds (0 : G) :=
+mem_nhds_sets U.is_open U.zero_mem
+attribute [to_additive open_add_subgroup.mem_nhds_zero] open_subgroup.mem_nhds_one
+variable {U}
+
 variable {U}
 
 section
@@ -482,6 +491,8 @@ def topology_of_subgroups : topological_space A :=
 @ring_with_zero_nhd.topological_space A
   (of_subgroups _ h_directed h_left_mul h_right_mul h_mul)
 
+variables {G h_directed h_left_mul h_right_mul h_mul}
+
 lemma of_subgroups.nhds_zero (U : set A) :
   U ∈ @nhds A (topology_of_subgroups _ h_directed h_left_mul h_right_mul h_mul)
     (0 : A) ↔ ∃ i, G i ⊆ U :=
@@ -491,8 +502,6 @@ begin
   change U ∈ (⨅ i, principal (G i)) ↔ _,
   rw mem_infi_range_of_base h_directed,
 end
-
-variables {G h_directed h_left_mul h_right_mul h_mul}
 
 lemma of_subgroups.is_open (i : ι) :
   @is_open A (topology_of_subgroups G h_directed h_left_mul h_right_mul h_mul) (G i) :=
@@ -641,12 +650,12 @@ begin
   exact mul_mem_mul hx hy,
 end
 
+variables {M h_directed h_left_mul h_mul}
+
 lemma of_submodules_comm.nhds_zero (U : set A) :
   U ∈ @nhds A (topology_of_submodules_comm _ h_directed h_left_mul h_mul)
     (0 : A) ↔ ∃ i, (M i : set A) ⊆ U :=
-of_subgroups.nhds_zero _ _ _ _ _ _
-
-variables {M h_directed h_left_mul h_mul}
+of_subgroups.nhds_zero U
 
 lemma of_submodules_comm.is_open (i : ι) :
   @is_open A (topology_of_submodules_comm M h_directed h_left_mul h_mul) (M i) :=
@@ -699,7 +708,7 @@ topology_of_submodules_comm
 def adic_ring (I : ideal R) := R
 
 namespace adic_ring
-variable (I : ideal R)
+variable {I : ideal R}
 
 instance : ring_with_zero_nhd I.adic_ring :=
 by delta adic_ring; exact
@@ -716,6 +725,9 @@ instance : topological_ring I.adic_ring := by apply_instance
 lemma nonarchimedean : topological_add_group.nonarchimedean I.adic_ring :=
 of_submodules_comm.nonarchimedean
 
+lemma is_open_pow_ideal (n : ℕ) : @is_open I.adic_ring _ (I^n).carrier :=
+of_submodules_comm.is_open n
+
 end adic_ring
 
 section
@@ -729,21 +741,57 @@ end
 
 end ideal
 
-
-
-
-#exit
-
+section
+open ideal topological_add_group
 variables {R : Type*} [comm_ring R]
 
-variables [topological_space R] [topological_ring R]
+def is_ideal_adic [H : topological_space R] [topological_ring R] (J : ideal R) : Prop :=
+H = J.adic_topology
+
+notation `is-`J`-adic` := is_ideal_adic J
+
+lemma is_ideal_adic_iff [topological_space R] [topological_ring R] (J : ideal R) :
+  is-J-adic ↔ (∀ n : ℕ, is_open (↑(J^n) : set R)) ∧ (∀ s ∈ nhds (0 : R), ∃ n : ℕ, ↑(J^n) ⊆ s) :=
+begin
+  split,
+  { intro H,
+    delta is_ideal_adic at H,
+    erw H at *,
+    split,
+    { exact adic_ring.is_open_pow_ideal, },
+    { intros s hs,
+      erw ← of_submodules_comm.nhds_zero,
+      exact hs, }, },
+  { rintro ⟨H₁, H₂⟩,
+    apply topological_add_group.ext,
+    { apply @topological_ring.to_topological_add_group },
+    { apply @topological_ring.to_topological_add_group (J.adic_ring) },
+    { ext s,
+      split; intro H,
+      { exact (of_submodules_comm.nhds_zero _).mpr (H₂ s H) },
+      { rcases (of_submodules_comm.nhds_zero _).mp H with ⟨n, hn⟩,
+        rw mem_nhds_sets_iff,
+        refine ⟨_, hn, H₁ n, (J^n).zero_mem⟩ } } }
+end
+
+variables (R) [topological_space R] [topological_ring R]
+
+def is_adic : Prop := ∃ (J : ideal R), is-J-adic
+
+variable {R}
 
 lemma is_ideal_adic.nonarchimedean {J : ideal R} (h : is-J-adic) :
-  nonarchimedean R := by convert adic_ring.nonarchimedean J
+  nonarchimedean R :=
+begin
+  delta is_ideal_adic at h, unfreezeI, subst h,
+  exact adic_ring.nonarchimedean
+end
 
 lemma is_adic.nonarchimedean (h : is_adic R) :
   nonarchimedean R :=
 begin
   rcases h with ⟨J, hJ⟩,
   exact hJ.nonarchimedean
+end
+
 end

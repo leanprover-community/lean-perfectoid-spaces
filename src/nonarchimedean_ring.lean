@@ -9,7 +9,7 @@ import for_mathlib.top_ring
 import for_mathlib.topological_rings
 
 open set
-
+/-
 /--A commutative topological ring is non-archimedean if every open subset
    containing 0 also contains an open additive subgroup.-/
 definition nonarchimedean (G : Type*)
@@ -165,3 +165,4 @@ begin
   { apply continuous.tendsto (emb.continuous),
     rwa is_ring_hom.map_zero f }
 end
+-/

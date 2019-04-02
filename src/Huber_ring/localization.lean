@@ -2,23 +2,24 @@ import ring_theory.localization
 import tactic.tidy
 import tactic.ring
 
-import nonarchimedean_ring
+-- import nonarchimedean_ring
 import Huber_ring.basic
 
 import for_mathlib.finset
 import for_mathlib.topological_rings
 import for_mathlib.algebra
-import for_mathlib.lc_algebra
-import for_mathlib.top_ring
+-- import for_mathlib.lc_algebra
+-- import for_mathlib.top_ring
 import for_mathlib.submodule
 import for_mathlib.subgroup
+import for_mathlib.nonarchimedean.basic
 
 universes u v
 
 local attribute [instance, priority 0] classical.prop_decidable
 
 namespace Huber_ring
-open localization algebra topological_ring submodule set
+open localization algebra topological_ring submodule set topological_add_group
 variables {A  : Type u} [comm_ring A] [topological_space A ] [topological_ring A]
 variables (T : set A) (s : A)
 
@@ -64,17 +65,14 @@ but towards the end we need to strengthen this assumption to Huber ring.
 set_option class.instance_max_depth 80
 
 /-The submodules spanned by the open subgroups of `A` form a directed family-/
-lemma directed (U₁ U₂ : open_add_subgroups A) :
-  ∃ (U : open_add_subgroups A), span ↥D (⇑(of_id A ATs) '' U.val) ≤
+lemma directed (U₁ U₂ : open_add_subgroup A) :
+  ∃ (U : open_add_subgroup A), span ↥D (⇑(of_id A ATs) '' U.val) ≤
     span ↥D (⇑(of_id A ATs) '' U₁.val) ⊓ span ↥D (⇑(of_id A ATs) '' U₂.val) :=
 begin
-  let U₃ : open_add_subgroups A :=
-    ⟨U₁.1 ∩ U₂.1, ⟨is_add_subgroup.inter _ _, is_open_inter U₁.2.2 U₂.2.2⟩⟩,
-  use U₃,
-  rw lattice.le_inf_iff,
-  split;
-  rw span_le;
-  refine subset.trans (image_subset _ _) subset_span,
+  use U₁ ⊓ U₂,
+  apply lattice.le_inf _ _;
+    rw span_le;
+    refine subset.trans (image_subset _ _) subset_span,
   { apply inter_subset_left },
   { apply inter_subset_right },
 end
@@ -82,28 +80,29 @@ end
 /-For every open subgroup `U` of `A` and every `a : A`,
 there exists an open subgroup `V` of `A`,
 such that `a . (span D V)` is contained in the `D`-span of `U`.-/
-lemma exists_mul_left_subset (h : nonarchimedean A) (U : open_add_subgroups A) (a : A) :
-  ∃ V : open_add_subgroups A,
+lemma exists_mul_left_subset (h : nonarchimedean A) (U : open_add_subgroup A) (a : A) :
+  ∃ V : open_add_subgroup A,
     (span ↥D (of_id A ATs '' V.1)).map (lmul_left _ ATs ((of_id A ATs : A → ATs) a)) ≤
     (span ↥D (of_id A ATs '' U.1)) :=
 begin
-  rcases h _ _ with ⟨V, h₁, h₂, h₃⟩,
-  let W : open_add_subgroups A := ⟨V, h₁, h₂⟩,
-  use W,
+  cases h _ _ with V hV,
+  use V,
   work_on_goal 0 {
     erw [← span_image, span_le, ← image_comp, ← algebra.map_lmul_left, image_comp],
     refine subset.trans (image_subset (of_id A ATs : A → ATs) _) subset_span,
     rw image_subset_iff,
-    exact h₃ },
-  apply mem_nhds_sets (continuous_mul_left _ _ U.2.2),
+    exact hV },
+  apply mem_nhds_sets (continuous_mul_left _ _ U.is_open),
   { rw [mem_preimage_eq, mul_zero],
     apply is_add_submonoid.zero_mem }
 end
 
+#exit
+
 /-For every open subgroup `U` of `A`, there exists an open subgroup `V` of `A`,
 such that the multiplication map sends the `D`-span of `V` into the `D`-span of `U`.-/
-lemma mul_subset (h : nonarchimedean A) (U : open_add_subgroups A) :
-∃ (V : open_add_subgroups A),
+lemma mul_subset (h : nonarchimedean A) (U : open_add_subgroup A) :
+∃ (V : open_add_subgroup A),
     (λ (x : away T s × away T s), x.fst * x.snd) ''
         set.prod ↑(span ↥D (⇑(of_id A ATs) '' V.val))
           ↑(span ↥D (⇑(of_id A ATs) '' V.val)) ≤
@@ -190,7 +189,7 @@ local notation `D` := aux T s
 set_option class.instance_max_depth 150
 
 /- Wedhorn 6.20 for n = 1-/
-lemma mul_T_open (hT : is_open (↑(ideal.span T) : set A)) (U : open_add_subgroups A) :
+lemma mul_T_open (hT : is_open (↑(ideal.span T) : set A)) (U : open_add_subgroup A) :
   is_open (add_group.closure {x | ∃ t ∈ T, ∃ u ∈ U.val, x = t * u}) :=
 begin
   -- we need to remember that A is nonarchimedean, before we destruct the Huber ring instance
@@ -219,7 +218,7 @@ begin
     { exact is_add_submonoid.zero_mem _ },
     apply_instance },
   rw ← image_subset_iff at hm,
-  apply @open_add_subgroups.is_open_of_open_add_subgroup A _ _ _ _
+  apply @open_add_subgroup.is_open_of_open_add_subgroup A _ _ _ _
     (add_group.closure.is_add_subgroup _),
   refine ⟨⟨to_fun A '' ↑(I^(n+m)), _, _⟩, _⟩,
   work_on_goal 2 { assumption },
@@ -329,15 +328,15 @@ end
 
 set_option class.instance_max_depth 150
 
-lemma mul_left (hT : is_open (↑(ideal.span T) : set A)) (a : away T s) (U : open_add_subgroups A) :
-  ∃ (V : open_add_subgroups A),
+lemma mul_left (hT : is_open (↑(ideal.span T) : set A)) (a : away T s) (U : open_add_subgroup A) :
+  ∃ (V : open_add_subgroup A),
     map (lmul_left ↥D ATs a) (span ↥D (⇑(of_id A ATs) '' V.val)) ≤
       span ↥D (⇑(of_id A ATs) '' U.val) :=
 begin
   apply localization.induction_on a,
   intros a' s',
   clear a,
-  suffices : ∃ W : open_add_subgroups A, _,
+  suffices : ∃ W : open_add_subgroup A, _,
   work_on_goal 0 {
     cases this with W hW,
     cases exists_mul_left_subset T s Huber_ring.nonarchimedean W a' with V hV,
@@ -360,14 +359,14 @@ begin
     exact le_refl _ },
   erw [pow_succ, coe_mul, lmul_left_mul, submodule.map_comp],
   cases hk with W hW,
-  suffices : ∃ V : open_add_subgroups A, _,
+  suffices : ∃ V : open_add_subgroup A, _,
   work_on_goal 0 {
     cases this with V hV,
     use V,
     refine le_trans _ (map_mono hW),
     exact hV },
   clear hW U,
-  let V : open_add_subgroups A := ⟨_, by apply_instance, mul_T_open _ hT W⟩,
+  let V : open_add_subgroup A := ⟨_, by apply_instance, mul_T_open _ hT W⟩,
   use V,
   rw [span_le, image_subset_iff, add_group.closure_subset_iff],
   rintros _ ⟨t, ht, w, hw, rfl⟩,
@@ -410,13 +409,13 @@ end
 instance (hT : is_open (↑(ideal.span T) : set A)) :
   topological_space ATs :=
 topology_of_submodules_comm
-(λ U : open_add_subgroups A, span D (of_id A ATs '' U.1))
+(λ U : open_add_subgroup A, span D (of_id A ATs '' U.1))
 (directed T s) (mul_left T s hT) (mul_subset T s Huber_ring.nonarchimedean)
 
 instance (hT : is_open (↑(ideal.span T) : set A)) :
   ring_with_zero_nhd ATs :=
 of_submodules_comm
-(λ U : open_add_subgroups A, span D (of_id A ATs '' U.1))
+(λ U : open_add_subgroup A, span D (of_id A ATs '' U.1))
 (directed T s) (mul_left T s hT) (mul_subset T s Huber_ring.nonarchimedean)
 
 section

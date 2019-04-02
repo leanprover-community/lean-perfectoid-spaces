@@ -16,6 +16,7 @@ open filter set
 
 variables {R : Type*} [comm_ring R]
 
+/-
 namespace filter
 -- This will be the filter `nhds 0` in our adic-ring
 -- The first mathematical key fact is this is indeed a filter
@@ -189,3 +190,4 @@ variables (R) [topological_space R] [topological_ring R]
 def is_adic : Prop := ∃ (J : ideal R), is-J-adic
 
 end
+-/
