@@ -175,6 +175,8 @@ end away
 
 end Huber_ring
 
+#exit
+
 namespace Huber_ring
 open localization algebra topological_ring submodule set
 variables {A  : Type u} [Huber_ring A]
