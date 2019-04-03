@@ -9,6 +9,7 @@ import for_mathlib.data.set.pointwise_mul
 import for_mathlib.subgroup
 import for_mathlib.submodule
 import for_mathlib.topological_groups
+import for_mathlib.rings
 
 local attribute [instance] set.pointwise_mul_semiring
 
@@ -789,9 +790,29 @@ end
 
 lemma is_adic.nonarchimedean (h : is_adic R) :
   nonarchimedean R :=
+by { cases h with J hJ, exact hJ.nonarchimedean }
+
+lemma exists_ideal_adic_subset (h : is_adic R) (U : set R) (hU : U ∈ nhds (0:R)) :
+  ∃ I : ideal R, is-I-adic ∧ (I : set R) ⊆ U :=
 begin
-  rcases h with ⟨J, hJ⟩,
-  exact hJ.nonarchimedean
+  cases h with J hJ,
+  rw is_ideal_adic_iff at hJ,
+  cases hJ with H₁ H₂,
+  cases H₂ U hU with n hn,
+  -- Beware: n might be 0, in which case we cannot prove is-J^n-adic.
+  refine ⟨J^(n + 1), _, _⟩,
+  { rw is_ideal_adic_iff,
+    split,
+    { intro m, rw ← pow_mul, apply H₁ },
+    { intros V hV,
+      cases H₂ V hV with m hm,
+      use m,
+      refine set.subset.trans _ hm,
+      rw [← pow_mul, right_distrib, one_mul],
+      apply ideal.pow_le_pow,
+      apply nat.le_add_left } },
+  { refine set.subset.trans (J.pow_le_pow _) hn,
+    apply nat.le_succ }
 end
 
 end

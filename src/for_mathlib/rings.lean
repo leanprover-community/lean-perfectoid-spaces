@@ -24,6 +24,14 @@ open function
 
 variables {R : Type*} {S : Type*} [comm_ring R] [comm_ring S]
 
+lemma pow_le_pow (I : ideal R) {m n : ℕ} (h : m ≤ n) :
+  I^n ≤ I^m :=
+begin
+  cases nat.exists_eq_add_of_le h with k hk,
+  rw [hk, pow_add],
+  exact le_trans (mul_le_inf) (lattice.inf_le_left)
+end
+
 instance map_is_monoid_hom {f : R → S} [is_ring_hom f] :
   is_monoid_hom (ideal.map f) :=
 { map_one := ideal.map_top f,
