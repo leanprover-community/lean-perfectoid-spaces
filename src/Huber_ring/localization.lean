@@ -10,10 +10,13 @@ import for_mathlib.algebra
 import for_mathlib.submodule
 import for_mathlib.subgroup
 import for_mathlib.nonarchimedean.basic
+import for_mathlib.data.set.pointwise_mul
 
 universes u v
 
 local attribute [instance, priority 0] classical.prop_decidable
+
+local attribute [instance] set.pointwise_mul_semiring
 
 namespace Huber_ring
 open localization algebra topological_ring submodule set topological_add_group
@@ -44,9 +47,11 @@ instance : algebra A ATs := by delta away; apply_instance
 /--An auxiliary subring, used to define the topology on `away T s`-/
 def aux : subalgebra A ATs :=
 let s_inv : ATs := ((to_units ⟨s, ⟨1, by simp⟩⟩)⁻¹ : units ATs) in
-adjoin A {x | ∃ t ∈ T, x = of t * s_inv }
+adjoin A (s_inv • of_id A ATs '' T)
 
 local notation `D` := aux T s
+
+local notation `Dspan` U := span D (of_id A ATs '' U)
 
 /-
 To put a topology on `away T s` we want to use the construction
@@ -59,7 +64,7 @@ Initially we only assume that `A` is a nonarchimedean ring,
 but towards the end we need to strengthen this assumption to Huber ring.
 -/
 
-set_option class.instance_max_depth 80
+set_option class.instance_max_depth 50
 
 /-The submodules spanned by the open subgroups of `A` form a directed family-/
 lemma directed (U₁ U₂ : open_add_subgroup A) :
@@ -76,16 +81,14 @@ end
 
 /-For every open subgroup `U` of `A` and every `a : A`,
 there exists an open subgroup `V` of `A`,
-such that `a . (span D V)` is contained in the `D`-span of `U`.-/
+such that `a • (span D V)` is contained in the `D`-span of `U`.-/
 lemma exists_mul_left_subset (h : nonarchimedean A) (U : open_add_subgroup A) (a : A) :
-  ∃ V : open_add_subgroup A,
-    (span ↥D (of_id A ATs '' V.1)).map (lmul_left _ ATs ((of_id A ATs : A → ATs) a)) ≤
-    (span ↥D (of_id A ATs '' U.1)) :=
+  ∃ V : open_add_subgroup A, ((of_id A ATs : A → ATs) a) • (Dspan V) ≤ (Dspan U) :=
 begin
   cases h _ _ with V hV,
   use V,
   work_on_goal 0 {
-    erw [← span_image, span_le, ← image_comp, ← algebra.map_lmul_left, image_comp],
+    erw [smul_singleton, ← span_image, span_le, ← image_comp, ← algebra.map_lmul_left, image_comp],
     refine subset.trans (image_subset (of_id A ATs : A → ATs) _) subset_span,
     rw image_subset_iff,
     exact hV },
@@ -94,67 +97,31 @@ begin
     apply is_add_submonoid.zero_mem }
 end
 
-#exit
-
 /-For every open subgroup `U` of `A`, there exists an open subgroup `V` of `A`,
 such that the multiplication map sends the `D`-span of `V` into the `D`-span of `U`.-/
-lemma mul_subset (h : nonarchimedean A) (U : open_add_subgroup A) :
-∃ (V : open_add_subgroup A),
-    (λ (x : away T s × away T s), x.fst * x.snd) ''
-        set.prod ↑(span ↥D (⇑(of_id A ATs) '' V.val))
-          ↑(span ↥D (⇑(of_id A ATs) '' V.val)) ≤
-      ↑(span ↥D (⇑(of_id A ATs) '' U.val)) :=
+lemma mul_le (h : nonarchimedean A) (U : open_add_subgroup A) :
+  ∃ (V : open_add_subgroup A), (Dspan V) * (Dspan V) ≤ (Dspan U) :=
 begin
   rcases nonarchimedean.mul_subset h U with ⟨V, hV⟩,
   use V,
-  refine set.subset.trans _ (span_mono $ image_subset _ hV),
-  rw [← image_comp, function.comp],
-  simp only [alg_hom.map_mul (of_id _ _)],
-  rw image_subset_iff,
-  intro x,
-  rw set.mem_prod,
-  rintros ⟨h₁, h₂⟩,
-  rw mem_preimage_eq,
-  erw mem_span_iff_lc at h₁ h₂ ⊢,
-  rcases h₁ with ⟨lc₁, H₁, hx₁⟩,
-  rcases h₂ with ⟨lc₂, H₂, hx₂⟩,
-  refine ⟨lc₁ * lc₂, _, _⟩,
-  work_on_goal 0 {
-    rw lc.mem_supported at H₁ H₂ ⊢,
-    refine subset.trans (lc.support_mul _ _) _,
-    intros a' ha,
-    erw finset.mem_image at ha,
-    rcases ha with ⟨y, hy₁, hy₂⟩,
-    rw finset.mem_product at hy₁,
-    rw ← hy₂,
-    have ha₁ := H₁ hy₁.left,
-    have hb₁ := H₂ hy₁.right,
-    rw mem_image at ha₁ hb₁ ⊢,
-    rcases ha₁ with ⟨a₀, _, _⟩,
-    rcases hb₁ with ⟨b₀, _, _⟩,
-    use (a₀, b₀),
-    split,
-    { rw set.mem_prod, split; assumption },
-    { simp * } },
-  { rw [← hx₁, ← hx₂],
-    exact lc.atotal.map_mul _ _ }
+  rw span_mul_span,
+  rw ←  pointwise_mul_eq_image at ⊢,
+  apply span_mono,
+  rw ← is_semiring_hom.map_mul (image (of_id A ATs : A → ATs)),
+  exact image_subset _ hV,
 end
 
 lemma K.aux (L : finset A) (h : (↑L : set A) ⊆ ideal.span T) :
-  ∃ (K : finset A),
-  (↑L : set A) ⊆ add_group.closure {x | ∃ (t ∈ T) (k ∈ (↑K : set A)), x = t * k} :=
+  ∃ (K : finset A), (↑L : set A) ⊆ (↑(span ℤ (T * ↑K)) : set A) :=
 begin
   delta ideal.span at h,
   erw span_eq_map_lc at h,
   choose s hs using finset.exists_finset_of_subset_image L _ _ h,
   use s.bind (λ f, f.frange),
+  rcases hs with ⟨rfl, hs⟩,
   intros l hl,
-  cases hs with h' hs,
-  subst h',
-  erw finset.mem_image at hl,
-  rcases hl with ⟨f, hf, rfl⟩,
-  apply add_group.mclosure_subset,
-  apply add_monoid.sum_mem_closure,
+  rcases finset.mem_image.mp hl with ⟨f, hf, rfl⟩,
+  apply submodule.sum_mem_span,
   intros t ht,
   refine ⟨t, _, _, _, mul_comm _ _⟩,
   { replace hf := hs hf,
