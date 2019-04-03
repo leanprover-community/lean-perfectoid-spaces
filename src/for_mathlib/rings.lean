@@ -32,10 +32,10 @@ begin
   exact le_trans (mul_le_inf) (lattice.inf_le_left)
 end
 
-instance map_is_monoid_hom {f : R → S} [is_ring_hom f] :
-  is_monoid_hom (ideal.map f) :=
-{ map_one := ideal.map_top f,
-  map_mul := ideal.map_mul f }
+-- instance map_is_monoid_hom {f : R → S} [is_ring_hom f] :
+--   is_monoid_hom (ideal.map f) :=
+-- { map_one := ideal.map_top f,
+--   map_mul := ideal.map_mul f }
 
 lemma span_image {R : Type u} [comm_ring R] {S : Type v} [comm_ring S]
   (f : R → S) [is_ring_hom f] (X : set R) :

@@ -5,11 +5,11 @@ import ring_theory.ideal_operations
 
 import tactic.abel tactic.chain
 
-import for_mathlib.data.set.pointwise_mul
 import for_mathlib.subgroup
 import for_mathlib.submodule
 import for_mathlib.topological_groups
 import for_mathlib.rings
+import for_mathlib.pointwise
 
 local attribute [instance] set.pointwise_mul_semiring
 
@@ -604,7 +604,7 @@ end
 end comm_ring
 
 section comm_algebra
-open algebra
+open algebra submodule
 
 variables {R : Type*} {A: Type*} [comm_ring R] [comm_ring A] [algebra R A]
   {ι : Type*} [inhabited ι] (M : ι → submodule R A)
@@ -619,7 +619,7 @@ begin
   intros x i,
   cases h_left_mul x i with j hj,
   use j,
-  erw submodule.smul_singleton at hj,
+  erw smul_singleton at hj,
   erw set.smul_set_eq_image,
   exact hj
 end
@@ -638,7 +638,7 @@ begin
   intros x i,
   cases h_left_mul x i with j hj,
   use j,
-  erw submodule.smul_singleton at hj,
+  erw smul_singleton at hj,
   erw set.smul_set_eq_image,
   exact hj
 end

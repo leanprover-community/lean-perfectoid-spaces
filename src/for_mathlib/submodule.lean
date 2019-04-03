@@ -1,8 +1,6 @@
 import ring_theory.noetherian
 import ring_theory.algebra_operations
 
-import for_mathlib.data.set.pointwise_mul
-
 local attribute [instance] classical.prop_decidable
 
 namespace submodule
@@ -45,10 +43,10 @@ lemma fg_pow (h : I.fg) (n : ℕ) : (I^n).fg :=
 begin
   induction n with n ih,
   { refine ⟨finset.singleton 1, _⟩,
-    erw [ideal.span_singleton_eq_top],
+    erw [pow_zero, ideal.one_eq_top, ideal.span_singleton_eq_top],
     exact is_unit_one },
   { erw pow_succ,
-    apply algebra.fg_mul; assumption }
+    apply fg_mul; assumption }
 end
 
 end submodule
@@ -58,13 +56,14 @@ open algebra
 variables {R : Type*} {A : Type*} [comm_ring R] [ring A] [algebra R A]
 
 local attribute [instance] set.pointwise_mul_semiring
+local attribute [instance] set.singleton.is_monoid_hom
 
-namespace span
-
--- grrr, we need a mathlib PR to be merged before we can write this.
--- instance : is_semiring_hom (span R : set A → submodule R A) := _
-
-end span
+instance span.is_semiring_hom : is_semiring_hom (submodule.span R : set A → submodule R A) :=
+{ map_zero := span_empty,
+  map_one := show _ = map _ ⊤,
+    by erw [← ideal.span_singleton_one, ← span_image, set.image_singleton, alg_hom.map_one]; refl,
+  map_add := span_union,
+  map_mul := λ s t, by erw [span_mul_span, set.pointwise_mul_eq_image] }
 
 variables (R A)
 
@@ -75,10 +74,7 @@ instance semimodule_set : semimodule (set A) (submodule R A) :=
   mul_smul := λ s t P, show _ = _ * (_ * _),
     by { rw [← mul_assoc, span_mul_span, set.pointwise_mul_eq_image] },
   one_smul := λ P, show span R {(1 : A)} * P = _,
-  begin
-    conv_lhs {erw ← span_eq P},
-    erw [span_mul_span, ← set.pointwise_mul_eq_image, one_mul, span_eq],
-  end,
+    by { conv_lhs {erw ← span_eq P}, erw [span_mul_span, one_mul, span_eq] },
   zero_smul := λ P, show span R ∅ * P = ⊥, by erw [span_empty, bot_mul],
   smul_zero := λ _, mul_bot _ }
 
@@ -88,14 +84,14 @@ set_option class.instance_max_depth 40
 
 lemma smul_le_smul {s t : set A} {M N : submodule R A} (h₁ : s ≤ t) (h₂ : M ≤ N) :
   s • M ≤ t • N :=
-algebra.mul_le_mul (span_mono h₁) h₂
+mul_le_mul (span_mono h₁) h₂
 
 lemma smul_singleton (a : A) (M : submodule R A) :
   ({a} : set A) • M = M.map (lmul_left _ _ a) :=
 begin
   conv_lhs {erw ← span_eq M},
   change span _ _ * span _ _ = _,
-  erw [span_mul_span, ← set.pointwise_mul_eq_image],
+  erw [span_mul_span],
   apply le_antisymm,
   { erw span_le,
     rintros _ ⟨_, h, _, _, rfl⟩,

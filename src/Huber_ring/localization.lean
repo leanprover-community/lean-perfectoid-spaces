@@ -10,7 +10,6 @@ import for_mathlib.algebra
 import for_mathlib.submodule
 import for_mathlib.subgroup
 import for_mathlib.nonarchimedean.basic
-import for_mathlib.data.set.pointwise_mul
 
 universes u v
 
@@ -105,7 +104,6 @@ begin
   rcases nonarchimedean.mul_subset h U with ⟨V, hV⟩,
   use V,
   rw span_mul_span,
-  rw ←  pointwise_mul_eq_image at ⊢,
   apply span_mono,
   rw ← is_semiring_hom.map_mul (image (of_id A ATs : A → ATs)),
   exact image_subset _ hV,
