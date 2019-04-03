@@ -792,25 +792,30 @@ lemma is_adic.nonarchimedean (h : is_adic R) :
   nonarchimedean R :=
 by { cases h with J hJ, exact hJ.nonarchimedean }
 
+lemma is_ideal_adic_pow {J : ideal R} (h : is-J-adic) {n : ℕ} (hn : n > 0) :
+  is-J^n-adic :=
+begin
+  rw is_ideal_adic_iff at h ⊢,
+  split,
+  { intro m, rw ← pow_mul, apply h.left },
+  { intros V hV,
+    cases h.right V hV with m hm,
+    use m,
+    refine set.subset.trans _ hm,
+    cases n, { exfalso, exact nat.not_succ_le_zero 0 hn },
+    rw [← pow_mul, nat.succ_mul],
+    apply ideal.pow_le_pow,
+    apply nat.le_add_left }
+end
+
 lemma exists_ideal_adic_subset (h : is_adic R) (U : set R) (hU : U ∈ nhds (0:R)) :
   ∃ I : ideal R, is-I-adic ∧ (I : set R) ⊆ U :=
 begin
   cases h with J hJ,
-  rw is_ideal_adic_iff at hJ,
-  cases hJ with H₁ H₂,
-  cases H₂ U hU with n hn,
-  -- Beware: n might be 0, in which case we cannot prove is-J^n-adic.
+  have H := (is_ideal_adic_iff J).mp hJ,
+  cases H.right U hU with n hn,
   refine ⟨J^(n + 1), _, _⟩,
-  { rw is_ideal_adic_iff,
-    split,
-    { intro m, rw ← pow_mul, apply H₁ },
-    { intros V hV,
-      cases H₂ V hV with m hm,
-      use m,
-      refine set.subset.trans _ hm,
-      rw [← pow_mul, right_distrib, one_mul],
-      apply ideal.pow_le_pow,
-      apply nat.le_add_left } },
+  { apply is_ideal_adic_pow hJ, apply nat.succ_pos },
   { refine set.subset.trans (J.pow_le_pow _) hn,
     apply nat.le_succ }
 end
