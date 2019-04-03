@@ -5,11 +5,10 @@ import ring_theory.subring
 import for_mathlib.topology
 
 universes u v
+open filter set
 
 section
 variables {G : Type u} [add_comm_group G]
-
-open filter set
 
 def prod_map {α₁ : Type*} {α₂ : Type*} {β₁ : Type*} {β₂ : Type*}
   (f : α₁ → α₂) (g : β₁ → β₂) : α₁ × β₁ → α₂ × β₂
@@ -57,7 +56,6 @@ def of_open_add_subgroup {G : Type u} [str : add_comm_group G] (H : set G) [is_a
 end
 
 namespace topological_group
-open filter
 variables {G : Type*} {H : Type*}
 variables [group G] [topological_space G] [topological_group G]
 variables [group H] [topological_space H] [topological_group H]
@@ -88,14 +86,161 @@ end topological_group
 
 
 section
-open set
 variables (G : Type u) [add_comm_group G] [topological_space G] [topological_add_group G]
 
--- This is a hack. That is why it is confined to a section.
--- Making this an attribute on a wider scope is dangerous!
 local attribute [instance] topological_add_group.to_uniform_space
 
 -- Wedhorn Definition 5.31 page 38
 definition is_complete_hausdorff : Prop := is_complete (univ : set G) ∧ is_hausdorff G
+end
 
+
+-- I used to think I would need the next section soon, but I no longer do.
+-- I keep it because we'll want some form of this in mathlib at some point
+section top_group_equiv
+variables (G : Type*) [group G] [topological_space G] [topological_group G]
+variables (H : Type*) [group H] [topological_space H] [topological_group H]
+
+structure top_group_equiv extends homeomorph G H :=
+(hom : is_group_hom to_fun)
+
+infix ` ≃*ₜ `:50 := top_group_equiv
+
+instance top_group_equiv.is_group_hom (h : G ≃*ₜ H) : is_group_hom h.to_homeomorph :=
+h.hom
+end top_group_equiv
+
+namespace top_group_equiv
+variables (G : Type*) [group G] [topological_space G] [topological_group G]
+variables (H : Type*) [group H] [topological_space H] [topological_group H]
+variables (K : Type*) [group K] [topological_space K] [topological_group K]
+
+@[refl] def refl : G ≃*ₜ G :=
+{ hom := is_group_hom.id,
+  continuous_to_fun := continuous_id,
+  continuous_inv_fun := continuous_id,
+  ..equiv.refl _}
+
+@[symm] def symm (h : G ≃*ₜ H) : H ≃*ₜ G :=
+{ hom := ⟨λ n₁ n₂, function.injective_of_left_inverse h.left_inv begin
+   rw h.hom.mul, unfold equiv.symm, rw [h.right_inv, h.right_inv, h.right_inv], end⟩,
+  continuous_to_fun := h.continuous_inv_fun,
+  continuous_inv_fun := h.continuous_to_fun,
+  ..h.to_equiv.symm}
+
+@[trans] def trans (h1 : G ≃*ₜ H) (h2 : H ≃*ₜ K) : (G ≃*ₜ K) :=
+{ hom := is_group_hom.comp h1.to_homeomorph.to_equiv.to_fun h2.to_homeomorph.to_equiv.to_fun,
+  continuous_to_fun := continuous.comp h1.continuous_to_fun h2.continuous_to_fun,
+  continuous_inv_fun := continuous.comp h2.continuous_inv_fun h1.continuous_inv_fun,
+  ..equiv.trans h1.to_equiv h2.to_equiv }
+
+end top_group_equiv
+
+-- Next secton will move to order/filter/basic.lean and topology/basic.lean
+section
+variables {α : Type*} {β : Type*} (f : filter α) (b : β) (φ : α → β)
+
+lemma tendsto_pure : tendsto φ f (pure b) ↔ φ ⁻¹' {b} ∈ f :=
+tendsto_principal
+
+variables {g : filter β} {s : set α} {t : set β} {φ}
+
+lemma mem_comap_sets_of_inj (h : ∀ a a', φ a = φ a' → a = a') :
+  s ∈ (comap φ g).sets ↔ ∃ t ∈ g.sets, s = φ ⁻¹' t :=
+begin
+  rw mem_comap_sets,
+  split ; rintros ⟨t, ht, hts⟩,
+  { use t ∪ φ '' s,
+    split,
+    { simp [mem_sets_of_superset ht] },
+    { rw [preimage_union, preimage_image_eq _ h],
+      exact (union_eq_self_of_subset_left hts).symm } },
+  { use [t, ht],
+    rwa hts }
+end
+
+variables [topological_space β]
+
+/-- If a function is constant on some set of a proper filter then it converges along this filter -/
+lemma exists_limit_of_ultimately_const {φ : α → β} {f : filter α} (hf : f ≠ ⊥)
+{U : set α} (hU : U ∈ f) (h : ∀ x y ∈ U,  φ x = φ y) : ∃ b, tendsto φ f (nhds b) :=
+begin
+  have U_ne : U ≠ ∅,
+  { intro U_empty,
+    rw U_empty at hU,
+    exact mt empty_in_sets_eq_bot.1 hf hU },
+  cases exists_mem_of_ne_empty U_ne with x₀ x₀_in,
+  use φ x₀,
+  have : U ⊆ φ ⁻¹' {φ x₀},
+  { intros x x_in,
+    simp [h x x₀ x_in x₀_in] },
+  have : tendsto φ f (pure $ φ x₀),
+  { rw tendsto_pure,
+    exact mem_sets_of_superset hU this},
+  exact le_trans this (pure_le_nhds _)
+end
+end
+
+-- The next section will be used to extend a valuation to the completion of a field (for the
+-- valuation induced topology). The group Γ will be the value group, G = K^* and H = \hat{K}^*
+-- (units of the completed field). φ will be the valuation restricted to K^*
+section
+open is_group_hom
+variables {G : Type*} [comm_group G] [topological_space G] [topological_group G]
+variables {H : Type*} [comm_group H] [topological_space H] [topological_group H]
+variables {Γ : Type*} [comm_group Γ] [topological_space Γ] [topological_group Γ] [regular_space Γ]
+
+variables {ι : G → H} [is_group_hom ι] (de : dense_embedding ι)
+variables {φ : G → Γ} [is_group_hom φ]
+
+-- misc missing lemma, nothing to do with extensions of stuff
+
+lemma mul_right_nhds_one {U : set G} (U_in : U ∈ nhds (1 : G)) (g : G) :
+  (λ x, x*g) '' U ∈ nhds g :=
+begin
+  have l : function.left_inverse (λ (x : G), x * g⁻¹) (λ (x : G), x * g), from λ x, by simp,
+  have r : function.right_inverse (λ (x : G), x * g⁻¹) (λ (x : G), x * g), from λ x, by simp,
+  rw image_eq_preimage_of_inverse l r,
+  have : continuous (λ (x : G), x * g⁻¹), from continuous_mul continuous_id continuous_const,
+  apply this.tendsto g,
+  simpa,
+end
+
+
+-- in Lean the "extension by continuity" of φ always exists, and extends φ.
+example : ∀ g, (de.extend φ) (ι g) = φ g := de.extend_e_eq
+
+-- But, without additional assumption, it gives junk outside the range of ι.
+-- Here we explain how to make sure it's continuous, under the crucial assumption
+-- is_open (ker φ) which will be true in our case because Γ is discrete
+
+lemma continuous_extend_of_open_kernel (op_ker : is_open (ker φ)) : continuous (de.extend φ) :=
+begin
+  have : ∃ V, V ∈ nhds (1 : H) ∧ ker φ = ι ⁻¹' V,
+  { have : ker φ ∈ nhds (1 : G),
+      from mem_nhds_sets op_ker (is_submonoid.one_mem (ker φ)),
+    rw [← de.induced, mem_comap_sets_of_inj de.inj] at this,
+    rcases this with ⟨V, V_in, hV⟩,
+    rw one ι at V_in,
+    use [V, V_in, hV] },
+  rcases this with ⟨V, V_in, hV⟩,
+  have : ∃ V' ∈ nhds (1 : H), ∀ x y ∈ V', x*y⁻¹ ∈ V,
+    from exists_nhds_split_inv V_in,
+  rcases this with ⟨V', V'_in, hV'⟩,
+  apply dense_embedding.continuous_extend,
+  intro h,
+  have : ι ⁻¹' ((λ x, x*h) '' V') ∈ comap ι (nhds h),
+  { rw mem_comap_sets_of_inj de.inj,
+    exact ⟨(λ (x : H), x * h) '' V', mul_right_nhds_one V'_in h, rfl⟩ },
+  apply exists_limit_of_ultimately_const de.comap_nhds_neq_bot this, clear this,
+  intros x y x_in y_in,
+  rw mem_preimage_eq at x_in y_in,
+  rcases x_in with ⟨vₓ, vₓ_in, hx⟩,
+  rcases y_in with ⟨vy, vy_in, hy⟩,
+  change vₓ * h = ι x at hx,
+  change vy * h = ι y at hy,
+  rw [inv_iff_ker φ, hV, mem_preimage_eq, mul ι, inv ι, ← hx, ← hy],
+  simp [mul_assoc],
+  simp [hV', *],
+end
 end
