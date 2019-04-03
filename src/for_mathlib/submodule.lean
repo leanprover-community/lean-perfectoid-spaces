@@ -82,6 +82,9 @@ variables {R A}
 
 set_option class.instance_max_depth 40
 
+lemma smul_def {s : set A} {P : submodule R A} :
+  s • P = span R s * P := rfl
+
 lemma smul_le_smul {s t : set A} {M N : submodule R A} (h₁ : s ≤ t) (h₂ : M ≤ N) :
   s • M ≤ t • N :=
 mul_le_mul (span_mono h₁) h₂
