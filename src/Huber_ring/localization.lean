@@ -2,14 +2,11 @@ import ring_theory.localization
 import tactic.tidy
 import tactic.ring
 
--- import nonarchimedean_ring
 import Huber_ring.basic
 
 import for_mathlib.finset
 import for_mathlib.topological_rings
 import for_mathlib.algebra
--- import for_mathlib.lc_algebra
--- import for_mathlib.top_ring
 import for_mathlib.submodule
 import for_mathlib.subgroup
 import for_mathlib.nonarchimedean.basic
