@@ -36,7 +36,19 @@ end topologically_nilpotent
 
 /-- Wedhorn Definition 5.27 page 36 -/
 definition is_bounded (B : set R) : Prop :=
-∀ U ∈ (nhds (0 : R)), ∃ V ∈ (nhds (0 : R)), ∀ v ∈ V, ∀ b ∈ B, v*b ∈ U
+∀ U ∈ nhds (0 : R), ∃ V ∈ nhds (0 : R), ∀ v ∈ V, ∀ b ∈ B, v*b ∈ U
+
+lemma is_bounded_iff (B : set R) :
+  is_bounded B ↔ ∀ U ∈ nhds (0 : R), ∃ V ∈ nhds (0 : R), V * B ⊆ U :=
+forall_congr $ λ U, imp_congr iff.rfl $ exists_congr $ λ V, exists_congr $ λ hV,
+begin
+  split,
+  { rintros H _ ⟨v, hv, b, hb, rfl⟩, exact H v hv b hb },
+  { intros H v hv b hb, exact H ⟨v, hv, b, hb, rfl⟩ }
+end
+
+lemma is_bounded_add_subgroup_iff (B : set R) [is_add_subgroup B] :
+  is_bounded B ↔ ∀ U ∈ nhds (0:R), ∃ V : open_add_subgroup R, _ := _
 
 namespace bounded
 open topological_add_group
@@ -190,6 +202,10 @@ end
 lemma ring.closure (hR : nonarchimedean R) (T : set R)
   (hT : is_power_bounded_subset T) : is_power_bounded_subset (ring.closure T) :=
 add_group.closure hR $ monoid.closure hR hT
+
+lemma ring.closure' (hR : nonarchimedean R) (T : set R)
+  (hT : is_power_bounded_subset T) : is_bounded (_root_.ring.closure T) :=
+bounded.subset monoid.subset_closure (ring.closure hR _ hT)
 
 lemma add (hR : nonarchimedean R) (a b : R)
   (ha : is_power_bounded a) (hb : is_power_bounded b) :

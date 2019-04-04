@@ -288,15 +288,18 @@ of_submodules_comm
 section
 variables {B : Type*} [comm_ring B] [topological_space B] [topological_ring B]
 variables (hB : nonarchimedean B) {f : A → B} [is_ring_hom f] (hf : continuous f)
-variables {s_inv : units B} (hs : s_inv.inv = f s)
+variables {fs_inv : units B} (hs : fs_inv.inv = f s)
 variables (hT : is_open (↑(ideal.span T) : set A))
-variables (hTB : is_power_bounded_subset {x | ∃ t ∈ T, x = f t * s_inv})
+variables (hTB : is_power_bounded_subset ((↑fs_inv : B) • f '' T))
 
 include hs
 lemma is_unit : is_unit (f s) :=
 by rw [← hs, ← units.coe_inv]; exact is_unit_unit _
 
 noncomputable def lift : ATs → B := localization.away.lift f (is_unit s hs)
+
+instance : is_ring_hom (lift T s hs : ATs → B) :=
+localization.away.lift.is_ring_hom f _
 
 lemma of_continuous (hT : is_open (↑(ideal.span T) : set A)) :
   @continuous _ _ _ (away.topological_space T s hT) (of : A → ATs) :=
@@ -316,7 +319,20 @@ end
 include hB hf hT hTB
 lemma lift_continuous : @continuous _ _ (away.topological_space T s hT) _ (lift T s hs) :=
 begin
-  sorry
+  apply continuous_of_continuous_at_zero _ _,
+  all_goals {try {apply_instance}},
+  intros U hU,
+  rw is_ring_hom.map_zero (lift T s hs) at hU,
+  rw filter.mem_map_sets_iff,
+  let hF := power_bounded.ring.closure' hB _ hTB,
+  erw is_bounded_iff at hF,
+  rcases hF U hU with ⟨V, hV, hVF⟩,
+  rw ← is_ring_hom.map_zero f at hV,
+  have := hf.tendsto 0 hV,
+  rw filter.mem_map_sets_iff at this,
+  rcases this with ⟨W, hW, hWV⟩,
+  use (of '' W) * D,
+  sorry -- oops, to optimistic. We shouldn't multiply sets but subgroups
 end
 
 end
