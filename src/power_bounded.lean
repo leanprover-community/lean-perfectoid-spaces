@@ -47,8 +47,8 @@ begin
   { intros H v hv b hb, exact H ⟨v, hv, b, hb, rfl⟩ }
 end
 
-lemma is_bounded_add_subgroup_iff (B : set R) [is_add_subgroup B] :
-  is_bounded B ↔ ∀ U ∈ nhds (0:R), ∃ V : open_add_subgroup R, _ := _
+-- lemma is_bounded_add_subgroup_iff (B : set R) [is_add_subgroup B] :
+--   is_bounded B ↔ ∀ U ∈ nhds (0:R), ∃ V : open_add_subgroup R, _ := _
 
 namespace bounded
 open topological_add_group
