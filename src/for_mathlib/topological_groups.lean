@@ -186,9 +186,9 @@ end
 -- (units of the completed field). φ will be the valuation restricted to K^*
 section
 open is_group_hom
-variables {G : Type*} [comm_group G] [topological_space G] [topological_group G]
-variables {H : Type*} [comm_group H] [topological_space H] [topological_group H]
-variables {Γ : Type*} [comm_group Γ] [topological_space Γ] [topological_group Γ] [regular_space Γ]
+variables {G : Type*} [group G] [topological_space G] [topological_group G]
+variables {H : Type*} [group H] [topological_space H] [topological_group H]
+variables {Γ : Type*} [group Γ] [topological_space Γ] [topological_group Γ] [regular_space Γ]
 
 variables {ι : G → H} [is_group_hom ι] (de : dense_embedding ι)
 variables {φ : G → Γ} [is_group_hom φ]
