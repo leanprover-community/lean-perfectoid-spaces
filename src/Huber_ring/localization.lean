@@ -331,8 +331,16 @@ begin
   have := hf.tendsto 0 hV,
   rw filter.mem_map_sets_iff at this,
   rcases this with ⟨W, hW, hWV⟩,
-  use (of '' W) * D,
-  sorry -- oops, to optimistic. We shouldn't multiply sets but subgroups
+  cases Huber_ring.nonarchimedean W hW with Y hY,
+  refine ⟨↑(Dspan ↑Y), _, _⟩,
+  { apply mem_nhds_sets,
+    { convert of_submodules_comm.is_open Y },
+    { exact (Dspan ↑Y).zero_mem } },
+  { refine set.subset.trans _ hVF,
+    rintros _ ⟨x, hx, rfl⟩,
+    sorry -- yep, we're really stuck. If V is empty this is false.
+    -- We need to use multiplication of subgroups or submodules
+  }
 end
 
 end
