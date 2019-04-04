@@ -147,7 +147,7 @@ local notation `ATs` := away T s
 local notation `D` := aux T s
 local notation `Dspan` U := span D (of_id A ATs '' U)
 
-set_option class.instance_max_depth 150
+set_option class.instance_max_depth 70
 
 /- Wedhorn 6.20 for n = 1-/
 lemma mul_T_open (hT : is_open (↑(ideal.span T) : set A)) (U : open_add_subgroup A) :
@@ -160,14 +160,23 @@ begin
   -- Choose a generating set L ⊆ I
   cases fg with L hL,
   rw ← hL at hI,
-  have Lsub := set.subset.trans (image_subset _ _) hI,
-  work_on_goal 2 { apply subset_span },
-  rw [← finset.coe_image] at Lsub,
+  -- Observe L ⊆ span T
+  have Lsub : (↑(L.image (to_fun A)) : set A) ⊆ ↑(ideal.span T) :=
+  by { rw finset.coe_image, exact set.subset.trans (image_subset _ subset_span) hI },
   -- Choose a finite set K such that L ⊆ span (T * K)
   cases K.aux _ _ Lsub with K hK,
   -- Choose V such that K * V ⊆ U
-  let V := K.inf (λ k : A, classical.some (Huber_ring.nonarchimedean.left_mul_subset U k)),
+  let nonarch := Huber_ring.nonarchimedean,
+  let V := K.inf (λ k : A, classical.some (nonarch.left_mul_subset U k)),
   cases (is_ideal_adic_iff I).mp top with H₁ H₂,
+  have hV : ↑K * (V : set A) ⊆ U,
+  { rintros _ ⟨k, hk, v, hv, rfl⟩,
+    apply classical.some_spec (nonarch.left_mul_subset U k),
+    refine ⟨k, set.mem_singleton _, v, _, rfl⟩,
+    apply (finset.inf_le hk : V ≤ _),
+    exact hv },
+  replace hV : span ℤ _ ≤ span ℤ _ := span_mono hV,
+  erw [← span_mul_span, ← submodule.smul_def] at hV,
   -- Choose m such that I^m ⊆ V
   cases H₂ _ (mem_nhds_sets (emb.continuous _ V.is_open) _) with m hm,
   work_on_goal 1 {
@@ -175,6 +184,9 @@ begin
     { exact V.zero_mem },
     apply_instance },
   rw ← image_subset_iff at hm,
+  erw [← add_subgroup_eq_spanℤ (V : set A), ← add_subgroup_eq_spanℤ (↑(I^m) : set A₀)] at hm,
+  change (submodule.map (alg_hom_int $ to_fun A).to_linear_map _) ≤ _ at hm,
+  work_on_goal 1 {apply_instance},
   -- It suffices to provide an open subgroup
   apply @open_add_subgroup.is_open_of_open_add_subgroup A _ _ _ _
     (submodule.submodule_is_add_subgroup _),
@@ -182,207 +194,96 @@ begin
   work_on_goal 2 {assumption},
   all_goals { try {apply_instance} },
   { exact embedding_open emb hf (H₁ _) },
-  rw subtype.coe_mk,
-  calc _ = (to_fun A : A₀ → A) '' ↑(I^(m+1)) : rfl
-     ... ⊆ to_fun A '' ↑(↑L • I^m : submodule A₀ A₀) : by rw [pow_succ, ← hL, submodule.smul_def]
-    --  ... = to_fun A '' ↑(span A₀ ↑L) * to_fun A '' ↑(I^m) :
-    --         by { apply is_monoid_hom.map_mul (image (to_fun A : A₀ → A)), }
-     ... ⊆ _ : sorry,
-  all_goals {sorry}
---  rw [pow_add, pow_one, ← hL],
---  have hIm :
---    (add_group.closure {x | ∃ t ∈ T, ∃ ki ∈
---      add_group.closure {ki | ∃ k ∈ K, ∃ i ∈ ((to_fun A : A₀ → A) '' ↑(I^m)), ki = k * i},
---        x = t * ki}) ⊆ _ := _,
---  work_on_goal 0 { refine set.subset.trans _ hIm, clear hIm },
---  work_on_goal 1 {
---    apply add_group.closure_mono,
---    rintros _ ⟨t, ht, ki, hki, rfl⟩,
---    use [t, ht],
---    refine ⟨_, _, rfl⟩,
---    apply add_group.in_closure.rec_on hki,
---    { rintros _ ⟨k, hk, i, hi, rfl⟩,
---      replace hi := hm hi,
---      have H : V ≤ classical.some (nonarch.left_mul_subset U k) := finset.inf_le hk,
---      replace hi := H hi,
---      apply classical.some_spec (nonarch.left_mul_subset U k),
---      use [i, hi] },
---    { apply is_add_submonoid.zero_mem },
---    { intros, apply is_add_subgroup.neg_mem, assumption },
---    { intros, apply is_add_submonoid.add_mem; assumption } },
---  { have := set.prod_mono hK (set.subset.refl (to_fun A '' ↑(I^m))),
---    replace := set.image_subset (λ x : A × A, x.1 * x.2) this,
---    replace := add_group.closure_mono this,
---    convert this using 1,
---    { clear this,
---      change to_fun A '' _ = _,
---      erw [pow_add, ← hL, finset.coe_image, set.prod_image_image_eq, ← image_comp],
---      change _ = add_group.closure ((λ (x : A₀ × A₀), (to_fun A (x.fst) * to_fun A (x.snd))) ''
---          set.prod ↑L ↑(I^m)),
---      haveI : is_ring_hom (to_fun A : A₀ → A) := by apply_instance,
---      conv_rhs { congr, congr, funext, rw ← is_ring_hom.map_mul (to_fun A : A₀ → A) },
---      change _ = add_group.closure ((to_fun A ∘ (λ (x : A₀ × A₀), x.fst * x.snd)) ''
---          set.prod ↑L ↑(I^m)),
---      conv_rhs {rw [image_comp, ← add_group.image_closure (to_fun A : A₀ → A)]},
---      congr' 1,
---      apply set.subset.antisymm,
---      { rintros x hx,
---        rw ← span_eq (I^m) at hx,
---        rw span_mul_span at hx,
---        apply span_induction hx,
---        { intro, exact add_group.mem_closure },
---        { apply is_add_submonoid.zero_mem },
---        { intros,
---          apply is_add_submonoid.add_mem, assumption' },
---        { intros a li hli,
---          apply add_group.in_closure.rec_on hli,
---          { rintros _ ⟨⟨l, i⟩, H, rfl⟩,
---            apply add_group.mem_closure,
---            refine ⟨⟨l, a • i⟩, _, _⟩,
---            { rw set.mem_prod at H ⊢,
---              exact ⟨H.1, (I^m).smul_mem a H.2⟩ },
---            { dsimp,
---              erw [← mul_assoc, mul_comm l a, mul_assoc] } },
---          { rw smul_zero,
---            apply is_add_submonoid.zero_mem },
---          { intros,
---            rw smul_neg,
---            apply is_add_subgroup.neg_mem,
---            assumption },
---          { intros,
---            rw smul_add,
---            apply is_add_submonoid.add_mem,
---            assumption' } } },
---      { haveI tmp : is_add_subgroup ↑(span A₀ ↑L * I^m) := submodule.submodule_is_add_subgroup _,
---        apply @add_group.closure_subset _ _ _ _ tmp,
---        rintros _ ⟨⟨l, i⟩, hli, rfl⟩,
---        rw set.mem_prod at hli,
---        exact mul_mem_mul (subset_span hli.1) hli.2, } },
---    { clear this,
---      apply set.subset.antisymm,
---      { let RHS := _,
---        let temp : _ ⊆ RHS := _,
---        exact temp,
---        letI : is_add_subgroup RHS := add_group.closure.is_add_subgroup _,
---        { apply add_group.closure_subset,
---          rintros _ ⟨t, ht, ki, hki, rfl⟩,
---          apply add_group.in_closure.rec_on hki,
---          { rintros _ ⟨k, hk, i, hi, rfl⟩,
---            rw ← mul_assoc,
---            apply add_group.mem_closure,
---            refine ⟨(t * k, i), ⟨set.mem_prod.mpr ⟨add_group.mem_closure _, ‹_›⟩, rfl⟩⟩,
---            exact ⟨t, ht, k, hk, rfl⟩ },
---          all_goals {intros, simp [left_distrib, is_add_submonoid.zero_mem] },
---          { apply is_add_subgroup.neg_mem, assumption },
---          { apply is_add_submonoid.add_mem, assumption' } } },
---      { apply add_group.closure_subset,
---        rintros _ ⟨⟨x, i⟩, hx, rfl⟩,
---        rw set.mem_prod at hx,
---        cases hx with hx hi,
---        change x ∈ _ at hx,
---        change i ∈ _ at hi,
---        change x * i ∈ _,
---        apply add_group.in_closure.rec_on hx,
---        { rintros _ ⟨t, ht, k, hk, rfl⟩,
---          apply add_group.mem_closure,
---          rw mul_assoc,
---          exact ⟨t, ht, k * i, add_group.mem_closure ⟨k, hk, i, hi, rfl⟩, rfl⟩ },
---        all_goals {simp [right_distrib, is_add_submonoid.zero_mem]},
---        { intros, apply is_add_subgroup.neg_mem, assumption },
---        { intros, apply is_add_submonoid.add_mem, assumption' } } } }
+  -- And now we start a long calculation
+  -- Unfortunately it seems to be hard to express in calc mode
+  -- First observe: I^(m+1) = L • I^m as A₀-ideal, but also as ℤ-submodule
+  erw [subtype.coe_mk, pow_succ, ← hL, ← submodule.smul_def, hL, smul_eq_smul_spanℤ],
+  change (submodule.map (alg_hom_int $ to_fun A).to_linear_map _) ≤ _,
+  work_on_goal 1 {apply_instance},
+  -- Now we map the above equality through the canonical map A₀ → A
+  erw [submodule.map_mul, ← span_image, ← submodule.smul_def],
+  erw [finset.coe_image] at hK,
+  -- Next observe: L • I^m ≤ (T * K) • V
+  refine le_trans (smul_le_smul hK hm) _,
+  -- Also observe: T • (K • V) ≤ T • U
+  refine (le_trans (le_of_eq _) (smul_le_smul (le_refl T) hV)),
+  change span _ _ * _ = _,
+  erw [span_span, ← mul_smul],
+  refl
 end
 
-set_option class.instance_max_depth 150
+set_option class.instance_max_depth 80
 
-lemma mul_left (hT : is_open (↑(ideal.span T) : set A)) (a : away T s) (U : open_add_subgroup A) :
+lemma mul_left.aux₁ (hT : is_open (↑(ideal.span T) : set A)) (U : open_add_subgroup A) :
   ∃ (V : open_add_subgroup A),
-    map (lmul_left ↥D ATs a) (span ↥D (⇑(of_id A ATs) '' V.val)) ≤
-      span ↥D (⇑(of_id A ATs) '' U.val) :=
+    (↑((to_units ⟨s, ⟨1, pow_one s⟩⟩)⁻¹ : units ATs) : ATs) • (Dspan ↑V) ≤ Dspan ↑U :=
+begin
+  refine ⟨⟨_, mul_T_open _ hT U, by apply_instance⟩, _⟩,
+  erw [subtype.coe_mk (↑(T • span ℤ ↑U) : set A), @submodule.smul_def ℤ, span_mul_span],
+  change _ • span _ ↑(submodule.map (alg_hom_int $ (of_id A ATs : A → ATs)).to_linear_map _) ≤ _,
+  erw [← span_image, span_spanℤ, submodule.smul_def, span_mul_span, span_le],
+  rintros _ ⟨s_inv, hs_inv, tu, htu, rfl⟩,
+  erw mem_image at htu,
+  rcases htu with ⟨_, ⟨t, ht, u, hu, rfl⟩, rfl⟩,
+  rw submodule.mem_coe,
+  convert (span _ _).smul_mem _ _ using 1,
+  work_on_goal 3 { exact subset_span ⟨u, hu, rfl⟩ },
+  work_on_goal 1 { constructor },
+  work_on_goal 0 {
+    change s_inv * (algebra_map _ _) = _ • (algebra_map _ _),
+    rw [algebra.map_mul, ← mul_assoc],
+    congr },
+  { apply ring.mem_closure, right, exact ⟨s_inv, hs_inv, _, ⟨t, ht, rfl⟩, rfl⟩ }
+end
+
+lemma mul_left.aux₂ (hT : is_open (↑(ideal.span T) : set A))
+  (s' : powers s) (U : open_add_subgroup A) :
+  ∃ (V : open_add_subgroup A),
+    (↑((to_units s')⁻¹ : units ATs) : ATs) • (Dspan (V : set A)) ≤ Dspan (U : set A) :=
+begin
+  rcases s' with ⟨_, ⟨n, rfl⟩⟩,
+  induction n with k hk,
+  { use U,
+    simp only [pow_zero],
+    change (1 : ATs) • _ ≤ _,
+    rw one_smul,
+    exact le_refl _ },
+  cases hk with W hW,
+  cases mul_left.aux₁ T s hT W with V hV,
+  use V,
+  refine le_trans _ hW,
+  refine le_trans (le_of_eq _) (smul_le_smul (le_refl _) hV),
+  change _ = (_ : ATs) • _,
+  rw ← mul_smul,
+  congr' 1,
+  change ⟦((1 : A), _)⟧ = ⟦(1 * 1, _)⟧,
+  simpa [pow_succ'],
+end
+
+lemma mul_left (hT : is_open (↑(ideal.span T) : set A)) (a : ATs) (U : open_add_subgroup A) :
+  ∃ (V : open_add_subgroup A), a • (Dspan (V : set A)) ≤ Dspan (U : set A) :=
 begin
   apply localization.induction_on a,
   intros a' s',
   clear a,
-  suffices : ∃ W : open_add_subgroup A, _,
-  work_on_goal 0 {
-    cases this with W hW,
-    cases exists_mul_left_subset T s Huber_ring.nonarchimedean W a' with V hV,
-    use V,
-    erw [localization.mk_eq, mul_comm, lmul_left_mul, map_comp],
-    refine le_trans (map_mono hV) _,
-    clear hV V,
-    rw lmul_left_units_le_iff,
-    rw [inv_inv, to_units_coe],
-    exact hW },
-  clear a',
-  cases s'.property with n hn,
-  dsimp,
-  change s^n = s' at hn,
-  erw ← hn,
-  clear hn s',
-  induction n with k hk,
-  { use U,
-    erw [pow_zero, coe_one, lmul_left_one, submodule.map_id],
-    exact le_refl _ },
-  erw [pow_succ, coe_mul, lmul_left_mul, submodule.map_comp],
-  cases hk with W hW,
-  suffices : ∃ V : open_add_subgroup A, _,
-  work_on_goal 0 {
-    cases this with V hV,
-    use V,
-    refine le_trans _ (map_mono hW),
-    exact hV },
-  clear hW U,
-  let V : open_add_subgroup A := ⟨_, by apply_instance, mul_T_open _ hT W⟩,
+  cases mul_left.aux₂ _ _ hT s' U with W hW,
+  cases exists_mul_left_subset T s Huber_ring.nonarchimedean W a' with V hV,
   use V,
-  rw [span_le, image_subset_iff, add_group.closure_subset_iff],
-  rintros _ ⟨t, ht, w, hw, rfl⟩,
-  rw mem_preimage_eq,
-  erw mem_map,
-  let s_unit : units ATs := to_units ⟨s, ⟨1, by simp⟩⟩,
-  let y : away T s := ↑(s_unit⁻¹ : units _) * _,
-  work_on_goal 0 {
-    use y,
-    split,
-    work_on_goal 1 {
-      rw [lmul_left_apply],
-      dsimp only [y],
-      erw [← mul_assoc, s_unit.val_inv, one_mul] },
-  },
-  apply span_mono,
-  work_on_goal 1 {
-    erw mem_span_singleton,
-    work_on_goal 0 {
-      let t_over_s : _ := _,
-      refine ⟨t_over_s, _⟩,
-      work_on_goal 1 {
-        dsimp only [y],
-        erw [alg_hom.map_mul, ← mul_assoc, smul_def],
-        congr' 1,
-        rw mul_comm,
-      },
-      work_on_goal 1 {
-        fsplit,
-        { exact (of t) * ↑s_unit⁻¹ },
-        apply ring.mem_closure,
-        apply mem_union_right,
-        exact ⟨_, ht, rfl⟩ } } },
-  work_on_goal 0 {
-    erw singleton_subset_iff,
-    use [w, hw] },
-  refl
+  erw [localization.mk_eq, mul_comm, mul_smul],
+  exact le_trans (smul_le_smul (le_refl _) hV) hW
 end
 
 instance (hT : is_open (↑(ideal.span T) : set A)) :
   topological_space ATs :=
 topology_of_submodules_comm
 (λ U : open_add_subgroup A, span D (of_id A ATs '' U.1))
-(directed T s) (mul_left T s hT) (mul_subset T s Huber_ring.nonarchimedean)
+(directed T s) (mul_left T s hT) (mul_le T s Huber_ring.nonarchimedean)
 
 instance (hT : is_open (↑(ideal.span T) : set A)) :
   ring_with_zero_nhd ATs :=
 of_submodules_comm
 (λ U : open_add_subgroup A, span D (of_id A ATs '' U.1))
-(directed T s) (mul_left T s hT) (mul_subset T s Huber_ring.nonarchimedean)
+(directed T s) (mul_left T s hT) (mul_le T s Huber_ring.nonarchimedean)
 
 section
 variables {B : Type*} [comm_ring B] [topological_space B] [topological_ring B]

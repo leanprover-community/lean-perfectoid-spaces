@@ -105,6 +105,77 @@ begin
     exact ⟨a, set.mem_singleton _, _, ‹_›, rfl⟩ }
 end
 
+set_option class.instance_max_depth 80
+
+lemma smul_eq_smul_spanℤ (S : set R) (I : ideal R) :
+  (↑(S • I) : set R) = (↑(S • (span ℤ (↑I : set R))) : set R) :=
+begin
+  conv_lhs {erw ← span_eq I},
+  dsimp only [(•)],
+  erw [span_mul_span, span_mul_span],
+  apply set.subset.antisymm,
+  all_goals {
+    intros x hx,
+    apply span_induction hx,
+    { intros, apply subset_span, assumption },
+    { apply submodule.zero_mem (span _ _) },
+    { intros, apply submodule.add_mem (span _ _), assumption' },
+  { intros a si hsi,
+    apply span_induction hsi,
+    { rintros _ ⟨s, hs, i, hi, rfl⟩,
+      apply subset_span,
+      exact ⟨s, hs, a * i, I.mul_mem_left hi, mul_left_comm a s i⟩ },
+    { rw smul_zero, apply submodule.zero_mem (span _ _) },
+    { intros, rw smul_add, apply submodule.add_mem (span _ _), assumption' },
+    { intros b si hsi,
+      rw [show a • b • si = b • a • si, from mul_left_comm _ _ _],
+      apply submodule.smul_mem (span _ _) b hsi } } }
+end
+
+@[simp] lemma add_subgroup_eq_spanℤ (s : set R) [is_add_subgroup s] :
+  (↑(span ℤ s) : set R) = s :=
+begin
+  refine set.subset.antisymm _ subset_span,
+  intros x hx,
+  apply span_induction hx,
+  { exact λ _, id },
+  { apply is_add_submonoid.zero_mem },
+  { intros, apply is_add_submonoid.add_mem, assumption' },
+  { intros n r h,
+    erw [show n • r = gsmul n r, from (gsmul_eq_mul r n).symm],
+    exact is_add_subgroup.gsmul_mem ‹_› }
+end
+
+section
+variables {B : Type*} [comm_ring B] [algebra R B]
+variables (S : subalgebra R B)
+
+lemma span_mono' (X : set B) : (↑(span R X) : set B) ⊆ span S X :=
+λ b hb, span_induction hb
+  (λ x hx, subset_span hx)
+  (span S X).zero_mem
+  (λ x y hx hy, (span S X).add_mem hx hy)
+  (λ r b hb, by { rw algebra.smul_def, exact (span S X).smul_mem (algebra_map S r) hb })
+
+lemma span_span' (X : set B) : span S ↑(span R X) = span S X :=
+le_antisymm (span_le.mpr $ span_mono' S X) (span_mono subset_span)
+
+lemma span_spanℤ (X : set B) : span S ↑(span ℤ X) = span S X :=
+le_antisymm
+begin
+  rw span_le,
+  intros x hx,
+  refine span_induction hx (λ x hx, subset_span hx) (span S X).zero_mem
+    (λ x y hx hy, (span S X).add_mem hx hy) _,
+  intros n b hb,
+  change ↑n * b ∈ _,
+  erw ← gsmul_eq_mul,
+  apply is_add_subgroup.gsmul_mem hb,
+end
+(span_mono subset_span)
+
+end
+
 instance mul_action_algebra : mul_action A (submodule R A) :=
 { smul := λ a M, ({a} : set A) • M,
   mul_smul := λ s t P, show ({s * t} : set A) • _ = _,
