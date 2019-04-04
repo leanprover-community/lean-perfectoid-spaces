@@ -298,9 +298,26 @@ by rw [← hs, ← units.coe_inv]; exact is_unit_unit _
 
 noncomputable def lift : ATs → B := localization.away.lift f (is_unit s hs)
 
+lemma of_continuous (hT : is_open (↑(ideal.span T) : set A)) :
+  @continuous _ _ _ (away.topological_space T s hT) (of : A → ATs) :=
+begin
+  apply of_submodules_comm.continuous _,
+  all_goals {try {apply_instance}},
+  intro U,
+  apply open_add_subgroup.is_open_of_open_add_subgroup _,
+  all_goals {try {apply_instance}},
+  { use U,
+    rw ← image_subset_iff,
+    exact subset_span },
+  { apply is_add_group_hom.preimage _ _,
+    all_goals {apply_instance} }
+end
+
 include hB hf hT hTB
 lemma lift_continuous : @continuous _ _ (away.topological_space T s hT) _ (lift T s hs) :=
-sorry
+begin
+  sorry
+end
 
 end
 
