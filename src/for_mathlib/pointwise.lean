@@ -28,4 +28,8 @@ begin
   split; exact eq.symm
 end
 
+lemma mul_le_mul {s₁ s₂ t₁ t₂ : set α} (hs : s₁ ⊆ s₂) (ht : t₁ ⊆ t₂) :
+  s₁ * t₁ ⊆ s₂ * t₂ :=
+by { rintros _ ⟨a, ha, b, hb, rfl⟩, exact ⟨a, hs ha, b, ht hb, rfl⟩ }
+
 end set

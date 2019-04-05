@@ -132,18 +132,22 @@ begin
       apply submodule.smul_mem (span _ _) b hsi } } }
 end
 
+lemma add_group_closure_eq_spanℤ (s : set R) :
+  add_group.closure s = ↑(span ℤ s) :=
+set.subset.antisymm (add_group.closure_subset subset_span)
+  (λ x hx, span_induction hx
+  (λ _, add_group.mem_closure)
+  (is_add_submonoid.zero_mem _)
+  (λ a b ha hb, is_add_submonoid.add_mem ha hb)
+  (λ n a ha, by { erw [show n • a = gsmul n a, from (gsmul_eq_mul a n).symm],
+    exact is_add_subgroup.gsmul_mem ha}))
+
 @[simp] lemma add_subgroup_eq_spanℤ (s : set R) [is_add_subgroup s] :
   (↑(span ℤ s) : set R) = s :=
 begin
-  refine set.subset.antisymm _ subset_span,
-  intros x hx,
-  apply span_induction hx,
-  { exact λ _, id },
-  { apply is_add_submonoid.zero_mem },
-  { intros, apply is_add_submonoid.add_mem, assumption' },
-  { intros n r h,
-    erw [show n • r = gsmul n r, from (gsmul_eq_mul r n).symm],
-    exact is_add_subgroup.gsmul_mem ‹_› }
+  rw ← add_group_closure_eq_spanℤ,
+  refine set.subset.antisymm _ add_group.subset_closure,
+  rw add_group.closure_subset_iff
 end
 
 section
@@ -160,13 +164,13 @@ lemma span_mono' (X : set B) : (↑(span R X) : set B) ⊆ span S X :=
 lemma span_span' (X : set B) : span S ↑(span R X) = span S X :=
 le_antisymm (span_le.mpr $ span_mono' S X) (span_mono subset_span)
 
-lemma span_spanℤ (X : set B) : span S ↑(span ℤ X) = span S X :=
+lemma span_spanℤ (S' : set B) [is_subring S'] (X : set B) : span S' ↑(span ℤ X) = span S' X :=
 le_antisymm
 begin
   rw span_le,
   intros x hx,
-  refine span_induction hx (λ x hx, subset_span hx) (span S X).zero_mem
-    (λ x y hx hy, (span S X).add_mem hx hy) _,
+  refine span_induction hx (λ x hx, subset_span hx) (span S' X).zero_mem
+    (λ x y hx hy, (span S' X).add_mem hx hy) _,
   intros n b hb,
   change ↑n * b ∈ _,
   erw ← gsmul_eq_mul,

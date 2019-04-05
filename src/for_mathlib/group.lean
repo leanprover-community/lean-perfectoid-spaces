@@ -41,3 +41,8 @@ def group_equiv.quot_eq_of_eq {G1 : set G} [normal_subgroup G1] {G2 : set G} [no
     exact h4 a b,
   end⟩
   }
+
+variables {M : Type*} [monoid M]
+
+lemma units.ext_inv (a b : units M) (h : a.inv = b.inv) : a = b :=
+inv_inj $ units.ext h

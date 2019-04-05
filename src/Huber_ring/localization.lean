@@ -10,12 +10,13 @@ import for_mathlib.algebra
 import for_mathlib.submodule
 import for_mathlib.subgroup
 import for_mathlib.nonarchimedean.basic
+import for_mathlib.group
 
 universes u v
 
 local attribute [instance, priority 0] classical.prop_decidable
 
-local attribute [instance] set.pointwise_mul_semiring
+local attribute [instance] set.pointwise_mul_comm_semiring
 
 namespace Huber_ring
 open localization algebra topological_ring submodule set topological_add_group
@@ -43,14 +44,18 @@ instance : module A ATs := by delta away; apply_instance
 
 instance : algebra A ATs := by delta away; apply_instance
 
+instance : has_coe A ATs := ⟨λ a, (of_id A ATs : A → ATs) a⟩
+
 /--An auxiliary subring, used to define the topology on `away T s`-/
-def aux : subalgebra A ATs :=
+def D.aux : set ATs :=
 let s_inv : ATs := ((to_units ⟨s, ⟨1, by simp⟩⟩)⁻¹ : units ATs) in
-adjoin A (s_inv • of_id A ATs '' T)
+ring.closure (s_inv • of_id A ATs '' T)
 
-local notation `D` := aux T s
+local notation `D` := D.aux T s
 
-local notation `Dspan` U := span D (of_id A ATs '' U)
+instance : is_subring D := by delta D.aux; apply_instance
+
+local notation `Dspan` U := span D (of_id A ATs '' (U : set A))
 
 /-
 To put a topology on `away T s` we want to use the construction
@@ -67,8 +72,7 @@ set_option class.instance_max_depth 50
 
 /-The submodules spanned by the open subgroups of `A` form a directed family-/
 lemma directed (U₁ U₂ : open_add_subgroup A) :
-  ∃ (U : open_add_subgroup A), span ↥D (⇑(of_id A ATs) '' U.val) ≤
-    span ↥D (⇑(of_id A ATs) '' U₁.val) ⊓ span ↥D (⇑(of_id A ATs) '' U₂.val) :=
+  ∃ (U : open_add_subgroup A), (Dspan U) ≤ (Dspan U₁) ⊓ (Dspan U₂) :=
 begin
   use U₁ ⊓ U₂,
   apply lattice.le_inf _ _;
@@ -82,7 +86,7 @@ end
 there exists an open subgroup `V` of `A`,
 such that `a • (span D V)` is contained in the `D`-span of `U`.-/
 lemma exists_mul_left_subset (h : nonarchimedean A) (U : open_add_subgroup A) (a : A) :
-  ∃ V : open_add_subgroup A, ((of_id A ATs : A → ATs) a) • (Dspan V) ≤ (Dspan U) :=
+  ∃ V : open_add_subgroup A, (a : ATs) • (Dspan V) ≤ (Dspan U) :=
 begin
   cases h _ _ with V hV,
   use V,
@@ -144,10 +148,10 @@ variables (T : set A) (s : A)
 namespace away
 
 local notation `ATs` := away T s
-local notation `D` := aux T s
-local notation `Dspan` U := span D (of_id A ATs '' U)
+local notation `D` := D.aux T s
+local notation `Dspan` U := span D (of_id A ATs '' (U : set A))
 
-set_option class.instance_max_depth 70
+set_option class.instance_max_depth 80
 
 /- Wedhorn 6.20 for n = 1-/
 lemma mul_T_open (hT : is_open (↑(ideal.span T) : set A)) (U : open_add_subgroup A) :
@@ -233,7 +237,7 @@ begin
     change s_inv * (algebra_map _ _) = _ • (algebra_map _ _),
     rw [algebra.map_mul, ← mul_assoc],
     congr },
-  { apply ring.mem_closure, right, exact ⟨s_inv, hs_inv, _, ⟨t, ht, rfl⟩, rfl⟩ }
+  { apply ring.mem_closure, exact ⟨s_inv, hs_inv, _, ⟨t, ht, rfl⟩, rfl⟩ }
 end
 
 lemma mul_left.aux₂ (hT : is_open (↑(ideal.span T) : set A))
@@ -301,6 +305,15 @@ noncomputable def lift : ATs → B := localization.away.lift f (is_unit s hs)
 instance : is_ring_hom (lift T s hs : ATs → B) :=
 localization.away.lift.is_ring_hom f _
 
+@[simp] lemma lift_of (a : A) :
+  lift T s hs (of a) = f a := localization.away.lift_of _ _ _
+
+@[simp] lemma lift_coe (a : A) :
+  lift T s hs a = f a := localization.away.lift_of _ _ _
+
+@[simp] lemma lift_comp_of :
+  lift T s hs ∘ of = f := localization.lift'_comp_of _ _ _
+
 lemma of_continuous (hT : is_open (↑(ideal.span T) : set A)) :
   @continuous _ _ _ (away.topological_space T s hT) (of : A → ATs) :=
 begin
@@ -325,22 +338,66 @@ begin
   rw is_ring_hom.map_zero (lift T s hs) at hU,
   rw filter.mem_map_sets_iff,
   let hF := power_bounded.ring.closure' hB _ hTB,
-  erw is_bounded_iff at hF,
-  rcases hF U hU with ⟨V, hV, hVF⟩,
+  erw is_bounded_add_subgroup_iff hB at hF,
+  rcases hF U hU with ⟨V, hVF⟩,
+  let hV := V.mem_nhds_zero,
   rw ← is_ring_hom.map_zero f at hV,
-  have := hf.tendsto 0 hV,
-  rw filter.mem_map_sets_iff at this,
-  rcases this with ⟨W, hW, hWV⟩,
+  replace hV := hf.tendsto 0 hV,
+  rw filter.mem_map_sets_iff at hV,
+  rcases hV with ⟨W, hW, hWV⟩,
   cases Huber_ring.nonarchimedean W hW with Y hY,
-  refine ⟨↑(Dspan ↑Y), _, _⟩,
+  refine ⟨↑(Dspan Y), _, _⟩,
   { apply mem_nhds_sets,
     { convert of_submodules_comm.is_open Y },
     { exact (Dspan ↑Y).zero_mem } },
   { refine set.subset.trans _ hVF,
     rintros _ ⟨x, hx, rfl⟩,
-    sorry -- yep, we're really stuck. If V is empty this is false.
-    -- We need to use multiplication of subgroups or submodules
-  }
+    apply span_induction hx,
+    { rintros _ ⟨a, ha, rfl⟩,
+      erw [lift_of, ← mul_one (f a)],
+      refine mul_mem_mul (subset_span $ hWV $ ⟨a, hY ha, rfl⟩)
+        (subset_span $ is_submonoid.one_mem _) },
+    { rw is_ring_hom.map_zero (lift T s hs),
+      exact is_add_submonoid.zero_mem _ },
+    { intros a b ha hb,
+      rw is_ring_hom.map_add (lift T s hs),
+      exact is_add_submonoid.add_mem ha hb },
+    { rw [submodule.smul_def, span_mul_span],
+      intros d a ha,
+      rw [(show d • a = ↑d * a, from rfl), is_ring_hom.map_mul (lift T s hs), mul_comm],
+      rcases mem_span_iff_lc.mp ha with ⟨l, hl₁, hl₂⟩,
+      rw lc.mem_supported at hl₁,
+      rw [← hl₂, lc.total_apply] at ha ⊢,
+      rw finsupp.sum_mul,
+      apply sum_mem_span,
+      intros b hb',
+      show (↑(_ : ℤ) * _) * _ ∈ _,
+      rcases hl₁ hb' with ⟨v, hv, b, hb, rfl⟩,
+      refine ⟨↑(l (v * b)) * v, _, b * lift T s hs ↑d, _, _⟩,
+      { rw ← gsmul_eq_mul, exact is_add_subgroup.gsmul_mem hv },
+      { refine is_submonoid.mul_mem hb _,
+        cases d with d hd,
+        rw subtype.coe_mk,
+        apply ring.in_closure.rec_on hd,
+        { rw is_ring_hom.map_one (lift T s hs), exact is_submonoid.one_mem _ },
+        { rw [is_ring_hom.map_neg (lift T s hs), is_ring_hom.map_one (lift T s hs)],
+          exact is_add_subgroup.neg_mem (is_submonoid.one_mem _) },
+        { rintros _ ⟨sinv, hsinv, _, ⟨t, ht, rfl⟩, rfl⟩ b hb,
+          rw is_ring_hom.map_mul (lift T s hs),
+          refine is_submonoid.mul_mem _ hb,
+          apply ring.mem_closure,
+          erw [is_ring_hom.map_mul (lift T s hs), lift_of],
+          refine ⟨_, _, _, ⟨t, ht, rfl⟩, rfl⟩,
+          rw mem_singleton_iff at hsinv ⊢,
+          subst hsinv,
+          erw [← units.coe_map (lift T s hs), ← units.ext_iff, is_group_hom.inv (units.map _),
+            inv_eq_iff_inv_eq, units.ext_iff, units.coe_inv, hs],
+          { symmetry, exact lift_of T s hs s },
+          { apply_instance } },
+        { intros a b ha hb,
+          rw is_ring_hom.map_add (lift T s hs),
+          exact is_add_submonoid.add_mem ha hb } },
+      { repeat {rw mul_assoc} } } }
 end
 
 end

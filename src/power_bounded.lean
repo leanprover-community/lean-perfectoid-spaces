@@ -47,8 +47,37 @@ begin
   { intros H v hv b hb, exact H ⟨v, hv, b, hb, rfl⟩ }
 end
 
--- lemma is_bounded_add_subgroup_iff (B : set R) [is_add_subgroup B] :
---   is_bounded B ↔ ∀ U ∈ nhds (0:R), ∃ V : open_add_subgroup R, _ := _
+section
+open submodule topological_add_group
+
+set_option class.instance_max_depth 80
+
+lemma is_bounded_add_subgroup_iff (hR : nonarchimedean R) (B : set R) [is_add_subgroup B] :
+  is_bounded B ↔ ∀ U ∈ nhds (0:R), ∃ V : open_add_subgroup R,
+    (↑((V : set R) • span ℤ B) : set R) ⊆ U :=
+begin
+  split,
+  { rintros H U hU,
+    cases hR U hU with W hW,
+    rw is_bounded_iff at H,
+    rcases H _ W.mem_nhds_zero with ⟨V', hV', H'⟩,
+    cases hR V' hV' with V hV,
+    use V,
+    refine set.subset.trans _ hW,
+    change ↑(span _ _ * span _ _) ⊆ _,
+    rw [span_mul_span, ← add_group_closure_eq_spanℤ, add_group.closure_subset_iff],
+    exact set.subset.trans (set.mul_le_mul hV (set.subset.refl B)) H' },
+  { intros H,
+    rw is_bounded_iff,
+    intros U hU,
+    cases H U hU with V hV,
+    use [V, V.mem_nhds_zero],
+    refine set.subset.trans _ hV,
+    rintros _ ⟨v, hv, b, hb, rfl⟩,
+    exact mul_mem_mul (subset_span hv) (subset_span hb) }
+end
+
+end
 
 namespace bounded
 open topological_add_group
