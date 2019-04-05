@@ -281,6 +281,18 @@ end
 
 def map (f : α → β) : ring_completion α → ring_completion β := completion.map $ sep_quot.map f
 
+@[simp] lemma map_id : map (id : α → α) = id :=
+by { delta map, rw sep_quot.map_id, exact completion.map_id }
+
+@[simp] lemma map_comp {γ : Type*} [uniform_space γ]
+  {f : α → β} {g : β → γ} (hf : uniform_continuous f) (hg : uniform_continuous g) :
+  map (g ∘ f) = map g ∘ map f :=
+begin
+  delta map,
+  rw [completion.map_comp, sep_quot.map_comp];
+  solve_by_elim [sep_quot.uniform_continuous_map, uniform_continuous.separated_map]
+end
+
 lemma map_uniform_continuous {f : α → β} (hf : uniform_continuous f) : uniform_continuous (map f) :=
 completion.uniform_continuous_map
 

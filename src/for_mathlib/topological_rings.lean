@@ -1,7 +1,7 @@
 import topology.algebra.ring
+
 import ring_theory.subring
 import ring_theory.ideal_operations
-
 import for_mathlib.subgroup
 
 universe u

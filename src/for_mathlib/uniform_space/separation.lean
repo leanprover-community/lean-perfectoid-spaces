@@ -127,7 +127,7 @@ by ext ⟨a⟩;
 calc map f ⟦a⟧ = ⟦f a⟧ : map_mk hf a
   ... = g ⟦a⟧ : congr_fun comm a
 
-lemma map_id : map (@id α) = id :=
+@[simp] lemma map_id : map (@id α) = id :=
 map_unique uniform_continuous_id.separated_map rfl
 
 lemma map_comp {f : α → β} {g : β → γ} (hf : separated_map f) (hg : separated_map g) :
