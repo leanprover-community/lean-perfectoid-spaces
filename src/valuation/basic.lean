@@ -49,41 +49,49 @@ of v. See Definition 1.26 of Wedhorn.
 local attribute [instance] classical.prop_decidable
 noncomputable theory
 
+-- Some counter-Kenny trick, no need to read
+def classical.decidable_linear_order {α : Type*} [linear_order α] : decidable_linear_order α :=
+{ decidable_le := by apply_instance,
+  decidable_eq := by apply_instance,
+  decidable_lt := by apply_instance, ..‹linear_order α› }
+local attribute [instance, priority 0] classical.decidable_linear_order
+
+open function with_zero ideal localization
+
 universes u u₀ u₁ u₂ u₃ -- v is used for valuations
 
-open function
+variables {Γ : Type u} [linear_ordered_comm_group Γ]
+variables {Γ₁ : Type u₁} [linear_ordered_comm_group Γ₁]
+variables {Γ₂ : Type u₂} [linear_ordered_comm_group Γ₂]
+variables {Γ₃ : Type u₃} [linear_ordered_comm_group Γ₃]
 
-variables {R : Type u₀}
+variables {R : Type u₀} -- This will be a ring, assumed commutative in some sections
 
-namespace valuation
-variables [comm_ring R]
 
--- Valuations on a commutative ring with values in {0} ∪ Γ
-class is_valuation {Γ : Type u} [linear_ordered_comm_group Γ]
-  (v : R → with_zero Γ) : Prop :=
+-- Valuations on a ring with values in {0} ∪ Γ
+class valuation.is_valuation [ring R] (v : R → with_zero Γ) : Prop :=
 (map_zero : v 0 = 0)
 (map_one  : v 1 = 1)
 (map_mul  : ∀ x y, v (x * y) = v x * v y)
 (map_add  : ∀ x y, v (x + y) ≤ v x ∨ v (x + y) ≤ v y)
 
-end valuation
-
 /-- Γ-valued valuations on R -/
-def valuation (R : Type u₀) [comm_ring R] (Γ : Type u) [linear_ordered_comm_group Γ] :=
+def valuation (R : Type u₀) [ring R] (Γ : Type u) [linear_ordered_comm_group Γ] :=
 { v : R → with_zero Γ // valuation.is_valuation v }
 
 namespace valuation
-variables [comm_ring R]
+
+section
+variables [ring R]
 
 -- A valuation is coerced to the underlying function R → {0} ∪ Γ
-instance (R : Type u₀) [comm_ring R] (Γ : Type u) [linear_ordered_comm_group Γ] :
+instance (R : Type u₀) [ring R] (Γ : Type u) [linear_ordered_comm_group Γ] :
 has_coe_to_fun (valuation R Γ) := { F := λ _, R → with_zero Γ, coe := subtype.val}
 
 @[extensionality] lemma ext {Γ : Type u} [linear_ordered_comm_group Γ] (v₁ v₂ : valuation R Γ) :
   v₁ = v₂ ↔ ∀ r, v₁ r = v₂ r :=
 subtype.ext.trans ⟨λ h r, congr h rfl, funext⟩
 
-variables {Γ : Type u} [linear_ordered_comm_group Γ]
 variables (v : valuation R Γ) {x y z : R}
 
 instance : is_valuation v := v.property
@@ -92,6 +100,13 @@ instance : is_valuation v := v.property
 @[simp] lemma map_one  : v 1 = 1 := v.property.map_one
 @[simp] lemma map_mul  : ∀ x y, v (x * y) = v x * v y := v.property.map_mul
 @[simp] lemma map_add  : ∀ x y, v (x + y) ≤ v x ∨ v (x + y) ≤ v y := v.property.map_add
+
+lemma map_add_le_max (x y) : v (x + y) ≤ max (v x) (v y) :=
+begin
+  cases map_add v x y with h,
+  apply le_max_left_of_le h,
+  apply le_max_right_of_le h,
+end
 
 -- not an instance, because more than one v on a given R
 /-- a valuation gives a preorder on the underlying ring-/
@@ -151,13 +166,32 @@ calc v (-x) = v (-1 * x)   : by simp
         ... = v (-1) * v x : map_mul _ _ _
         ... = v x          : by simp
 
+lemma map_sub_le_max (x y : R) : v (x - y) ≤ max (v x) (v y) :=
+calc v (x-y) = v (x + -y)   : by simp
+        ... ≤ max (v x) (v $ -y) : map_add_le_max _ _ _
+        ... = max (v x) (v y)    : by rw map_neg
+
+lemma map_add_of_distinct_val (h : v x ≠ v y) : v (x + y) = max (v x) (v y) :=
+begin
+  suffices : ¬v (x + y) < max (v x) (v y),
+    from or_iff_not_imp_right.1 (le_iff_eq_or_lt.1 (map_add_le_max v x y)) this,
+  intro h',
+  wlog vyx : v y < v x using x y,
+  { apply lt_or_gt_of_ne h.symm },
+  { rw max_eq_left_of_lt vyx at h',
+    apply lt_irrefl (v x),
+    calc v x = v ((x+y) - y)         : by simp
+         ... ≤ max (v $ x + y) (v y) : map_sub_le_max _ _ _
+         ... < v x                   : max_lt h' vyx },
+  { apply this h.symm,
+    rwa [add_comm, max_comm] at h' }
+end
+
 @[simp] theorem eq_zero_iff_le_zero {r : R} : v r = 0 ↔ v r ≤ v 0 :=
 v.map_zero.symm ▸ with_zero.le_zero_iff_eq_zero.symm
 
 section
 
-variables {Γ₁ : Type u₁} [linear_ordered_comm_group Γ₁]
-variables {Γ₂ : Type u₂} [linear_ordered_comm_group Γ₂]
 variables {v₁ : R → with_zero Γ₁} {v₂ : R → with_zero Γ₂}
 variables {ψ : Γ₁ → Γ₂}
 variables (H12 : ∀ r, with_zero.map ψ (v₁ r) = v₂ r)
@@ -193,7 +227,7 @@ is_valuation v₁ :=
 end -- section
 
 /-- f : S → R induces map valuation R Γ → valuation S Γ -/
-def comap {S : Type u₁} [comm_ring S] (f : S → R) [is_ring_hom f] : valuation S Γ :=
+def comap {S : Type u₁} [ring S] (f : S → R) [is_ring_hom f] : valuation S Γ :=
 { val := v ∘ f,
   property := by constructor;
     simp [is_ring_hom.map_zero f, is_ring_hom.map_one f,
@@ -201,7 +235,7 @@ def comap {S : Type u₁} [comm_ring S] (f : S → R) [is_ring_hom f] : valuatio
 
 lemma comap_id : v.comap (id : R → R) = v := subtype.eq rfl
 
-lemma comap_comp {S₁ : Type u₁} [comm_ring S₁] {S₂ : Type u₂} [comm_ring S₂]
+lemma comap_comp {S₁ : Type u₁} [ring S₁] {S₂ : Type u₂} [ring S₂]
 (f : S₁ → S₂) [is_ring_hom f] (g : S₂ → R) [is_ring_hom g] :
   v.comap (g ∘ f) = (v.comap g).comap f :=
 subtype.ext.mpr $ rfl
@@ -231,22 +265,15 @@ valuation R Γ₁ :=
       exact λ h, with_zero.map_monotone hf h,
     end } }
 
-section
-
-variables {Γ₁ : Type u₁} [linear_ordered_comm_group Γ₁]
-variables {Γ₂ : Type u₂} [linear_ordered_comm_group Γ₂]
 
 -- Definition of equivalence relation on valuations
 def is_equiv (v₁ : valuation R Γ₁) (v₂ : valuation R Γ₂) : Prop :=
 ∀ r s, v₁ r ≤ v₁ s ↔ v₂ r ≤ v₂ s
-
 end
 
 namespace is_equiv
-variables {v}
-variables {Γ₁ : Type u₁} [linear_ordered_comm_group Γ₁]
-variables {Γ₂ : Type u₂} [linear_ordered_comm_group Γ₂]
-variables {Γ₃ : Type u₃} [linear_ordered_comm_group Γ₃]
+variables [ring R]
+variables {v : valuation R Γ}
 variables {v₁ : valuation R Γ₁} {v₂ : valuation R Γ₂} {v₃ : valuation R Γ₃}
 
 @[refl] lemma refl : v.is_equiv v :=
@@ -270,7 +297,7 @@ lemma map {v' : valuation R Γ} (f : Γ → Γ₁) [is_group_hom f] (inf : injec
   apply h,
 end
 
-lemma comap {S : Type u₃} [comm_ring S] (f : S → R) [is_ring_hom f] (h : v₁.is_equiv v₂) :
+lemma comap {S : Type u₃} [ring S] (f : S → R) [is_ring_hom f] (h : v₁.is_equiv v₂) :
   (v₁.comap f).is_equiv (v₂.comap f) :=
 λ r s, h (f r) (f s)
 
@@ -288,8 +315,10 @@ end
 
 end is_equiv
 
-variable {v}
-lemma is_equiv_of_map_of_strict_mono {Γ₁ : Type u₁} [linear_ordered_comm_group Γ₁]
+section
+variables [ring R]
+variables {v : valuation R Γ}
+lemma is_equiv_of_map_of_strict_mono
 (f : Γ → Γ₁) [is_group_hom f] (H : strict_mono f) :
   is_equiv (v.map f (H.monotone)) v :=
 begin
@@ -302,9 +331,10 @@ begin
   refine (le_iff_le_of_strict_mono _ _).mp,
   exact with_zero.map_strict_mono H
 end
-variable (v)
+end
 
 section trivial
+variable [comm_ring R]
 variables (S : ideal R) [prime : ideal.is_prime S]
 include prime
 
@@ -341,7 +371,8 @@ def trivial : valuation R Γ :=
 end trivial
 
 section supp
-open with_zero
+variables  [comm_ring R]
+variables (v : valuation R Γ)
 
 -- support of a valuation v : R → {0} ∪ Γ
 def supp : ideal R :=
@@ -443,6 +474,11 @@ subtype.ext.mpr $ funext $
   λ r, @quotient.lift_on_beta _ _ (J.quotient_rel) v
   (λ a b h, have hsupp : a - b ∈ supp v := hJ h,
     by convert val_add_supp b (a - b) hsupp; simp) _
+end supp
+
+section supp_comm
+variable [comm_ring R]
+variables (v : valuation R Γ)
 
 lemma comap_supp {S : Type u₁} [comm_ring S] (f : S → R) [is_ring_hom f] :
   supp (v.comap f) = ideal.comap f v.supp :=
@@ -484,18 +520,14 @@ lemma quot_preorder_comap {J : ideal R} (hJ : J ≤ supp v) :
 preorder.lift' (v.on_quot hJ).to_preorder (ideal.quotient.mk J) = v.to_preorder :=
 preorder.ext $ λ x y, iff.rfl
 
-end supp
+end supp_comm
 
-end valuation
 
-namespace valuation
-open with_zero
 
 section fraction_ring
-open localization
 
-variables [integral_domain R]
-variables {Γ : Type u} [linear_ordered_comm_group Γ] (v : valuation R Γ)
+variables [integral_domain R] -- integral domain is abreviated ID in the following
+variables (v : valuation R Γ)
 
 -- function corresponding to extension of valuation on ID with support 0
 -- to valuation on field of fractions
@@ -606,8 +638,10 @@ rw [←on_frac_comap_eq' v hv, ←on_frac_comap_eq' v hv], exact iff.rfl end
 
 end fraction_ring
 
+section valuation_field
+
 variables [comm_ring R]
-variables {Γ : Type u} [linear_ordered_comm_group Γ] (v : valuation R Γ)
+variables (v : valuation R Γ)
 
 definition valuation_ID := (supp v).quotient
 
@@ -659,17 +693,12 @@ by apply_instance
   (localization.of ∘ (ideal.quotient.mk _)) = v :=
 by rw [comap_comp, on_frac_comap_eq, on_quot_comap_eq]
 
-section
-open ideal
-
 definition on_valuation_field : valuation (valuation_field v) Γ :=
 on_frac (v.on_quot (set.subset.refl _))
 begin
   rw [supp_quot_supp],
   rw zero_eq_bot,
   apply ideal.map_quotient_self,
-end
-
 end
 
 definition valuation_ring := {x | v.on_valuation_field x ≤ 1}
@@ -739,5 +768,5 @@ set_option class.instance_max_depth 32
 definition residue_field := (max_ideal v).quotient
 
 instance residue_field.discrete_field : discrete_field (residue_field v) := ideal.quotient.field _
-
+end valuation_field
 end valuation
