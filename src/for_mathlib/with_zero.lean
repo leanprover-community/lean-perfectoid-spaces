@@ -125,4 +125,11 @@ begin
   { simp [H x y]}
 end
 
+lemma coe_min (x y : α) [decidable_linear_order α]: ((min x y : α) : with_zero α) = min (x: with_zero α) (y : with_zero α) :=
+begin
+  by_cases h: x ≤ y,
+  { simp [min_eq_left, h] },
+  { replace h : y ≤ x := le_of_not_le h,
+    simp [min_eq_right, h] }
+end
 end with_zero

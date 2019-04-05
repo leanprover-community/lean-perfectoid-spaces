@@ -9,11 +9,6 @@ import for_mathlib.linear_ordered_comm_group
 import for_mathlib.order -- preorder.comap
 import for_mathlib.equiv
 
-import tactic.tidy
-import tactic.abel
-import tactic.ring
-import tactic.where
-
 /- valuations.basic
 
 The basic theory of valuations (non-archimedean norms) on a commutative ring,
