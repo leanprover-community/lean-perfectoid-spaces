@@ -108,15 +108,14 @@ instance valuation.lt_is_add_subgroup (γ : Γ): is_add_subgroup {x | v x < γ} 
 
 
 def valuation.topology {R : Type*} [ring R] (v : valuation R Γ) : topological_space R :=
-begin
-  apply topology_of_subgroups (λ γ : Γ, {k | v k < γ}),
-  { intros γ₁ γ₂,
+topology_of_subgroups (λ γ : Γ, {k | v k < γ})
+  (begin intros γ₁ γ₂,
     use min γ₁ γ₂,
     simp only [set_of_subset_set_of, subset_inter_iff],
     split ; intros x x_lt ;  rw coe_min at x_lt,
     { apply lt_of_lt_of_le x_lt (min_le_left _ _) },
-    { apply lt_of_lt_of_le x_lt (min_le_right _ _) } },
-  { intros x γ,
+    { apply lt_of_lt_of_le x_lt (min_le_right _ _) } end)
+  (begin intros x γ,
     by_cases Hx : ∃ γ : Γ, v x = γ,
     { cases Hx with γx Hx,
       simp only [Hx, image_subset_iff, set_of_subset_set_of, preimage_set_of_eq, valuation.map_mul],
@@ -131,8 +130,8 @@ begin
       rcases (mem_image _ _ _).1 y_in with ⟨t, t_in, xty⟩,
       rw ← xty,
       simp [Hx],
-      exact none_lt_some, } },
-  { intros x γ,
+      exact none_lt_some, } end)
+  (begin intros x γ,
     simp [image_subset_iff],
     induction v x using with_zero.cases_on,
     { simp,
@@ -144,9 +143,9 @@ begin
       rw mul_comm,
       rw ← with_zero.mul_coe at vy_lt,
       apply actual_ordered_comm_monoid.lt_of_mul_lt_mul_left (a⁻¹ : with_zero Γ),
-      rwa [← mul_assoc, with_zero.mul_left_inv _ (coe_ne_zero), one_mul, inv_coe] } },
-  { intro γ,
-    simp [image_subset_iff],
+      rwa [← mul_assoc, with_zero.mul_left_inv _ (coe_ne_zero), one_mul, inv_coe] } end)
+  (begin
+    intro γ,
     by_cases h : γ < 1,
     { have : (γ*γ : with_zero Γ) < γ,
       { rw mul_coe,
@@ -164,5 +163,4 @@ begin
       rintro x ⟨r, r_in, s, s_in, rfl⟩,
       refine lt_of_lt_of_le _ h,
       rw [valuation.map_mul, show (1: Γ) = 1*1, from (mul_one _).symm, ← mul_coe],
-      exact actual_ordered_comm_monoid.mul_lt_mul r_in s_in}}
-end
+      exact actual_ordered_comm_monoid.mul_lt_mul r_in s_in} end)
