@@ -73,26 +73,30 @@ end TopCommRing
 
 section uniform
 local attribute [instance] topological_add_group.to_uniform_space
-def CmplTopCommRing := {R : TopCommRing.{u} // complete_space R ∧ separated R}
+
+structure CmplTopCommRing extends TopCommRing.{u} :=
+[cs : complete_space α]
+[sp : separated α]
+
 end uniform
 
 namespace CmplTopCommRing
 
-instance : category CmplTopCommRing.{u} := category_theory.full_subcategory _
+instance : category CmplTopCommRing.{u} := induced_category.category to_TopCommRing
 
 instance : has_coe_to_sort CmplTopCommRing.{u} :=
 { S := Type u, coe := λ R, R.1 }
 
 instance : has_coe CmplTopCommRing.{u} TopCommRing.{u} :=
-⟨λ R, R.val⟩
+⟨to_TopCommRing⟩
 
 section
 variables (R S T : CmplTopCommRing.{u})
 
 section uniform
 local attribute [instance] TopCommRing.uniform_space TopCommRing.uniform_add_group
-instance : complete_space R := R.2.1
-instance : separated R := R.2.2
+instance : complete_space R := R.cs
+instance : separated R := R.sp
 end uniform
 
 instance : has_coe_to_fun (R ⟶ S) :=
@@ -117,8 +121,9 @@ local attribute [instance] TopCommRing.uniform_space TopCommRing.uniform_add_gro
 
 noncomputable def completion : TopCommRing.{u} ⥤ CmplTopCommRing.{u} :=
 { obj := λ R,
-  { val := { α := ring_completion R, cr := sorry, ts := sorry, tr := sorry },
-    property := sorry },
+  { α := ring_completion R,
+    -- ideally all the following classes can be figured out automatically
+    cr := sorry, ts := sorry, tr := sorry, cs := sorry, sp := sorry },
   map := λ R S f,
     ⟨ring_completion.map f.1,
       sorry, -- tried: ring_completion.map_is_ring_hom _ _ (TopCommRing.continuous f),
@@ -139,10 +144,8 @@ local attribute [instance] TopCommRing.uniform_space TopCommRing.uniform_add_gro
 
 @[simp] lemma completion_obj_coe : (completion.obj R : Type u) = ring_completion R := rfl
 
-@[simp] lemma completion_obj_val : ((completion.obj R).val : Type u) = ring_completion R := rfl
-
 def to_completion : R ⟶ completion.obj R :=
-{ val := λ r, show ring_completion R, from coe r,
+{ val := (coe : R → ring_completion R),
   property := sorry }
 
 @[simp] lemma to_completion_val :
@@ -164,7 +167,7 @@ noncomputable def completion.extension {S : CmplTopCommRing.{u}} (f : R ⟶ S) :
 end
 
 noncomputable def completion_inclusion_adjunction :
-  adjunction completion (full_subcategory_inclusion _) :=
+  adjunction completion (induced_functor _) :=
 { hom_equiv := λ R S,
   { to_fun := λ f, R.to_completion ≫ f,
     inv_fun := λ g, sorry,
