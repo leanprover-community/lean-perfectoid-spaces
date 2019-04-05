@@ -48,6 +48,14 @@ of v. See Definition 1.26 of Wedhorn.
 
 local attribute [instance] classical.prop_decidable
 noncomputable theory
+
+-- Some counter-Kenny trick, no need to read
+def classical.decidable_linear_order {α : Type*} [linear_order α] : decidable_linear_order α :=
+{ decidable_le := by apply_instance,
+  decidable_eq := by apply_instance,
+  decidable_lt := by apply_instance, ..‹linear_order α› }
+local attribute [instance, priority 0] classical.decidable_linear_order
+
 open function with_zero ideal localization
 
 universes u u₀ u₁ u₂ u₃ -- v is used for valuations
@@ -92,6 +100,13 @@ instance : is_valuation v := v.property
 @[simp] lemma map_one  : v 1 = 1 := v.property.map_one
 @[simp] lemma map_mul  : ∀ x y, v (x * y) = v x * v y := v.property.map_mul
 @[simp] lemma map_add  : ∀ x y, v (x + y) ≤ v x ∨ v (x + y) ≤ v y := v.property.map_add
+
+lemma map_add_le_max (x y) : v (x + y) ≤ max (v x) (v y) :=
+begin
+  cases map_add v x y with h,
+  apply le_max_left_of_le h,
+  apply le_max_right_of_le h,
+end
 
 -- not an instance, because more than one v on a given R
 /-- a valuation gives a preorder on the underlying ring-/
@@ -150,6 +165,27 @@ end
 calc v (-x) = v (-1 * x)   : by simp
         ... = v (-1) * v x : map_mul _ _ _
         ... = v x          : by simp
+
+lemma map_sub_le_max (x y : R) : v (x - y) ≤ max (v x) (v y) :=
+calc v (x-y) = v (x + -y)   : by simp
+        ... ≤ max (v x) (v $ -y) : map_add_le_max _ _ _
+        ... = max (v x) (v y)    : by rw map_neg
+
+lemma map_add_of_distinct_val (h : v x ≠ v y) : v (x + y) = max (v x) (v y) :=
+begin
+  suffices : ¬v (x + y) < max (v x) (v y),
+    from or_iff_not_imp_right.1 (le_iff_eq_or_lt.1 (map_add_le_max v x y)) this,
+  intro h',
+  wlog vyx : v y < v x using x y,
+  { apply lt_or_gt_of_ne h.symm },
+  { rw max_eq_left_of_lt vyx at h',
+    apply lt_irrefl (v x),
+    calc v x = v ((x+y) - y)         : by simp
+         ... ≤ max (v $ x + y) (v y) : map_sub_le_max _ _ _
+         ... < v x                   : max_lt h' vyx },
+  { apply this h.symm,
+    rwa [add_comm, max_comm] at h' }
+end
 
 @[simp] theorem eq_zero_iff_le_zero {r : R} : v r = 0 ↔ v r ≤ v 0 :=
 v.map_zero.symm ▸ with_zero.le_zero_iff_eq_zero.symm
