@@ -279,7 +279,7 @@ set_option old_structure_cmd true
 
 /-- An ordered commutative monoid is a commutative monoid
   with a partial order such that mulition is an order embedding, i.e.
-  `a * b ≤ a * c ↔ b ≤ c`. These monoids are automatically cancellative. -/
+  `a * b ≤ a * c ↔ b ≤ c`. -/
 class actual_ordered_comm_monoid (α : Type*) extends comm_monoid α, partial_order α :=
 (mul_le_mul_left       : ∀ a b : α, a ≤ b → ∀ c : α, c * a ≤ c * b)
 (lt_of_mul_lt_mul_left : ∀ a b c : α, a * b < a * c → b < c)
