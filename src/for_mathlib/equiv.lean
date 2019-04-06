@@ -145,3 +145,5 @@ def preorder_equiv.to_with_zero_preorder_equiv {α : Type*} {β : Type*} [preord
   (he : α ≃≤ β) : (with_zero α) ≃≤ (with_zero β) :=
   { le_map := with_zero.map_le he.le_map
     ..he.to_equiv.with_zero_equiv}
+
+-- equiv of top spaces is already done -- it's called homeomorph in topology/constructions.lean
