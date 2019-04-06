@@ -212,14 +212,13 @@ attribute [to_additive open_add_subgroup.le_iff] open_subgroup.le_iff
 
 end open_add_subgroup
 
-/--A topological group is non-archimedean if every open subset
-   containing 1 also contains an open subgroup.-/
+/--A topological group is non-archimedean if every neighborhood of 1 contains an open subgroup.-/
 definition topological_group.nonarchimedean (G : Type*)
   [group G] [topological_space G] [topological_group G] : Prop :=
 ∀ U ∈ nhds (1 : G), ∃ V : open_subgroup G, (V : set G) ⊆ U
 
-/--A topological additive group is non-archimedean if every open subset
-   containing 0 also contains an open additive subgroup.-/
+/--A topological additive group is non-archimedean if every neighborhood of 0 contains an
+   open subgroup.-/
 definition topological_add_group.nonarchimedean (G : Type*)
   [add_group G] [topological_space G] [topological_add_group G] : Prop :=
 ∀ U ∈ nhds (0 : G), ∃ V : open_add_subgroup G, (V : set G) ⊆ U
@@ -282,8 +281,7 @@ begin
   rcases hU with ⟨U₁, hU₁, U₂, hU₂, h⟩,
   cases hR _ hU₁ with V hV,
   cases hS _ hU₂ with W hW,
-  use [V, W],
-  refine set.subset.trans (set.prod_mono _ _) h; assumption
+  use [V, W, set.subset.trans (set.prod_mono hV hW) h]
 end
 
 lemma prod_self_subset (hR : nonarchimedean R) :
@@ -365,7 +363,7 @@ by ext t ; rw [generate_eq_of_base H, mem_infi_range_of_base H]
 end bases
 
 namespace add_group_with_zero_nhd
-variables (α : Type*) [add_group_with_zero_nhd α]
+variables {α : Type*} [add_group_with_zero_nhd α]
 open filter
 
 lemma nhds_eq' (a : α) : nhds a = map (λx, a + x) (Z α) :=
@@ -396,7 +394,7 @@ instance to_add_group_with_zero_nhd {α :Type*} [ring_with_zero_nhd α] :
   add_group_with_zero_nhd α :=
 {..‹ring_with_zero_nhd α›}
 
-instance : topological_space α := by apply_instance
+def topological_space : topological_space α := by apply_instance
 
 instance : topological_ring α :=
 begin

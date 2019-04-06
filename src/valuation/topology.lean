@@ -23,8 +23,8 @@ instance valuation.lt_is_add_subgroup (γ : Γ): is_add_subgroup {x | v x < γ} 
   neg_mem := λ x x_in, by rwa [mem_set_of_eq, map_neg] }
 
 
-def valuation.topology {R : Type*} [ring R] (v : valuation R Γ) : topological_space R :=
-topology_of_subgroups (λ γ : Γ, {k | v k < γ})
+def valuation.ring_with_zero_nhd {R : Type*} [ring R] (v : valuation R Γ) : ring_with_zero_nhd R :=
+of_subgroups (λ γ : Γ, {k | v k < γ})
   (begin intros γ₁ γ₂,
     use min γ₁ γ₂,
     simp only [set_of_subset_set_of, subset_inter_iff],
