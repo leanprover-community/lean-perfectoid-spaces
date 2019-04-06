@@ -235,3 +235,222 @@ begin
 end
 
 end with_zero
+
+namespace linear_ordered_comm_group
+variables {α : Type*} [linear_ordered_comm_group α]
+instance inhabited : inhabited α := ⟨1⟩
+
+lemma mul_lt_right  :
+  ∀ {a b} c : α, a < b → a*c < b*c :=
+begin
+  introv h,
+  rw lt_iff_le_and_ne,
+  refine ⟨linear_ordered_comm_group.mul_le_mul_right (le_of_lt h) _, _⟩,
+  intro h',
+  rw mul_right_cancel  h' at h,
+  exact lt_irrefl b h
+end
+
+lemma mul_lt_left  :
+  ∀ {a b} c : α, a < b → c*a < c*b :=
+begin
+  introv h,
+  rw [mul_comm c, mul_comm c],
+  exact mul_lt_right _ h,
+end
+
+lemma mul_lt_mul  :
+  ∀ {a b c d : α}, a < b → c < d → a*c < b*d :=
+begin
+  introv hab hcd,
+  calc a*c < b*c : mul_lt_right _ hab
+  ... < b*d : mul_lt_left _ hcd
+end
+
+lemma lt_of_mul_lt_mul_left {α : Type*} [linear_ordered_comm_group α] :
+  ∀ a b c : α, a * b < a * c → b < c :=
+λ a b c h, lt_of_not_ge (λ h', lt_irrefl _ $ lt_of_lt_of_le h $
+                               linear_ordered_comm_group.mul_le_mul_left h' a)
+end linear_ordered_comm_group
+
+
+section
+set_option old_structure_cmd true
+
+/-- An ordered commutative monoid is a commutative monoid
+  with a partial order such that mulition is an order embedding, i.e.
+  `a * b ≤ a * c ↔ b ≤ c`. These monoids are automatically cancellative. -/
+class actual_ordered_comm_monoid (α : Type*) extends comm_monoid α, partial_order α :=
+(mul_le_mul_left       : ∀ a b : α, a ≤ b → ∀ c : α, c * a ≤ c * b)
+(lt_of_mul_lt_mul_left : ∀ a b c : α, a * b < a * c → b < c)
+end
+
+namespace actual_ordered_comm_monoid
+variables {α : Type*} [actual_ordered_comm_monoid α] {a b c d : α}
+
+lemma mul_le_mul_left' (h : a ≤ b) : c * a ≤ c * b :=
+actual_ordered_comm_monoid.mul_le_mul_left a b h c
+
+lemma mul_le_mul_right' (h : a ≤ b) : a * c ≤ b * c :=
+mul_comm c a ▸ mul_comm c b ▸ mul_le_mul_left' h
+
+lemma lt_of_mul_lt_mul_left' : a * b < a * c → b < c :=
+actual_ordered_comm_monoid.lt_of_mul_lt_mul_left a b c
+
+lemma mul_le_mul' (h₁ : a ≤ b) (h₂ : c ≤ d) : a * c ≤ b * d :=
+_root_.le_trans (mul_le_mul_right' h₁) (mul_le_mul_left' h₂)
+
+lemma le_mul_of_nonneg_right' (h : b ≥ 1) : a ≤ a * b :=
+have a * b ≥ a * 1, from mul_le_mul_left' h,
+by rwa mul_one at this
+
+lemma le_mul_of_nonneg_left' (h : b ≥ 1) : a ≤ b * a :=
+have 1 * a ≤ b * a, from mul_le_mul_right' h,
+by rwa one_mul at this
+
+lemma lt_of_mul_lt_mul_right' (h : a * b < c * b) : a < c :=
+lt_of_mul_lt_mul_left'
+  (show b * a < b * c, begin rw [mul_comm b a, mul_comm b c], assumption end)
+
+-- here we start using properties of one.
+lemma le_mul_of_nonneg_of_le' (ha : 1 ≤ a) (hbc : b ≤ c) : b ≤ a * c :=
+one_mul b ▸ mul_le_mul' ha hbc
+
+lemma le_mul_of_le_of_nonneg' (hbc : b ≤ c) (ha : 1 ≤ a) : b ≤ c * a :=
+mul_one b ▸ mul_le_mul' hbc ha
+
+lemma mul_nonneg' (ha : 1 ≤ a) (hb : 1 ≤ b) : 1 ≤ a * b :=
+le_mul_of_nonneg_of_le' ha hb
+
+lemma mul_gt_one_of_gt_one_of_nonneg' (ha : 1 < a) (hb : 1 ≤ b) : 1 < a * b :=
+lt_of_lt_of_le ha $ le_mul_of_nonneg_right' hb
+
+lemma mul_gt_one' (ha : 1 < a) (hb : 1 < b) : 1 < a * b :=
+mul_gt_one_of_gt_one_of_nonneg' ha $ le_of_lt hb
+
+lemma mul_gt_one_of_nonneg_of_gt_one' (ha : 1 ≤ a) (hb : 1 < b) : 1 < a * b :=
+lt_of_lt_of_le hb $ le_mul_of_nonneg_left' ha
+
+lemma mul_nongt_one' (ha : a ≤ 1) (hb : b ≤ 1) : a * b ≤ 1 :=
+one_mul (1:α) ▸ (mul_le_mul' ha hb)
+
+lemma mul_le_of_nongt_one_of_le' (ha : a ≤ 1) (hbc : b ≤ c) : a * b ≤ c :=
+one_mul c ▸ mul_le_mul' ha hbc
+
+lemma mul_le_of_le_of_nongt_one' (hbc : b ≤ c) (ha : a ≤ 1) : b * a ≤ c :=
+mul_one c ▸ mul_le_mul' hbc ha
+
+lemma mul_neg_of_neg_of_nongt_one' (ha : a < 1) (hb : b ≤ 1) : a * b < 1 :=
+lt_of_le_of_lt (mul_le_of_le_of_nongt_one' (le_refl _) hb) ha
+
+lemma mul_neg_of_nongt_one_of_neg' (ha : a ≤ 1) (hb : b < 1) : a * b < 1 :=
+lt_of_le_of_lt (mul_le_of_nongt_one_of_le' ha (le_refl _)) hb
+
+lemma mul_neg' (ha : a < 1) (hb : b < 1) : a * b < 1 :=
+mul_neg_of_nongt_one_of_neg' (le_of_lt ha) hb
+
+lemma lt_mul_of_nonneg_of_lt' (ha : 1 ≤ a) (hbc : b < c) : b < a * c :=
+lt_of_lt_of_le hbc $ le_mul_of_nonneg_left' ha
+
+lemma lt_mul_of_lt_of_nonneg' (hbc : b < c) (ha : 1 ≤ a) : b < c * a :=
+lt_of_lt_of_le hbc $ le_mul_of_nonneg_right' ha
+
+lemma lt_mul_of_gt_one_of_lt' (ha : 1 < a) (hbc : b < c) : b < a * c :=
+lt_mul_of_nonneg_of_lt' (le_of_lt ha) hbc
+
+lemma lt_mul_of_lt_of_gt_one' (hbc : b < c) (ha : 1 < a) : b < c * a :=
+lt_mul_of_lt_of_nonneg' hbc (le_of_lt ha)
+
+lemma mul_lt_of_nongt_one_of_lt' (ha : a ≤ 1) (hbc : b < c) : a * b < c :=
+lt_of_le_of_lt (mul_le_of_nongt_one_of_le' ha (le_refl _)) hbc
+
+lemma mul_lt_of_lt_of_nongt_one' (hbc : b < c) (ha : a ≤ 1)  : b * a < c :=
+lt_of_le_of_lt (mul_le_of_le_of_nongt_one' (le_refl _) ha) hbc
+
+lemma mul_lt_of_neg_of_lt' (ha : a < 1) (hbc : b < c) : a * b < c :=
+mul_lt_of_nongt_one_of_lt' (le_of_lt ha) hbc
+
+lemma mul_lt_of_lt_of_neg' (hbc : b < c) (ha : a < 1) : b * a < c :=
+mul_lt_of_lt_of_nongt_one' hbc (le_of_lt ha)
+
+lemma mul_eq_one_iff' (ha : 1 ≤ a) (hb : 1 ≤ b) : a * b = 1 ↔ a = 1 ∧ b = 1 :=
+iff.intro
+  (assume hab : a * b = 1,
+   have a ≤ 1, from hab ▸ le_mul_of_le_of_nonneg' (le_refl _) hb,
+   have a = 1, from _root_.le_antisymm this ha,
+   have b ≤ 1, from hab ▸ le_mul_of_nonneg_of_le' ha (le_refl _),
+   have b = 1, from _root_.le_antisymm this hb,
+   and.intro ‹a = 1› ‹b = 1›)
+  (assume ⟨ha', hb'⟩, by rw [ha', hb', mul_one])
+
+lemma square_gt_one {a : α} (h : 1 < a) : 1 < a*a :=
+mul_gt_one' h h
+end actual_ordered_comm_monoid
+
+variables {Γ : Type*} [linear_ordered_comm_group Γ]
+
+lemma with_zero.not_lt_zero : ∀ (x : with_zero Γ), x < 0 → false :=
+begin
+  intros x h,
+  induction x using with_zero.cases_on,
+  { exact lt_irrefl 0 h },
+  { exact (with_zero.not_some_le_zero : ¬ (x : with_zero Γ) ≤ 0) (le_of_lt h) },
+end
+
+lemma with_zero.some_lt_some : ∀ (x y : Γ), (x : with_zero Γ) < y ↔ x < y :=
+λ x y, by repeat { rw [lt_iff_le_not_le, with_zero.some_le_some'] }
+
+lemma with_zero.some_of_gt {x y : with_zero Γ} (h : x < y) : ∃ γ : Γ, y = (γ : with_zero Γ) :=
+begin
+  induction y using with_zero.cases_on,
+  { exact false.elim (with_zero.not_lt_zero _ h) },
+  { use y },
+end
+
+open with_zero
+
+instance : actual_ordered_comm_monoid (with_zero Γ) :=
+{ mul_le_mul_left := λ x y x_le_y z,
+    begin
+      induction z using with_zero.cases_on,
+      { simp },
+      { induction x using with_zero.cases_on,
+        { simp },
+        { rw mul_coe,
+          induction y using with_zero.cases_on ; simp at x_le_y,
+          { exact false.elim x_le_y },
+          { rw mul_coe,
+            simp,
+            exact linear_ordered_comm_group.mul_le_mul_left x_le_y z } } }
+    end,
+  lt_of_mul_lt_mul_left := λ x y z hlt,
+    begin
+      induction z using with_zero.cases_on,
+      { rw mul_zero at hlt,
+        exact false.elim (with_zero.not_lt_zero _ hlt) },
+      { induction x using with_zero.cases_on;
+        induction y using with_zero.cases_on ; simp at hlt ;
+        try { exact false.elim (with_zero.not_lt_zero _ hlt) },
+        { exact zero_lt_some },
+        { rw some_lt_some at hlt ⊢,
+          exact linear_ordered_comm_group.lt_of_mul_lt_mul_left x _ _ hlt } }
+    end,
+  ..(by apply_instance : comm_monoid (with_zero Γ)),
+  ..(by apply_instance : partial_order (with_zero Γ)),
+}
+
+lemma with_zero.mul_lt_mul {a b c d : with_zero Γ} : a < b → c < d → a*c < b*d :=
+begin
+  intros hab hcd,
+  rcases with_zero.some_of_gt hcd with ⟨γ, rfl⟩,
+  rcases with_zero.some_of_gt hab with ⟨γ', rfl⟩,
+  rw mul_coe,
+  induction a using with_zero.cases_on,
+  { rw zero_mul,
+    exact zero_lt_some },
+  { induction c using with_zero.cases_on,
+    { rw mul_zero,
+      exact zero_lt_some },
+    { rw [mul_coe], rw some_lt_some at *,
+      exact linear_ordered_comm_group.mul_lt_mul hab hcd } }
+end
