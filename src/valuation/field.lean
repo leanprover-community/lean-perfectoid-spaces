@@ -1,4 +1,5 @@
 import for_mathlib.topological_field
+import for_mathlib.topology
 import valuation.topology
 
 
@@ -27,7 +28,7 @@ variables {K : Type*} [division_ring K] (v : valuation K Γ)
 variables x y : units K
 
 -- The following is meant to be the main technical lemma ensuring that inversion is continuous
--- in the topology induced by a valuation on a division ring
+-- in the topology induced by a valuation on a division ring (ie the next instance)
 lemma top_div_ring_aux {x y : units K} {γ : Γ} (h : v (x - y) < min (γ*((v y)*(v y))) (v y)) :
   v (x⁻¹.val - y⁻¹.val) < γ :=
 begin
@@ -58,7 +59,41 @@ end
 instance valuation.topological_division_ring : topological_division_ring (valued_ring K v) :=
 { continuous_inv :=
     begin
-      rw (topological_ring.units_embedding (valued_ring K v)).continuous_iff,
-      sorry
+      let Kv := valued_ring K v,
+      have H : units.val ∘ (λ x : units Kv, x⁻¹) = (λ x : Kv, x⁻¹) ∘ units.val,
+      { ext x,
+        sorry },
+      rw continuous_iff_continuous_at,
+      intro x,
+      let emb := topological_ring.units_embedding Kv,
+      apply emb.tendsto_iff emb H,
+      unfold continuous_at,
+      rw  topological_add_group.tendsto_nhds_nhds_iff (λ (x : Kv), x⁻¹) x.val x.val⁻¹,
+      intros V V_in,
+      cases (of_subgroups.nhds_zero _).1 V_in with γ Hγ,
+      let x' : units K := units.mk (x.val : K) (x.inv : K) sorry sorry,
+      use { k : Kv | v k < min (γ*((v x')*(v x'))) (v x')},
+      simp only [exists_prop],
+      split,
+      { apply (of_subgroups.nhds_zero _).2,
+        have : ∃ γ' : Γ, v x' = γ', sorry,
+        cases this with γ' hγ',
+        use min (γ * γ'*γ') (γ'),
+        intro k,
+        simp only [hγ'],
+        sorry,
+        apply_instance },
+      { intro y,
+        rw set.mem_set_of_eq,
+        intro H,
+        apply Hγ,
+        rw set.mem_set_of_eq,
+        -- I sort of lost that y is a unit, but fortunately, it is easy to prove it's not zero
+        have : y ≠ 0,
+        { intro hy,
+          simp [hy] at H,
+          exact lt_irrefl _ H.2 },
+        -- Now I would like to apply the preceding lemma. But the setup is all wrong
+        sorry },
     end,
   ..(by apply_instance : topological_ring (valued_ring K v)) }

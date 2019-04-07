@@ -3,6 +3,7 @@ import topology.uniform_space.cauchy
 import topology.algebra.group
 
 import for_mathlib.function
+import for_mathlib.filter
 
 open topological_space
 
@@ -38,4 +39,45 @@ begin
   unfold continuous₂,
   rw function.uncurry_comp₂,
   exact hf.comp hg
+end
+
+section
+open filter
+
+/-
+    f
+  α → β
+g ↓   ↓ h
+  γ → δ
+    i
+-/
+variables {g : α → γ} (eg : embedding g)
+include eg
+
+lemma embedding.nhds_eq_comap (a : α) : nhds a = comap g (nhds $ g a) :=
+by rw [eg.2, nhds_induced_eq_comap]
+
+variables {f : α → β} {i : γ → δ}
+          {h : β → δ} (eh : embedding h)
+          (H : h ∘ f = i ∘ g)
+include eh H
+
+lemma embedding.tendsto_iff (a : α) : continuous_at i (g a) → continuous_at f a:=
+begin
+  let N := nhds a, let Nf := nhds (f a),
+  let Nhf := nhds (h $ f a), let Ng := nhds (g a),
+  have Neq1 : Nf = comap h Nhf, from eh.nhds_eq_comap (f a),
+  have Neq2 : N = comap g Ng, from eg.nhds_eq_comap a,
+  intro hyp,
+  replace hyp : Ng ≤ comap i Nhf,
+  { unfold continuous_at at hyp,
+    rw ← show h (f a) = i (g a), from congr_fun H a at hyp,
+    rwa tendsto_iff_comap at hyp },
+  rw calc
+      continuous_at f a ↔ tendsto f N Nf : iff.rfl
+      ... ↔ N ≤ comap f Nf : tendsto_iff_comap
+      ... ↔ comap g Ng ≤ comap f (comap h Nhf) : by rw [Neq1, Neq2]
+      ... ↔ comap g Ng ≤ comap g (comap i Nhf) : by rw comap_comm H,
+  exact comap_mono hyp
+end
 end

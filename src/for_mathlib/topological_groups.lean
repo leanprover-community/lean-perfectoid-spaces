@@ -1,9 +1,12 @@
+import tactic.abel
+
 import topology.algebra.group
 --import topology.algebra.uniform_ring
 import for_mathlib.uniform_space.ring
 import ring_theory.subring
 
 import for_mathlib.topology
+import for_mathlib.filter
 
 universes u v
 open filter set
@@ -41,9 +44,7 @@ def add_group_with_zero_nhd.of_open_add_subgroup
 
     calc map δ_G (filter.prod Z Z)
           = map δ_G (map (ι ⨯ ι) $ filter.prod N N) : by rw prod_map_map_eq;refl
-      ... = map (δ_G ∘ ι⨯ι) (filter.prod N N)       : map_map
-      ... = map (ι ∘ δ_H) (filter.prod N N)         : by rw key₂
-      ... = map ι (map δ_H $ filter.prod N N)       : eq.symm map_map
+      ... = map ι (map δ_H $ filter.prod N N)       : map_comm key₂ _
       ... = map ι (map δ_H $ nhds (0, 0))           : by rw ← nhds_prod_eq
       ... ≤ map ι N : map_mono key₁
   end,
@@ -56,32 +57,86 @@ def of_open_add_subgroup {G : Type u} [str : add_comm_group G] (H : set G) [is_a
 
 end
 
+namespace add_group_with_zero_nhd
+
+local attribute [instance] add_group_with_zero_nhd.topological_space
+local notation `Z` := add_group_with_zero_nhd.Z
+
+variables {α : Type*}
+variables {G : Type*} [add_group_with_zero_nhd G]
+
+lemma nhds_eq_comap (g : G) : nhds g = comap (λ g', g' + -g) (Z G) :=
+by rw [← nhds_zero_eq_Z, nhds_translation_add_neg g]
+end add_group_with_zero_nhd
+
 namespace topological_group
 variables {G : Type*} {H : Type*}
 variables [group G] [topological_space G] [topological_group G]
 variables [group H] [topological_space H] [topological_group H]
 variables (f : G → H) [is_group_hom f]
 
+
+-- TODO when PR'ing to mathlib, make sure to include _right in the name
+-- of this and nhds_translation_mul_inv
+@[to_additive nhds_translation_add]
+lemma nhds_translation_mul (g : G) :
+  map (λ h, h*g) (nhds 1) = nhds g :=
+begin
+  rw ← nhds_translation_mul_inv g,
+  apply map_eq_comap_of_inverse ; ext ; simp
+end
+
+
+@[to_additive nhds_translation_add_neg_left]
+lemma nhds_translation_mul_inv_left (g : G) :
+  comap (λ h, g⁻¹*h) (nhds 1) = nhds g :=
+begin
+  refine comap_eq_of_inverse (λ h, g*h) _ _ _,
+  { funext x; simp },
+  { suffices : tendsto (λ h,g⁻¹*h) (nhds g) (nhds (g⁻¹ * g)), { simpa },
+    exact tendsto_mul tendsto_const_nhds tendsto_id },
+  { suffices : tendsto (λ h, g*h) (nhds 1) (nhds (g*1)), { simpa },
+    exact tendsto_mul tendsto_const_nhds tendsto_id }
+end
+
+@[to_additive nhds_translation_add_left]
+lemma nhds_translation_mul_left (g : G) :
+  map (λ h, g*h) (nhds 1) = nhds g :=
+begin
+  rw ← nhds_translation_mul_inv_left g,
+  apply map_eq_comap_of_inverse ; ext ; simp
+end
+
 @[to_additive topological_add_group.continuous_of_continuous_at_zero]
 lemma continuous_of_continuous_at_one (h : continuous_at f 1) :
   continuous f :=
 begin
+  replace h : map f (nhds 1) ≤ nhds 1, by rw ← is_group_hom.one f ; exact h,
   rw continuous_iff_continuous_at,
   intro g,
-  have hg : continuous (λ x, g⁻¹ * x) :=
-    continuous_mul continuous_const continuous_id,
-  have hfg : continuous (λ x, f g  * x) :=
-    continuous_mul continuous_const continuous_id,
-  convert tendsto.comp _ (tendsto.comp h _),
-  swap 4,
-  { simpa only [mul_left_inv] using hg.tendsto g },
-  swap 3,
-  { dsimp [function.comp],
-    simpa only [mul_left_inv] using hfg.tendsto (f 1) },
-  { funext x,
-    delta function.comp,
-    rw [is_group_hom.mul f, is_group_hom.inv f, ← mul_assoc, mul_right_inv, one_mul] },
+  have key : (f ∘ λ (h : G), g * h) = (λ (h : H), (f g) * h) ∘ f,
+    by ext ; simp [is_group_hom.mul f],
+  change map f (nhds g) ≤ nhds (f g),
+  rw [← nhds_translation_mul_left g, ← nhds_translation_mul_left (f g),
+      filter.map_comm key],
+  exact map_mono h
 end
+
+@[to_additive topological_add_group.tendsto_nhds_iff]
+lemma tendsto_nhds_iff {α : Type*} (f : α → H) (F : filter α) (h : H) :
+  tendsto f F (nhds h) ↔ ∀ V ∈ nhds (1 : H), {a | f a * h⁻¹ ∈ V} ∈ F :=
+let R := λ h', h' * h⁻¹,
+    N := nhds (1 : H) in
+calc tendsto f F (nhds h) ↔ map f F ≤ (nhds h) : iff.rfl
+  ... ↔ map f F ≤ comap R N : by rw nhds_translation_mul_inv
+  ... ↔ map R (map f F) ≤ N : map_le_iff_le_comap.symm
+  ... ↔ map (λ a, f a * h⁻¹) F ≤ N : by rw filter.map_map
+
+@[to_additive topological_add_group.tendsto_nhds_nhds_iff]
+lemma tendsto_nhds_nhds_iff (f : G → H) (g : G) (h : H) :
+  tendsto f (nhds g) (nhds h) ↔
+  ∀ V ∈ nhds (1 : H), ∃ U ∈ nhds (1 : G), ∀ g', g'*g⁻¹ ∈ U → f g' * h⁻¹ ∈ V :=
+by rw [tendsto_nhds_iff f, ← nhds_translation_mul_inv g] ; exact iff.rfl
 
 end topological_group
 
@@ -137,30 +192,9 @@ variables (K : Type*) [group K] [topological_space K] [topological_group K]
 
 end top_group_equiv
 
--- Next secton will move to order/filter/basic.lean and topology/basic.lean
+-- Next secton will move to topology/basic.lean
 section
-variables {α : Type*} {β : Type*} (f : filter α) (b : β) (φ : α → β)
-
-lemma tendsto_pure : tendsto φ f (pure b) ↔ φ ⁻¹' {b} ∈ f :=
-tendsto_principal
-
-variables {g : filter β} {s : set α} {t : set β} {φ}
-
-lemma mem_comap_sets_of_inj (h : ∀ a a', φ a = φ a' → a = a') :
-  s ∈ (comap φ g).sets ↔ ∃ t ∈ g.sets, s = φ ⁻¹' t :=
-begin
-  rw mem_comap_sets,
-  split ; rintros ⟨t, ht, hts⟩,
-  { use t ∪ φ '' s,
-    split,
-    { simp [mem_sets_of_superset ht] },
-    { rw [preimage_union, preimage_image_eq _ h],
-      exact (union_eq_self_of_subset_left hts).symm } },
-  { use [t, ht],
-    rwa hts }
-end
-
-variables [topological_space β]
+variables {α : Type*} {β : Type*} [topological_space β]
 
 /-- If a function is constant on some set of a proper filter then it converges along this filter -/
 lemma exists_limit_of_ultimately_const {φ : α → β} {f : filter α} (hf : f ≠ ⊥)
