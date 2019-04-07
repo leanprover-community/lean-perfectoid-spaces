@@ -1,5 +1,6 @@
 import topology.algebra.group
-import topology.algebra.uniform_ring
+--import topology.algebra.uniform_ring
+import for_mathlib.uniform_space.ring
 import ring_theory.subring
 
 import for_mathlib.topology
