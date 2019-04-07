@@ -2,9 +2,12 @@ import ring_theory.localization
 import ring_theory.subring
 import continuous_valuations
 import Huber_pair
+import Huber_ring.localization
 
 import for_mathlib.nonarchimedean.basic
 import for_mathlib.data.set.finite
+import for_mathlib.uniform_space.ring -- need completions of rings plus UMP
+import for_mathlib.group -- some stupid lemma about units
 
 universes u₁ u₂ u₃
 
@@ -62,33 +65,172 @@ set.ext $ λ v, ⟨λ h, h.right, λ h, ⟨le_refl _, h⟩⟩
 definition rational_open (s : A) (T : set A) : set (Spa A) :=
 {v | (∀ t ∈ T, (v t ≤ v s)) ∧ (v s ≠ 0)}
 
+-- Here's everything in one package.
 structure rational_open_data (A : Huber_pair) :=
 (s : A)
 (T : set A)
-(Hfin : finite T)
+(Tfin : fintype T)
 (Hopen : is_open ((ideal.span T) : set A))
 
-def rational_open_data.open (rod : rational_open_data A) : set (Spa A) :=
-{v | (∀ t ∈ rod.T, (v t ≤ v rod.s)) ∧ (v rod.s ≠ 0)}
+instance (r : rational_open_data A) : fintype r.T := r.Tfin
 
-def rational_open_data.insert_s (rod : rational_open_data A) : rational_open_data A :=
-{ s := rod.s,
-  T := insert rod.s rod.T,
-  Hfin := set.finite_insert _ rod.Hfin,
-  Hopen := sorry -- need "an ideal is open if it contains an open sub-ideal"
+namespace rational_open_data
+
+def ext (r₁ r₂ : rational_open_data A) (hs : r₁.s = r₂.s) (hT : r₁.T = r₂.T) :
+  r₁ = r₂ :=
+begin
+  cases r₁, cases r₂,
+  congr; assumption
+end
+
+def rational_open (r : rational_open_data A) : set (Spa A) :=
+rational_open r.s r.T
+
+def localization (r : rational_open_data A) := Huber_ring.away r.T r.s
+
+instance (r : rational_open_data A) : topological_space (localization r) :=
+Huber_ring.away.topological_space r.T r.s r.Hopen
+
+instance (r : rational_open_data A) : ring_with_zero_nhd (localization r) :=
+Huber_ring.away.ring_with_zero_nhd r.T r.s r.Hopen
+
+instance (r : rational_open_data A) : comm_ring (localization r) :=
+by unfold localization; apply_instance
+
+instance (r : rational_open_data A) : topological_ring (localization r) := by apply_instance
+
+open algebra
+
+instance (r : rational_open_data A) : algebra A (localization r) := Huber_ring.away.algebra r.T r.s
+
+/- In this file, we are going to take a projective limit over a preordered set of rings,
+   to make a presheaf. The underlying type of this preorder is `rational_open_data A`.
+
+ The correct preorder on rational open data:
+
+def correct_preorder : preorder (rational_open_data A) :=
+{ le := λ r1 r2, rational_open r1 ⊆ rational_open r2,
+  le_refl := λ _ _, id,
+  le_trans := λ _ _ _, subset.trans,
 }
 
-def rational_open_data.inter_aux (r1 r2 : rational_open_data A) : rational_open_data A :=
+One can prove (in maths) that r1 ≤ r2 iff there's a continuous R-algebra morphism
+of Huber pairs localization r2 → localization r1. I think the ← direction of this
+iff is straightforward (but I didn't think about it too carefully). However we
+definitely cannot prove the → direction of this iff in this repo yet because we
+don't have enough API for cont. Here is an indication
+of part of the problem. localization r2 is just A[1/r2.s]. But we cannot prove yet r2.s is
+invertible in localization.r1, even though we know it doesn't canish anywhere on
+rational_open r2 and hence on rational_open r1, because the fact that it doesn't vanish anywhere
+on rational_open r1 only means that it's not in any prime ideal corresponding
+to a *continuous* valuation on localization r1; one would now need to prove that every maximal ideal
+is the support of a continuous valuation, which is Wedhorn 7.52(2). This is not
+too bad -- but it is work that we have not yet done. This is not the whole story though;
+we would also need that r1.T is power-bounded in localization.r2
+and this looks worse: it's Wedhorn 7.52(1). Everything is do-able, but it's just *long*.
+Long as in "thousands more lines of code".
+
+We have to work with a weaker preorder then, because haven't made a good enough
+API for continuous valuations. We basically work with the preorder r1 ≤ r2 iff
+there's a continuous R-algebra map localization r2 → localization r1, i.e, we
+define our way around the problem. We are fortunate in that we can prove
+(in maths) that the projective limit over this preorder agrees with the projective
+limit over the correct preorder.
+-/
+
+-- note: I don't think we ever use le_refl or le_trans
+instance : preorder (rational_open_data A) :=
+{ le := λ r1 r2, ∃ k : A, r1.s * k = r2.s ∧
+    ∀ t₁ ∈ r1.T, ∃ t₂ ∈ r2.T, (of_id A (localization r2)).to_fun (t₁ * k - t₂) = 0,
+  le_refl := sorry, -- should be easy
+  le_trans := sorry -- should be fine
+}
+
+-- our preorder is weaker than the preorder we're supposed to have but don't. However
+-- the projective limit we take over our preorder is provably (in maths) equal to
+-- the projective limit that we cannot even formalise. The thing we definitely need
+-- is that if r1 ≤ r2 then there's a map localization r1 → localization r2
+
+/-- This awful function produces r1.s as a unit in localization r2 -/
+noncomputable def s_inv_aux (r1 r2 : rational_open_data A) (h : r1 ≤ r2) : units (localization r2) :=
+@units.unit_of_mul_left_eq_unit _ _
+  ((of_id A (localization r2)).to_fun r1.s)
+  ((of_id A (localization r2)).to_fun (classical.some h))
+  (localization.to_units (⟨r2.s, 1, by simp⟩ : powers r2.s)) (begin
+    suffices : (of_id A (localization r2)).to_fun (r1.s * classical.some h) =
+      (localization.to_units (⟨r2.s, 1, by simp⟩ : powers r2.s)).val,
+      convert this,
+      convert (is_ring_hom.map_mul _).symm,
+      apply_instance, -- stupid type class inference
+    rw (classical.some_spec h).1,
+    refl,
+end)
+
+noncomputable def rational_open_subset.restriction {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
+  localization r1 → localization r2 :=
+Huber_ring.away.lift r1.T r1.s
+( show ((s_inv_aux r1 r2 h)⁻¹).inv = (of_id A (localization r2)).to_fun r1.s, from rfl)
+
+-- Johan -- can you give me a guide for how to prove this?
+def localization.nonarchimedean (r : rational_open_data A) :
+  topological_add_group.nonarchimedean (localization r) := sorry
+
+local attribute [instance] set.pointwise_mul_comm_semiring
+local attribute [instance] set.mul_action
+
+-- KMB trying to debug next def
+example (r : rational_open_data A) : algebra A (localization r) := by apply_instance
+example (r : rational_open_data A) : set (localization r) :=
+  (((of_id A (localization r)).to_fun '' r.T) : set (localization r))
+example (r : rational_open_data A) : localization r :=
+((localization.mk 1 ⟨r.s, 1, by simp⟩) : localization r)
+example (r : rational_open_data A) : monoid (localization r) := by apply_instance
+
+-- ? Why doesn't this work? Johan -- do you have any idea?
+-- def localization.power_bounded_data (r : rational_open_data A) : set (localization r) :=
+--((localization.mk 1 ⟨r.s, 1, pow_one _⟩) : localization r) •
+--(((of_id A (localization r)).to_fun '' r.T) : set (localization r))
+
+-- non • version:
+def localization.power_bounded_data (r : rational_open_data A) : set (localization r) :=
+(λ b, ((localization.mk 1 ⟨r.s, 1, pow_one _⟩) : localization r) * b) ''
+(((of_id A (localization r)).to_fun '' r.T) : set (localization r))
+
+-- Johan -- can you give me a guide for filling in this sorry?
+theorem localization.power_bounded (r : rational_open_data A) : is_power_bounded_subset
+(localization.power_bounded_data r) := sorry
+
+-- This sorry will be messy, but not impossible, to fill in. Need h.some_spec.2
+lemma rational_open_subset.restriction_is_cts {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
+  continuous (rational_open_subset.restriction h) := Huber_ring.away.lift_continuous r1.T r1.s
+  (localization.nonarchimedean r2)
+ (Huber_ring.away.of_continuous r2.T r2.s
+  (show ((localization.to_units (⟨r2.s, 1, by simp⟩ : powers r2.s))⁻¹ : units (localization r2)).inv =
+     (of_id A (localization r2)).to_fun r2.s, from rfl) r2.Hopen) _ _ sorry
+
+
+
+-- Note: I don't think we ever use this.
+noncomputable def insert_s (r : rational_open_data A) : rational_open_data A :=
+{ s := r.s,
+  T := insert r.s r.T,
+  Tfin := set.fintype_insert r.s r.T, -- noncomputable!
+  Hopen := sorry -- need "an ideal is open if it contains an open sub-ideal"
+    -- Johan says `is_open_of_open_submodule`
+}
+
+-- not sure we ever use this
+noncomputable def inter_aux (r1 r2 : rational_open_data A) : rational_open_data A :=
 { s := r1.s * r2.s,
-  T := ((*) <$> r1.T <*> r2.T),
-  Hfin := sorry, -- need "product of finite sets is finite"
+  T := r1.T * r2.T,
+  Tfin := by apply_instance,
   Hopen := sorry /-
     need "product of open subgroups is open in a Huber ring" (because subgroup is open
     iff it contains I^N for some ideal of definition)
   -/
 }
 
-
+end rational_open_data
 
 lemma mk_mem_rational_open {s : A} {T : set A} {v : valuation A Γ} {hv : mk v ∈ Spa A} :
   (⟨mk v, hv⟩ : Spa A) ∈ rational_open s T ↔ (∀ t ∈ T, (v t ≤ v s)) ∧ (v s ≠ 0) :=
@@ -225,7 +367,9 @@ begin
 end
 
 -- Current status: proof is broken with 2 sorries.
--- KMB remarks that we don't need this result yet so he's commenting it out
+-- KMB remarks that we don't need this result yet so he's commenting it out for now.
+-- We might well need it though!
+
 /-
 lemma rational_basis.is_basis : topological_space.is_topological_basis (rational_basis A) :=
 begin
@@ -269,10 +413,8 @@ split,
 end
 -/
 
-/- The value of the presheaf on a rational open given by T and s is isomorphic
-to R<T/s>. Here is the construction
--/
-
+-- KMB remarks that we don't need the presheaf on the basic either
+/-
 namespace rational_open
 
 def presheaf.aux (s : A) (T : set A) := localization.away s
@@ -304,17 +446,19 @@ def presheaf' (s : A) (T : set A) [Hfin : fintype T]
   (Hopen : _root_.is_open ((ideal.span T) : set A)) : Type* := sorry
 -- ring_completion presheaf.aux s T
 
-def presheaf (rod : rational_open_data A) : Type* := sorry
--- ring_completion presheaf.aux rod.s rod.T
-
 end rational_open
+-/
 
-def rational_open_subsets_data (U : set (Spa A)) (HU : is_open U) :=
-{ rod : rational_open_data A // rod.open ⊆ U}
+def rational_open_data_subsets (U : set (Spa A)) (HU : is_open U) :=
+{ r : rational_open_data A // r.rational_open ⊆ U}
 
-def presheaf (U : set (Spa A)) (HU : is_open U) :=
-{f : Π (rosd : rational_open_subsets_data U HU), Spa.rational_open.presheaf rosd.1 //
-   sorry} -- agrees on overlaps
+local attribute [instance] topological_add_group.to_uniform_space
+
+-- nearly there but doesn't compile :-( "deep recursion"
+--def presheaf (U : set (Spa A)) (HU : is_open U) :=
+--{f : Π (rd : rational_open_data_subsets U HU), ring_completion (rational_open_data.localization rd.1) //
+--   ∀ (rd1 rd2 : rational_open_data_subsets U HU) (h : rd1.1 ≤ rd2.1),
+--     rational_open_data.rational_open_subset.restriction h (f rd1) = (f rd2)} -- agrees on overlaps
 
 end Spa
 
