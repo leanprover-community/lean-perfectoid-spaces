@@ -32,4 +32,14 @@ lemma mul_le_mul {s₁ s₂ t₁ t₂ : set α} (hs : s₁ ⊆ s₂) (ht : t₁ 
   s₁ * t₁ ⊆ s₂ * t₂ :=
 by { rintros _ ⟨a, ha, b, hb, rfl⟩, exact ⟨a, hs ha, b, ht hb, rfl⟩ }
 
+local attribute [instance] pointwise_mul pointwise_add
+
+instance pointwise_mul_fintype [has_mul α] [decidable_eq α] (s t : set α) [hs : fintype s] [ht : fintype t] :
+  fintype (s * t : set α) := by {rw pointwise_mul_eq_image, apply set.fintype_image}
+
+instance pointwise_add_fintype [has_add α] [decidable_eq α] (s t : set α) [hs : fintype s] [ht : fintype t] :
+  fintype (s + t : set α) := by {rw pointwise_add_eq_image, apply set.fintype_image}
+-- attribute [to_additive set.pointwise_add_fintype] or something should go here but KMB forgot the
+-- syntax for when it wasn't auto generated
+
 end set
