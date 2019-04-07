@@ -104,7 +104,6 @@ def comp {ℱ : presheaf_of_typesU X} {𝒢 : presheaf_of_typesU Y} {ℋ : presh
   ρ := λ U x, ℋ.res (le_of_eq (comap_comp _)) (f𝒢ℋ.ρ _ (fℱ𝒢.ρ U x)),
   nat := λ U V hUV x, by rw [fℱ𝒢.nat, f𝒢ℋ.nat, ℋ.comp, ℋ.comp] }
 
---set_option pp.implicit true
 lemma comp_assoc {ℱ : presheaf_of_typesU X} {𝒢 : presheaf_of_typesU Y} {ℋ : presheaf_of_typesU Z}
   {𝒥 : presheaf_of_typesU W} (fℱ𝒢 : f_map ℱ 𝒢) (f𝒢ℋ  : f_map 𝒢 ℋ) (fℋ𝒥 : f_map ℋ 𝒥) :
   comp (comp fℱ𝒢 f𝒢ℋ) fℋ𝒥 = comp fℱ𝒢 (comp f𝒢ℋ fℋ𝒥) :=
