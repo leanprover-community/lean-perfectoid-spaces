@@ -25,10 +25,18 @@ end
 end topological_space
 
 namespace topological_ring
-open topological_space
-variables {R : Type*} [ring R] [topological_space R]
+open topological_space function
+variables (R : Type*) [ring R]
+
+lemma units.coe_inj : injective (coe : units R → R) :=
+λ x y h, units.ext h
+
+variables  [topological_space R]
 
 instance : topological_space (units R) := induced units.val ‹_›
+
+lemma units_embedding : embedding (units.val : units R → R) :=
+⟨units.coe_inj _, rfl⟩
 
 instance top_monoid_units [topological_ring R] : topological_monoid (units R) :=
 ⟨begin
@@ -57,6 +65,6 @@ variables [topological_division_ring K]
 
 instance units_top_group : topological_group (units K) :=
 { continuous_inv := topological_division_ring.continuous_inv K,
-  ..topological_ring.top_monoid_units }
+  ..topological_ring.top_monoid_units K}
 
 end topological_division_ring

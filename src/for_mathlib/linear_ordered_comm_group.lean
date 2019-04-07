@@ -271,6 +271,10 @@ lemma lt_of_mul_lt_mul_left {α : Type*} [linear_ordered_comm_group α] :
   ∀ a b c : α, a * b < a * c → b < c :=
 λ a b c h, lt_of_not_ge (λ h', lt_irrefl _ $ lt_of_lt_of_le h $
                                linear_ordered_comm_group.mul_le_mul_left h' a)
+
+-- TODO: for completeness, we would need variations
+lemma mul_inv_lt_of_lt_mul {x y z : α} (h : x < y*z) : x*z⁻¹ < y :=
+by simpa [mul_inv_cancel_right] using mul_lt_right z⁻¹ h
 end linear_ordered_comm_group
 
 
@@ -389,7 +393,8 @@ end actual_ordered_comm_monoid
 
 variables {Γ : Type*} [linear_ordered_comm_group Γ]
 
-lemma with_zero.not_lt_zero : ∀ (x : with_zero Γ), x < 0 → false :=
+namespace with_zero
+lemma not_lt_zero : ∀ (x : with_zero Γ), x < 0 → false :=
 begin
   intros x h,
   induction x using with_zero.cases_on,
@@ -397,15 +402,58 @@ begin
   { exact (with_zero.not_some_le_zero : ¬ (x : with_zero Γ) ≤ 0) (le_of_lt h) },
 end
 
-lemma with_zero.some_lt_some : ∀ (x y : Γ), (x : with_zero Γ) < y ↔ x < y :=
+lemma some_lt_some : ∀ (x y : Γ), (x : with_zero Γ) < y ↔ x < y :=
 λ x y, by repeat { rw [lt_iff_le_not_le, with_zero.some_le_some'] }
 
-lemma with_zero.some_of_gt {x y : with_zero Γ} (h : x < y) : ∃ γ : Γ, y = (γ : with_zero Γ) :=
+lemma some_of_gt {x y : with_zero Γ} (h : x < y) : ∃ γ : Γ, y = (γ : with_zero Γ) :=
 begin
   induction y using with_zero.cases_on,
   { exact false.elim (with_zero.not_lt_zero _ h) },
   { use y },
 end
+
+lemma eq_some_of_mul_eq_some_right {x y : with_zero Γ} {γ : Γ} (h : x*y = γ) :
+  ∃ γ' : Γ, y = γ' :=
+begin
+  rw ←with_zero.ne_zero_iff_exists,
+  intro hy,
+  rw [hy, mul_zero] at h,
+  exact zero_ne_coe h
+end
+
+lemma eq_some_of_mul_eq_some_left {x y : with_zero Γ} {γ : Γ} (h : x*y = γ) :
+  ∃ γ' : Γ, x = γ' :=
+by rw mul_comm at h ; exact with_zero.eq_some_of_mul_eq_some_right h
+
+lemma eq_some_of_mul_eq_some {x y : with_zero Γ} {γ : Γ} (h : x*y = γ) :
+  (∃ γ' : Γ, x = γ') ∧ ∃ γ'' : Γ, y = γ'' :=
+⟨with_zero.eq_some_of_mul_eq_some_left h, with_zero.eq_some_of_mul_eq_some_right h⟩
+
+lemma mul_inv_lt_of_lt_mul {x y z : with_zero Γ} (h : x < y*z) : x*z⁻¹ < y :=
+begin
+  cases some_of_gt h with γ h',
+  rcases with_zero.eq_some_of_mul_eq_some h' with ⟨⟨γ', hy⟩, γ'', hz⟩,
+  rw [hy, hz] at *,
+  induction x using with_zero.cases_on,
+  { rw zero_mul,
+    exact zero_lt_some },
+  { rw inv_coe,
+    rw [mul_coe, some_lt_some] at *,
+    exact linear_ordered_comm_group.mul_inv_lt_of_lt_mul h },
+end
+lemma eq_inv_of_mul_eq_one_right {x y : with_zero Γ} (h : x*y = 1) : y = x⁻¹ :=
+begin
+  rcases with_zero.eq_some_of_mul_eq_some h with ⟨⟨γ', hx⟩, γ'', hy⟩,
+  rw [hx, hy] at *,
+  rw [mul_coe, ← coe_one, coe_inj, mul_eq_one_iff_inv_eq] at h,
+  rw [inv_coe, h],
+end
+lemma eq_inv_of_mul_eq_one_left {x y : with_zero Γ} (h : x*y = 1) : x = y⁻¹ :=
+begin
+  rw mul_comm at h,
+  exact  with_zero.eq_inv_of_mul_eq_one_right h,
+end
+end with_zero
 
 open with_zero
 

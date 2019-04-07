@@ -118,6 +118,21 @@ begin
   { constructor }
 end
 
+-- As far as Patrick can see, this is the useful version of valuation.map_unit
+lemma unit_is_some (x : units R) : ∃ γ : Γ, v x = γ :=
+begin
+  have h1 := v.map_mul x.val x.inv,
+  rw [x.val_inv, valuation.map_one] at h1,
+  exact with_zero.eq_some_of_mul_eq_some_left h1.symm
+end
+
+lemma map_inv (x : units R) : v x⁻¹.val = (v x)⁻¹ :=
+begin
+  have := congr_arg v x.val_inv,
+  rw [v.map_one, map_mul] at this,
+  exact with_zero.eq_inv_of_mul_eq_one_right this,
+end
+
 lemma map_unit' (x : units R) : (v x).is_some := map_unit v x.val_inv
 
 definition unit_map : units R → Γ :=
@@ -160,6 +175,10 @@ end
 calc v (-x) = v (-1 * x)   : by simp
         ... = v (-1) * v x : map_mul _ _ _
         ... = v x          : by simp
+
+lemma map_sub_swap (x y : R) : v (x - y) = v (y - x) :=
+calc v (x - y) = v (-(y - x)) : by rw show x - y = -(y-x), by abel
+           ... = _ : map_neg _ _
 
 lemma map_sub_le_max (x y : R) : v (x - y) ≤ max (v x) (v y) :=
 calc v (x-y) = v (x + -y)   : by simp
