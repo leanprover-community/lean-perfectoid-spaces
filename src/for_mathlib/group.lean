@@ -46,3 +46,13 @@ variables {M : Type*} [monoid M]
 
 lemma units.ext_inv (a b : units M) (h : a.inv = b.inv) : a = b :=
 inv_inj $ units.ext h
+
+-- is this true for non-commutative monoids?
+/-- produces a unit s from a proof that s divides a unit -/
+def units.unit_of_mul_left_eq_unit {M : Type*} [comm_monoid M]
+  {s t : M} {u : units M}
+(h : s * t = u) : units M :=
+{ val := s,
+  inv := t * (u⁻¹ : units M),
+  val_inv := by {show s * (t * (u⁻¹ : units M)) = 1, rw [←mul_assoc, h], simp},
+  inv_val := by {show t * (u⁻¹ : units M) * s = 1, rw [mul_comm, ←mul_assoc, h], simp} }
