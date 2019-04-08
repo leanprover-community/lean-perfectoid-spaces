@@ -535,7 +535,8 @@ def presheaf.map {U V : opens (Spa A)} (hUV : U ≤ V) :
 λ f, ⟨λ rd, f.val ⟨rd.val, set.subset.trans rd.2 hUV⟩,
 begin
   intros,
-  let X := f.2 ⟨rd1.1, set.subset.trans rd1.2 hUV⟩ ⟨rd2.1, set.subset.trans rd2.2 hUV⟩ h,
+  let X := f.2 (rational_open_data_subsets.map hUV rd1)
+    (rational_open_data_subsets.map hUV rd2) h,
   exact X,
 end⟩
 
