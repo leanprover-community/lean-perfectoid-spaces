@@ -213,14 +213,37 @@ lemma rational_open_subset.restriction_is_cts {r1 r2 : rational_open_data A} (h 
       let h' := h, -- need it later
       rcases h with ⟨a, ha, h₂⟩,
       rcases h₂ t₁ ht₁ with ⟨t₂, ht₂, N, hN⟩,
-      dsimp, unfold localization.power_bounded_data,
+      show ↑(s_inv_aux r1 r2 _)⁻¹ * to_fun (localization r2) t₁ ∈
+        localization.mk 1 ⟨r2.s, _⟩ • (of_id ↥A (localization r2)).to_fun '' r2.T,
       rw mem_smul_set,
       use (of_id ↥A (localization r2)).to_fun t₂,
       existsi _, swap,
         rw mem_image, use t₂, use ht₂,
       rw [←units.mul_left_inj (s_inv_aux r1 r2 h'), units.mul_inv_cancel_left],
-      show _ = (of_id ↥A (localization r2)).to_fun (r1.s) * _,
-      sorry, -- KMB working on this now
+      show to_fun (localization r2) t₁ = to_fun (localization r2) (r1.s) *
+        (localization.mk 1 ⟨r2.s, _⟩ * to_fun (localization r2) t₂),
+      rw [mul_comm, mul_assoc],
+      rw ←units.mul_left_inj (localization.to_units (⟨r2.s, 1, by simp⟩ : powers r2.s)),
+      rw ←mul_assoc,
+      -- t1=s1*(1/s2 * t2) in r2
+      have : ↑(localization.to_units (⟨r2.s, 1, by simp⟩ : powers r2.s)) *
+        localization.mk (1 : A) (⟨r2.s, 1, by simp⟩ : powers r2.s) = 1,
+      convert units.mul_inv _,
+      rw [this, one_mul], clear this,
+      show to_fun (localization r2) r2.s * _ = _,
+      rw ←units.mul_left_inj (localization.to_units (⟨r2.s ^ N, N, rfl⟩ : powers r2.s)),
+      show to_fun (localization r2) (r2.s ^ N) * _ = to_fun (localization r2) (r2.s ^ N) * _,
+      have hrh : is_ring_hom (to_fun (localization r2)) := begin
+        change is_ring_hom ((of_id ↥A (localization r2)).to_fun),
+        apply_instance,
+      end,
+      rw ←@is_ring_hom.map_mul _ _ _ _ (to_fun (localization r2)) hrh,
+      rw ←@is_ring_hom.map_mul _ _ _ _ (to_fun (localization r2)) hrh,
+      rw ←@is_ring_hom.map_mul _ _ _ _ (to_fun (localization r2)) hrh,
+      rw ←@is_ring_hom.map_mul _ _ _ _ (to_fun (localization r2)) hrh,
+      congr' 1,
+      rw [←mul_assoc _ t₂, hN],
+      rw ←ha, ring,
     end)
 
 -- Note: I don't think we ever use this.
