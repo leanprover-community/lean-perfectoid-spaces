@@ -88,16 +88,11 @@ rational_open r.s r.T
 
 def localization (r : rational_open_data A) := Huber_ring.away r.T r.s
 
-instance (r : rational_open_data A) : topological_space (localization r) :=
-Huber_ring.away.topological_space r.T r.s r.Hopen
-
 instance (r : rational_open_data A) : ring_with_zero_nhd (localization r) :=
 Huber_ring.away.ring_with_zero_nhd r.T r.s r.Hopen
 
 instance (r : rational_open_data A) : comm_ring (localization r) :=
 by unfold localization; apply_instance
-
-instance (r : rational_open_data A) : topological_ring (localization r) := by apply_instance
 
 open algebra
 
