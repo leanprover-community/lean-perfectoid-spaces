@@ -141,9 +141,19 @@ limit over the correct preorder.
 -- note: I don't think we ever use le_refl or le_trans
 instance : preorder (rational_open_data A) :=
 { le := λ r1 r2, ∃ k : A, r1.s * k = r2.s ∧
-    ∀ t₁ ∈ r1.T, ∃ t₂ ∈ r2.T, (of_id A (localization r2)).to_fun (t₁ * k - t₂) = 0,
-  le_refl := sorry, -- should be easy
-  le_trans := sorry -- should be fine
+    ∀ t₁ ∈ r1.T, ∃ t₂ ∈ r2.T, ∃ N : ℕ, r2.s ^ N * t₂ = r2.s ^ N * (t₁ * k),
+  le_refl := λ r, ⟨1, mul_one _, λ t ht, ⟨t, ht, 0, by rw mul_one⟩⟩,
+  le_trans := λ a b c ⟨k, hk, hab⟩ ⟨l, hl, hbc⟩, ⟨k * l, by rw [←mul_assoc, hk, hl],
+    λ ta hta, begin
+      rcases hab ta hta with ⟨tb, htb, Nab, h1⟩,
+      rcases hbc tb htb with ⟨hc, htc, Nbc, h2⟩,
+      use hc, use htc, use (Nab + Nbc),
+      rw [←mul_assoc, pow_add, mul_assoc, h2, ←hl, mul_pow, mul_pow],
+      rw (show b.s ^ Nab * l ^ Nab * (b.s ^ Nbc * l ^ Nbc * (tb * l)) =
+        b.s ^ Nab * tb * (l ^ Nab * (b.s ^ Nbc * l ^ Nbc *  l)), by ring),
+      rw h1,
+      ring
+    end⟩
 }
 
 -- our preorder is weaker than the preorder we're supposed to have but don't. However
