@@ -550,6 +550,12 @@ by { delta presheaf.map, tidy }
 
 end
 
+instance (rd : rational_open_data A): uniform_add_group (rational_open_data.localization rd) :=
+topological_add_group_is_uniform
+
+noncomputable
+example (rd : rational_open_data A): ring (ring_completion (rational_open_data.localization rd))
+:= by apply_instance
 end Spa
 
 
