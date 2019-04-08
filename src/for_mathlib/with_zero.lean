@@ -136,7 +136,7 @@ end
 section group
 variables [group α]
 
-lemma mul_left_cancel : ∀  (x : with_zero α) (h : x ≠ 0) {y z : with_zero α} ,
+lemma mul_left_cancel : ∀ {x : with_zero α} (h : x ≠ 0) {y z : with_zero α} ,
   x * y = x * z → y = z
 | 0       h := false.elim $ h rfl
 | (a : α) h := λ y z h2, begin
@@ -144,7 +144,7 @@ lemma mul_left_cancel : ∀  (x : with_zero α) (h : x ≠ 0) {y z : with_zero �
   rwa [←mul_assoc, ←mul_assoc, with_zero.mul_left_inv _ h, one_mul, one_mul] at h3,
 end
 
-lemma mul_right_cancel : ∀  (x : with_zero α) (h : x ≠ 0) {y z : with_zero α} ,
+lemma mul_right_cancel : ∀ {x : with_zero α} (h : x ≠ 0) {y z : with_zero α} ,
   y * x = z * x → y = z
 | 0       h := false.elim $ h rfl
 | (a : α) h := λ y z h2, begin
