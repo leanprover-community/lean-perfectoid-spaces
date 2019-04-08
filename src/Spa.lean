@@ -514,7 +514,10 @@ open topological_space
 def rational_open_data_subsets (U : opens (Spa A)) :=
 { r : rational_open_data A // r.rational_open ⊆ U}
 
---def rational_open_data_subsets.res :
+def rational_open_data_subsets.map {U V : opens (Spa A)} (hUV : U ≤ V)
+  (rd : rational_open_data_subsets U) :
+  rational_open_data_subsets V :=
+⟨rd.val, set.subset.trans rd.property hUV⟩
 
 instance (r : rational_open_data A) : uniform_space (rational_open_data.localization r) :=
 topological_add_group.to_uniform_space _
@@ -522,7 +525,6 @@ topological_add_group.to_uniform_space _
 def rational_open_data.presheaf (r : rational_open_data A) :=
 ring_completion (rational_open_data.localization r)
 
--- nearly there but doesn't compile :-( "deep recursion"
 def presheaf (U : opens (Spa A)) :=
 {f : Π (rd : rational_open_data_subsets U), ring_completion (rational_open_data.localization rd.1) //
    ∀ (rd1 rd2 : rational_open_data_subsets U) (h : rd1.1 ≤ rd2.1),
