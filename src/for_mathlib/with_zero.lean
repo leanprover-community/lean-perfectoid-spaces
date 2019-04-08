@@ -132,4 +132,26 @@ begin
   { replace h : y ≤ x := le_of_not_le h,
     simp [min_eq_right, h] }
 end
+
+section group
+variables [group α]
+
+lemma mul_left_cancel : ∀  (x : with_zero α) (h : x ≠ 0) {y z : with_zero α} ,
+  x * y = x * z → y = z
+| 0       h := false.elim $ h rfl
+| (a : α) h := λ y z h2, begin
+  have h3 : (a⁻¹ : with_zero α) * (a * y) = a⁻¹ * (a * z) := by rw h2,
+  rwa [←mul_assoc, ←mul_assoc, with_zero.mul_left_inv _ h, one_mul, one_mul] at h3,
+end
+
+lemma mul_right_cancel : ∀  (x : with_zero α) (h : x ≠ 0) {y z : with_zero α} ,
+  y * x = z * x → y = z
+| 0       h := false.elim $ h rfl
+| (a : α) h := λ y z h2, begin
+  have h3 : (y * a) * a⁻¹ = (z * a) * a⁻¹ := by rw h2,
+  rwa [mul_assoc, mul_assoc, with_zero.mul_right_inv _ h, mul_one, mul_one] at h3,
+end
+
+end group
+
 end with_zero
