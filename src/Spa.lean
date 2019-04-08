@@ -219,7 +219,8 @@ end
 
 end
 
--- This sorry will be messy, but not impossible, to fill in. Need h.some_spec.2
+-- To prove continuity I need to check that something is power-bounded; that's where
+-- the work is here. The claim could be factored out, it's the 40 line begin/end block.
 lemma rational_open_subset.restriction_is_cts {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
   continuous (rational_open_subset.restriction h) := Huber_ring.away.lift_continuous r1.T r1.s
   (localization.nonarchimedean r2)
@@ -513,10 +514,10 @@ def rational_open_data_subsets (U : set (Spa A)) (HU : is_open U) :=
 local attribute [instance] topological_add_group.to_uniform_space
 
 -- nearly there but doesn't compile :-( "deep recursion"
---def presheaf (U : set (Spa A)) (HU : is_open U) :=
---{f : Π (rd : rational_open_data_subsets U HU), ring_completion (rational_open_data.localization rd.1) //
---   ∀ (rd1 rd2 : rational_open_data_subsets U HU) (h : rd1.1 ≤ rd2.1),
---     rational_open_data.rational_open_subset.restriction h (f rd1) = (f rd2)} -- agrees on overlaps
+def presheaf (U : set (Spa A)) (HU : is_open U) :=
+{f : Π (rd : rational_open_data_subsets U HU), ring_completion (rational_open_data.localization rd.1) //
+   ∀ (rd1 rd2 : rational_open_data_subsets U HU) (h : rd1.1 ≤ rd2.1),
+     rational_open_data.rational_open_subset.restriction h (f rd1) = (f rd2)} -- agrees on overlaps
 
 end Spa
 
