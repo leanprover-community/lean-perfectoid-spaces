@@ -48,6 +48,7 @@ lemma units.ext_inv (a b : units M) (h : a.inv = b.inv) : a = b :=
 inv_inj $ units.ext h
 
 -- is this true for non-commutative monoids?
+-- KL: No, s := nat.pred, t := nat.succ, u := id
 /-- produces a unit s from a proof that s divides a unit -/
 def units.unit_of_mul_left_eq_unit {M : Type*} [comm_monoid M]
   {s t : M} {u : units M}

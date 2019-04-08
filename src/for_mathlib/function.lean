@@ -1,15 +1,9 @@
-import tactic.interactive
-
 variables {α : Type*} {β : Type*} {γ : Type*} {δ : Type*}
 
-def function.comp₂ (f : α → β → γ) (g : γ → δ) : α → β → δ := λ  x y, g (f x y)
+def function.comp₂ (f : α → β → γ) (g : γ → δ) : α → β → δ := λ x y, g (f x y)
 
 notation g `∘₂` f := function.comp₂ f g
 
 lemma function.uncurry_comp₂ (f : α → β → γ) (g : γ → δ) :
   function.uncurry (g ∘₂ f) = (g ∘ function.uncurry f) :=
-begin
-  ext x,
-  cases x,
-  simp[function.comp₂, function.uncurry],
-end
+funext $ λ ⟨p, q⟩, rfl
