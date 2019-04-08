@@ -181,23 +181,43 @@ noncomputable def rational_open_subset.restriction {r1 r2 : rational_open_data A
 Huber_ring.away.lift r1.T r1.s
 ( show ((s_inv_aux r1 r2 h)⁻¹).inv = (of_id A (localization r2)).to_fun r1.s, from rfl)
 
--- Johan -- can you give me a guide for how to prove this?
 def localization.nonarchimedean (r : rational_open_data A) :
   topological_add_group.nonarchimedean (localization r) :=
 of_submodules_comm.nonarchimedean
 
+section
+open localization submodule Huber_ring.away
 local attribute [instance] set.pointwise_mul_comm_semiring
 local attribute [instance] set.mul_action
 
--- KMB cannot get this to work without explictly feeding the typeclass into has_scalar.smul
 def localization.power_bounded_data (r : rational_open_data A) : set (localization r) :=
-@has_scalar.smul _ _ (show has_scalar (localization r) (set (localization r)), by apply_instance)
-((localization.mk 1 ⟨r.s, 1, pow_one _⟩) : localization r)
-(((of_id A (localization r)).to_fun '' r.T) : set (localization r))
+let s_inv : localization r := ((to_units ⟨r.s, ⟨1, by simp⟩⟩)⁻¹ : units (localization r)) in
+(s_inv • of_id A (localization r) '' r.T)
 
--- Johan -- can you give me a guide for filling in this sorry?
-theorem localization.power_bounded (r : rational_open_data A) : is_power_bounded_subset
-(localization.power_bounded_data r) := sorry
+set_option class.instance_max_depth 50
+
+theorem localization.power_bounded (r : rational_open_data A) :
+  is_power_bounded_subset (localization.power_bounded_data r) :=
+begin
+  apply bounded.subset,
+  work_on_goal 0 { apply add_group.subset_closure },
+  show is_bounded (ring.closure (localization.power_bounded_data r)),
+  intros U hU,
+  rw of_submodules_comm.nhds_zero at hU,
+  cases hU with V hV,
+  refine ⟨_, mem_nhds_sets (of_submodules_comm.is_open V) _, _⟩,
+  { rw submodule.mem_coe,
+    exact submodule.zero_mem _ },
+  { intros v hv b hb,
+    apply hV,
+    rw mul_comm,
+    rw submodule.mem_coe at hv ⊢,
+    convert submodule.smul_mem _ _ hv,
+    work_on_goal 1 { exact ⟨b, hb⟩ },
+    refl }
+end
+
+end
 
 -- This sorry will be messy, but not impossible, to fill in. Need h.some_spec.2
 lemma rational_open_subset.restriction_is_cts {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
