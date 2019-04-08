@@ -122,7 +122,7 @@ begin
   exact map_mono h
 end
 
-@[to_additive topological_add_group.tendsto_nhds_iff]
+@[to_additive topological_add_group.tendsto_nhds_iff']
 lemma tendsto_nhds_iff {α : Type*} (f : α → H) (F : filter α) (h : H) :
   tendsto f F (nhds h) ↔ ∀ V ∈ nhds (1 : H), {a | f a * h⁻¹ ∈ V} ∈ F :=
 let R := λ h', h' * h⁻¹,
@@ -132,13 +132,28 @@ calc tendsto f F (nhds h) ↔ map f F ≤ (nhds h) : iff.rfl
   ... ↔ map R (map f F) ≤ N : map_le_iff_le_comap.symm
   ... ↔ map (λ a, f a * h⁻¹) F ≤ N : by rw filter.map_map
 
-@[to_additive topological_add_group.tendsto_nhds_nhds_iff]
+@[to_additive topological_add_group.tendsto_nhds_nhds_iff']
 lemma tendsto_nhds_nhds_iff (f : G → H) (g : G) (h : H) :
   tendsto f (nhds g) (nhds h) ↔
   ∀ V ∈ nhds (1 : H), ∃ U ∈ nhds (1 : G), ∀ g', g'*g⁻¹ ∈ U → f g' * h⁻¹ ∈ V :=
 by rw [tendsto_nhds_iff f, ← nhds_translation_mul_inv g] ; exact iff.rfl
-
 end topological_group
+
+namespace topological_add_group
+-- `to_additive` generates statements using `g + -h` instead of `g-h`, let's fix that
+
+variables {G : Type*} [add_group G] [topological_space G] [topological_add_group G]
+variables {H : Type*} [add_group H] [topological_space H] [topological_add_group H]
+
+lemma tendsto_nhds_iff {α : Type*} (f : α → H) (F : filter α) (h : H) :
+    tendsto f F (nhds h) ↔ ∀ (V : set H), V ∈ nhds (0 : H) → {a : α | f a - h ∈ V} ∈ F :=
+topological_add_group.tendsto_nhds_iff' _ _ _
+
+lemma tendsto_nhds_nhds_iff (f : G → H) (g : G) (h : H) :
+  tendsto f (nhds g) (nhds h) ↔
+  ∀ V ∈ nhds (0 : H), ∃ U ∈ nhds (0 : G), ∀ g', g' - g ∈ U → f g' - h ∈ V :=
+topological_add_group.tendsto_nhds_nhds_iff' _ _ _
+end topological_add_group
 
 
 section
