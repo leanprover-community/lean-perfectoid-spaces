@@ -1,5 +1,6 @@
 import for_mathlib.topological_field
 import for_mathlib.topology
+import for_mathlib.division_ring
 import valuation.topology
 
 
@@ -61,15 +62,7 @@ instance valuation.topological_division_ring : topological_division_ring (valued
     begin
       let Kv := valued_ring K v,
       have H : units.val ∘ (λ x : units Kv, x⁻¹) = (λ x : Kv, x⁻¹) ∘ units.val,
-      { ext x,
-        show x.inv = x.val⁻¹,
-        rw [←units.mul_left_inj x],
-        show x.val * _ = x.val * _,
-        rw [x.val_inv, mul_inv_cancel],
-        have h : x.val * x.inv ≠ 0,
-          rw x.val_inv,
-          simp,
-        exact ne_zero_of_mul_ne_zero_right h },
+        by ext ;simp,
       rw continuous_iff_continuous_at,
       intro x,
       let emb := topological_ring.units_embedding Kv,
@@ -80,43 +73,27 @@ instance valuation.topological_division_ring : topological_division_ring (valued
       cases (of_subgroups.nhds_zero _).1 V_in with γ Hγ,
       let x' : units K := units.mk (x.val : K) (x.inv : K) x.val_inv x.inv_val,
       use { k : Kv | v k < min (γ*((v x')*(v x'))) (v x')},
-      simp only [exists_prop],
       split,
-      { apply (of_subgroups.nhds_zero _).2,
-        have : ∃ γ' : Γ, v x' = γ' := valuation.unit_is_some v x',
-        cases this with γ' hγ',
-        use min (γ * γ'*γ') (γ'),
+      { refine (of_subgroups.nhds_zero _).2 _,
+        cases valuation.unit_is_some v x' with γ' hγ',
+        use min (γ * γ' * γ') γ',
         intro k,
         simp only [hγ'],
-          intro h, convert h, ext, convert iff.rfl,
-          rw [with_zero.coe_min, mul_assoc], refl,
-        apply_instance },
-      { intro y,
-        rw set.mem_set_of_eq,
-        intro H,
+        intro h, convert h, ext, convert iff.rfl,
+        rw [with_zero.coe_min, mul_assoc], refl },
+      { intros y ineq,
         apply Hγ,
         rw set.mem_set_of_eq,
         -- I sort of lost that y is a unit, but fortunately, it is easy to prove it's not zero
         have : y ≠ 0,
         { intro hy,
-          simp [hy] at H,
-          exact lt_irrefl _ H.2 },
-        let yu : units Kv := ⟨y, y⁻¹, mul_inv_cancel this, inv_mul_cancel this⟩,
-        -- Now I would like to apply the preceding lemma. But the setup is all wrong
-      change v ((yu : Kv) - (x : Kv)) < _ at H, -- you have two H's Patrick
-      convert top_div_ring_aux v H_1, -- weird H_1 just appeared
-      apply congr_arg,
-      show _ - _ = _,
-      congr,
-      -- we've been here before
-      symmetry,
-      show x.inv = x.val⁻¹,
-      rw [←units.mul_left_inj x],
-      show x.val * _ = x.val * _,
-      rw [x.val_inv, mul_inv_cancel],
-      have h : x.val * x.inv ≠ 0,
-        rw x.val_inv,
-        simp,
-      exact ne_zero_of_mul_ne_zero_right h },
+          simp [hy] at ineq,
+          exact lt_irrefl _ ineq.2 },
+        let yu := units.mk' this,
+        change v ((yu : Kv) - (x : Kv)) < _ at ineq,
+        convert top_div_ring_aux v ineq,
+        apply congr_arg,
+        congr,
+        simp },
     end,
   ..(by apply_instance : topological_ring (valued_ring K v)) }
