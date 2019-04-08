@@ -514,6 +514,8 @@ open topological_space
 def rational_open_data_subsets (U : opens (Spa A)) :=
 { r : rational_open_data A // r.rational_open ⊆ U}
 
+--def rational_open_data_subsets.res :
+
 instance (r : rational_open_data A) : uniform_space (rational_open_data.localization r) :=
 topological_add_group.to_uniform_space _
 
@@ -531,7 +533,8 @@ def presheaf.map {U V : opens (Spa A)} (hUV : U ≤ V) :
 λ f, ⟨λ rd, f.val ⟨rd.val, set.subset.trans rd.2 hUV⟩,
 begin
   intros,
-  sorry
+  let X := f.2 ⟨rd1.1, set.subset.trans rd1.2 hUV⟩ ⟨rd2.1, set.subset.trans rd2.2 hUV⟩ h,
+  exact X,
 end⟩
 
 lemma presheaf.map_id (U : opens (Spa A)) :
@@ -546,9 +549,7 @@ end
 
 end Spa
 
--- goal now to define the 𝓞_X on *rational subsets* and then to extend.
 
--- to define it on rational subsets it's just a ring completion.
 
 -- remember that a rational open is not actually `rational_open s T` in full
 -- generality -- we also need that T is finite and that T generates an open ideal in A.
