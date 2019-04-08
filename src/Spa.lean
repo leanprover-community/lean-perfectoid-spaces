@@ -508,19 +508,41 @@ def presheaf' (s : A) (T : set A) [Hfin : fintype T]
 end rational_open
 -/
 
-def rational_open_data_subsets (U : set (Spa A)) (HU : is_open U) :=
+section
+open topological_space
+
+def rational_open_data_subsets (U : opens (Spa A)) :=
 { r : rational_open_data A // r.rational_open ⊆ U}
 
 instance (r : rational_open_data A) : uniform_space (rational_open_data.localization r) :=
 topological_add_group.to_uniform_space _
 
-def rational_open_data.presheaf (r : rational_open_data A) := ring_completion (rational_open_data.localization r)
+def rational_open_data.presheaf (r : rational_open_data A) :=
+ring_completion (rational_open_data.localization r)
 
 -- nearly there but doesn't compile :-( "deep recursion"
-def presheaf (U : set (Spa A)) (HU : is_open U) :=
-{f : Π (rd : rational_open_data_subsets U HU), ring_completion (rational_open_data.localization rd.1) //
-   ∀ (rd1 rd2 : rational_open_data_subsets U HU) (h : rd1.1 ≤ rd2.1),
+def presheaf (U : opens (Spa A)) :=
+{f : Π (rd : rational_open_data_subsets U), ring_completion (rational_open_data.localization rd.1) //
+   ∀ (rd1 rd2 : rational_open_data_subsets U) (h : rd1.1 ≤ rd2.1),
      ring_completion.map (rational_open_data.rational_open_subset.restriction h) (f rd1) = (f rd2)} -- agrees on overlaps
+
+def presheaf.map {U V : opens (Spa A)} (hUV : U ≤ V) :
+  presheaf V → presheaf U :=
+λ f, ⟨λ rd, f.val ⟨rd.val, set.subset.trans rd.2 hUV⟩,
+begin
+  intros,
+  sorry
+end⟩
+
+lemma presheaf.map_id (U : opens (Spa A)) :
+  presheaf.map (le_refl U) = id :=
+by { delta presheaf.map, tidy }
+
+lemma presheaf.map_comp {U V W : opens (Spa A)} (hUV : U ≤ V) (hVW : V ≤ W) :
+  presheaf.map hUV ∘ presheaf.map hVW = presheaf.map (le_trans hUV hVW) :=
+by { delta presheaf.map, tidy }
+
+end
 
 end Spa
 
