@@ -530,13 +530,15 @@ def presheaf (U : opens (Spa A)) :=
    ∀ (rd1 rd2 : rational_open_data_subsets U) (h : rd1.1 ≤ rd2.1),
      ring_completion.map (rational_open_data.rational_open_subset.restriction h) (f rd1) = (f rd2)} -- agrees on overlaps
 
-def presheaf.map {U V : opens (Spa A)} (hUV : U ≤ V) (f : presheaf V) :
-  presheaf U :=
-{ val := λ rd, f.val (rational_open_data_subsets.map hUV rd),
-  property := λ rd₁ rd₂ h,
-  begin
-    sorry -- whatever I try here, I get timeouts
-  end }
+def presheaf.map {U V : opens (Spa A)} (hUV : U ≤ V) :
+  presheaf V → presheaf U :=
+λ f, ⟨λ rd, f.val ⟨rd.val, set.subset.trans rd.2 hUV⟩,
+begin
+  intros,
+  let X := f.2 (rational_open_data_subsets.map hUV rd1)
+    (rational_open_data_subsets.map hUV rd2) h,
+  exact X,
+end⟩
 
 lemma presheaf.map_id (U : opens (Spa A)) :
   presheaf.map (le_refl U) = id :=
@@ -550,9 +552,7 @@ end
 
 end Spa
 
--- goal now to define the 𝓞_X on *rational subsets* and then to extend.
 
--- to define it on rational subsets it's just a ring completion.
 
 -- remember that a rational open is not actually `rational_open s T` in full
 -- generality -- we also need that T is finite and that T generates an open ideal in A.
