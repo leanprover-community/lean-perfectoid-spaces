@@ -183,27 +183,16 @@ Huber_ring.away.lift r1.T r1.s
 
 -- Johan -- can you give me a guide for how to prove this?
 def localization.nonarchimedean (r : rational_open_data A) :
-  topological_add_group.nonarchimedean (localization r) := sorry
+  topological_add_group.nonarchimedean (localization r) :=
+of_submodules_comm.nonarchimedean
 
 local attribute [instance] set.pointwise_mul_comm_semiring
 local attribute [instance] set.mul_action
 
--- KMB trying to debug next def
-example (r : rational_open_data A) : algebra A (localization r) := by apply_instance
-example (r : rational_open_data A) : set (localization r) :=
-  (((of_id A (localization r)).to_fun '' r.T) : set (localization r))
-example (r : rational_open_data A) : localization r :=
-((localization.mk 1 ⟨r.s, 1, by simp⟩) : localization r)
-example (r : rational_open_data A) : monoid (localization r) := by apply_instance
-
--- ? Why doesn't this work? Johan -- do you have any idea?
--- def localization.power_bounded_data (r : rational_open_data A) : set (localization r) :=
---((localization.mk 1 ⟨r.s, 1, pow_one _⟩) : localization r) •
---(((of_id A (localization r)).to_fun '' r.T) : set (localization r))
-
--- non • version:
+-- KMB cannot get this to work without explictly feeding the typeclass into has_scalar.smul
 def localization.power_bounded_data (r : rational_open_data A) : set (localization r) :=
-(λ b, ((localization.mk 1 ⟨r.s, 1, pow_one _⟩) : localization r) * b) ''
+@has_scalar.smul _ _ (show has_scalar (localization r) (set (localization r)), by apply_instance)
+((localization.mk 1 ⟨r.s, 1, pow_one _⟩) : localization r)
 (((of_id A (localization r)).to_fun '' r.T) : set (localization r))
 
 -- Johan -- can you give me a guide for filling in this sorry?
@@ -214,22 +203,37 @@ theorem localization.power_bounded (r : rational_open_data A) : is_power_bounded
 lemma rational_open_subset.restriction_is_cts {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
   continuous (rational_open_subset.restriction h) := Huber_ring.away.lift_continuous r1.T r1.s
   (localization.nonarchimedean r2)
- (Huber_ring.away.of_continuous r2.T r2.s
+  (Huber_ring.away.of_continuous r2.T r2.s
   (show ((localization.to_units (⟨r2.s, 1, by simp⟩ : powers r2.s))⁻¹ : units (localization r2)).inv =
-     (of_id A (localization r2)).to_fun r2.s, from rfl) r2.Hopen) _ _ sorry
-
-
+    (of_id A (localization r2)).to_fun r2.s, from rfl) r2.Hopen) _ _ (begin
+      refine power_bounded.subset _ (localization.power_bounded r2),
+      intros x hx,
+      rcases hx with ⟨y, hy, hz, ⟨t₁, ht₁, rfl⟩, rfl⟩,
+      rw mem_singleton_iff at hy, rw hy, clear hy, clear y,
+      let h' := h, -- need it later
+      rcases h with ⟨a, ha, h₂⟩,
+      rcases h₂ t₁ ht₁ with ⟨t₂, ht₂, N, hN⟩,
+      dsimp, unfold localization.power_bounded_data,
+      rw mem_smul_set,
+      use (of_id ↥A (localization r2)).to_fun t₂,
+      existsi _, swap,
+        rw mem_image, use t₂, use ht₂,
+      rw [←units.mul_left_inj (s_inv_aux r1 r2 h'), units.mul_inv_cancel_left],
+      show _ = (of_id ↥A (localization r2)).to_fun (r1.s) * _,
+      sorry, -- KMB working on this now
+    end)
 
 -- Note: I don't think we ever use this.
 noncomputable def insert_s (r : rational_open_data A) : rational_open_data A :=
 { s := r.s,
   T := insert r.s r.T,
   Tfin := set.fintype_insert r.s r.T, -- noncomputable!
-  Hopen := sorry -- need "an ideal is open if it contains an open sub-ideal"
-    -- Johan says `is_open_of_open_submodule`
+  Hopen := submodule.is_open_of_open_submodule
+    ⟨ideal.span (r.T), r.Hopen, ideal.span_mono $ set.subset_insert _ _⟩
 }
 
 -- not sure we ever use this
+/-
 noncomputable def inter_aux (r1 r2 : rational_open_data A) : rational_open_data A :=
 { s := r1.s * r2.s,
   T := r1.T * r2.T,
@@ -239,6 +243,7 @@ noncomputable def inter_aux (r1 r2 : rational_open_data A) : rational_open_data 
     iff it contains I^N for some ideal of definition)
   -/
 }
+-/
 
 end rational_open_data
 
