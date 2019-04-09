@@ -81,9 +81,11 @@ of_subgroups (λ γ : Γ, {k | v k < γ})
       rw [valuation.map_mul, show (1: Γ) = 1*1, from (mul_one _).symm, ← mul_coe],
       exact with_zero.mul_lt_mul r_in s_in} end)
 
--- no harm making this an instance because this is the only correct instance on
+-- No harm making this an instance because this is the only correct instance on
 -- the valuation field. Note: I use the canonical valuation not the induced valuation;
--- Patrick did *not* assume Γ was the value group above so I insert the assumption this way.
+-- Patrick did *not* assume Γ was the value group above so his topology is not
+-- constant across equivalence classes; this does not matter, but when making the
+-- instance we need to choose the correct one, which is the canonical valuation.
 noncomputable instance valuation_field.ring_with_zero_nhd
   {R : Type*} [comm_ring R] (v : valuation R Γ) :
 ring_with_zero_nhd (valuation_field v) :=
