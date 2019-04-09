@@ -164,7 +164,6 @@ lemma subset {B C : set R} (h : B ⊆ C) (hC : is_power_bounded_subset C) :
 λ U hU, exists.elim (hC U hU) $
   λ V ⟨hV, hC⟩, ⟨V, hV, λ v hv b hb, hC v hv b $ monoid.closure_mono h hb⟩
 
-
 lemma union {S T : set R} (hS : is_power_bounded_subset S) (hT : is_power_bounded_subset T) :
   is_power_bounded_subset (S ∪ T) :=
 begin
