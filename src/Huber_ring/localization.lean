@@ -314,6 +314,8 @@ localization.away.lift.is_ring_hom f _
 @[simp] lemma lift_comp_of :
   lift T s hs ∘ of = f := localization.lift'_comp_of _ _ _
 
+-- TODO: this has nothing to do with lift so should perhaps be elsewhere
+-- (because KMB keeps confusing it with the next lemma ;-))
 lemma of_continuous (hT : is_open (↑(ideal.span T) : set A)) :
   @continuous _ _ _ (away.topological_space T s hT) (of : A → ATs) :=
 begin
