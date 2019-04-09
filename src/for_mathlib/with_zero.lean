@@ -152,6 +152,17 @@ lemma mul_right_cancel : ∀ {x : with_zero α} (h : x ≠ 0) {y z : with_zero �
   rwa [mul_assoc, mul_assoc, with_zero.mul_right_inv _ h, mul_one, mul_one] at h3,
 end
 
+lemma mul_inv_eq_of_eq_mul : ∀ {x : with_zero α} (h : x ≠ 0) {y z : with_zero α} ,
+  y = z * x → y * x⁻¹ = z
+| 0       h := false.elim $ h rfl
+| (x : α) h := λ y z h2, begin
+  apply with_zero.mul_right_cancel h,
+  rwa [mul_assoc, with_zero.mul_left_inv _ h, mul_one]
+end
+
+lemma eq_mul_inv_of_mul_eq {x : with_zero α} (h : x ≠ 0) {y z : with_zero α}
+  (h2 : z * x = y) : z = y * x⁻¹ := eq.symm $ mul_inv_eq_of_eq_mul h h2.symm
+
 end group
 
 end with_zero

@@ -502,3 +502,27 @@ begin
     { rw [mul_coe], rw some_lt_some at *,
       exact linear_ordered_comm_group.mul_lt_mul hab hcd } }
 end
+
+lemma with_zero.le_of_le_mul_right {a b c : with_zero Γ} (h : c ≠ 0) (hab : a * c ≤ b * c) :
+  a ≤ b :=
+begin
+  replace hab := linear_ordered_comm_monoid.mul_le_mul_right hab c⁻¹,
+  rwa [mul_assoc, mul_assoc, with_zero.mul_right_inv _ h, mul_one, mul_one] at hab,
+end
+
+lemma with_zero.le_of_le_mul_left {a b c : with_zero Γ} (h : c ≠ 0) (hab : c * a ≤ c * b) :
+  a ≤ b := by {rw [mul_comm, mul_comm c] at hab, exact with_zero.le_of_le_mul_right h hab}
+
+lemma with_zero.le_mul_inv_of_mul_le {a b c : with_zero Γ} (h : c ≠ 0) (hab : a * c ≤ b) :
+  a ≤ b * c⁻¹ :=
+begin
+  apply with_zero.le_of_le_mul_right h,
+  rwa [mul_assoc, with_zero.mul_left_inv _ h, mul_one],
+end
+
+lemma with_zero.mul_inv_le_of_le_mul {a b c : with_zero Γ} (h : c ≠ 0) (hab : a ≤ b * c) :
+  a * c⁻¹ ≤ b :=
+begin
+  apply with_zero.le_of_le_mul_right h,
+  rwa [mul_assoc, with_zero.mul_left_inv _ h, mul_one]
+end

@@ -126,6 +126,14 @@ begin
   exact with_zero.eq_some_of_mul_eq_some_left h1.symm
 end
 
+lemma unit_is_some' {Γ : Type u} [_inst_1 : linear_ordered_comm_group Γ] {R : Type u₀} [comm_ring R]
+  (v : valuation R Γ) {x : R} (h : ∃ y : R, x * y = 1) : ∃ γ : Γ, v x = γ :=
+begin
+  cases h with y hy,
+  let x' : units R := units.mk x y hy (mul_comm x y ▸ hy),
+  exact unit_is_some v x'
+end
+
 lemma map_inv (x : units R) : v x⁻¹.val = (v x)⁻¹ :=
 begin
   have := congr_arg v x.val_inv,
