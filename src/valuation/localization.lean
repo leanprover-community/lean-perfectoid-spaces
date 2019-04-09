@@ -87,8 +87,58 @@ instance localization_is_valuation (h : ∀ s, s ∈ S → v s ≠ 0) : is_valua
     }
   end }
 
+/-- Extension of a valuation to a localization -/
 def localization (h : ∀ s, s ∈ S → v s ≠ 0) : valuation (localization R S) Γ :=
 { val := localization_v h,
   property := by apply_instance }
+
+/-- the extension of a valuation pulls back to the valuation -/
+lemma localization_comap (h : ∀ s, s ∈ S → v s ≠ 0) : (localization h).comap (localization.of) = v :=
+begin
+  rw valuation.ext,
+  intro r,
+  show v r * (v 1)⁻¹ = v r,
+  apply with_zero.mul_inv_eq_of_eq_mul (v.map_one_ne_zero),
+  rw [v.map_one, mul_one]
+end
+
+lemma eq_localization_of_comap_aux (w : valuation (_root_.localization R S) Γ)
+  (h : w.comap (localization.of) = v) : ∀ s, s ∈ S → v s ≠ 0 := λ s hs h0,
+begin
+  cases inverse_exists ⟨s, hs⟩ with u hu,
+  let s' : units (_root_.localization R S) := ⟨localization.of s, u, mul_comm u s ▸ hu, hu⟩,
+--  have hs0 : w (localization.of s) ≠ 0
+  cases unit_is_some w s' with γ hγ,
+  rw ←h at h0,
+  change w s' = 0 at h0,
+  rw hγ at h0,
+  exact option.no_confusion h0,
+end
+
+/-- if a valuation on a localisation pulls back to v then it's the localization of v -/
+lemma eq_localization_of_comap (w : valuation (_root_.localization R S) Γ)
+  (h : w.comap (localization.of) = v) : localization (eq_localization_of_comap_aux w h) = w := begin
+  rw subtype.ext,
+  funext,
+  induction q,
+  { rcases q with ⟨r, s, hs⟩,
+    show v r * (v s)⁻¹ = w (localization.mk r ⟨s, hs⟩),
+    rw [localization.mk_eq, ←h, w.map_mul],
+    show w r * _ = _,
+    congr,
+    show (w s)⁻¹ = _,
+    have hs0 : w s ≠ 0 := unit_is_not_none w  (localization.to_units ⟨s, hs⟩),
+    apply with_zero.mul_right_cancel hs0,
+    rw ←w.map_mul,
+    rw with_zero.mul_left_inv _ hs0,
+    rw ←w.map_one, apply congr_arg,
+    symmetry,
+    exact units.inv_mul _
+  },
+  refl
+end
+-- equiv version? Not sure if I need it.
+
+
 
 end valuation

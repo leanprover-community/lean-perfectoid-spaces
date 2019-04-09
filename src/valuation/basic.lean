@@ -96,6 +96,8 @@ instance : is_valuation v := v.property
 @[simp] lemma map_mul  : ∀ x y, v (x * y) = v x * v y := v.property.map_mul
 @[simp] lemma map_add  : ∀ x y, v (x + y) ≤ v x ∨ v (x + y) ≤ v y := v.property.map_add
 
+lemma map_one_ne_zero : v 1 ≠ 0 := by rw map_one; simp
+
 lemma map_add_le_max (x y) : v (x + y) ≤ max (v x) (v y) :=
 begin
   cases map_add v x y with h,
@@ -124,6 +126,13 @@ begin
   have h1 := v.map_mul x.val x.inv,
   rw [x.val_inv, valuation.map_one] at h1,
   exact with_zero.eq_some_of_mul_eq_some_left h1.symm
+end
+
+lemma unit_is_not_none (x : units R) : v x ≠ 0 :=
+begin
+  cases unit_is_some v x with γ Hγ,
+  rw Hγ,
+  apply option.no_confusion,
 end
 
 lemma unit_is_some' {Γ : Type u} [_inst_1 : linear_ordered_comm_group Γ] {R : Type u₀} [comm_ring R]
