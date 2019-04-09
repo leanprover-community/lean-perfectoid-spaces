@@ -696,9 +696,21 @@ instance : discrete_field (valuation_field v) := by delta valuation_field; apply
 
 def valuation_field_mk (r : R) : valuation_field v := localization.of (v.valuation_ID_mk r)
 
+instance to_valuation_field.is_ring_hom : is_ring_hom (valuation_field_mk v) :=
+by delta valuation_field_mk; apply_instance
+
 lemma valuation_field_mk_ker (r : R) : v.valuation_field_mk r = 0 ↔ r ∈ supp v :=
 ⟨λ h, (v.valuation_ID_mk_ker r).1 $ localization.fraction_ring.eq_zero_of _ h,
  λ h, show localization.of _ = 0, by rw (v.valuation_ID_mk_ker r).2 h; apply is_ring_hom.map_zero⟩
+
+-- could be golfed
+lemma valuation_field_mk_ne_zero (r : R) (hr : v r ≠ 0) : valuation_field_mk v r ≠ 0 :=
+begin
+  intro h,
+  rw valuation_field_mk_ker v r at h,
+  revert h,
+  exact hr
+end
 
 instance valuation.valfield_preorder : preorder (valuation_field v) :=
   ((v.on_quot (le_refl _)).on_frac $ quot_supp_zero v).to_preorder
