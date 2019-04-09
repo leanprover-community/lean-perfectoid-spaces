@@ -5,7 +5,7 @@ valuation.topology {Γ : Type*} [linear_ordered_comm_group Γ] {R : Type*} [ring
     valuation R Γ → topological_space R
 -/
 import for_mathlib.nonarchimedean.basic
-import valuation.basic
+import valuation.canonical -- we need the canonical valuation for the instance at the end
 
 local attribute [instance] classical.prop_decidable
 noncomputable theory
@@ -80,3 +80,11 @@ of_subgroups (λ γ : Γ, {k | v k < γ})
       refine lt_of_lt_of_le _ h,
       rw [valuation.map_mul, show (1: Γ) = 1*1, from (mul_one _).symm, ← mul_coe],
       exact with_zero.mul_lt_mul r_in s_in} end)
+
+-- no harm making this an instance because this is the only correct instance on
+-- the valuation field. Note: I use the canonical valuation not the induced valuation;
+-- Patrick did *not* assume Γ was the value group above so I insert the assumption this way.
+noncomputable instance valuation_field.ring_with_zero_nhd
+  {R : Type*} [comm_ring R] (v : valuation R Γ) :
+ring_with_zero_nhd (valuation_field v) :=
+valuation.ring_with_zero_nhd (valuation_field.canonical_valuation v)
