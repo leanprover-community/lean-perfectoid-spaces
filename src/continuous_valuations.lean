@@ -1,7 +1,9 @@
 import topology.algebra.ring
 import valuation_spectrum
+import valuation.topology -- for valuation top on K_v
 
 import for_mathlib.logic
+import for_mathlib.nonarchimedean.basic -- continuous_of_continuous_at_zero
 
 universes u u₀ u₁ u₂ u₃
 
@@ -84,6 +86,39 @@ begin
     apply h }
 end
 -/
+
+-- It is *not true* that v is continuous iff the map R -> with_zero Γ is continuous
+-- where with_zero Γ gets the usual topology where {γ} and {x < γ} are open. What is
+-- true is that the valuation is continuous iff the associated map from R to the
+-- valuation field is continuous.
+
+lemma continuous_valuation_field_mk_at_zero (v : valuation R Γ) (hv : is_continuous v) :
+continuous_at (valuation_field_mk v) 0 :=
+begin
+  intros U HU,
+  conv at HU in (valuation_field_mk v 0) begin
+    rw is_ring_hom.map_zero (valuation_field_mk v),
+  end,
+  rw of_subgroups.nhds_zero U at HU, swap, by apply_instance,
+  cases HU with γ Hγ,
+  show valuation_field_mk v ⁻¹' U ∈ (nhds (0 : R)),
+  let V := {r : R | (canonical_valuation v) r < ↑γ},
+  have HV : is_open V := hv γ,
+  have H0V : (0 : R) ∈ V,
+    show (canonical_valuation v) 0 < γ,
+    rw (canonical_valuation v).map_zero,
+    exact with_zero.zero_lt_some,
+  refine filter.mem_sets_of_superset (mem_nhds_sets HV H0V) _,
+  intros u Hu,
+  apply set.mem_of_mem_of_subset _ Hγ,
+  exact Hu, -- the joys of definitional equality
+end
+
+theorem continuous_valuation_field_mk_of_continuous (v : valuation R Γ) (hv : is_continuous v) :
+  continuous (valuation_field_mk v) :=
+topological_add_group.continuous_of_continuous_at_zero (valuation_field_mk v) $
+  continuous_valuation_field_mk_at_zero v hv
+
 end valuation
 
 namespace Spv
