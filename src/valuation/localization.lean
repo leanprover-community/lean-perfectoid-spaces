@@ -1,10 +1,6 @@
 -- extending valuations to localizations
--- and extending continuous valuations to rational localizations
--- Note that this file comes much lower down the import tree
--- than stuff like valuation.canonical and valuation.field.
--- Here we use all this Huber ring stuff like R(T/s).
 
-import valuation.field
+import valuation.basic
 
 --local attribute [instance] classical.prop_decidable
 --noncomputable theory
@@ -43,6 +39,20 @@ def localization_v (h : ∀ s, s ∈ S → v s ≠ 0) : localization R S → wit
     rw [←v.map_mul, ←v.map_mul, hrst]
   end
 
+def localization_to_valuation_field_aux (h : ∀ s, s ∈ S → v s ≠ 0) (s : R) (hs : s ∈ S) :
+  is_unit (valuation_field_mk v s) :=
+is_unit_of_mul_one _ (valuation_field_mk v s)⁻¹ $ mul_inv_cancel $
+  valuation.valuation_field_mk_ne_zero v s (h s hs)
+
+--the localization approach would look like this.
+/-
+noncomputable def localization_to_valuation_field (h : ∀ s, s ∈ S → v s ≠ 0) :
+  localization R S → valuation_field v :=
+localization.lift (valuation_field_mk v) $ localization_to_valuation_field_aux h
+-/
+
+-- I could have pulled back from R[1/S] -> K_v and avoided these proofs.
+-- TODO -- refactor?
 instance localization_is_valuation (h : ∀ s, s ∈ S → v s ≠ 0) : is_valuation (localization_v h) :=
 { map_zero := show v 0 * (v 1)⁻¹ = 0, by rw [v.map_zero, zero_mul],
   map_one := show v 1 * (v 1)⁻¹ = 1, by {rw [v.map_one], simp},
@@ -137,8 +147,5 @@ lemma eq_localization_of_comap (w : valuation (_root_.localization R S) Γ)
   },
   refl
 end
--- equiv version? Not sure if I need it.
-
-
 
 end valuation
