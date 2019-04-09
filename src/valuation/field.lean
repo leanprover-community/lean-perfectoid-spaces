@@ -3,6 +3,7 @@ import for_mathlib.topology
 import for_mathlib.division_ring
 import valuation.topology
 
+open filter set
 
 local attribute [instance, priority 0] classical.decidable_linear_order
 variables {Γ : Type*} [linear_ordered_comm_group Γ]
@@ -30,6 +31,7 @@ variables x y : units K
 
 -- The following is meant to be the main technical lemma ensuring that inversion is continuous
 -- in the topology induced by a valuation on a division ring (ie the next instance)
+-- [BouAC, VI.5.1 Lemme 1]
 lemma top_div_ring_aux {x y : units K} {γ : Γ} (h : v (x - y) < min (γ*((v y)*(v y))) (v y)) :
   v (x⁻¹.val - y⁻¹.val) < γ :=
 begin
@@ -39,10 +41,7 @@ begin
     from with_zero.mul_inv_lt_of_lt_mul hyp1,
   have hyp2 : v (x - y) < v y,
     from lt_of_lt_of_le h (min_le_right _ _),
-  have key : v x = v y,
-  { have := valuation.map_add_of_distinct_val v (ne_of_gt hyp2),
-    rw max_eq_left (le_of_lt hyp2) at this,
-    simpa using this },
+  have key : v x = v y, from valuation.map_eq_of_sub_lt v hyp2,
   have decomp : x⁻¹.val - y⁻¹.val = x⁻¹.val*(y.val-x.val)*y⁻¹.val,
   by rw [mul_sub_left_distrib, sub_mul, mul_assoc,
         show y.val * y⁻¹.val = 1, from y.val_inv,
@@ -57,6 +56,8 @@ begin
     ... < γ : hyp1',
 end
 
+/-- The topology coming from a valuation on a division ring make it a topological division ring
+    [BouAC, VI.5.1 middle of Proposition 1] -/
 instance valuation.topological_division_ring : topological_division_ring (valued_ring K v) :=
 { continuous_inv :=
     begin
@@ -83,7 +84,7 @@ instance valuation.topological_division_ring : topological_division_ring (valued
         rw [with_zero.coe_min, mul_assoc], refl },
       { intros y ineq,
         apply Hγ,
-        rw set.mem_set_of_eq,
+        rw mem_set_of_eq,
         -- I sort of lost that y is a unit, but fortunately, it is easy to prove it's not zero
         have : y ≠ 0,
         { intro hy,
@@ -97,3 +98,42 @@ instance valuation.topological_division_ring : topological_division_ring (valued
         simp },
     end,
   ..(by apply_instance : topological_ring (valued_ring K v)) }
+
+section
+-- until the end of this section, all linearly ordered commutative groups will be endowed with
+-- the discrete topology
+def discrete_ordered_comm_group : topological_space Γ := ⊤
+local attribute [instance] discrete_ordered_comm_group
+
+def ordered_comm_group_is_discrete : discrete_topology Γ := ⟨rfl⟩
+local attribute [instance] ordered_comm_group_is_discrete
+
+instance discrete_top_group {G : Type*} [group G] [topological_space G] [discrete_topology G] :
+  topological_group G :=
+{ continuous_mul := continuous_of_discrete_topology,
+  continuous_inv := continuous_of_discrete_topology }
+
+
+/-- The valuation map restricted to units of a field endowed with the valuation toplogy is
+    continuous if we endow the target with discrete topology.
+    [BouAC, VI.5.1 end of Proposition 1] -/
+lemma continuous_unit_map :
+@continuous _ _ (by apply_instance : topological_space (units $ valued_ring K v) ) _ v.unit_map :=
+-- The ugly @ seems to comes from the valued_ring trick
+begin
+  rw continuous_into_discrete_iff,
+  intro γ,
+  rw is_open_iff_mem_nhds,
+  intros x vx,
+  rw [nhds_induced, ← nhds_translation_add_neg x.val, comap_comap_comp],
+  use {y | v y < v.unit_map x },
+  split,
+  { -- Patrick has no idea why Lean needs so much baby-sitting. Patrick is tired
+    exact @of_subgroups.mem_nhds_zero K _ Γ _ (λ γ : Γ, {k | v k < γ}) _ _ _ _ _ (v.unit_map x) },
+  { intros z hz,
+    rw [valuation.coe_unit_map] at hz,
+    rw [mem_preimage_eq, mem_singleton_iff] at *,
+    rw ← vx,
+    exact valuation.unit_map.ext v x z (valuation.map_eq_of_sub_lt v hz),},
+end
+end

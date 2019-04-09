@@ -33,7 +33,7 @@ lemma units.coe_inj : injective (coe : units R → R) :=
 
 variables  [topological_space R]
 
-instance : topological_space (units R) := induced units.val ‹_›
+instance units_topological_space: topological_space (units R) := induced units.val ‹_›
 
 lemma units_embedding : embedding (units.val : units R → R) :=
 ⟨units.coe_inj _, rfl⟩
@@ -44,7 +44,7 @@ instance top_monoid_units [topological_ring R] : topological_monoid (units R) :=
   let mulRx := (λ (p : units R × units R), p.1*p.2),
   have key : units.val ∘ mulRx = mulR ∘ (λ p, (p.1.val, p.2.val)), from rfl,
   rw continuous_iff_induced_le,
-  unfold topological_ring.topological_space,
+  unfold topological_ring.units_topological_space,
   rw [induced_compose, key, ← induced_compose, prod_induced_induced],
   apply induced_mono,
   rw ← continuous_iff_induced_le,

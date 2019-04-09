@@ -294,3 +294,8 @@ begin
   simp [hV', *],
 end
 end
+
+instance discrete_top_group {G : Type*} [group G] [topological_space G] [discrete_topology G] :
+  topological_group G :=
+{ continuous_mul := continuous_of_discrete_topology,
+  continuous_inv := continuous_of_discrete_topology }

@@ -170,6 +170,14 @@ begin
   refl,
 end
 
+lemma unit_map.ext (x z : units R) (H : v (z.val) = v (x.val)) :
+  valuation.unit_map v z = valuation.unit_map v x :=
+by rwa [←option.some_inj, valuation.unit_map_eq, valuation.unit_map_eq]
+
+@[simp]
+lemma coe_unit_map (x : units R)  : ↑(v.unit_map x) = v x :=
+by rw ← valuation.unit_map_eq ; refl
+
 instance is_group_hom.unit_map : is_group_hom (unit_map v) :=
 ⟨λ a b, option.some.inj $
   show _ = (some _ * some _ : with_zero Γ),
@@ -216,6 +224,13 @@ begin
          ... < v x                   : max_lt h' vyx },
   { apply this h.symm,
     rwa [add_comm, max_comm] at h' }
+end
+
+lemma map_eq_of_sub_lt (h : v (y - x) < v x) : v y = v x :=
+begin
+  have := valuation.map_add_of_distinct_val v (ne_of_gt h).symm,
+  rw max_eq_right (le_of_lt h) at this,
+  simpa using this
 end
 
 @[simp] theorem eq_zero_iff_le_zero {r : R} : v r = 0 ↔ v r ≤ v 0 :=

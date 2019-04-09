@@ -21,6 +21,7 @@ lemma continuous_of_const {α : Type*} {β : Type*}
   set.ext (λ a, ⟨λ fa, ⟨_, fa⟩,
     λ ⟨b, fb⟩, show f a ∈ s, from h b a ▸ fb⟩)
 
+section
 variables {α : Type*} {β : Type*} {γ : Type*} {δ : Type*}
 
 variables [topological_space α] [topological_space β] [topological_space γ] [topological_space δ]
@@ -79,5 +80,25 @@ begin
       ... ↔ comap g Ng ≤ comap f (comap h Nhf) : by rw [Neq1, Neq2]
       ... ↔ comap g Ng ≤ comap g (comap i Nhf) : by rw comap_comm H,
   exact comap_mono hyp
+end
+end
+end
+
+section
+open filter
+variables  {α : Type*} [topological_space α] {β : Type*} [topological_space β] [discrete_topology β]
+
+lemma continuous_into_discrete_iff (f : α → β) : continuous f ↔ ∀ b : β, is_open (f ⁻¹' {b}) :=
+begin
+  split,
+  { intros hf b,
+    exact hf _ (is_open_discrete _) },
+  { intro h,
+    rw continuous_iff_continuous_at,
+    intro x,
+    have key : f ⁻¹' {f x} ∈ nhds x,
+      from mem_nhds_sets (h $ f x) (set.mem_insert (f x) ∅),
+    calc map f (nhds x) ≤ pure (f x) : (tendsto_pure f (nhds x) (f x)).2 key
+        ... ≤ nhds (f x) : pure_le_nhds _ }
 end
 end

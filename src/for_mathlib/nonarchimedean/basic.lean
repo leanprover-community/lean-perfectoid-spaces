@@ -502,6 +502,12 @@ begin
   rw mem_infi_range_of_base h_directed,
 end
 
+-- The following is a stupid proof but Patrick wants to go fast
+
+lemma of_subgroups.mem_nhds_zero (i : ι) :
+  G i ∈ (@nhds A (topology_of_subgroups _ h_directed h_left_mul h_right_mul h_mul) 0) :=
+by { rw of_subgroups.nhds_zero, use i}
+
 lemma of_subgroups.is_open (i : ι) :
   @is_open A (topology_of_subgroups G h_directed h_left_mul h_right_mul h_mul) (G i) :=
 begin
