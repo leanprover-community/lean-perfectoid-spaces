@@ -456,8 +456,8 @@ begin
     exact (mem_nhds_sets h₂ $ ideal.zero_mem $ ideal.span T₂) }
 end
 
--- Current status: proof is broken with 2 sorries.
--- We need this :-\
+-- Current status: proof is broken with 2 sorries. This looks hard, We don't need it though.
+/-
 lemma rational_basis.is_basis : topological_space.is_topological_basis (rational_basis A) :=
 begin
   split,
@@ -494,8 +494,8 @@ begin
       haveI := hT,
       exact rational_open.is_open s T,
     } }
-end
-
+end #check id
+-/
 end
 
 section
@@ -574,7 +574,6 @@ noncomputable
 example (rd : rational_open_data A): ring (ring_completion (rational_open_data.localization rd))
 := by apply_instance
 end Spa
-
 
 
 -- remember that a rational open is not actually `rational_open s T` in full
