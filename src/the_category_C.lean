@@ -1,57 +1,35 @@
-import data.nat.prime
-import algebra.group_power
-import topology.algebra.ring
+
 import topology.opens
-import algebraic_geometry.preordered_stalks
-import category_theory.instances.TopCommRing
 
-import for_mathlib.prime
-import for_mathlib.is_cover
+import .presheaf_stuff.stuff
 
-import continuous_valuations
-import Spa
-import Huber_pair
-
-universes u v
+universes v u
 
 open algebraic_geometry
 open category_theory
 open category_theory.instances
 open category_theory.limits
 
-namespace algebraic_geometry.PresheafedSpace
--- We define a shorthand for the stalk at a point, computed in Types
-def stalk' (X : PresheafedSpace.{v} TopCommRing.{v}) (x : X.X) :=
-(TopCommRing.forget.map_presheaf.obj X).stalk x
-
--- And a short hand for the induced maps of (type-level) stalks
-def stalk_map' {X Y : PresheafedSpace.{v} TopCommRing.{v}} (f : X ⟶ Y) (x : X.X) :
-  Y.stalk' (f x) → X.stalk' x :=
-stalk_map (TopCommRing.forget.map_presheaf.map f) x
-
-end algebraic_geometry.PresheafedSpace
-
 open algebraic_geometry.PresheafedSpace
 
-structure whatsit extends PresheafedSpace.{v} TopCommRing.{v} :=
+structure C extends PresheafedSpace.{v} TopCommRing.{v} :=
 (preorder : Π x : X, preorder (to_PresheafedSpace.stalk' x))
 
-instance stalk_preorder (X : whatsit.{v}) (x : X.X) : preorder (X.to_PresheafedSpace.stalk' x) :=
+instance stalk_preorder (X : C.{v}) (x : X.X) : preorder (X.to_PresheafedSpace.stalk' x) :=
 X.preorder x
 
-structure hom (F G : whatsit.{v}) :=
+structure hom (F G : C.{v}) :=
 (hom : F.to_PresheafedSpace ⟶ G.to_PresheafedSpace)
 (monotone : Π (x : F.X) (a b : G.to_PresheafedSpace.stalk' (PresheafedSpace.hom.f hom x)),
    (a ≤ b) ↔ ((stalk_map' hom x) a ≤ (stalk_map' hom x) b))
 .
 
 -- FIXME can't tag this with @[extensionality]?
-lemma hom.ext {F G : whatsit.{v}} {f g : hom F G} (w : f.hom = g.hom) : f = g :=
+lemma hom.ext {F G : C.{v}} {f g : hom F G} (w : f.hom = g.hom) : f = g :=
 begin
   cases f, cases g,
   congr; assumption
 end
-
 
 -- We need two lemmas about `stalk_map'`:
 section
@@ -73,11 +51,11 @@ end
 sorry
 end
 
-def hom.id (F : whatsit.{v}) : hom F F :=
+def hom.id (F : C.{v}) : hom F F :=
 { hom := 𝟙 F.to_PresheafedSpace,
   monotone := λ x a b, by simp,  }
 
-def hom.comp (F G H : whatsit.{v}) (α : hom F G) (β : hom G H) : hom F H :=
+def hom.comp (F G H : C.{v}) (α : hom F G) (β : hom G H) : hom F H :=
 { hom := α.hom ≫ β.hom,
   monotone := λ x a b,
   begin
@@ -89,7 +67,7 @@ def hom.comp (F G H : whatsit.{v}) (α : hom F G) (β : hom G H) : hom F H :=
 
 section
 local attribute [simp] id comp
-instance : category whatsit.{v} :=
+instance : category C.{v} :=
 { hom := hom,
   id := hom.id,
   comp := hom.comp,
