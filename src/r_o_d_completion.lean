@@ -10,18 +10,10 @@ variable {A : Huber_pair}
 
 open topological_space valuation Spv Spa
 
-noncomputable example (v : Spa A) : ring_with_zero_nhd (valuation_field (out (v.val)))
-:= by apply_instance
-noncomputable example (v : Spa A) : add_group_with_zero_nhd (valuation_field (out (v.val)))
-:= by apply_instance
-noncomputable instance (v : Spa A) : topological_space (valuation_field (out (v.val)))
-:= ring_with_zero_nhd.topological_space _
-instance (v : Spa A) : topological_add_group (valuation_field (out (v.val)))
-:= add_group_with_zero_nhd.topological_add_group
 noncomputable instance Spa.r_o_d_completion.uniform_space' (v : Spa A) : uniform_space (valuation_field (out (v.val))) :=
-topological_add_group.to_uniform_space (valuation_field (out (v.val)))
+topological_add_group.to_uniform_space _
 
-instance (v : Spa A) : uniform_add_group (valuation_field (out (v.val))) := sorry
+instance (v : Spa A) : uniform_add_group (valuation_field (out (v.val))) := topological_add_group_is_uniform
 
 noncomputable def to_complete_valuation_field {r : rational_open_data A} {v : Spa A} (hv : v ∈ r.rational_open) :
 r_o_d_completion r → ring_completion (valuation_field (Spv.out v.1)) :=
