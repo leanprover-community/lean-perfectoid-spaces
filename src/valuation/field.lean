@@ -17,8 +17,11 @@ variables (v : valuation R Γ)
 
 instance : ring (valued_ring R v) := ‹ring R›
 
-
 instance : ring_with_zero_nhd (valued_ring R v) := valuation.ring_with_zero_nhd v
+
+instance : uniform_space (valued_ring R v) := topological_add_group.to_uniform_space _
+
+instance : uniform_add_group (valued_ring R v) := topological_add_group_is_uniform
 
 variables {K : Type*} [division_ring K] (ν : valuation K Γ)
 
@@ -130,4 +133,23 @@ begin
     rw ← vx,
     exact valuation.unit_map.ext v x z (valuation.map_eq_of_sub_lt v hz),},
 end
+
+instance valued_ring.separated : separated (valued_ring K v) :=
+begin
+  apply topological_add_group.separated_of_zero_sep,
+  intros x x_ne,
+  have := division_ring,
+  use {k | v k < v x},
+  have : ∃ γ : Γ, v x = γ, from valuation.unit_is_some v (units.mk' x_ne),
+  cases this with γ H,
+  split,
+  { -- again, this will be an ugly win
+    convert @of_subgroups.mem_nhds_zero K _ Γ _ (λ γ : Γ, {k | v k < γ}) _ _ _ _ _ γ,
+    rw H, refl },
+  { simp [le_refl] }
+end
+
+lemma valued_ring.completion_embedding :
+  embedding (coe : (valued_ring K v) → ring_completion (valued_ring K v)) :=
+(ring_completion.uniform_embedding_coe (valued_ring K v)).embedding
 end
