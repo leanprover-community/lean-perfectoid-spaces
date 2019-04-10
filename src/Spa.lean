@@ -175,6 +175,7 @@ noncomputable def s_inv_aux (r1 r2 : rational_open_data A) (h : r1 ≤ r2) : uni
     refl,
 end)
 
+-- Spa.rational_open_data.localization_map : the uncompleted map
 noncomputable def localization_map {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
   localization r1 → localization r2 :=
 Huber_ring.away.lift r1.T r1.s
@@ -518,14 +519,19 @@ def localization_map_is_uniform_continuous {r1 r2 : rational_open_data A} (h : r
   uniform_continuous (rational_open_data.localization_map h) :=
 uniform_continuous_of_continuous (rational_open_data.localization_map_is_cts h)
 
+end -- section
+
 /-- A<T/s>, the functions on D(T,s). A topological ring -/
 def r_o_d_completion (r : rational_open_data A) :=
 ring_completion (rational_open_data.localization r)
 
+namespace r_o_d_completion
+open topological_space
+
 noncomputable instance (r : rational_open_data A) : ring (r_o_d_completion r) :=
 by dunfold r_o_d_completion; apply_instance
 
-instance r_o_d_uniform_space (r : rational_open_data A) : uniform_space (r_o_d_completion r) :=
+instance uniform_space (r : rational_open_data A) : uniform_space (r_o_d_completion r) :=
 by dunfold r_o_d_completion; apply_instance
 
 example (r : rational_open_data A) : topological_space (r_o_d_completion r) := by apply_instance
@@ -533,11 +539,11 @@ example (r : rational_open_data A) : topological_space (r_o_d_completion r) := b
 instance (r : rational_open_data A) : topological_ring (r_o_d_completion r)
 := by dunfold r_o_d_completion; apply_instance
 
-noncomputable def r_o_d_completion.restriction {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
+noncomputable def restriction {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
 r_o_d_completion r1 → r_o_d_completion r2 :=
 ring_completion.map (rational_open_data.localization_map h)
 
-instance {r1 r2 : rational_open_data A} (h : r1 ≤ r2) : is_ring_hom (r_o_d_completion.restriction h)
+instance {r1 r2 : rational_open_data A} (h : r1 ≤ r2) : is_ring_hom (restriction h)
 := by delta r_o_d_completion.restriction;
 exact ring_completion.map_is_ring_hom _ _ (rational_open_data.localization_map_is_cts h)
 
@@ -568,7 +574,7 @@ lemma presheaf.map_comp {U V W : opens (Spa A)} (hUV : U ≤ V) (hVW : V ≤ W) 
   presheaf.map hUV ∘ presheaf.map hVW = presheaf.map (le_trans hUV hVW) :=
 by { delta presheaf.map, tidy }
 
-end -- section
+end r_o_d_completion
 
 noncomputable
 example (rd : rational_open_data A): ring (ring_completion (rational_open_data.localization rd))

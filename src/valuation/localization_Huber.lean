@@ -120,11 +120,34 @@ end
 noncomputable def to_valuation_field (hs : v s ≠ 0) : ATs → (valuation_field v) :=
 Huber_ring.away.lift T s (unit_aux hs)
 
+instance (hs : v s ≠ 0) : is_ring_hom (to_valuation_field hs) :=
+by delta to_valuation_field; apply_instance
+
 theorem to_valuation_field_cts' (hs : v s ≠ 0)(hT2 : ∀ t : A, t ∈ T → v t ≤ v s) (hv : is_continuous v) :
   continuous (to_valuation_field hs) :=
 Huber_ring.away.lift_continuous T s (of_subgroups.nonarchimedean)
   (continuous_valuation_field_mk_of_continuous v hv) (unit_aux hs) (rd.Hopen)
   (v_T_over_s_is_power_bounded hs hT2)
+
+-- now we need that the triangles commute when we fix v but change s.
+
+theorem to_valuation_field_commutes (r1 r2 : Spa.rational_open_data A) (h : r1 ≤ r2)
+  (hs1 : v r1.s ≠ 0) (hs2 : v r2.s ≠ 0) :
+to_valuation_field hs1 = (to_valuation_field hs2) ∘ (Spa.rational_open_data.localization_map h) :=
+begin
+  refine localization.funext
+    (to_valuation_field hs1 : localization A.R (powers r1.s) → valuation_field v)
+    ((to_valuation_field hs2) ∘ (Spa.rational_open_data.localization_map h) :
+      localization A.R (powers r1.s) → valuation_field v) _,
+  intro r,
+  change Huber_ring.away.lift (r1.T) (r1.s) _ (localization.of r) =
+    Huber_ring.away.lift (r2.T) (r2.s) _ (Spa.rational_open_data.localization_map h (localization.of r)),
+  dunfold Spa.rational_open_data.localization_map,
+  rw Huber_ring.away.lift_of,
+  rw Huber_ring.away.lift_of,
+  change _ = Huber_ring.away.lift (r2.T) (r2.s) _ (localization.of r),
+  rw Huber_ring.away.lift_of,
+end
 
 namespace rational_open_data
 
@@ -136,14 +159,26 @@ def to_valuation_field {r : Spa.rational_open_data A} {v : Spa A} (hv : v ∈ r.
 (to_valuation_field $ to_valuation_field_cts_aux hv)
 
 instance {r : Spa.rational_open_data A} {v : Spa A} (hv : v ∈ r.rational_open) :
-  is_ring_hom (to_valuation_field hv) := by delta to_valuation_field; sorry
+  is_ring_hom (to_valuation_field hv) := by {delta to_valuation_field, apply_instance}
 
 /-- If v : Spa A is in D(T,s) then the map A(T/s) -> K_v is continuous -/
 theorem to_valuation_field_cts {r : Spa.rational_open_data A} {v : Spa A}
   (hv : v ∈ r.rational_open) : continuous (to_valuation_field hv) :=
 Huber_pair.to_valuation_field_cts' hv.2 hv.1 v.2.1
 
--- Now we need to show that
+-- Now we need to show that if r1 <= r2 then these to_valuation_field maps
+-- are compatible.
+
+theorem to_valuation_field_commutes {r1 r2 : Spa.rational_open_data A} {v : Spa A}
+  (hv1 : v ∈ r1.rational_open) (hv2 : v ∈ r2.rational_open) (h : r1 ≤ r2) :
+(to_valuation_field hv1) = (to_valuation_field hv2) ∘ (Spa.rational_open_data.localization_map h) :=
+to_valuation_field_commutes r1 r2 h hv1.2 hv2.2
+
+-- next we need to show that the completed maps also all commute
+
+-- Now we need to show that for any O_X(U) with v in U we have a map
+-- to K_v-hat. We do this under the additional assumption that D(T,s)
+
 end rational_open_data
 
 end Huber_pair
