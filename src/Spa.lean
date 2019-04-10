@@ -334,6 +334,9 @@ namespace rational_open_data
 lemma insert_s_rational_open (r : rational_open_data A) :
 (insert_s r).rational_open = r.rational_open := (rational_open_add_s r.s r.T).symm
 
+lemma mem_insert_s (r : rational_open_data A) :
+r.s ∈ (insert_s r).T := by {left, refl}
+
 end rational_open_data
 
 lemma rational_open.is_open (s : A) (T : set A) [h : fintype T] :
@@ -470,9 +473,38 @@ lemma rational_open_data_inter (r1 r2 : rational_open_data A) :
 begin
   rw ←insert_s_rational_open r1,
   rw ←insert_s_rational_open r2,
-  symmetry,
-  apply rational_open_inter,
-  left, refl, left, refl,
+  exact (rational_open_inter (mem_insert_s r1) (mem_insert_s r2)).symm
+end
+
+lemma rational_open_data_inter_le (r1 r2 : rational_open_data A) (h : r2.s ∈ r2.T) :
+r1 ≤ (inter r1 r2) :=
+begin
+  use r2.s,
+  split, refl,
+  intros t1 ht1,
+  use t1 * r2.s,
+  existsi _,
+    use 0,
+  use t1,
+  existsi _,
+    use r2.s,
+    existsi _, refl,
+    exact mem_insert_s r2,
+  right, assumption
+end
+
+lemma rational_open_data_symm (r1 r2 : rational_open_data A) :
+  inter r1 r2 = inter r2 r1 :=
+begin
+  cases r1,
+  cases r2,
+    unfold inter inter_aux,
+  congr' 1,
+    unfold insert_s,
+    dsimp, exact mul_comm _ _,
+  unfold insert_s,
+  dsimp,
+  exact mul_comm _ _,
 end
 
 end rational_open_data
