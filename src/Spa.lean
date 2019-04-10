@@ -88,7 +88,8 @@ rational_open r.s r.T
 
 def localization (r : rational_open_data A) := Huber_ring.away r.T r.s
 
-instance ring_with_zero_nhd_of_localization (r : rational_open_data A) : ring_with_zero_nhd (localization r) :=
+instance ring_with_zero_nhd_of_localization (r : rational_open_data A) :
+  ring_with_zero_nhd (localization r) :=
 Huber_ring.away.ring_with_zero_nhd r.T r.s r.Hopen
 
 instance (r : rational_open_data A) : comm_ring (localization r) :=
@@ -133,7 +134,9 @@ define our way around the problem. We are fortunate in that we can prove
 limit over the correct preorder.
 -/
 
--- note: I don't think we ever use le_refl or le_trans
+-- note: I don't think we ever use le_refl or le_trans. I only proved them to
+-- validate the paper calculation I did which proves that the limit over these things
+-- equals the limit over the things we'd rather be taking a limit over.
 instance : preorder (rational_open_data A) :=
 { le := λ r1 r2, ∃ k : A, r1.s * k = r2.s ∧
     ∀ t₁ ∈ r1.T, ∃ t₂ ∈ r2.T, ∃ N : ℕ, r2.s ^ N * t₂ = r2.s ^ N * (t₁ * k),
@@ -171,10 +174,13 @@ noncomputable def s_inv_aux (r1 r2 : rational_open_data A) (h : r1 ≤ r2) : uni
     refl,
 end)
 
-noncomputable def rational_open_subset.restriction {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
+noncomputable def localization_map {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
   localization r1 → localization r2 :=
 Huber_ring.away.lift r1.T r1.s
 ( show ((s_inv_aux r1 r2 h)⁻¹).inv = (of_id A (localization r2)).to_fun r1.s, from rfl)
+
+instance {r1 r2 : rational_open_data A} (h : r1 ≤ r2) : is_ring_hom
+(localization_map h) := by delta localization_map; apply_instance
 
 def localization.nonarchimedean (r : rational_open_data A) :
   topological_add_group.nonarchimedean (localization r) :=
@@ -212,55 +218,64 @@ begin
     refl }
 end
 
+end -- section
+
+-- To prove continuity of the localisation map coming from r1 ≤ r2 I need to check
+-- that the image of T/s in the r1 ring is power-bounded in the r2 ring. This is
+-- this lemma.
+
+lemma localization_map_is_cts_aux {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
+is_power_bounded_subset
+  ((s_inv_aux r1 r2 h)⁻¹.val • (λ (x : ↥A), to_fun (localization r2) x) '' r1.T) :=
+begin
+  refine power_bounded.subset _ (localization.power_bounded r2),
+  intros x hx,
+  rcases hx with ⟨y, hy, hz, ⟨t₁, ht₁, rfl⟩, rfl⟩,
+  rw mem_singleton_iff at hy, rw hy, clear hy, clear y,
+  let h' := h, -- need it later
+  rcases h with ⟨a, ha, h₂⟩,
+  rcases h₂ t₁ ht₁ with ⟨t₂, ht₂, N, hN⟩,
+  show ↑(s_inv_aux r1 r2 _)⁻¹ * to_fun (localization r2) t₁ ∈
+    localization.mk 1 ⟨r2.s, _⟩ • (of_id ↥A (localization r2)).to_fun '' r2.T,
+  rw mem_smul_set,
+  use (of_id ↥A (localization r2)).to_fun t₂,
+  existsi _, swap,
+    rw mem_image, use t₂, use ht₂,
+  rw [←units.mul_left_inj (s_inv_aux r1 r2 h'), units.mul_inv_cancel_left],
+  show to_fun (localization r2) t₁ = to_fun (localization r2) (r1.s) *
+    (localization.mk 1 ⟨r2.s, _⟩ * to_fun (localization r2) t₂),
+  rw [mul_comm, mul_assoc],
+  rw ←units.mul_left_inj (localization.to_units (⟨r2.s, 1, by simp⟩ : powers r2.s)),
+  rw ←mul_assoc,
+  -- t1=s1*(1/s2 * t2) in r2
+  have : ↑(localization.to_units (⟨r2.s, 1, by simp⟩ : powers r2.s)) *
+    localization.mk (1 : A) (⟨r2.s, 1, by simp⟩ : powers r2.s) = 1,
+  convert units.mul_inv _,
+  rw [this, one_mul], clear this,
+  show to_fun (localization r2) r2.s * _ = _,
+  rw ←units.mul_left_inj (localization.to_units (⟨r2.s ^ N, N, rfl⟩ : powers r2.s)),
+  show to_fun (localization r2) (r2.s ^ N) * _ = to_fun (localization r2) (r2.s ^ N) * _,
+  have hrh : is_ring_hom (to_fun (localization r2)) := begin
+    change is_ring_hom ((of_id ↥A (localization r2)).to_fun),
+    apply_instance,
+  end,
+  rw ←@is_ring_hom.map_mul _ _ _ _ (to_fun (localization r2)) hrh,
+  rw ←@is_ring_hom.map_mul _ _ _ _ (to_fun (localization r2)) hrh,
+  rw ←@is_ring_hom.map_mul _ _ _ _ (to_fun (localization r2)) hrh,
+  rw ←@is_ring_hom.map_mul _ _ _ _ (to_fun (localization r2)) hrh,
+  congr' 1,
+  rw [←mul_assoc _ t₂, hN],
+  rw ←ha, ring,
 end
 
--- To prove continuity I need to check that something is power-bounded; that's where
--- the work is here. The claim could be factored out, it's the 40 line begin/end block.
-lemma rational_open_subset.restriction_is_cts {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
-  continuous (rational_open_subset.restriction h) := Huber_ring.away.lift_continuous r1.T r1.s
+-- Continuity now follows from the universal property.
+lemma localization_map_is_cts {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
+  continuous (localization_map h) := Huber_ring.away.lift_continuous r1.T r1.s
   (localization.nonarchimedean r2)
   (Huber_ring.away.of_continuous r2.T r2.s
   (show ((localization.to_units (⟨r2.s, 1, by simp⟩ : powers r2.s))⁻¹ : units (localization r2)).inv =
-    (of_id A (localization r2)).to_fun r2.s, from rfl) r2.Hopen) _ _ (begin
-      refine power_bounded.subset _ (localization.power_bounded r2),
-      intros x hx,
-      rcases hx with ⟨y, hy, hz, ⟨t₁, ht₁, rfl⟩, rfl⟩,
-      rw mem_singleton_iff at hy, rw hy, clear hy, clear y,
-      let h' := h, -- need it later
-      rcases h with ⟨a, ha, h₂⟩,
-      rcases h₂ t₁ ht₁ with ⟨t₂, ht₂, N, hN⟩,
-      show ↑(s_inv_aux r1 r2 _)⁻¹ * to_fun (localization r2) t₁ ∈
-        localization.mk 1 ⟨r2.s, _⟩ • (of_id ↥A (localization r2)).to_fun '' r2.T,
-      rw mem_smul_set,
-      use (of_id ↥A (localization r2)).to_fun t₂,
-      existsi _, swap,
-        rw mem_image, use t₂, use ht₂,
-      rw [←units.mul_left_inj (s_inv_aux r1 r2 h'), units.mul_inv_cancel_left],
-      show to_fun (localization r2) t₁ = to_fun (localization r2) (r1.s) *
-        (localization.mk 1 ⟨r2.s, _⟩ * to_fun (localization r2) t₂),
-      rw [mul_comm, mul_assoc],
-      rw ←units.mul_left_inj (localization.to_units (⟨r2.s, 1, by simp⟩ : powers r2.s)),
-      rw ←mul_assoc,
-      -- t1=s1*(1/s2 * t2) in r2
-      have : ↑(localization.to_units (⟨r2.s, 1, by simp⟩ : powers r2.s)) *
-        localization.mk (1 : A) (⟨r2.s, 1, by simp⟩ : powers r2.s) = 1,
-      convert units.mul_inv _,
-      rw [this, one_mul], clear this,
-      show to_fun (localization r2) r2.s * _ = _,
-      rw ←units.mul_left_inj (localization.to_units (⟨r2.s ^ N, N, rfl⟩ : powers r2.s)),
-      show to_fun (localization r2) (r2.s ^ N) * _ = to_fun (localization r2) (r2.s ^ N) * _,
-      have hrh : is_ring_hom (to_fun (localization r2)) := begin
-        change is_ring_hom ((of_id ↥A (localization r2)).to_fun),
-        apply_instance,
-      end,
-      rw ←@is_ring_hom.map_mul _ _ _ _ (to_fun (localization r2)) hrh,
-      rw ←@is_ring_hom.map_mul _ _ _ _ (to_fun (localization r2)) hrh,
-      rw ←@is_ring_hom.map_mul _ _ _ _ (to_fun (localization r2)) hrh,
-      rw ←@is_ring_hom.map_mul _ _ _ _ (to_fun (localization r2)) hrh,
-      congr' 1,
-      rw [←mul_assoc _ t₂, hN],
-      rw ←ha, ring,
-    end)
+    (of_id A (localization r2)).to_fun r2.s, from rfl) r2.Hopen) _ _
+    (localization_map_is_cts_aux h)
 
 -- Note: I don't think we ever use this.
 noncomputable def insert_s (r : rational_open_data A) : rational_open_data A :=
@@ -284,7 +299,7 @@ noncomputable def inter_aux (r1 r2 : rational_open_data A) : rational_open_data 
 }
 -/
 
-end rational_open_data
+end rational_open_data -- namespace
 
 lemma mk_mem_rational_open {s : A} {T : set A} {v : valuation A Γ} {hv : mk v ∈ Spa A} :
   (⟨mk v, hv⟩ : Spa A) ∈ rational_open s T ↔ (∀ t ∈ T, (v t ≤ v s)) ∧ (v s ≠ 0) :=
@@ -421,10 +436,8 @@ begin
 end
 
 -- Current status: proof is broken with 2 sorries.
--- KMB remarks that we don't need this result yet so he's commenting it out for now.
--- We might well need it though!
+-- We need this :-\
 
-/-
 lemma rational_basis.is_basis : topological_space.is_topological_basis (rational_basis A) :=
 begin
 split,
@@ -465,50 +478,12 @@ split,
     exact rational_open.is_open s T,
   } }
 end
--/
-
--- KMB remarks that we don't need the presheaf on the basic either
-/-
-namespace rational_open
-
-def presheaf.aux (s : A) (T : set A) := localization.away s
-
-instance (s : A) (T : set A) : comm_ring (presheaf.aux s T) :=
-by delta presheaf.aux; apply_instance
-
--- Definition of A\left(\frac T s\right) as a topological ring
-def presheaf.topology (rod : rational_open_data A) :
-  topological_space (presheaf.aux rod.s rod.T) := sorry
-/-
-let As := presheaf.aux s T in
-let S₁ : set As := localization.of '' A.RHuber.A₀ in
-let T' : set As := localization.of '' T in
-let S₂ : set As := (*) (((localization.to_units s)⁻¹ : units As) : As) '' T' in -- need to update mathlib
-let S : set As := S₁ ∪ S₂ in
-let D := ring.closure S in
-let I := classical.some A.RHuber.A₀_is_ring_of_definition.2 in
-adic_topology (I * D)
---  let As := presheaf.aux s T in sorry
- /-let D := ring.closure ((localize s) '' A.RHuber.A₀ ∪ (((λ x, x*s⁻¹) ∘ localize s) '' T)) in
- begin
-   let nhd := λ n : ℕ, mul_ideal (pow_ideal ((localize s) '' A.Rplus) n) D,
-  sorry
-end-/
--/
-
-def presheaf' (s : A) (T : set A) [Hfin : fintype T]
-  (Hopen : _root_.is_open ((ideal.span T) : set A)) : Type* := sorry
--- ring_completion presheaf.aux s T
-
-end rational_open
--/
 
 section
 open topological_space
 
 def rational_open_data_subsets (U : opens (Spa A)) :=
 { r : rational_open_data A // r.rational_open ⊆ U}
-
 def rational_open_data_subsets.map {U V : opens (Spa A)} (hUV : U ≤ V)
   (rd : rational_open_data_subsets U) :
   rational_open_data_subsets V :=
@@ -517,13 +492,44 @@ def rational_open_data_subsets.map {U V : opens (Spa A)} (hUV : U ≤ V)
 instance (r : rational_open_data A) : uniform_space (rational_open_data.localization r) :=
 topological_add_group.to_uniform_space _
 
-def rational_open_data.presheaf (r : rational_open_data A) :=
+instance (rd : rational_open_data A): uniform_add_group (rational_open_data.localization rd) :=
+topological_add_group_is_uniform
+
+-- it's continuous -- will that do?
+def localization_map_is_uniform_continuous {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
+  uniform_continuous (rational_open_data.localization_map h) := sorry
+
+/-- A<T/s>, the functions on D(T,s). A topological ring -/
+def r_o_d_completion (r : rational_open_data A) :=
 ring_completion (rational_open_data.localization r)
 
+noncomputable instance (r : rational_open_data A) : ring (r_o_d_completion r) :=
+by dunfold r_o_d_completion; apply_instance
+
+instance r_o_d_uniform_space (r : rational_open_data A) : uniform_space (r_o_d_completion r) :=
+by dunfold r_o_d_completion; apply_instance
+
+example (r : rational_open_data A) : topological_space (r_o_d_completion r) := by apply_instance
+
+instance (r : rational_open_data A) : topological_ring (r_o_d_completion r)
+:= by dunfold r_o_d_completion; apply_instance
+
+noncomputable def r_o_d_completion.restriction {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
+r_o_d_completion r1 → r_o_d_completion r2 :=
+ring_completion.map (rational_open_data.localization_map h)
+
+instance {r1 r2 : rational_open_data A} (h : r1 ≤ r2) : is_ring_hom (r_o_d_completion.restriction h)
+:= by delta r_o_d_completion.restriction;
+exact ring_completion.map_is_ring_hom _ _ (rational_open_data.localization_map_is_cts h)
+
+lemma restriction_is_continuous {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
+uniform_continuous (r_o_d_completion.restriction h) :=
+ring_completion.map_uniform_continuous $ localization_map_is_uniform_continuous h
+
 def presheaf (U : opens (Spa A)) :=
-{f : Π (rd : rational_open_data_subsets U), ring_completion (rational_open_data.localization rd.1) //
+{f : Π (rd : rational_open_data_subsets U), r_o_d_completion rd.1 //
    ∀ (rd1 rd2 : rational_open_data_subsets U) (h : rd1.1 ≤ rd2.1),
-     ring_completion.map (rational_open_data.rational_open_subset.restriction h) (f rd1) = (f rd2)} -- agrees on overlaps
+     r_o_d_completion.restriction h (f rd1) = (f rd2)} -- agrees on overlaps
 
 def presheaf.map {U V : opens (Spa A)} (hUV : U ≤ V) :
   presheaf V → presheaf U :=
@@ -544,9 +550,6 @@ lemma presheaf.map_comp {U V W : opens (Spa A)} (hUV : U ≤ V) (hVW : V ≤ W) 
 by { delta presheaf.map, tidy }
 
 end
-
-instance (rd : rational_open_data A): uniform_add_group (rational_open_data.localization rd) :=
-topological_add_group_is_uniform
 
 noncomputable
 example (rd : rational_open_data A): ring (ring_completion (rational_open_data.localization rd))
