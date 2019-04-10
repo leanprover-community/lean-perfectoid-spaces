@@ -495,9 +495,9 @@ topological_add_group.to_uniform_space _
 instance (rd : rational_open_data A): uniform_add_group (rational_open_data.localization rd) :=
 topological_add_group_is_uniform
 
--- it's continuous -- will that do?
 def localization_map_is_uniform_continuous {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
-  uniform_continuous (rational_open_data.localization_map h) := sorry
+  uniform_continuous (rational_open_data.localization_map h) :=
+uniform_continuous_of_continuous (rational_open_data.localization_map_is_cts h)
 
 /-- A<T/s>, the functions on D(T,s). A topological ring -/
 def r_o_d_completion (r : rational_open_data A) :=

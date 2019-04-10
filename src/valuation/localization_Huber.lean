@@ -123,6 +123,7 @@ Huber_ring.away.lift T s (unit_aux hs)
 theorem to_valuation_field_cts (hs : v s ≠ 0)(hT2 : ∀ t : A, t ∈ T → v t ≤ v s) (hv : is_continuous v) :
   continuous (to_valuation_field hs) :=
 Huber_ring.away.lift_continuous T s (of_subgroups.nonarchimedean)
-(continuous_valuation_field_mk_of_continuous v hv) (unit_aux hs) (rd.Hopen) (v_T_over_s_is_power_bounded hs hT2)
+  (continuous_valuation_field_mk_of_continuous v hv) (unit_aux hs) (rd.Hopen)
+  (v_T_over_s_is_power_bounded hs hT2)
 
 end Huber_pair
