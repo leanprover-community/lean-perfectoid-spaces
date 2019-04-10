@@ -108,12 +108,6 @@ local attribute [instance] discrete_ordered_comm_group
 def ordered_comm_group_is_discrete : discrete_topology Γ := ⟨rfl⟩
 local attribute [instance] ordered_comm_group_is_discrete
 
-instance discrete_top_group' {G : Type*} [group G] [topological_space G] [discrete_topology G] :
-  topological_group G :=
-{ continuous_mul := continuous_of_discrete_topology,
-  continuous_inv := continuous_of_discrete_topology }
-
-
 /-- The valuation map restricted to units of a field endowed with the valuation toplogy is
     continuous if we endow the target with discrete topology.
     [BouAC, VI.5.1 end of Proposition 1] -/
