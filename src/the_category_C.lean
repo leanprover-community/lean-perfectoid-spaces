@@ -1,4 +1,6 @@
-
+import algebraic_geometry.stalks
+import category_theory.limits.types
+import category_theory.instances.TopCommRing
 import topology.opens
 
 import .presheaf_stuff.stuff
@@ -24,69 +26,75 @@ structure C extends PresheafedSpace.{v} TopCommRing.{v} :=
 
 structure C_hom (F G : C.{v}) :=
 (f : F.to_PresheafedSpace ⟶ G.to_PresheafedSpace)
-(monotone : Π (x : F.X) (a b : G.to_PresheafedSpace.stalk' (PresheafedSpace.hom.f hom x)),
-   (a ≤ b) ↔ ((stalk_map' hom x) a ≤ (stalk_map' hom x) b))
+(s : preserves_relation F.s G.s ((TopCommRing.forget.map_presheaf).map f))
 .
 
--- FIXME can't tag this with @[extensionality]?
-lemma hom.ext {F G : C.{v}} {f g : hom F G} (w : f.hom = g.hom) : f = g :=
+@[extensionality]
+lemma C_hom.ext {F G : C.{v}} {f g : C_hom F G} (w : f.f = g.f) : f = g :=
 begin
   cases f, cases g,
   congr; assumption
 end
 
--- We need two lemmas about `stalk_map'`:
-section
+open algebraic_geometry.presheaf_on_space
 
-@[simp] lemma stalk_map'_id (F : PresheafedSpace.{v} TopCommRing.{v}) (x : F.X) :
-  stalk_map' (𝟙 F) x = 𝟙 (F.stalk' x) :=
+@[simp] lemma stalk_map.id' {F : C.{v}} (x : F.X) :
+  (stalk_map ((functor.map_presheaf TopCommRing.forget).map (𝟙 (F.to_PresheafedSpace))) x) = id :=
+by refine stalk_map.id _ _
+
+@[simp] lemma stalk_map.comp' {F G H : C.{v}} (α : C_hom F G) (β : C_hom G H) (x : F.X) :
+  stalk_map ((TopCommRing.forget.map_presheaf).map (α.f ≫ β.f)) x =
+    (stalk_map ((TopCommRing.forget.map_presheaf).map β.f) (α.f x) : ((TopCommRing.forget.map_presheaf).obj H.to_PresheafedSpace).stalk (β.f.f (α.f.f x)) ⟶ ((TopCommRing.forget.map_presheaf).obj G.to_PresheafedSpace).stalk (α.f.f x)) ≫
+    (stalk_map ((TopCommRing.forget.map_presheaf).map α.f) x : ((TopCommRing.forget.map_presheaf).obj G.to_PresheafedSpace).stalk (α.f.f x) ⟶ ((TopCommRing.forget.map_presheaf).obj F.to_PresheafedSpace).stalk x) :=
 begin
-  dsimp [stalk_map', stalk'],
-  -- because of tangled type dependencies, we're going to have to give the original proof all over again
-  dsimp [stalk_map, whisker_right],
-  simp [id_c],
-  rw ←category_theory.functor.map_comp,
-  rw ←category_theory.functor.map_comp,
-  -- convert (stalk_functor C x).map_id F.𝒪,
-  -- tidy,
-  -- -- Shoot, this is why I wanted to take @[simp] off the eq_to_hom lemmas
-  -- conv { to_lhs, congr, skip, rw ←eq_to_hom_map },
-  -- rw ←category_theory.functor.map_comp,
-  -- rw [eq_to_hom_op_comp],
-  -- erw category_theory.functor.map_id,
-
+  convert stalk_map.comp _ _ _,
+  erw category_theory.functor.map_comp,
+  erw category_theory.functor.map_comp,
 end
-@[simp] lemma stalk_map'_comp {F G H : PresheafedSpace.{v} TopCommRing.{v}} (α : F ⟶ G) (β : G ⟶ H) (x : F.X) :
-  stalk_map' (α ≫ β) x =
-    begin
-      have p := (stalk_map' β (α x) : H.stalk' (β (α x)) ⟶ G.stalk' (α x)),
-      have q := (stalk_map' α x : G.stalk' (α x) ⟶ F.stalk' x),
-      exact q ∘ p
-    end :=
-sorry
-end
+.
 
-def hom.id (F : C.{v}) : hom F F :=
-{ hom := 𝟙 F.to_PresheafedSpace,
-  monotone := λ x a b, by simp,  }
+def C_hom.id (F : C.{v}) : C_hom F F :=
+{ f := 𝟙 F.to_PresheafedSpace,
+  s := λ x a b, begin dsimp at *, simp, end,  }
 
-def hom.comp (F G H : C.{v}) (α : hom F G) (β : hom G H) : hom F H :=
-{ hom := α.hom ≫ β.hom,
-  monotone := λ x a b,
+def C_hom.comp (F G H : C.{v}) (α : C_hom F G) (β : C_hom G H) : C_hom F H :=
+{ f := α.f ≫ β.f,
+  s := λ x a b,
   begin
     simp,
     transitivity,
-    apply β.monotone,
-    apply α.monotone,
+    apply β.s,
+    apply α.s,
   end  }
 
 section
-local attribute [simp] id comp
+local attribute [simp] C_hom.id C_hom.comp PresheafedSpace.id_c PresheafedSpace.comp_c
 instance : category C.{v} :=
-{ hom := hom,
-  id := hom.id,
-  comp := hom.comp,
-  comp_id' := λ X Y f, sorry,
-  id_comp' := λ X Y f, sorry,
-  assoc' := λ W X Y Z f g h, sorry }
+{ hom := C_hom,
+  id := C_hom.id,
+  comp := C_hom.comp,
+  comp_id' := λ X Y f,
+  begin
+    ext,
+    { dsimp,
+      simp,
+      erw category_theory.functor.map_id,
+      erw category.comp_id,
+      dsimp [opposite] at X_1,
+      cases X_1,
+      dsimp,
+      erw category_theory.functor.map_id,
+      simp,
+      refl, },
+    refl,
+  end,
+  id_comp' := λ X Y f,
+  begin
+    ext,
+    { dsimp,
+      simp,
+      erw category_theory.functor.map_id,
+      erw category.comp_id, },
+    refl,
+  end, }
 end
