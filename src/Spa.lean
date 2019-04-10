@@ -522,7 +522,7 @@ instance {r1 r2 : rational_open_data A} (h : r1 ≤ r2) : is_ring_hom (r_o_d_com
 := by delta r_o_d_completion.restriction;
 exact ring_completion.map_is_ring_hom _ _ (rational_open_data.localization_map_is_cts h)
 
-lemma restriction_is_continuous {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
+lemma restriction_is_uniform_continuous {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
 uniform_continuous (r_o_d_completion.restriction h) :=
 ring_completion.map_uniform_continuous $ localization_map_is_uniform_continuous h
 
@@ -549,7 +549,7 @@ lemma presheaf.map_comp {U V W : opens (Spa A)} (hUV : U ≤ V) (hVW : V ≤ W) 
   presheaf.map hUV ∘ presheaf.map hVW = presheaf.map (le_trans hUV hVW) :=
 by { delta presheaf.map, tidy }
 
-end
+end -- section
 
 noncomputable
 example (rd : rational_open_data A): ring (ring_completion (rational_open_data.localization rd))
