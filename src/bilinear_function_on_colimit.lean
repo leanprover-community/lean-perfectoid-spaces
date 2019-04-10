@@ -31,7 +31,7 @@ variable (F : J ⥤ C)
 -- constructing (co)cones. (Usually one would just first package `f` and `w`
 -- into a `c : cocone F`, and construct this function by `colimit.desc F c`.)
 
-def map_out_of_colimit (F : J ⥤ C) [has_colimit F] (X : C)
+def desc (F : J ⥤ C) [has_colimit F] (X : C)
   (f : Π j, F.obj j ⟶ X) (w : Π (j j') (k : j ⟶ j'), F.map k ≫ f j' = f j)
   : colimit F ⟶ X :=
 colimit.desc F
@@ -40,9 +40,10 @@ colimit.desc F
   { app := λ j, f j,
     naturality' := λ j j' k, begin dsimp, simp, exact w j j' k end }}
 
+omit 𝒞
 variables [is_filtered'.{v} J]
 
-def map₂_out_of_colimit (F : J ⥤ Type v) (X : Type v)
+def desc₂ (F : J ⥤ Type v) (X : Type v)
   (f : Π j, F.obj j → F.obj j → X)
   (w : Π (j j') (k : j ⟶ j'), (λ x y, f j' (F.map k x) (F.map k y)) = f j)
   : colimit F ⟶ (colimit F ⟶ X) :=
