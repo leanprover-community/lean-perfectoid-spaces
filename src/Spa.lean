@@ -12,6 +12,7 @@ import for_mathlib.group -- some stupid lemma about units
 universes u₁ u₂ u₃
 
 local attribute [instance, priority 0] classical.prop_decidable
+local attribute [instance] set.pointwise_mul_comm_semiring
 
 open set function Spv valuation
 
@@ -355,12 +356,11 @@ end
 lemma rational_open_inter.aux₁ {s₁ s₂ : A} {T₁ T₂ : set A}
   (h₁ : s₁ ∈ T₁) (h₂ : s₂ ∈ T₂) :
   rational_open s₁ T₁ ∩ rational_open s₂ T₂ ⊆
-  rational_open (s₁ * s₂) ((*) <$> T₁ <*> T₂) :=
+  rational_open (s₁ * s₂) (T₁ * T₂) :=
 begin
   rintros v ⟨⟨hv₁, hs₁⟩, ⟨hv₂, hs₂⟩⟩,
   split,
-  { rintros t ⟨_, ⟨t₁, ht₁, rfl⟩, ⟨t₂, ht₂, ht⟩⟩,
-    subst ht,
+  { rintros t ⟨t₁, ht₁, t₂, ht₂, rfl⟩,
     convert le_trans
       (linear_ordered_comm_monoid.mul_le_mul_right (hv₁ t₁ ht₁) _)
       (linear_ordered_comm_monoid.mul_le_mul_left  (hv₂ t₂ ht₂) _);
@@ -374,7 +374,7 @@ end
 
 lemma rational_open_inter.aux₂ {s₁ s₂ : A} {T₁ T₂ : set A}
   (h₁ : s₁ ∈ T₁) (h₂ : s₂ ∈ T₂) :
-  rational_open (s₁ * s₂) ((*) <$> T₁ <*> T₂) ⊆
+  rational_open (s₁ * s₂) (T₁ * T₂) ⊆
   rational_open s₁ T₁ ∩ rational_open s₂ T₂ :=
 begin
   rintros v ⟨hv, hs⟩,
@@ -393,7 +393,7 @@ begin
       erw [mul_one, mul_one] at this,
       exact this },
     { erw [← valuation.map_mul, ← valuation.map_mul],
-      exact hv (t * s₂) ⟨_, ⟨t, ht, rfl⟩, ⟨s₂, h₂, rfl⟩⟩, } },
+      exact hv (t * s₂) ⟨t, ht, s₂, h₂, rfl⟩, } },
   { suffices H : v s₁ * v t ≤ v s₁ * v s₂,
     { cases hs₁ with γ hγ,
       rw hγ at H,
@@ -403,12 +403,12 @@ begin
       erw [one_mul, one_mul] at this,
       exact this },
     { erw [← valuation.map_mul, ← valuation.map_mul],
-      exact hv _ ⟨_, ⟨s₁, h₁, rfl⟩, ⟨t, ht, rfl⟩⟩ } },
+      exact hv _ ⟨s₁, h₁, t, ht, rfl⟩ } },
 end
 
 lemma rational_open_inter {s₁ s₂ : A} {T₁ T₂ : set A} (h₁ : s₁ ∈ T₁) (h₂ : s₂ ∈ T₂) :
   rational_open s₁ T₁ ∩ rational_open s₂ T₂ =
-  rational_open (s₁ * s₂) ((*) <$> T₁ <*> T₂) :=
+  rational_open (s₁ * s₂) (T₁ * T₂) :=
 le_antisymm (rational_open_inter.aux₁ h₁ h₂) (rational_open_inter.aux₂ h₁ h₂)
 
 @[simp] lemma rational_open_singleton {r s : A} :
@@ -425,18 +425,13 @@ univ_subset_iff.1 $ λ v h, ⟨le_refl _,by erw valuation.map_one; exact one_ne_
 by simp
 
 def rational_basis (A : Huber_pair) : set (set (Spa A)) :=
-{U : set (Spa A) | ∃ {s : A} {T : set A} {hfin : fintype T} {hopen : is_open (ideal.span T).carrier},
+{U : set (Spa A) | ∃ {s : A} {T : set A} {hfin : fintype T} {hopen : is_open (↑(ideal.span T) : set A)},
                    U = rational_open s T }
-
-lemma rational_basis.is_basis.aux₁ (s₁ s₂ : A) (T₁ T₂ : set A) :
-  (*) <$> T₁ <*> T₂ ⊆ (*) <$> (insert s₁ T₁) <*> (insert s₂ T₂) :=
-begin
-  rintros t ⟨_, ⟨t₁, ht₁, rfl⟩, ⟨t₂, ht₂, ht⟩⟩,
-  exact ⟨_, ⟨t₁, mem_insert_of_mem _ ht₁, rfl⟩, ⟨t₂, mem_insert_of_mem _ ht₂, ht⟩⟩
-end
 
 -- Current status: proof is broken with 2 sorries.
 -- We need this :-\
+section
+open algebra
 
 lemma rational_basis.is_basis : topological_space.is_topological_basis (rational_basis A) :=
 begin
@@ -448,12 +443,26 @@ split,
   { simp only [H₁, H₂, rational_open_inter, set.mem_insert_iff, true_or, eq_self_iff_true],
     resetI,
     refine ⟨_, _, infer_instance, _, rfl⟩,
-    -- jmc: what follows is a sketch. We can fill the gaps once we know more about topological rings
-    have foo := ideal.span_mono (rational_basis.is_basis.aux₁ s₁ s₂ T₁ T₂),
-    suffices : is_open (ideal.span ((*) <$> T₁ <*> T₂)).carrier,
-    { sorry /- use "foo" from two lines up -/ },
-    { -- See the remarks in Wedhorn 7.30.(5).
-      sorry } },
+    rcases Huber_ring.exists_pod_subset _ (mem_nhds_sets hopen₁ $ ideal.zero_mem $ ideal.span T₁)
+      with ⟨A₀, _, _, _, ⟨_, emb, hf, I, fg, top⟩, hI⟩,
+    dsimp only at hI,
+    rw is_ideal_adic_iff at top,
+    cases top.2 (algebra_map A ⁻¹' ↑(ideal.span T₂)) _ with n hn,
+    { apply submodule.is_open_of_open_submodule,
+      use ideal.map (of_id A₀ A) (I^(n+1)),
+      refine ⟨is_open_ideal_map_open_embedding emb hf _ (top.1 (n+1)), _⟩,
+      delta ideal.span,
+      refine le_trans _
+        (submodule.span_mono $ set.mul_le_mul (subset_insert s₁ T₁) (subset_insert s₂ T₂)),
+      erw [pow_succ, ideal.map_mul, ← submodule.span_mul_span],
+      apply submodule.mul_le_mul,
+      { exact (ideal.span_le.mpr hI) },
+      { rw ← image_subset_iff at hn,
+        exact (ideal.span_le.mpr hn) } },
+    { apply emb.continuous.tendsto,
+      rw show algebra.to_fun A (0:A₀) = 0,
+      { apply is_ring_hom.map_zero },
+      exact (mem_nhds_sets hopen₂ $ ideal.zero_mem $ ideal.span T₂) } },
   { exact ⟨hv, subset.refl _⟩ } },
 split,
 { apply le_antisymm,
@@ -477,6 +486,8 @@ split,
     haveI := hT,
     exact rational_open.is_open s T,
   } }
+end
+
 end
 
 section
