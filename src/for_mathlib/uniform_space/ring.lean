@@ -306,6 +306,7 @@ begin
   apply h,
 end
 
+variables (α)
 lemma uniform_embedding_coe [separated α] : uniform_embedding (coe : α → ring_completion α) :=
 (uniform_embedding.comp sep_quot.uniform_embedding (completion.uniform_embedding_coe $sep_quot α) : _)
 end ring_completion
