@@ -1,4 +1,4 @@
-import .bilinear_function_on_stalk
+import .relation_on_stalk
 import algebraic_geometry.stalks
 import algebraic_geometry.presheaf_of_functions
 

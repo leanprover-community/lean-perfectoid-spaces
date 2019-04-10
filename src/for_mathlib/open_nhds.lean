@@ -1,17 +1,14 @@
-import .bilinear_function_on_colimit
-import algebraic_geometry.stalks
+import category_theory.instances.Top.open_nhds
+import for_mathlib.filtered
 
-
-universes v u
+universe v
 
 open category_theory
 open category_theory.instances
-open algebraic_geometry
 open topological_space
 open topological_space.open_nhds
 
 variables (X : Top.{v})
-variables (F : presheaf_on_space (Type v) X)
 
 instance (x : X) : has_inter (open_nhds x)ᵒᵖ :=
 { inter := λ U V, op ⟨(unop U).1 ∩ (unop V).1, ⟨(unop U).2, (unop V).2⟩⟩ }
@@ -25,9 +22,3 @@ instance (x : X) : is_filtered' (open_nhds x)ᵒᵖ :=
   cocone_objs := λ U V, ⟨U ∩ V, ⟨begin /- gross!-/ dsimp [opposite] at *, cases U, cases V, dsimp [(⟶)], split, split, intros x h, dsimp [(∩)] at h, cases h, exact h_left, end,
                                  begin /- gross!-/ dsimp [opposite] at *, cases U, cases V, dsimp [(⟶)], split, split, intros x h, dsimp [(∩)] at h, cases h, exact h_right, end ⟩ ⟩ ,
   cocone_maps := λ U V f g, ⟨⟨V, 𝟙 V⟩, begin dsimp, simp, apply subsingleton.elim end⟩ }
-
-def stalk_desc₂ (Y : Type v) (x : X)
-  (f : Π (U : (open_nhds x)ᵒᵖ), ((inclusion x).op ⋙ F).obj U → ((inclusion x).op ⋙ F).obj U → Y)
-  (w : Π (U U' : (open_nhds x)ᵒᵖ) (k : U ⟶ U'), (λ a b, f U' (((inclusion x).op ⋙ F).map k a) (((inclusion x).op ⋙ F).map k b)) = f U)
-  : F.stalk x ⟶ (F.stalk x ⟶ Y) :=
-desc₂ ((inclusion x).op ⋙ F) Y f w
