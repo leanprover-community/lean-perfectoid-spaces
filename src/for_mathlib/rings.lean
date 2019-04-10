@@ -24,12 +24,31 @@ open function
 
 variables {R : Type*} {S : Type*} [comm_ring R] [comm_ring S]
 
+local attribute [instance] set.pointwise_mul_comm_semiring
+
 lemma pow_le_pow (I : ideal R) {m n : ℕ} (h : m ≤ n) :
   I^n ≤ I^m :=
 begin
   cases nat.exists_eq_add_of_le h with k hk,
   rw [hk, pow_add],
   exact le_trans (mul_le_inf) (lattice.inf_le_left)
+end
+
+lemma mul_subset_mul (I J : ideal R) :
+  (↑I : set R) * (↑J : set R) ⊆ (↑(I * J) : set R) :=
+begin
+  rintros _ ⟨i, hi, j, hj, rfl⟩,
+  exact mul_mem_mul hi hj
+end
+
+lemma pow_subset_pow (I : ideal R) {n : ℕ} :
+  (↑I : set R)^n ⊆ ↑(I^n : ideal R) :=
+begin
+  induction n with n ih,
+  { erw [pow_zero, pow_zero, set.singleton_subset_iff], simp },
+  { rw [pow_succ, pow_succ],
+    refine set.subset.trans (set.pointwise_mul_subset_mul (set.subset.refl _) ih) _,
+    apply mul_subset_mul I (I^n) }
 end
 
 -- instance map_is_monoid_hom {f : R → S} [is_ring_hom f] :

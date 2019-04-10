@@ -59,6 +59,9 @@ topological_space.generate_from {U : set (Spa A) | ∃ r s : A, U = basic_open r
 lemma basic_open.is_open (r s : A) : is_open (basic_open r s) :=
 topological_space.generate_open.basic (basic_open r s) ⟨r, s, rfl⟩
 
+lemma basic_open.compact (r s : A) : compact (basic_open r s) :=
+sorry
+
 lemma basic_open_eq (s : A) : basic_open s s = {v | v s ≠ 0} :=
 set.ext $ λ v, ⟨λ h, h.right, λ h, ⟨le_refl _, h⟩⟩
 
@@ -429,9 +432,9 @@ def rational_basis (A : Huber_pair) : set (set (Spa A)) :=
                    U = rational_open s T }
 
 section
-open algebra
+open algebra lattice
 
-lemma rational_basis.is_basis.aux₁ (T₁ T₂ : set A)
+lemma rational_basis.is_basis.mul (T₁ T₂ : set A)
   (h₁ : is_open (↑(ideal.span T₁) : set A)) (h₂ : is_open (↑(ideal.span T₂) : set A)) :
   is_open (↑(ideal.span (T₁ * T₂)) : set A) :=
 begin
@@ -456,6 +459,77 @@ begin
     exact (mem_nhds_sets h₂ $ ideal.zero_mem $ ideal.span T₂) }
 end
 
+lemma rational_basis.is_basis.pow (T : set A) (hT : is_open (↑(ideal.span T) : set A)) (n : ℕ) :
+  is_open (↑(ideal.span (T^n)) : set A) :=
+begin
+  induction n with n ih,
+  { erw [pow_zero, ideal.span_singleton_one], exact is_open_univ },
+  { rw pow_succ, exact rational_basis.is_basis.mul _ _ hT ih }
+end
+
+noncomputable instance foobar (T : set A) [fintype T] (n : ℕ) : fintype (T^n : set A) :=
+begin
+  induction n with n ih,
+  { rw pow_zero, exact set.fintype_singleton _ },
+  { rw pow_succ, resetI, exact set.pointwise_mul_fintype _ _ }
+end
+
+lemma exists_rational_open (X : set (Spa A)) (hX : compact X)
+  (s : A) (hs : ∀ v ∈ X, (v : Spv A) s ≠ 0) :
+  ∃ (T : set A) (fin : fintype T) (hT : is_open (↑(ideal.span T) : set A)),
+    X ⊆ rational_open s T :=
+begin
+  rcases Huber_ring.exists_pod_subset (univ : set A) (filter.univ_mem_sets)
+    with ⟨A₀, _, _, _, ⟨_, emb, hf, I, fg, top⟩, hI⟩,
+  rcases fg with ⟨T', hT'⟩,
+  resetI,
+  let T : set A := algebra_map A '' ↑T',
+  haveI : fintype T := @set.fintype_image _ _ (by apply_instance) _ _ (finset_coe.fintype _),
+  have hT : is_open (↑(ideal.span T) : set A) :=
+  begin
+    rw is_ideal_adic_iff at top,
+    apply submodule.is_open_of_open_submodule,
+    refine ⟨_, is_open_ideal_map_open_embedding emb hf I (pow_one I ▸ top.1 1), _⟩,
+    change ideal.span _ = _ at hT',
+    rw [← hT', ← ideal.span_image],
+    exact le_refl _,
+  end,
+  have HT : is_topologically_nilpotent_subset T :=
+  begin
+    sorry
+  end,
+  have key : X ⊆ ⋃ (n ∈ (univ : set ℕ)), rational_open s (T^n) :=
+  begin
+    intros v hv,
+    rw set.mem_Union,
+    let U := (v : Spv A) ⁻¹' {γ | γ ≤ v s},
+    cases HT U _ with n hn,
+    refine ⟨n, _, _, _⟩,
+    work_on_goal 1 { simp },
+    work_on_goal 0 {
+      split,
+      { intros t ht,
+        apply hn,
+        exact ht },
+      { exact hs v hv } },
+    { apply mem_nhds_sets,
+      have H := v.property.1,
+      sorry,
+      sorry }
+  end,
+  work_on_goal 0 {
+    rcases compact_elim_finite_subcover_image hX _ key with ⟨c, csub, cfin, hc⟩,
+    work_on_goal 1 { rintros _ ⟨n, rfl⟩, apply rational_open.is_open },
+    refine ⟨T^(Sup c), by apply_instance, rational_basis.is_basis.pow T hT _, _⟩,
+    refine set.subset.trans hc _,
+    apply set.bUnion_subset,
+    intros n hn v hv,
+    refine ⟨_, hv.2⟩,
+    intros t ht,
+    sorry
+  },
+end
+
 -- Current status: proof is broken with 2 sorries.
 -- We need this :-\
 lemma rational_basis.is_basis : topological_space.is_topological_basis (rational_basis A) :=
@@ -467,7 +541,7 @@ begin
     simp only [H₁, H₂, rational_open_inter, set.mem_insert_iff, true_or, eq_self_iff_true],
     resetI,
     refine ⟨_, _, infer_instance, _, rfl⟩,
-    apply rational_basis.is_basis.aux₁,
+    apply rational_basis.is_basis.mul,
     all_goals {
       apply submodule.is_open_of_open_submodule,
       refine ⟨_, _, ideal.span_mono (subset_insert _ _)⟩,
@@ -482,12 +556,22 @@ begin
   { apply le_antisymm,
     { delta Spa.topological_space,
       rw generate_from_le_iff_subset_is_open,
-      rintros U ⟨r, s, H⟩,
-      rw [H, ← rational_open_singleton],
-      refine topological_space.generate_open.basic _ ⟨s, {r}, infer_instance, _, rfl⟩,
-      sorry -- is this even true? I guess we shouldn't do the rw 2 lines up.
-      -- Instead, we should use a smarter argument that I haven't cooked up yet.
-      },
+      rintros _ ⟨r, s, rfl⟩,
+      rcases exists_rational_open _ (basic_open.compact r s) s (λ v hv, hv.2) with ⟨T, Tfin, hT, H⟩,
+      resetI,
+      have key : basic_open r s = rational_open s (insert r T) :=
+      begin
+        apply set.subset.antisymm,
+        all_goals { intros v hv, refine ⟨_, hv.2⟩ },
+        { intros t ht, rw mem_insert_iff at ht, rcases ht with rfl | ht,
+          { exact hv.1 },
+          { exact (H hv).1 t ht } },
+        { exact hv.1 r (mem_insert _ _) }
+      end,
+      rw key,
+      refine topological_space.generate_open.basic _ ⟨s, _, infer_instance, _, rfl⟩,
+      apply submodule.is_open_of_open_submodule,
+      exact ⟨_, hT, ideal.span_mono (subset_insert _ _)⟩ },
     { rw generate_from_le_iff_subset_is_open,
       rintros U ⟨s, T, hT, hT', H⟩,
       subst H,
