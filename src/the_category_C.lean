@@ -98,3 +98,53 @@ instance : category C.{v} :=
     refl,
   end, }
 end
+.
+
+
+open topological_space
+
+def inclusion (X : Top.{v}) (U : opens X) : opens ((opens.to_Top X).obj U) ⥤ opens X :=
+{ obj := λ V, begin cases V, fsplit, intro h, sorry, sorry end,
+  map := λ V W i, sorry }
+
+namespace algebraic_geometry.PresheafedSpace
+variables {C : Type u} [𝒞 : category.{v+1} C]
+include 𝒞
+
+def restrict (X : PresheafedSpace.{v} C) (U : opens X.X) : PresheafedSpace.{v} C :=
+{ X := (opens.to_Top X.X).obj U,
+  𝒪 := (inclusion X.X U).op ⋙ X.𝒪 }
+
+section
+variables {D : Type u} [𝒟 : category.{v+1} D]
+include 𝒟
+-- Usually it would be dangerous to state an equality between PresheafedSpaces, but this is definitional so hopefully it's okay!
+def map_presheaf_restrict (X : PresheafedSpace.{v} C) (U : opens X.X) (F : C ⥤ D) :
+  (F.map_presheaf.obj X).restrict U = F.map_presheaf.obj (X.restrict U) :=
+rfl
+end
+
+section
+variables [has_colimits.{v} C]
+-- TODO should construct an iso, but for tonight we just need one direction!
+def restrict_stalk (X : PresheafedSpace.{v} C) (U : opens X.X) (x : X.X) (h : x ∈ U) :
+  stalk (X.restrict U) (⟨x, h⟩ : (X.restrict U).X) ⟶ stalk X x :=
+colimit.desc.{v} _
+{ X := stalk X x,
+  ι :=
+  { app := begin intro U, dsimp, refine _ ≫ colimit.ι _ _, sorry, sorry, end,
+    naturality' := sorry }, }
+end
+end algebraic_geometry.PresheafedSpace
+
+def restrict (X : C) (U : opens X.X) : C :=
+{ X := (X.to_PresheafedSpace.restrict U).X,
+  𝒪 := (X.to_PresheafedSpace.restrict U).𝒪,
+  s :=
+  { relation := λ x a b,
+    begin
+      cases x with x xU,
+      have a' := ((TopCommRing.forget.map_presheaf.obj X.to_PresheafedSpace).restrict_stalk U x xU) a,
+      have b' := ((TopCommRing.forget.map_presheaf.obj X.to_PresheafedSpace).restrict_stalk U x xU) b,
+      exact X.s.relation x a' b'
+    end } }
