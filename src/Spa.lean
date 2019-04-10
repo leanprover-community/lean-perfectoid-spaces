@@ -279,7 +279,6 @@ lemma localization_map_is_cts {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
     (of_id A (localization r2)).to_fun r2.s, from rfl) r2.Hopen) _ _
     (localization_map_is_cts_aux h)
 
--- Note: I don't think we ever use this.
 noncomputable def insert_s (r : rational_open_data A) : rational_open_data A :=
 { s := r.s,
   T := insert r.s r.T,
@@ -288,18 +287,6 @@ noncomputable def insert_s (r : rational_open_data A) : rational_open_data A :=
     ⟨ideal.span (r.T), r.Hopen, ideal.span_mono $ set.subset_insert _ _⟩
 }
 
--- not sure we ever use this
-/-
-noncomputable def inter_aux (r1 r2 : rational_open_data A) : rational_open_data A :=
-{ s := r1.s * r2.s,
-  T := r1.T * r2.T,
-  Tfin := by apply_instance,
-  Hopen := sorry /-
-    need "product of open subgroups is open in a Huber ring" (because subgroup is open
-    iff it contains I^N for some ideal of definition)
-  -/
-}
--/
 
 end rational_open_data -- namespace
 
@@ -341,6 +328,13 @@ begin
   { apply h₁ t,
     exact mem_insert_of_mem _ ht }
 end
+
+namespace rational_open_data
+
+lemma insert_s_rational_open (r : rational_open_data A) :
+(insert_s r).rational_open = r.rational_open := (rational_open_add_s r.s r.T).symm
+
+end rational_open_data
 
 lemma rational_open.is_open (s : A) (T : set A) [h : fintype T] :
   is_open (rational_open s T) :=
@@ -457,6 +451,32 @@ begin
     exact (mem_nhds_sets h₂ $ ideal.zero_mem $ ideal.span T₂) }
 end
 
+end
+
+namespace rational_open_data
+
+noncomputable def inter_aux (r1 r2 : rational_open_data A) : rational_open_data A :=
+{ s := r1.s * r2.s,
+  T := r1.T * r2.T,
+  Tfin := by apply_instance,
+  Hopen := rational_basis.is_basis.aux₁ r1.T r2.T r1.Hopen r2.Hopen
+}
+
+noncomputable def inter (r1 r2 : rational_open_data A) : rational_open_data A :=
+inter_aux (rational_open_data.insert_s r1) (rational_open_data.insert_s r2)
+
+lemma rational_open_data_inter (r1 r2 : rational_open_data A) :
+(inter r1 r2).rational_open = r1.rational_open ∩ r2.rational_open :=
+begin
+  rw ←insert_s_rational_open r1,
+  rw ←insert_s_rational_open r2,
+  symmetry,
+  apply rational_open_inter,
+  left, refl, left, refl,
+end
+
+end rational_open_data
+
 -- Current status: proof is broken with 2 sorries. This looks hard, We don't need it though.
 /-
 lemma rational_basis.is_basis : topological_space.is_topological_basis (rational_basis A) :=
@@ -497,7 +517,6 @@ begin
     } }
 end #check id
 -/
-end
 
 section
 open topological_space
