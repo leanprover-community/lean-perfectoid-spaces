@@ -120,10 +120,30 @@ end
 noncomputable def to_valuation_field (hs : v s ≠ 0) : ATs → (valuation_field v) :=
 Huber_ring.away.lift T s (unit_aux hs)
 
-theorem to_valuation_field_cts (hs : v s ≠ 0)(hT2 : ∀ t : A, t ∈ T → v t ≤ v s) (hv : is_continuous v) :
+theorem to_valuation_field_cts' (hs : v s ≠ 0)(hT2 : ∀ t : A, t ∈ T → v t ≤ v s) (hv : is_continuous v) :
   continuous (to_valuation_field hs) :=
 Huber_ring.away.lift_continuous T s (of_subgroups.nonarchimedean)
   (continuous_valuation_field_mk_of_continuous v hv) (unit_aux hs) (rd.Hopen)
   (v_T_over_s_is_power_bounded hs hT2)
+
+namespace rational_open_data
+
+lemma to_valuation_field_cts_aux {r : Spa.rational_open_data A} {v : Spa A}
+(hv : v ∈ r.rational_open) : (Spv.out v.1) (r.s) ≠ 0 := hv.2
+
+def to_valuation_field {r : Spa.rational_open_data A} {v : Spa A} (hv : v ∈ r.rational_open) :
+  Spa.rational_open_data.localization r → valuation_field (Spv.out (v.val)) :=
+(to_valuation_field $ to_valuation_field_cts_aux hv)
+
+instance {r : Spa.rational_open_data A} {v : Spa A} (hv : v ∈ r.rational_open) :
+  is_ring_hom (to_valuation_field hv) := by delta to_valuation_field; sorry
+
+/-- If v : Spa A is in D(T,s) then the map A(T/s) -> K_v is continuous -/
+theorem to_valuation_field_cts {r : Spa.rational_open_data A} {v : Spa A}
+  (hv : v ∈ r.rational_open) : continuous (to_valuation_field hv) :=
+Huber_pair.to_valuation_field_cts' hv.2 hv.1 v.2.1
+
+-- Now we need to show that
+end rational_open_data
 
 end Huber_pair
