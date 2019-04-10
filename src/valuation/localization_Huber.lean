@@ -174,11 +174,6 @@ theorem to_valuation_field_commutes {r1 r2 : Spa.rational_open_data A} {v : Spa 
 (to_valuation_field hv1) = (to_valuation_field hv2) ∘ (Spa.rational_open_data.localization_map h) :=
 to_valuation_field_commutes r1 r2 h hv1.2 hv2.2
 
--- next we need to show that the completed maps also all commute
-
--- Now we need to show that for any O_X(U) with v in U we have a map
--- to K_v-hat. We do this under the additional assumption that D(T,s)
-
 end rational_open_data
 
 end Huber_pair
