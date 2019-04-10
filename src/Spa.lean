@@ -476,7 +476,7 @@ begin
   exact (rational_open_inter (mem_insert_s r1) (mem_insert_s r2)).symm
 end
 
-lemma rational_open_data_inter_le (r1 r2 : rational_open_data A) (h : r2.s ∈ r2.T) :
+lemma rational_open_data_le_inter_left (r1 r2 : rational_open_data A) :
 r1 ≤ (inter r1 r2) :=
 begin
   use r2.s,
@@ -491,6 +491,23 @@ begin
     existsi _, refl,
     exact mem_insert_s r2,
   right, assumption
+end
+
+lemma rational_open_data_le_inter_right (r1 r2 : rational_open_data A) :
+r2 ≤ (inter r1 r2) :=
+begin
+  use r1.s,
+  split, apply mul_comm,
+  intros t2 ht2,
+  use t2 * r1.s,
+  existsi _,
+    use 0,
+  use r1.s,
+  existsi _,
+    use t2,
+    existsi _, apply mul_comm,
+    right, assumption,
+  exact mem_insert_s r1,
 end
 
 lemma rational_open_data_symm (r1 r2 : rational_open_data A) :
@@ -568,6 +585,14 @@ rational_open_data_subsets U :=
   refine set.subset.trans (inter_subset_left r1.1.rational_open r2.1.rational_open) _,
   exact r1.2
 end⟩
+
+lemma rational_open_data_subsets_symm {U :  opens (Spa A)}
+  (r1 r2 : rational_open_data_subsets U) :
+rational_open_data_subsets_inter r1 r2 = rational_open_data_subsets_inter r2 r1 :=
+begin
+  rw subtype.ext,
+  exact rational_open_data.rational_open_data_symm r1.1 r2.1
+end
 
 instance (r : rational_open_data A) : uniform_space (rational_open_data.localization r) :=
 topological_add_group.to_uniform_space _
