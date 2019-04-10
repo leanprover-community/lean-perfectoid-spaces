@@ -428,64 +428,72 @@ def rational_basis (A : Huber_pair) : set (set (Spa A)) :=
 {U : set (Spa A) | ∃ {s : A} {T : set A} {hfin : fintype T} {hopen : is_open (↑(ideal.span T) : set A)},
                    U = rational_open s T }
 
--- Current status: proof is broken with 2 sorries.
--- We need this :-\
 section
 open algebra
 
+lemma rational_basis.is_basis.aux₁ (T₁ T₂ : set A)
+  (h₁ : is_open (↑(ideal.span T₁) : set A)) (h₂ : is_open (↑(ideal.span T₂) : set A)) :
+  is_open (↑(ideal.span (T₁ * T₂)) : set A) :=
+begin
+  rcases Huber_ring.exists_pod_subset _ (mem_nhds_sets h₁ $ ideal.zero_mem $ ideal.span T₁)
+    with ⟨A₀, _, _, _, ⟨_, emb, hf, I, fg, top⟩, hI⟩,
+  dsimp only at hI,
+  resetI,
+  rw is_ideal_adic_iff at top,
+  cases top.2 (algebra_map A ⁻¹' ↑(ideal.span T₂)) _ with n hn,
+  { apply submodule.is_open_of_open_submodule,
+    use ideal.map (of_id A₀ A) (I^(n+1)),
+    refine ⟨is_open_ideal_map_open_embedding emb hf _ (top.1 (n+1)), _⟩,
+    delta ideal.span,
+    erw [pow_succ, ideal.map_mul, ← submodule.span_mul_span],
+    apply submodule.mul_le_mul,
+    { exact (ideal.span_le.mpr hI) },
+    { rw ← image_subset_iff at hn,
+      exact (ideal.span_le.mpr hn) } },
+  { apply emb.continuous.tendsto,
+    rw show algebra.to_fun A (0:A₀) = 0,
+    { apply is_ring_hom.map_zero },
+    exact (mem_nhds_sets h₂ $ ideal.zero_mem $ ideal.span T₂) }
+end
+
+-- Current status: proof is broken with 2 sorries.
+-- We need this :-\
 lemma rational_basis.is_basis : topological_space.is_topological_basis (rational_basis A) :=
 begin
-split,
-{ rintros U₁ ⟨s₁, T₁, hfin₁, hopen₁, H₁⟩ U₂ ⟨s₂, T₂, hfin₂, hopen₂, H₂⟩ v hv,
-  use U₁ ∩ U₂,
-  rw rational_open_add_s at H₁ H₂,
   split,
-  { simp only [H₁, H₂, rational_open_inter, set.mem_insert_iff, true_or, eq_self_iff_true],
+  { rintros U₁ ⟨s₁, T₁, hfin₁, hopen₁, H₁⟩ U₂ ⟨s₂, T₂, hfin₂, hopen₂, H₂⟩ v hv,
+    refine ⟨U₁ ∩ U₂, _, hv, subset.refl _⟩,
+    rw rational_open_add_s at H₁ H₂,
+    simp only [H₁, H₂, rational_open_inter, set.mem_insert_iff, true_or, eq_self_iff_true],
     resetI,
     refine ⟨_, _, infer_instance, _, rfl⟩,
-    rcases Huber_ring.exists_pod_subset _ (mem_nhds_sets hopen₁ $ ideal.zero_mem $ ideal.span T₁)
-      with ⟨A₀, _, _, _, ⟨_, emb, hf, I, fg, top⟩, hI⟩,
-    dsimp only at hI,
-    rw is_ideal_adic_iff at top,
-    cases top.2 (algebra_map A ⁻¹' ↑(ideal.span T₂)) _ with n hn,
-    { apply submodule.is_open_of_open_submodule,
-      use ideal.map (of_id A₀ A) (I^(n+1)),
-      refine ⟨is_open_ideal_map_open_embedding emb hf _ (top.1 (n+1)), _⟩,
-      delta ideal.span,
-      refine le_trans _
-        (submodule.span_mono $ set.mul_le_mul (subset_insert s₁ T₁) (subset_insert s₂ T₂)),
-      erw [pow_succ, ideal.map_mul, ← submodule.span_mul_span],
-      apply submodule.mul_le_mul,
-      { exact (ideal.span_le.mpr hI) },
-      { rw ← image_subset_iff at hn,
-        exact (ideal.span_le.mpr hn) } },
-    { apply emb.continuous.tendsto,
-      rw show algebra.to_fun A (0:A₀) = 0,
-      { apply is_ring_hom.map_zero },
-      exact (mem_nhds_sets hopen₂ $ ideal.zero_mem $ ideal.span T₂) } },
-  { exact ⟨hv, subset.refl _⟩ } },
-split,
-{ apply le_antisymm,
-  { exact subset_univ _ },
-  { apply subset_sUnion_of_mem,
-    refine ⟨(1 : A), {(1 : A)}, infer_instance, _, by simp⟩,
-    rw ideal.span_singleton_one,
-    exact is_open_univ, } },
-{ apply le_antisymm,
-  { delta Spa.topological_space,
-    rw generate_from_le_iff_subset_is_open,
-    rintros U ⟨r, s, H⟩,
-    rw [H, ← rational_open_singleton],
-    refine topological_space.generate_open.basic _ ⟨s, {r}, infer_instance, _, rfl⟩,
-    sorry -- is this even true? I guess we shouldn't do the rw 2 lines up.
-    -- Instead, we should use a smarter argument that I haven't cooked up yet.
-     },
-  { rw generate_from_le_iff_subset_is_open,
-    rintros U ⟨s, T, hT, hT', H⟩,
-    subst H,
-    haveI := hT,
-    exact rational_open.is_open s T,
-  } }
+    apply rational_basis.is_basis.aux₁,
+    all_goals {
+      apply submodule.is_open_of_open_submodule,
+      refine ⟨_, _, ideal.span_mono (subset_insert _ _)⟩,
+      assumption } },
+  split,
+  { apply le_antisymm,
+    { exact subset_univ _ },
+    { apply subset_sUnion_of_mem,
+      refine ⟨(1 : A), {(1 : A)}, infer_instance, _, by simp⟩,
+      rw ideal.span_singleton_one,
+      exact is_open_univ, } },
+  { apply le_antisymm,
+    { delta Spa.topological_space,
+      rw generate_from_le_iff_subset_is_open,
+      rintros U ⟨r, s, H⟩,
+      rw [H, ← rational_open_singleton],
+      refine topological_space.generate_open.basic _ ⟨s, {r}, infer_instance, _, rfl⟩,
+      sorry -- is this even true? I guess we shouldn't do the rw 2 lines up.
+      -- Instead, we should use a smarter argument that I haven't cooked up yet.
+      },
+    { rw generate_from_le_iff_subset_is_open,
+      rintros U ⟨s, T, hT, hT', H⟩,
+      subst H,
+      haveI := hT,
+      exact rational_open.is_open s T,
+    } }
 end
 
 end
