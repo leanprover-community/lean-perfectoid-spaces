@@ -652,6 +652,18 @@ lemma presheaf.map_comp {U V W : opens (Spa A)} (hUV : U ≤ V) (hVW : V ≤ W) 
   presheaf.map hUV ∘ presheaf.map hVW = presheaf.map (le_trans hUV hVW) :=
 by { delta presheaf.map, tidy }
 
+noncomputable instance presheaf.ring (U : opens (Spa A)) : ring (presheaf U) :=
+begin
+  apply @subset.ring _ pi.ring _ _,
+  { apply_instance },
+  refine {..},
+  { intros rd₁ rd₂ h,
+    exact is_ring_hom.map_zero _ },
+  { intros a b ha hb rd₁ rd₂ h,
+    sorry },
+  all_goals {sorry}
+end
+
 end -- section
 
 noncomputable
