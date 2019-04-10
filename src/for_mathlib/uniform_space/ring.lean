@@ -330,15 +330,15 @@ by dunfold ring_completion ; apply_instance
 instance : topological_ring (ring_completion α) :=
 by dunfold ring_completion ; apply_instance
 
-variables {f : α → β} [is_ring_hom f] (hf : continuous f)
-include hf
-
 instance ring_completion.coe_is_ring_hom : is_ring_hom (coe : α → ring_completion α) :=
 begin
   haveI := completion.is_ring_hom_coe (sep_quot α),
   haveI : is_ring_hom (sep_quot.mk : α → sep_quot α) := sep_quot.is_ring_hom_mk,
   exact (is_ring_hom.comp (sep_quot.mk : α → sep_quot α) (coe : sep_quot α → completion (sep_quot α)) : _)
 end
+
+variables {f : α → β} [is_ring_hom f] (hf : continuous f)
+include hf
 
 lemma ring_completion.extension_is_ring_hom [separated β] [complete_space β] :
   is_ring_hom (ring_completion.extension f) :=
