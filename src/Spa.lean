@@ -560,6 +560,15 @@ def rational_open_data_subsets.map {U V : opens (Spa A)} (hUV : U ≤ V)
   rational_open_data_subsets V :=
 ⟨rd.val, set.subset.trans rd.property hUV⟩
 
+noncomputable def rational_open_data_subsets_inter {U :  opens (Spa A)}
+  (r1 r2 : rational_open_data_subsets U) :
+rational_open_data_subsets U :=
+⟨rational_open_data.inter r1.1 r2.1, begin
+  rw rational_open_data.rational_open_data_inter,
+  refine set.subset.trans (inter_subset_left r1.1.rational_open r2.1.rational_open) _,
+  exact r1.2
+end⟩
+
 instance (r : rational_open_data A) : uniform_space (rational_open_data.localization r) :=
 topological_add_group.to_uniform_space _
 
