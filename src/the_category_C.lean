@@ -9,6 +9,7 @@ open algebraic_geometry
 open category_theory
 open category_theory.instances
 open category_theory.limits
+open topological_space
 
 open algebraic_geometry.PresheafedSpace
 
@@ -127,6 +128,14 @@ variables [has_colimits.{v} C]
 -- TODO should construct an iso, but for tonight we just need one direction!
 def restrict_stalk (X : PresheafedSpace.{v} C) (U : opens X.X) (x : X.X) (h : x ∈ U) :
   stalk (X.restrict U) (⟨x, h⟩ : (X.restrict U).X) ⟶ stalk X x :=
+-- begin
+-- transitivity,
+-- swap,
+-- change _ ⟶ colimit ((open_nhds.inclusion x).op ⋙ X.𝒪),
+-- convert colimit.pre _ (inclusion X.X U).op,
+--   have p := colimit.pre _ (inclusion X.X U).op,
+-- end
+
 colimit.desc.{v} _
 { X := stalk X x,
   ι :=
