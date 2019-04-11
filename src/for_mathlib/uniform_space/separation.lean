@@ -61,6 +61,9 @@ lemma uniform_continuous.eqv_of_separated {f : α → β} (H : uniform_continuou
 lemma uniform_continuous.eq_of_separated [separated β] {f : α → β} (H : uniform_continuous f) {x y : α} (h : x ≈ y) :
   f x = f y
  := H.separated_map.eq_of_separated h
+
+lemma separated.eq_iff [separated α] {x y : α} (h : x ≈ y) : x = y :=
+separated_def.1 (by apply_instance) x y h
 end
 
 open uniform_space
@@ -74,6 +77,9 @@ variables {α : Type u} {β : Type v} {γ : Type w}
 variables [uniform_space α] [uniform_space β] [uniform_space γ]
 
 def mk {α : Type u} [uniform_space α] : α → sep_quot α := quotient.mk
+
+lemma uniform_embedding [separated α] : uniform_embedding (sep_quot.mk : α → sep_quot α) :=
+⟨λ x y h, separated.eq_iff (quotient.exact h), comap_quotient_eq_uniformity⟩
 
 lemma uniform_continuous_mk :
   uniform_continuous (quotient.mk : α → sep_quot α) :=

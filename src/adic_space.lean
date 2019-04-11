@@ -4,7 +4,6 @@ import algebra.group_power
 import topology.algebra.ring
 import topology.opens
 
-import for_mathlib.prime
 import for_mathlib.is_cover
 
 import continuous_valuations

@@ -175,6 +175,7 @@ noncomputable def s_inv_aux (r1 r2 : rational_open_data A) (h : r1 ≤ r2) : uni
     refl,
 end)
 
+-- Spa.rational_open_data.localization_map : the uncompleted map
 noncomputable def localization_map {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
   localization r1 → localization r2 :=
 Huber_ring.away.lift r1.T r1.s
@@ -278,7 +279,6 @@ lemma localization_map_is_cts {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
     (of_id A (localization r2)).to_fun r2.s, from rfl) r2.Hopen) _ _
     (localization_map_is_cts_aux h)
 
--- Note: I don't think we ever use this.
 noncomputable def insert_s (r : rational_open_data A) : rational_open_data A :=
 { s := r.s,
   T := insert r.s r.T,
@@ -287,18 +287,6 @@ noncomputable def insert_s (r : rational_open_data A) : rational_open_data A :=
     ⟨ideal.span (r.T), r.Hopen, ideal.span_mono $ set.subset_insert _ _⟩
 }
 
--- not sure we ever use this
-/-
-noncomputable def inter_aux (r1 r2 : rational_open_data A) : rational_open_data A :=
-{ s := r1.s * r2.s,
-  T := r1.T * r2.T,
-  Tfin := by apply_instance,
-  Hopen := sorry /-
-    need "product of open subgroups is open in a Huber ring" (because subgroup is open
-    iff it contains I^N for some ideal of definition)
-  -/
-}
--/
 
 end rational_open_data -- namespace
 
@@ -340,6 +328,16 @@ begin
   { apply h₁ t,
     exact mem_insert_of_mem _ ht }
 end
+
+namespace rational_open_data
+
+lemma insert_s_rational_open (r : rational_open_data A) :
+(insert_s r).rational_open = r.rational_open := (rational_open_add_s r.s r.T).symm
+
+lemma mem_insert_s (r : rational_open_data A) :
+r.s ∈ (insert_s r).T := by {left, refl}
+
+end rational_open_data
 
 lemma rational_open.is_open (s : A) (T : set A) [h : fintype T] :
   is_open (rational_open s T) :=
@@ -456,6 +454,78 @@ begin
     exact (mem_nhds_sets h₂ $ ideal.zero_mem $ ideal.span T₂) }
 end
 
+end
+
+namespace rational_open_data
+
+noncomputable def inter_aux (r1 r2 : rational_open_data A) : rational_open_data A :=
+{ s := r1.s * r2.s,
+  T := r1.T * r2.T,
+  Tfin := by apply_instance,
+  Hopen := rational_basis.is_basis.aux₁ r1.T r2.T r1.Hopen r2.Hopen
+}
+
+noncomputable def inter (r1 r2 : rational_open_data A) : rational_open_data A :=
+inter_aux (rational_open_data.insert_s r1) (rational_open_data.insert_s r2)
+
+lemma rational_open_data_inter (r1 r2 : rational_open_data A) :
+(inter r1 r2).rational_open = r1.rational_open ∩ r2.rational_open :=
+begin
+  rw ←insert_s_rational_open r1,
+  rw ←insert_s_rational_open r2,
+  exact (rational_open_inter (mem_insert_s r1) (mem_insert_s r2)).symm
+end
+
+lemma rational_open_data_le_inter_left (r1 r2 : rational_open_data A) :
+r1 ≤ (inter r1 r2) :=
+begin
+  use r2.s,
+  split, refl,
+  intros t1 ht1,
+  use t1 * r2.s,
+  existsi _,
+    use 0,
+  use t1,
+  existsi _,
+    use r2.s,
+    existsi _, refl,
+    exact mem_insert_s r2,
+  right, assumption
+end
+
+lemma rational_open_data_le_inter_right (r1 r2 : rational_open_data A) :
+r2 ≤ (inter r1 r2) :=
+begin
+  use r1.s,
+  split, apply mul_comm,
+  intros t2 ht2,
+  use t2 * r1.s,
+  existsi _,
+    use 0,
+  use r1.s,
+  existsi _,
+    use t2,
+    existsi _, apply mul_comm,
+    right, assumption,
+  exact mem_insert_s r1,
+end
+
+lemma rational_open_data_symm (r1 r2 : rational_open_data A) :
+  inter r1 r2 = inter r2 r1 :=
+begin
+  cases r1,
+  cases r2,
+    unfold inter inter_aux,
+  congr' 1,
+    unfold insert_s,
+    dsimp, exact mul_comm _ _,
+  unfold insert_s,
+  dsimp,
+  exact mul_comm _ _,
+end
+
+end rational_open_data
+
 -- Current status: proof is broken with 2 sorries. This looks hard, We don't need it though.
 /-
 lemma rational_basis.is_basis : topological_space.is_topological_basis (rational_basis A) :=
@@ -496,7 +566,6 @@ begin
     } }
 end #check id
 -/
-end
 
 section
 open topological_space
@@ -508,6 +577,23 @@ def rational_open_data_subsets.map {U V : opens (Spa A)} (hUV : U ≤ V)
   rational_open_data_subsets V :=
 ⟨rd.val, set.subset.trans rd.property hUV⟩
 
+noncomputable def rational_open_data_subsets_inter {U :  opens (Spa A)}
+  (r1 r2 : rational_open_data_subsets U) :
+rational_open_data_subsets U :=
+⟨rational_open_data.inter r1.1 r2.1, begin
+  rw rational_open_data.rational_open_data_inter,
+  refine set.subset.trans (inter_subset_left r1.1.rational_open r2.1.rational_open) _,
+  exact r1.2
+end⟩
+
+lemma rational_open_data_subsets_symm {U :  opens (Spa A)}
+  (r1 r2 : rational_open_data_subsets U) :
+rational_open_data_subsets_inter r1 r2 = rational_open_data_subsets_inter r2 r1 :=
+begin
+  rw subtype.ext,
+  exact rational_open_data.rational_open_data_symm r1.1 r2.1
+end
+
 instance (r : rational_open_data A) : uniform_space (rational_open_data.localization r) :=
 topological_add_group.to_uniform_space _
 
@@ -518,14 +604,19 @@ def localization_map_is_uniform_continuous {r1 r2 : rational_open_data A} (h : r
   uniform_continuous (rational_open_data.localization_map h) :=
 uniform_continuous_of_continuous (rational_open_data.localization_map_is_cts h)
 
+end -- section
+
 /-- A<T/s>, the functions on D(T,s). A topological ring -/
 def r_o_d_completion (r : rational_open_data A) :=
 ring_completion (rational_open_data.localization r)
 
+namespace r_o_d_completion
+open topological_space
+
 noncomputable instance (r : rational_open_data A) : ring (r_o_d_completion r) :=
 by dunfold r_o_d_completion; apply_instance
 
-instance r_o_d_uniform_space (r : rational_open_data A) : uniform_space (r_o_d_completion r) :=
+instance uniform_space (r : rational_open_data A) : uniform_space (r_o_d_completion r) :=
 by dunfold r_o_d_completion; apply_instance
 
 example (r : rational_open_data A) : topological_space (r_o_d_completion r) := by apply_instance
@@ -533,11 +624,11 @@ example (r : rational_open_data A) : topological_space (r_o_d_completion r) := b
 instance (r : rational_open_data A) : topological_ring (r_o_d_completion r)
 := by dunfold r_o_d_completion; apply_instance
 
-noncomputable def r_o_d_completion.restriction {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
+noncomputable def restriction {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
 r_o_d_completion r1 → r_o_d_completion r2 :=
 ring_completion.map (rational_open_data.localization_map h)
 
-instance {r1 r2 : rational_open_data A} (h : r1 ≤ r2) : is_ring_hom (r_o_d_completion.restriction h)
+instance {r1 r2 : rational_open_data A} (h : r1 ≤ r2) : is_ring_hom (restriction h)
 := by delta r_o_d_completion.restriction;
 exact ring_completion.map_is_ring_hom _ _ (rational_open_data.localization_map_is_cts h)
 
@@ -568,7 +659,7 @@ lemma presheaf.map_comp {U V W : opens (Spa A)} (hUV : U ≤ V) (hVW : V ≤ W) 
   presheaf.map hUV ∘ presheaf.map hVW = presheaf.map (le_trans hUV hVW) :=
 by { delta presheaf.map, tidy }
 
-end -- section
+end r_o_d_completion
 
 noncomputable
 example (rd : rational_open_data A): ring (ring_completion (rational_open_data.localization rd))

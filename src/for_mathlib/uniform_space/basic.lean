@@ -1,4 +1,5 @@
 import topology.uniform_space.basic
+import topology.uniform_space.uniform_embedding
 
 import for_mathlib.function
 
@@ -23,4 +24,11 @@ begin
   rw function.uncurry_comp₂,
   exact hf.comp hg
 end
+
+lemma uniform_embedding.comp {f : α → β} (hf : uniform_embedding f)
+  {g : β → γ} (hg : uniform_embedding g) : uniform_embedding (g ∘ f) :=
+⟨function.injective_comp hg.1 hf.1,
+ by rw [show (λ (x : α × α), ((g ∘ f) x.1, (g ∘ f) x.2)) =
+         (λ y : β × β, (g y.1, g y.2)) ∘ (λ x : α × α, (f x.1, f x.2)), by ext ; simp,
+        ← filter.comap_comap_comp, hg.2, hf.2]⟩
 end

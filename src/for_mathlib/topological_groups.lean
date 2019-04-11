@@ -160,6 +160,47 @@ section
 variables (G : Type u) [add_comm_group G] [topological_space G] [topological_add_group G]
 
 local attribute [instance] topological_add_group.to_uniform_space
+local attribute [instance] topological_add_group_is_uniform
+
+lemma topological_add_group.separated_iff_zero_closed : separated G ↔ is_closed ({0} : set G) :=
+begin
+  unfold separated,
+  rw ← closure_eq_iff_is_closed,
+  split ; intro h,
+  { apply subset.antisymm,
+    { intros x x_in,
+      have := group_separation_rel x 0,
+      rw sub_zero at this,
+      rw [← this, h] at x_in,
+      change x = 0 at x_in,
+      simp [x_in] },
+    { exact subset_closure  } },
+  { ext p,
+    cases p with x y,
+    rw [group_separation_rel x, h, mem_singleton_iff, sub_eq_zero_iff_eq],
+    refl }
+end
+
+lemma set.not_mem_singleton {α : Type*} (a x : α) : x ∈ -({a} : set α) ↔ x ≠ a :=
+by simp  [finset.not_mem_singleton]
+
+lemma topological_add_group.separated_of_zero_sep
+  (H : ∀ x : G, x ≠ 0 → ∃ U ∈ nhds (0 : G), x ∉ U) : separated G:=
+begin
+  rw topological_add_group.separated_iff_zero_closed,
+  rw [← is_open_compl_iff, is_open_iff_mem_nhds],
+  intros x x_not,
+  have : x ≠ 0, from (set.not_mem_singleton 0 x).1 x_not,
+  rcases H x this with ⟨U, U_in, xU⟩,
+  rw ← nhds_zero_symm G at U_in,
+  rcases U_in with ⟨W, W_in, UW⟩,
+  rw ← nhds_translation_add_neg_left x,
+  use [W, W_in],
+  rw subset_compl_comm,
+  suffices : -x ∉ W, by simp[this],
+  intro h,
+  exact xU (UW h)
+end
 
 -- Wedhorn Definition 5.31 page 38
 definition is_complete_hausdorff : Prop := is_complete (univ : set G) ∧ is_hausdorff G

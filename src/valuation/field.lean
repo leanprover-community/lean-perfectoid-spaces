@@ -17,14 +17,18 @@ variables (v : valuation R Γ)
 
 instance : ring (valued_ring R v) := ‹ring R›
 
-
 instance : ring_with_zero_nhd (valued_ring R v) := valuation.ring_with_zero_nhd v
+
+instance : uniform_space (valued_ring R v) := topological_add_group.to_uniform_space _
+
+instance : uniform_add_group (valued_ring R v) := topological_add_group_is_uniform
 
 variables {K : Type*} [division_ring K] (ν : valuation K Γ)
 
 instance : division_ring (valued_ring K ν) := ‹division_ring K›
 end valued_ring
 
+section
 variables {K : Type*} [division_ring K] (v : valuation K Γ)
 
 variables x y : units K
@@ -130,4 +134,152 @@ begin
     rw ← vx,
     exact valuation.unit_map.ext v x z (valuation.map_eq_of_sub_lt v hz),},
 end
+
+instance valued_ring.separated : separated (valued_ring K v) :=
+begin
+  apply topological_add_group.separated_of_zero_sep,
+  intros x x_ne,
+  have := division_ring,
+  use {k | v k < v x},
+  have : ∃ γ : Γ, v x = γ, from valuation.unit_is_some v (units.mk' x_ne),
+  cases this with γ H,
+  split,
+  { -- again, this will be an ugly win
+    convert @of_subgroups.mem_nhds_zero K _ Γ _ (λ γ : Γ, {k | v k < γ}) _ _ _ _ _ γ,
+    rw H, refl },
+  { simp [le_refl] }
+end
+
+lemma valued_ring.completion_embedding :
+  embedding (coe : (valued_ring K v) → ring_completion (valued_ring K v)) :=
+(ring_completion.uniform_embedding_coe (valued_ring K v)).embedding
+end
+end
+
+section top_group_extend
+open is_group_hom
+variables {G : Type*} [group G] [topological_space G] [topological_group G]
+variables {H : Type*} [group H] [topological_space H] [topological_group H]
+variables {L : Type*} [group L] [topological_space L] [topological_group L]
+[t2_space L]
+
+variables {ι : G → H} [is_group_hom ι] (de : dense_embedding ι)
+variables {φ : G → L} [is_group_hom φ]
+
+lemma topological_group.extend_is_group_hom (hφ : continuous φ) (h : continuous (de.extend φ)):
+is_group_hom (de.extend φ) :=
+⟨begin
+  let Φ := de.extend φ,
+  let P := λ x y : H, Φ (x*y) = Φ x*Φ y,
+  have closed : is_closed { q : H × H | P q.1 q.2 } :=
+    have c1 : continuous (λ q : H × H, Φ (q.1 * q.2)), from continuous_mul'.comp h,
+    have c2 : continuous (λ q : H × H, Φ q.1 * Φ q.2),
+      from continuous_mul (continuous_fst.comp h) (continuous_snd.comp h),
+  is_closed_eq c1 c2,
+
+  apply is_closed_property2 de closed,
+  intros x y,
+  dsimp [P, Φ],
+  rw ← is_group_hom.mul ι,
+  repeat { rw dense_embedding.extend_e_eq },
+  rw is_group_hom.mul φ
+end⟩
+end top_group_extend
+
+section
+variables {R : Type*} [ring R] [topological_space R]
+
+end
+
+section
+-- In this section K is commutative
+variables {K : Type*} [discrete_field K] (v : valuation K Γ)
+
+-- until the end of this section, all linearly ordered commutative groups will be endowed with
+-- the discrete topology
+local attribute [instance] discrete_ordered_comm_group ordered_comm_group_is_discrete
+
+instance : comm_ring (valued_ring K v) :=
+by unfold valued_ring ; apply_instance
+
+-- Patrick doesn't have any idea why Lean needs help here:
+instance valued_ring.coe_is_monoid_hom : is_monoid_hom (coe : (valued_ring K v) → ring_completion (valued_ring K v)) :=
+begin
+  let Kv := valued_ring K v,
+  haveI := @is_ring_hom.is_semiring_hom Kv (ring_completion Kv) _ _ coe _,
+  exact @is_semiring_hom.is_monoid_hom Kv (ring_completion Kv) _ _ coe _,
+end
+
+-- and here. It's probaly paying for the wrapper type valued_ring K v
+noncomputable instance : topological_space (units $ ring_completion $ valued_ring K v) :=
+topological_ring.units_topological_space _
+
+lemma units_completion_dense_embedding :
+  dense_embedding (units.map (coe : (valued_ring K v) → ring_completion (valued_ring K v))) :=
+begin
+  let emb := valued_ring.completion_embedding v,
+  constructor,
+  {
+    sorry },
+  {
+    sorry },
+  {
+    sorry },
+end
+
+instance : topological_group (units $ valued_ring K v) :=
+topological_division_ring.units_top_group (valued_ring K v)
+
+--instance : division_ring (ring_completion (valued_ring K v)) := sorry
+--instance : topological_division_ring (ring_completion (valued_ring K v)) := sorry
+
+instance ring_completion.units_top_group : topological_group (units $ ring_completion $ valued_ring K v) :=
+sorry
+--topological_division_ring.units_top_group (ring_completion $ valued_ring K v)
+
+instance regular_of_discrete {α : Type*} [topological_space α] [discrete_topology α] : regular_space α :=
+⟨begin
+  intros s a s_closed a_not,
+  refine ⟨s, is_open_discrete s, subset.refl s, _⟩,
+  rw [← empty_in_sets_eq_bot, mem_inf_sets],
+  use {a},
+  rw nhds_discrete α,
+  simp,
+  refine ⟨s, subset.refl s, _ ⟩,
+  rintro x ⟨xa, xs⟩,
+  rw ← mem_singleton_iff.1 xa at a_not,
+  exact a_not xs
+end⟩
+
+lemma nhds_of_valuation_lt (x : valued_ring K v) (γ : Γ) :
+  {y : K | v (y - x) < γ} ∈ nhds x :=
+begin
+  rw [← nhds_translation_add_neg x],
+  refine ⟨{k | v k < γ}, _ , subset.refl _⟩,
+  exact @of_subgroups.mem_nhds_zero K _ Γ _ (λ γ : Γ, {k | v k < γ}) _ _ _ _ _ γ
+end
+
+lemma continous_unit_extension : continuous ((units_completion_dense_embedding v).extend v.unit_map) :=
+begin
+  let Kv := valued_ring K v,
+  let ι := units.map (coe : (valued_ring K v) → ring_completion (valued_ring K v)),
+  let de : dense_embedding ι := units_completion_dense_embedding v,
+  -- Patrick hates the three next lines. He is clearly punished for something
+  haveI : is_group_hom ι := units.is_group_hom _,
+  letI : topological_space (units K) := @topological_ring.units_topological_space Kv _ _,
+  haveI : topological_space K := (by apply_instance : topological_space Kv),
+  have key : is_open (is_group_hom.ker (v.unit_map : units Kv → Γ)),
+  { rw is_open_iff_mem_nhds,
+    intros x x_in,
+    rw [nhds_induced],
+    refine ⟨{y | v (y - x) < v.unit_map x }, nhds_of_valuation_lt v _ _, _⟩,
+    intros y vy,
+    simp [mem_preimage_eq] at vy,
+    rw is_group_hom.mem_ker at *,
+    rw ← x_in,
+    exact valuation.unit_map.ext v _ _ (valuation.map_eq_of_sub_lt v vy) },
+  exact continuous_extend_of_open_kernel de key,
+end
+#check (units_completion_dense_embedding v).extend v.unit_map
+#check continuous_extend_of_open_kernel
 end

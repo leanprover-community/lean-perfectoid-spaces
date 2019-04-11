@@ -74,6 +74,14 @@ instance : ring (completion α) :=
     (assume a b c, by rw [← coe_add, ← coe_mul, ← coe_mul, ← coe_mul, ←coe_add, add_mul]),
   ..completion.add_comm_group, ..completion.has_mul α, ..completion.has_one α }
 
+variables (R : Type*) [comm_ring R] [uniform_space R] [uniform_add_group R] [topological_ring R] [separated R]
+
+instance : comm_ring (completion R) :=
+{ mul_comm := assume a b, completion.induction_on₂ a b
+      (is_closed_eq(continuous_mul continuous_fst continuous_snd) (continuous_mul continuous_snd continuous_fst))
+      (assume a b, by rw [← coe_mul, ← coe_mul, mul_comm]),
+ ..completion.ring R }
+
 instance top_ring_compl : topological_ring (completion α) :=
 { continuous_add := continuous_add',
   continuous_mul := uniform_space.completion.continuous_mul' α,
@@ -305,6 +313,10 @@ begin
   rw sep_quot.map_mk hf.separated_map,
   apply h,
 end
+
+variables (α)
+lemma uniform_embedding_coe [separated α] : uniform_embedding (coe : α → ring_completion α) :=
+(uniform_embedding.comp sep_quot.uniform_embedding (completion.uniform_embedding_coe $sep_quot α) : _)
 end ring_completion
 
 section ring_completion
@@ -312,11 +324,18 @@ open uniform_space ring_completion
 variables (α : Type*) [comm_ring α] [uniform_space α] [uniform_add_group α] [topological_ring α]
 variables (β : Type*) [comm_ring β] [uniform_space β] [uniform_add_group β] [topological_ring β]
 
-instance : ring (ring_completion α) :=
+instance : comm_ring (ring_completion α) :=
 by dunfold ring_completion ; apply_instance
 
 instance : topological_ring (ring_completion α) :=
 by dunfold ring_completion ; apply_instance
+
+instance ring_completion.coe_is_ring_hom : is_ring_hom (coe : α → ring_completion α) :=
+begin
+  haveI := completion.is_ring_hom_coe (sep_quot α),
+  haveI : is_ring_hom (sep_quot.mk : α → sep_quot α) := sep_quot.is_ring_hom_mk,
+  exact (is_ring_hom.comp (sep_quot.mk : α → sep_quot α) (coe : sep_quot α → completion (sep_quot α)) : _)
+end
 
 variables {f : α → β} [is_ring_hom f] (hf : continuous f)
 include hf
