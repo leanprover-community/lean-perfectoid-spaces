@@ -3,8 +3,6 @@ import category_theory.limits.types
 import category_theory.instances.TopCommRing
 import topology.opens
 
-import .presheaf_stuff.stuff
-
 universes v u
 
 open algebraic_geometry
