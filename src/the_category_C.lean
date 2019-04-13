@@ -16,7 +16,8 @@ open algebraic_geometry.PresheafedSpace
 structure relation_stalks (F : PresheafedSpace.{v} (Type v)) :=
 (relation : Π x : F.X, (F.stalk x) → (F.stalk x) → Prop)
 
-def preserves_relation {F G : PresheafedSpace.{v} (Type v)} (F_r : relation_stalks F) (G_r : relation_stalks G) (f : F ⟶ G) : Prop :=
+def preserves_relation {F G : PresheafedSpace.{v} (Type v)} (F_r : relation_stalks F)
+  (G_r : relation_stalks G) (f : F ⟶ G) : Prop :=
 ∀ (x : F.X) (a b : G.stalk (f.f x)),
    (G_r.relation (f.f x) a b) ↔ (F_r.relation x ((stalk_map f x) a) ((stalk_map f x) b))
 
@@ -43,8 +44,12 @@ by refine stalk_map.id _ _
 
 @[simp] lemma stalk_map.comp' {F G H : C.{v}} (α : C_hom F G) (β : C_hom G H) (x : F.X) :
   stalk_map ((TopCommRing.forget.map_presheaf).map (α.f ≫ β.f)) x =
-    (stalk_map ((TopCommRing.forget.map_presheaf).map β.f) (α.f x) : ((TopCommRing.forget.map_presheaf).obj H.to_PresheafedSpace).stalk (β.f.f (α.f.f x)) ⟶ ((TopCommRing.forget.map_presheaf).obj G.to_PresheafedSpace).stalk (α.f.f x)) ≫
-    (stalk_map ((TopCommRing.forget.map_presheaf).map α.f) x : ((TopCommRing.forget.map_presheaf).obj G.to_PresheafedSpace).stalk (α.f.f x) ⟶ ((TopCommRing.forget.map_presheaf).obj F.to_PresheafedSpace).stalk x) :=
+    (stalk_map ((TopCommRing.forget.map_presheaf).map β.f) (α.f x) :
+      ((TopCommRing.forget.map_presheaf).obj H.to_PresheafedSpace).stalk (β.f.f (α.f.f x)) ⟶
+      ((TopCommRing.forget.map_presheaf).obj G.to_PresheafedSpace).stalk (α.f.f x)) ≫
+    (stalk_map ((TopCommRing.forget.map_presheaf).map α.f) x :
+      ((TopCommRing.forget.map_presheaf).obj G.to_PresheafedSpace).stalk (α.f.f x) ⟶
+      ((TopCommRing.forget.map_presheaf).obj F.to_PresheafedSpace).stalk x) :=
 begin
   convert stalk_map.comp _ _ _,
   erw category_theory.functor.map_comp,
@@ -101,6 +106,10 @@ end
 
 
 open topological_space
+--def inclusion (X : Top.{v}) (U : opens X) : opens ((opens.to_Top X).obj U) ⥤ opens X :=
+--def inclusion (X : Top.{v}) (U : opens X) : opens (U.val) ⥤ opens X :=
+--{ obj := λ V, sorry,--begin cases V, fsplit, intro h, sorry, sorry end,
+--  map := λ V W i, sorry }
 
 def inclusion (X : Top.{v}) (U : opens X) : opens ((opens.to_Top X).obj U) ⥤ opens X :=
 { obj := λ V, begin cases V, fsplit, intro h, sorry, sorry end,
