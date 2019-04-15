@@ -11,6 +11,7 @@ def is_open_map.map (h : is_open_map f) : opens α → opens β :=
 
 def functor.is_open_map.map (h : is_open_map f) : opens α ⥤ opens β :=
 { obj := is_open_map.map h,
-  map := λ X Y hXY x ⟨a, ha, ha'⟩, begin rw ←ha', use a, exact ⟨hXY ha, rfl⟩ end,
+  map := λ X Y hXY, begin cases hXY, cases hXY, apply ulift.up, apply plift.up,
+    rintros x ⟨a, ha, ha'⟩, rw ←ha', use a, exact ⟨hXY ha, rfl⟩ end,
   map_id' := λ _, rfl,
   map_comp' := λ _ _ _ _ _, rfl }
