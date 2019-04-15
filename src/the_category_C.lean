@@ -149,6 +149,24 @@ def restrict (X : PresheafedSpace.{v} C) (U : opens X.X) : PresheafedSpace.{v} C
 { X := (opens.to_Top X.X).obj U,
   𝒪 := (inclusion X.X U).op ⋙ X.𝒪 }
 
+def restrict.ι (X : PresheafedSpace.{v} C) (U : opens X) :
+  X.restrict U ⟶ X :=
+{ f := ⟨subtype.val, continuous_subtype_val⟩,
+  c :=
+  { app := λ V, by { refine X.𝒪.map _,
+          rw ← op_unop V,
+          refine has_hom.hom.op (ulift.up $ plift.up $
+            set.image_preimage_subset subtype.val (unop V).val) },
+    naturality' :=
+    begin
+      intros V₁ V₂ i,
+      erw ← X.𝒪.map_comp,
+      erw ← X.𝒪.map_comp,
+      congr' 1,
+    end } }
+
+
+
 section
 variables {D : Type u} [𝒟 : category.{v+1} D]
 include 𝒟
@@ -160,7 +178,28 @@ end
 
 section
 variables [has_colimits.{v} C]
--- TODO should construct an iso, but for tonight we just need one direction!
+
+def restrict_stalk' (X : PresheafedSpace.{v} C) (U : opens X.X) (x : (X.restrict U)) :
+  stalk X (x.val) ⟶ stalk (X.restrict U) x :=
+stalk_map (restrict.ι X U) x
+
+-- The other way is harder :-/
+
+def restrict_stalk (X : PresheafedSpace.{v} C) (U : opens X.X) (x : X.restrict U) :
+  stalk (X.restrict U) x ⟶ stalk X x.val :=
+@colimit.desc (presheaf_on_space C ((X.restrict U).X)) _ C 𝒞
+  (@stalk_functor C _ _ ((X.restrict U).X) x) _ sorry
+#exit
+-- I now need to supply the cocone
+{ X := stalk X x,
+  -- I now need to supply the natural transformation ι from the interesting functor J ⥤ C to the
+  -- constant functor J ⥤ C sending every j to stalk X x
+  ι :=
+  { app := λ (V : (@open_nhds.open_nhds ((X.restrict U).X) (⟨x, h⟩ : ((X.restrict U).X).α))ᵒᵖ),
+    begin sorry end,
+    naturality' := sorry}, }
+
+#exit
 def restrict_stalk (X : PresheafedSpace.{v} C) (U : opens X.X) (x : X.X) (h : x ∈ U) :
   stalk (X.restrict U) (⟨x, h⟩ : (X.restrict U).X) ⟶ stalk X x :=
 -- begin
