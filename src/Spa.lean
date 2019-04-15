@@ -8,6 +8,7 @@ import for_mathlib.nonarchimedean.basic
 import for_mathlib.data.set.finite
 import for_mathlib.uniform_space.ring -- need completions of rings plus UMP
 import for_mathlib.group -- some stupid lemma about units
+import for_mathlib.compact
 
 universes u₁ u₂ u₃
 
@@ -58,9 +59,6 @@ topological_space.generate_from {U : set (Spa A) | ∃ r s : A, U = basic_open r
 
 lemma basic_open.is_open (r s : A) : is_open (basic_open r s) :=
 topological_space.generate_open.basic (basic_open r s) ⟨r, s, rfl⟩
-
-lemma basic_open.compact (r s : A) : compact (basic_open r s) :=
-sorry
 
 lemma basic_open_eq (s : A) : basic_open s s = {v | v s ≠ 0} :=
 set.ext $ λ v, ⟨λ h, h.right, λ h, ⟨le_refl _, h⟩⟩
@@ -426,6 +424,42 @@ univ_subset_iff.1 $ λ v h, ⟨le_refl _,by erw valuation.map_one; exact one_ne_
 
 @[simp] lemma rational_open_eq_univ : rational_open (1 : A) {(1 : A)} = univ :=
 by simp
+
+lemma basic_open.is_basis :
+  topological_space.is_topological_basis {U | ∃ r s : A, U = basic_open r s} :=
+begin
+  refine ⟨_, _, rfl⟩,
+  { rintros _ ⟨r₁, s₁, rfl⟩ _ ⟨r₂, s₂, rfl⟩ v hv,
+    refine ⟨_, ⟨r₁ * r₂, s₁ * s₂, rfl⟩, _, _⟩,
+    { split;
+      repeat {erw valuation.map_mul},
+      { exact le_trans
+          (linear_ordered_comm_monoid.mul_le_mul_right hv.1.1 _)
+          (linear_ordered_comm_monoid.mul_le_mul_left  hv.2.1 _) },
+      { rcases hv with ⟨⟨hrs₁, hs₁⟩, ⟨hrs₂, hs₂⟩⟩,
+        rw with_zero.ne_zero_iff_exists at hs₁ hs₂ ⊢,
+        rcases hs₁ with ⟨γ₁, hγ₁⟩,
+        rcases hs₂ with ⟨γ₂, hγ₂⟩,
+        use γ₁ * γ₂,
+        erw [hγ₁, hγ₂, with_zero.mul_coe] } },
+    { rintros v' ⟨H, hs⟩,
+      have vmuls : v' (s₁ * s₂) = v' s₁ * v' s₂ := valuation.map_mul _ _ _,
+      have hs₁ : v' s₁ ≠ 0 := λ h, by simpa [-coe_fn_coe_base, vmuls, h] using hs,
+      have hs₂ : v' s₂ ≠ 0 := λ h, by simpa [-coe_fn_coe_base, vmuls, h] using hs,
+      split; split; try {assumption},
+      all_goals {sorry}
+       } },
+  { apply subset.antisymm (subset_univ _),
+    rw ← basic_open_eq_univ,
+    apply subset_sUnion_of_mem,
+    exact ⟨1, 1, rfl⟩ }
+end
+
+lemma basic_open.compact (r s : A) : compact (basic_open r s) :=
+is_topological_basis.compact_of_finite_subcover _
+begin
+
+end
 
 def rational_basis (A : Huber_pair) : set (set (Spa A)) :=
 {U : set (Spa A) | ∃ {s : A} {T : set A} {hfin : fintype T} {hopen : is_open (↑(ideal.span T) : set A)},
