@@ -1,7 +1,14 @@
+/- For want of a better name, C is the category whose objects are a topological space,
+   a presheaf of topological rings, and a binary relation (we might make it a valuation)
+   on each stalk.
+-/
+
 import algebraic_geometry.stalks
 import category_theory.limits.types
 import category_theory.instances.TopCommRing
 import topology.opens
+
+import for_mathlib.opens for_mathlib.open_embeddings
 
 universes v u
 
@@ -59,13 +66,25 @@ end
 
 def C_hom.id (F : C.{v}) : C_hom F F :=
 { f := 𝟙 F.to_PresheafedSpace,
-  s := λ x a b, begin dsimp at *, simp, end,  }
+  s := λ x a b,
+    begin
+      show (F.s).relation x a b ↔ (F.s).relation x
+        (stalk_map ((functor.map_presheaf TopCommRing.forget).map (𝟙 (F.to_PresheafedSpace))) x a)
+        (stalk_map ((functor.map_presheaf TopCommRing.forget).map (𝟙 (F.to_PresheafedSpace))) x b),
+      simp,
+    end }
 
 def C_hom.comp (F G H : C.{v}) (α : C_hom F G) (β : C_hom G H) : C_hom F H :=
 { f := α.f ≫ β.f,
   s := λ x a b,
   begin
-    simp,
+    suffices : (H.s).relation ((((functor.map_presheaf TopCommRing.forget).map (α.f ≫ β.f)).f) x) a b ↔
+    (F.s).relation x
+      (stalk_map ((functor.map_presheaf TopCommRing.forget).map (α.f)) x
+         (stalk_map ((functor.map_presheaf TopCommRing.forget).map (β.f)) ((α.f) x) a))
+      (stalk_map ((functor.map_presheaf TopCommRing.forget).map (α.f)) x
+         (stalk_map ((functor.map_presheaf TopCommRing.forget).map (β.f)) ((α.f) x) b)),
+      simpa,
     transitivity,
     apply β.s,
     apply α.s,
@@ -104,16 +123,23 @@ instance : category C.{v} :=
 end
 .
 
-
 open topological_space
 --def inclusion (X : Top.{v}) (U : opens X) : opens ((opens.to_Top X).obj U) ⥤ opens X :=
 --def inclusion (X : Top.{v}) (U : opens X) : opens (U.val) ⥤ opens X :=
 --{ obj := λ V, sorry,--begin cases V, fsplit, intro h, sorry, sorry end,
 --  map := λ V W i, sorry }
 
-def inclusion (X : Top.{v}) (U : opens X) : opens ((opens.to_Top X).obj U) ⥤ opens X :=
-{ obj := λ V, begin cases V, fsplit, intro h, sorry, sorry end,
-  map := λ V W i, sorry }
+--set_option pp.all true
+set_option pp.universes true
+#check category_theory.functor
+#check functor.is_open_map.map
+def inclusion (X : Top.{v}) (U : opens.{v} X) : opens.{v} ({x // x ∈ U.val}) ⥤ opens.{v} X :=
+--functor.is_open_map.map.{v v} (is_open_map_of_open U.2)
+{ obj := (functor.is_open_map.map.{v v} (is_open_map_of_open U.2)).obj,
+  map := (functor.is_open_map.map.{v v} (is_open_map_of_open U.2)).map }
+--{ obj := λ V, begin cases V, fsplit, intro h, sorry, sorry end,
+--  map := λ V W i, sorry }
+#check plift
 
 namespace algebraic_geometry.PresheafedSpace
 variables {C : Type u} [𝒞 : category.{v+1} C]
