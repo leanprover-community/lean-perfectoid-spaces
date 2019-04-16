@@ -1,7 +1,6 @@
 /-
   Presheaf of toplogical rings.
 
-
 -/
 
 import topology.algebra.ring
@@ -9,7 +8,7 @@ import for_mathlib.sheaves.presheaf_of_rings
 
 universes u v
 
--- Definition of a presheaf of rings.
+-- Definition of a presheaf of topological rings.
 
 structure presheaf_of_topological_rings (α : Type u) [topological_space α]
 extends presheaf_of_rings α :=
