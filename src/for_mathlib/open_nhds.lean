@@ -1,5 +1,6 @@
 import category_theory.instances.Top.open_nhds
 import for_mathlib.filtered
+import for_mathlib.opens
 
 universe v
 
@@ -28,3 +29,11 @@ def bar (x : X) {U : opens X} (h : x ∈ U) : ((opens.to_Top X).obj U) := ⟨x, 
 -- def foo (x : X) (U : opens X) (h : x ∈ U) : open_nhds (bar x h) ⥤ open_nhds x :=
 -- { obj := λ V, ⟨⟨V.val.val, sorry⟩, sorry⟩,
 --   map := sorry, }
+
+variables {Y : Top.{v}} {f : X ⟶ Y}
+
+def functor.is_open_map.open_nhds.map (h : is_open_map f) (x : X) :
+  open_nhds x ⥤ open_nhds (f x) :=
+{ obj := λ U, ⟨(open_nhds.inclusion x ⋙ functor.is_open_map.map h).obj U,
+                set.mem_image_of_mem _ U.property⟩,
+  map := λ U₁ U₂ i, (open_nhds.inclusion x ⋙ functor.is_open_map.map h).map i }

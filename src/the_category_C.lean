@@ -8,7 +8,9 @@ import category_theory.limits.types
 import category_theory.instances.TopCommRing
 import topology.opens
 
-import for_mathlib.opens for_mathlib.open_embeddings
+import for_mathlib.opens
+import for_mathlib.open_nhds
+import for_mathlib.open_embeddings
 
 universes v u
 
@@ -124,30 +126,35 @@ end
 .
 
 open topological_space
---def inclusion (X : Top.{v}) (U : opens X) : opens ((opens.to_Top X).obj U) ⥤ opens X :=
---def inclusion (X : Top.{v}) (U : opens X) : opens (U.val) ⥤ opens X :=
---{ obj := λ V, sorry,--begin cases V, fsplit, intro h, sorry, sorry end,
---  map := λ V W i, sorry }
 
---set_option pp.all true
-set_option pp.universes true
-#check category_theory.functor
-#check functor.is_open_map.map
-def inclusion (X : Top.{v}) (U : opens.{v} X) : opens.{v} ({x // x ∈ U.val}) ⥤ opens.{v} X :=
---functor.is_open_map.map.{v v} (is_open_map_of_open U.2)
-{ obj := (functor.is_open_map.map.{v v} (is_open_map_of_open U.2)).obj,
-  map := (functor.is_open_map.map.{v v} (is_open_map_of_open U.2)).map }
---{ obj := λ V, begin cases V, fsplit, intro h, sorry, sorry end,
---  map := λ V W i, sorry }
-#check plift
+def inclusion (X : Top.{v}) (U : opens X) :
+  opens ((opens.to_Top X).obj U) ⥤ opens X :=
+functor.is_open_map.map (is_open_map_of_open U.2)
 
 namespace algebraic_geometry.PresheafedSpace
 variables {C : Type u} [𝒞 : category.{v+1} C]
 include 𝒞
 
-def restrict (X : PresheafedSpace.{v} C) (U : opens X.X) : PresheafedSpace.{v} C :=
+def restrict (X : PresheafedSpace.{v} C) (U : opens X) : PresheafedSpace.{v} C :=
 { X := (opens.to_Top X.X).obj U,
   𝒪 := (inclusion X.X U).op ⋙ X.𝒪 }
+
+-- jmc: This deserves better treatment in the lib
+def to_op_unop (V : Cᵒᵖ) : V ⟶ (op (unop V)) := 𝟙 V
+
+def restrict.ι (X : PresheafedSpace.{v} C) (U : opens X) :
+  X.restrict U ⟶ X :=
+{ f := ⟨subtype.val, continuous_subtype_val⟩,
+  c :=
+  { app := λ V, X.𝒪.map (to_op_unop V ≫ has_hom.hom.op (ulift.up $ plift.up $
+            set.image_preimage_subset subtype.val (unop V).val)),
+    naturality' :=
+    begin
+      intros V₁ V₂ i,
+      erw ← X.𝒪.map_comp,
+      erw ← X.𝒪.map_comp,
+      congr' 1,
+    end } }
 
 section
 variables {D : Type u} [𝒟 : category.{v+1} D]
@@ -160,22 +167,35 @@ end
 
 section
 variables [has_colimits.{v} C]
--- TODO should construct an iso, but for tonight we just need one direction!
-def restrict_stalk (X : PresheafedSpace.{v} C) (U : opens X.X) (x : X.X) (h : x ∈ U) :
-  stalk (X.restrict U) (⟨x, h⟩ : (X.restrict U).X) ⟶ stalk X x :=
--- begin
--- transitivity,
--- swap,
--- change _ ⟶ colimit ((open_nhds.inclusion x).op ⋙ X.𝒪),
--- convert colimit.pre _ (inclusion X.X U).op,
---   have p := colimit.pre _ (inclusion X.X U).op,
--- end
+def restrict_stalk' (X : PresheafedSpace.{v} C) (U : opens X) (x : (X.restrict U)) :
+  stalk X (x.val) ⟶ stalk (X.restrict U) x :=
+stalk_map (restrict.ι X U) x
 
-colimit.desc.{v} _
-{ X := stalk X x,
+-- TODO should construct an iso, but for tonight we just need one direction!
+def restrict_stalk (X : PresheafedSpace.{v} C) (U : opens X) (x : (X.restrict U)) :
+  stalk (X.restrict U) x ⟶ stalk X (restrict.ι X U x) :=
+colimit.desc.{v} ((open_nhds.inclusion _).op ⋙ (X.restrict U).𝒪)
+{ X := stalk X (restrict.ι X U x),
   ι :=
-  { app := begin intro U, dsimp, refine _ ≫ colimit.ι _ _, sorry, sorry, end,
-    naturality' := sorry }, }
+  { app := λ (V : (open_nhds.open_nhds x)ᵒᵖ),
+    begin
+      refine _ ≫ (colimit.ι ((open_nhds.inclusion _).op ⋙ X.𝒪) _),
+      { refine ((functor.is_open_map.open_nhds.map _ _).op).obj V,
+        exact (is_open_map_of_open U.2) },
+      { dsimp [restrict], exact X.𝒪.map (𝟙 _).op }
+    end,
+    naturality' := λ V₁ V₂ XYZZY,
+    begin
+      dsimp,
+      erw [← category.assoc, ← X.𝒪.map_comp, X.𝒪.map_id, category.comp_id, category.comp_id,
+        category.id_comp, ← functor.op_map],
+      rw show
+        (X.𝒪).map ((functor.op (inclusion (X.X) U)).map ((functor.op (open_nhds.inclusion x)).map XYZZY)) =
+        ((open_nhds.inclusion ((restrict.ι X U) x)).op ⋙ X.𝒪).map
+          ((functor.is_open_map.open_nhds.map _ x).map (XYZZY.unop)).op,
+      { erw functor.comp_map },
+      apply colimit.w
+    end } }
 end
 end algebraic_geometry.PresheafedSpace
 
@@ -185,8 +205,7 @@ def restrict (X : C) (U : opens X.X) : C :=
   s :=
   { relation := λ x a b,
     begin
-      cases x with x xU,
-      have a' := ((TopCommRing.forget.map_presheaf.obj X.to_PresheafedSpace).restrict_stalk U x xU) a,
-      have b' := ((TopCommRing.forget.map_presheaf.obj X.to_PresheafedSpace).restrict_stalk U x xU) b,
-      exact X.s.relation x a' b'
+      have a' := ((TopCommRing.forget.map_presheaf.obj X.to_PresheafedSpace).restrict_stalk U x) a,
+      have b' := ((TopCommRing.forget.map_presheaf.obj X.to_PresheafedSpace).restrict_stalk U x) b,
+      exact X.s.relation x.val a' b'
     end } }
