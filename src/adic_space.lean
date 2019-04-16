@@ -11,18 +11,15 @@ import continuous_valuations
 import Spa
 import Huber_pair
 
-/- An adic space is...
-
-Vpre: p76
-
--/
-
 universe u
 
 open nat function
 open topological_space
 
-structure 𝓥pre (X : Type*) [topological_space X]
+structure 𝒱 (X : Type*) [topological_space X] :=
+(𝒪X : sheaf of )
+/-- An auxiliary category 𝒞.  -/
+structure 𝒞 (X : Type*) [topological_space X]
 -- :=
 --(𝓞X : presheaf of rings)
 --(complete : 𝓞X U is a complete topological ring)
