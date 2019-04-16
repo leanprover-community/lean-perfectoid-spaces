@@ -23,6 +23,9 @@ variables {α : Type u} [topological_space α]
 @[simp] lemma opens.inter (U V : opens α) :
 U ∩ V = ⟨U.1 ∩ V.1, is_open_inter U.2 V.2⟩ := rfl
 
+lemma opens.inter_comm (U V : opens α) :
+U ∩ V = V ∩ U := subtype.ext.2 $ set.inter_comm U.1 V.1
+
 prefix `⋃` := supr
 
 -- Opens constants.
