@@ -120,12 +120,16 @@ of part of the problem. localization r2 is just A[1/r2.s]. But we cannot prove y
 invertible in localization.r1, even though we know it doesn't canish anywhere on
 rational_open r2 and hence on rational_open r1, because the fact that it doesn't vanish anywhere
 on rational_open r1 only means that it's not in any prime ideal corresponding
-to a *continuous* valuation on localization r1; one would now need to prove that every maximal ideal
+to a *continuous* valuation on localization r1 which is bounded by 1 on some + subring;
+one would now need to prove, at least, that every maximal ideal
 is the support of a continuous valuation, which is Wedhorn 7.52(2). This is not
-too bad -- but it is work that we have not yet done. This is not the whole story though;
+too bad -- but it is work that we have not yet done. However this is by no means the whole story;
 we would also need that r1.T is power-bounded in localization.r2
-and this looks worse: it's Wedhorn 7.52(1). Everything is do-able, but it's just *long*.
-Long as in "thousands more lines of code".
+and this looks much worse: it's Wedhorn 7.52(1). Everything is do-able, but it's just *long*.
+Long as in "thousands more lines of code". We will need a good theory of primary and
+secondary specialisation of valuations and so on and so on. None of this is there at
+the time of writing, although I see no obstruction to putting it there, other than the
+fact that it would take weeks of work.
 
 We have to work with a weaker preorder then, because haven't made a good enough
 API for continuous valuations. We basically work with the preorder r1 ≤ r2 iff
@@ -175,7 +179,8 @@ noncomputable def s_inv_aux (r1 r2 : rational_open_data A) (h : r1 ≤ r2) : uni
     refl,
 end)
 
--- Spa.rational_open_data.localization_map : the uncompleted map
+-- Spa.rational_open_data.localization_map : the map between the uncompleted rings A(T1/s1)->A(T2/s2)
+/-- The map A(T1/s1) -> A(T2/s2) coming from the inequality r1 ≤ r2 -/
 noncomputable def localization_map {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
   localization r1 → localization r2 :=
 Huber_ring.away.lift r1.T r1.s
@@ -526,7 +531,8 @@ end
 
 end rational_open_data
 
--- Current status: proof is broken with 2 sorries. This looks hard, We don't need it though.
+-- Rational opens form a basis of Spa(A). Current status: proof has some sorries.
+-- Filling them may or may not be hard. We don't need it for the defition of an adic space.
 /-
 lemma rational_basis.is_basis : topological_space.is_topological_basis (rational_basis A) :=
 begin
@@ -606,6 +612,8 @@ uniform_continuous_of_continuous (rational_open_data.localization_map_is_cts h)
 
 end -- section
 
+-- r_o_d is short for "rational open data". KB needs to think more clearlty
+-- about namespaces etc.
 /-- A<T/s>, the functions on D(T,s). A topological ring -/
 def r_o_d_completion (r : rational_open_data A) :=
 ring_completion (rational_open_data.localization r)
@@ -636,6 +644,7 @@ lemma restriction_is_uniform_continuous {r1 r2 : rational_open_data A} (h : r1 �
 uniform_continuous (r_o_d_completion.restriction h) :=
 ring_completion.map_uniform_continuous $ localization_map_is_uniform_continuous h
 
+/-- The underlying type of 𝒪_X(U), the structure presheaf on Spa(A) -/
 def presheaf (U : opens (Spa A)) :=
 {f : Π (rd : rational_open_data_subsets U), r_o_d_completion rd.1 //
    ∀ (rd1 rd2 : rational_open_data_subsets U) (h : rd1.1 ≤ rd2.1),
@@ -666,18 +675,17 @@ example (rd : rational_open_data A): ring (ring_completion (rational_open_data.l
 := by apply_instance
 end Spa
 
+-- old notes
 
 -- remember that a rational open is not actually `rational_open s T` in full
 -- generality -- we also need that T is finite and that T generates an open ideal in A.
 -- The construction on p73/74 (note typo in first line of p74 -- ideal should be I.D)
 -- gives A<T/s> (need completion) and A<T/s>^+ (need integral closure).
 
--- Once we have this, we see mid way through p75 that the definition of the presheaf
+-- KB idle comment: I guess we never make A<T/s> a Huber pair if A is a Huber pair?
+-- We would need integral closure for this and I don't think we have it in mathlib.
+
+-- We see mid way through p75 that the definition of the presheaf
 -- on V is proj lim of O_X(U) as U runs through rationals opens in V. This gets
 -- the projective limit topology and then we have a presheaf (hopefully this is
 -- straightforward) of complete topological rings (need proj lim of complete is complete)
-
--- We then need the valuations on the stalks (this is direct limit in cat of rings, forget
--- the topology). This will be fiddly but not impossible.
-
--- We then have an object in V^pre and I think then everything should follow.
