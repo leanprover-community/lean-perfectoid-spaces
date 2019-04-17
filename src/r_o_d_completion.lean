@@ -80,7 +80,7 @@ variable (hA : topological_space.is_topological_basis (rational_basis A))
 /-- The map from F(U) to K_v for v ∈ U -/
 noncomputable def to_valuation_field_completion {v : Spa A} {U : opens (Spa A)} (hv : v ∈ U)
   (hA : topological_space.is_topological_basis (rational_basis' A))
-  (f : r_o_d_completion.presheaf U) : ring_completion (valuation_field (Spv.out v.1)) :=
+  (f : Spa.presheaf_value U) : ring_completion (valuation_field (Spv.out v.1)) :=
 Spa.r_o_d_completion.to_complete_valuation_field (Spa.mem_rational_open_subset_nhd hv hA) $
   f.1 $ Spa.rational_open_subset_nhd hv hA
 
@@ -90,7 +90,7 @@ Spa.r_o_d_completion.to_complete_valuation_field (Spa.mem_rational_open_subset_n
 -- let's check that Spa.r_o_d_completion.to_complete_valuation_field commutes with ≤
 lemma to_valuation_field_completion_well_defined_aux₁ {v : Spa A} {U : opens (Spa A)} (hv : v ∈ U)
   (hA : topological_space.is_topological_basis (rational_basis' A))
-  (f : r_o_d_completion.presheaf U) {r1 r2 : rational_open_data_subsets U}
+  (f : Spa.presheaf_value U) {r1 r2 : rational_open_data_subsets U}
   (h1 : v ∈ r1.1.rational_open) (h2 : v ∈ r2.1.rational_open) :
 Spa.r_o_d_completion.to_complete_valuation_field h1 (f.1 r1) =
   Spa.r_o_d_completion.to_complete_valuation_field (begin
@@ -114,7 +114,7 @@ end
 -- now the other way
 lemma to_valuation_field_completion_well_defined_aux₂ {v : Spa A} {U : opens (Spa A)} (hv : v ∈ U)
   (hA : topological_space.is_topological_basis (rational_basis' A))
-  (f : r_o_d_completion.presheaf U) {r1 r2 : rational_open_data_subsets U}
+  (f : Spa.presheaf_value U) {r1 r2 : rational_open_data_subsets U}
   (h1 : v ∈ r1.1.rational_open) (h2 : v ∈ r2.1.rational_open) :
 Spa.r_o_d_completion.to_complete_valuation_field h2 (f.1 r2) =
   Spa.r_o_d_completion.to_complete_valuation_field (begin
@@ -138,7 +138,7 @@ end
 -- now let's check it agrees on any rational_open_data_subsets
 lemma to_valuation_field_completion_well_defined_aux₃ {v : Spa A} {U : opens (Spa A)} (hv : v ∈ U)
   (hA : topological_space.is_topological_basis (rational_basis' A))
-  (f : r_o_d_completion.presheaf U) {r1 r2 : rational_open_data_subsets U}
+  (f : Spa.presheaf_value U) {r1 r2 : rational_open_data_subsets U}
   (h1 : v ∈ r1.1.rational_open) (h2 : v ∈ r2.1.rational_open) :
   Spa.r_o_d_completion.to_complete_valuation_field h1 (f.1 r1) =
   Spa.r_o_d_completion.to_complete_valuation_field h2 (f.1 r2) :=
@@ -151,7 +151,7 @@ end
 -- f gets sent to the same thing.
 lemma to_valuation_field_completion_well_defined {v : Spa A} {U : opens (Spa A)} (hv : v ∈ U)
   (hA : topological_space.is_topological_basis (rational_basis' A))
-  (f : r_o_d_completion.presheaf U) (r : rational_open_data_subsets U) (hr : v ∈ r.1.rational_open):
+  (f : Spa.presheaf_value U) (r : rational_open_data_subsets U) (hr : v ∈ r.1.rational_open):
 to_valuation_field_completion hv hA f =
   Spa.r_o_d_completion.to_complete_valuation_field hr (f.1 r) :=
 to_valuation_field_completion_well_defined_aux₃ hv hA f _ hr
@@ -161,16 +161,16 @@ to_valuation_field_completion_well_defined_aux₃ hv hA f _ hr
     commutes with restriction (so we can get a map from the stalk at v) -/
 theorem to_valuation_field_completion_commutes {v : Spa A} {U V : opens (Spa A)} (hv : v ∈ U)
   (hUV : U ⊆ V) (hA : topological_space.is_topological_basis (rational_basis' A))
-  (f : r_o_d_completion.presheaf V) :
+  (f : Spa.presheaf_value V) :
   to_valuation_field_completion (hUV hv) hA f =
-  to_valuation_field_completion hv hA (r_o_d_completion.presheaf.map hUV f) :=
+  to_valuation_field_completion hv hA (Spa.presheaf_map hUV f) :=
 begin
   -- to_valuation_field_completion involves choosing a random basis element.
   let rU := Spa.rational_open_subset_nhd hv hA,
   let rV := Spa.rational_open_subset_nhd (hUV hv) hA,
   -- we now need to intersect these two things.
   let rUV1 := rational_open_data.inter rU.1 rV.1,
-  rw to_valuation_field_completion_well_defined hv hA (r_o_d_completion.presheaf.map hUV f)
+  rw to_valuation_field_completion_well_defined hv hA (Spa.presheaf_map hUV f)
     ⟨rUV1, begin rw rational_open_data.rational_open_data_inter,
     exact set.subset.trans (set.inter_subset_left _ _) rU.2 end⟩
     ( begin rw rational_open_data.rational_open_data_inter,
