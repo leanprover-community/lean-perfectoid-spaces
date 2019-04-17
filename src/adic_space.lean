@@ -19,7 +19,6 @@ open topological_space
 instance meh {X : Type*} [topological_space X] (𝒪X : sheaf_of_topological_rings X) (U : opens X) :
 topological_space (𝒪X.F.F U) := presheaf_of_topological_rings.topological_space_sections 𝒪X.F U
 
-
 instance meh' {X : Type*} [topological_space X] (𝒪X : sheaf_of_topological_rings X) (U : opens X) :
   topological_ring (𝒪X.F.F U) := presheaf_of_topological_rings.Ftop_ring 𝒪X.F U
 
