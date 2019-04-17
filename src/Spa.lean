@@ -8,6 +8,7 @@ import for_mathlib.nonarchimedean.basic
 import for_mathlib.data.set.finite
 import for_mathlib.uniform_space.ring -- need completions of rings plus UMP
 import for_mathlib.group -- some stupid lemma about units
+import for_mathlib.sheaves.presheaf_of_topological_rings
 
 universes u₁ u₂ u₃
 
@@ -612,7 +613,7 @@ uniform_continuous_of_continuous (rational_open_data.localization_map_is_cts h)
 
 end -- section
 
--- r_o_d is short for "rational open data". KB needs to think more clearlty
+-- r_o_d is short for "rational open data". KB needs to think more clearly
 -- about namespaces etc.
 /-- A<T/s>, the functions on D(T,s). A topological ring -/
 def r_o_d_completion (r : rational_open_data A) :=
@@ -621,13 +622,13 @@ ring_completion (rational_open_data.localization r)
 namespace r_o_d_completion
 open topological_space
 
-noncomputable instance (r : rational_open_data A) : ring (r_o_d_completion r) :=
+noncomputable instance (r : rational_open_data A) : comm_ring (r_o_d_completion r) :=
 by dunfold r_o_d_completion; apply_instance
 
 instance uniform_space (r : rational_open_data A) : uniform_space (r_o_d_completion r) :=
 by dunfold r_o_d_completion; apply_instance
 
-example (r : rational_open_data A) : topological_space (r_o_d_completion r) := by apply_instance
+-- example (r : rational_open_data A) : topological_space (r_o_d_completion r) := by apply_instance
 
 instance (r : rational_open_data A) : topological_ring (r_o_d_completion r)
 := by dunfold r_o_d_completion; apply_instance
@@ -636,22 +637,69 @@ noncomputable def restriction {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
 r_o_d_completion r1 → r_o_d_completion r2 :=
 ring_completion.map (rational_open_data.localization_map h)
 
-instance {r1 r2 : rational_open_data A} (h : r1 ≤ r2) : is_ring_hom (restriction h)
-:= by delta r_o_d_completion.restriction;
+instance restriction_is_ring_hom {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
+  is_ring_hom (restriction h) :=
+by delta r_o_d_completion.restriction;
 exact ring_completion.map_is_ring_hom _ _ (rational_open_data.localization_map_is_cts h)
 
 lemma restriction_is_uniform_continuous {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
 uniform_continuous (r_o_d_completion.restriction h) :=
 ring_completion.map_uniform_continuous $ localization_map_is_uniform_continuous h
 
+end r_o_d_completion
+
+open topological_space
+
 /-- The underlying type of 𝒪_X(U), the structure presheaf on Spa(A) -/
-def presheaf (U : opens (Spa A)) :=
+def presheaf_value (U : opens (Spa A)) :=
 {f : Π (rd : rational_open_data_subsets U), r_o_d_completion rd.1 //
    ∀ (rd1 rd2 : rational_open_data_subsets U) (h : rd1.1 ≤ rd2.1),
      r_o_d_completion.restriction h (f rd1) = (f rd2)} -- agrees on overlaps
 
-def presheaf.map {U V : opens (Spa A)} (hUV : U ≤ V) :
-  presheaf V → presheaf U :=
+-- We need to check it's a ring
+noncomputable instance presheaf_comm_ring (U : opens (Spa A)) : comm_ring (presheaf_value U) :=
+begin
+  apply @subset.comm_ring _ pi.comm_ring _ _, apply_instance,
+  refine {..}, -- now five goals
+  { -- zero_mem
+    intros rd₁ rd₂ h,
+    exact is_ring_hom.map_zero _ },
+  { -- add_mem
+    intros a b ha hb rd₁ rd₂ h,
+    change r_o_d_completion.restriction h (a rd₁ + b rd₁) = a rd₂ + b rd₂,
+    rw is_ring_hom.map_add (r_o_d_completion.restriction h),
+    rw [ha _ _ h, hb _ _ h] },
+  { -- neg_mem
+    intros a ha rd₁ rd₂ h,
+    change r_o_d_completion.restriction h (-(a rd₁)) = -(a rd₂),
+    rw is_ring_hom.map_neg (r_o_d_completion.restriction h),
+    rw ha _ _ h },
+  { -- one_mem
+    intros rd₁ rd₂ h,
+    exact is_ring_hom.map_one _ },
+  { -- mul_mem
+    intros a b ha hb rd₁ rd₂ h,
+    change r_o_d_completion.restriction h (a rd₁ * b rd₁) = a rd₂ * b rd₂,
+    rw is_ring_hom.map_mul (r_o_d_completion.restriction h),
+    rw [ha _ _ h, hb _ _ h] }
+end
+
+instance presheaf_top_space (U : opens (Spa A)) : topological_space (presheaf_value U) :=
+by unfold presheaf_value; apply_instance
+
+-- we need to check it's a topological ring!
+instance presheaf_top_add_monoid (U : opens (Spa A)) : topological_add_monoid (presheaf_value U) :=
+{ continuous_add := sorry,
+..Spa.presheaf_top_space U, ..Spa.presheaf_comm_ring U}
+
+instance presheaf_top_ring (U : opens (Spa A)) : topological_ring (presheaf_value U) :=
+{ continuous_mul := sorry,
+  continuous_neg := sorry,
+  ..Spa.presheaf_top_add_monoid U,
+..Spa.presheaf_top_space U, ..Spa.presheaf_comm_ring U}
+
+def presheaf_map {U V : opens (Spa A)} (hUV : U ≤ V) :
+  presheaf_value V → presheaf_value U :=
 λ f, ⟨λ rd, f.val ⟨rd.val, set.subset.trans rd.2 hUV⟩,
 begin
   intros,
@@ -660,19 +708,36 @@ begin
   exact X,
 end⟩
 
-lemma presheaf.map_id (U : opens (Spa A)) :
-  presheaf.map (le_refl U) = id :=
-by { delta presheaf.map, tidy }
+lemma presheaf_map_id (U : opens (Spa A)) :
+  presheaf_map (le_refl U) = id :=
+by { delta presheaf_map, tidy }
 
-lemma presheaf.map_comp {U V W : opens (Spa A)} (hUV : U ≤ V) (hVW : V ≤ W) :
-  presheaf.map hUV ∘ presheaf.map hVW = presheaf.map (le_trans hUV hVW) :=
-by { delta presheaf.map, tidy }
+lemma presheaf_map_comp {U V W : opens (Spa A)} (hUV : U ≤ V) (hVW : V ≤ W) :
+  presheaf_map hUV ∘ presheaf_map hVW = presheaf_map (le_trans hUV hVW) :=
+by { delta presheaf_map, tidy }
 
-end r_o_d_completion
+instance presheaf_map_is_ring_hom {U V : opens (Spa A)} (hUV : U ≤ V) :
+is_ring_hom (presheaf_map hUV) :=
+{ map_one := rfl,
+  map_mul := λ _ _, rfl,
+  map_add := λ _ _, rfl }
 
-noncomputable
-example (rd : rational_open_data A): ring (ring_completion (rational_open_data.localization rd))
-:= by apply_instance
+def presheaf_map_cts {U V : opens (Spa A)} (hUV : U ≤ V) :
+continuous (presheaf_map hUV) := sorry
+
+noncomputable def presheaf_of_topological_rings : presheaf_of_topological_rings (Spa A) :=
+{ F := presheaf_value,
+  res := λ U V, presheaf_map,
+  Hid := presheaf_map_id,
+  Hcomp := λ U V W, presheaf_map_comp,
+  Fring := Spa.presheaf_comm_ring,
+  res_is_ring_hom := λ U V, Spa.presheaf_map_is_ring_hom,
+  Ftop := Spa.presheaf_top_space,
+  Ftop_ring := Spa.presheaf_top_ring,
+  res_continuous := λ U V, presheaf_map_cts
+}
+
+
 end Spa
 
 -- old notes
