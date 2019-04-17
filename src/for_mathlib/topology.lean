@@ -84,6 +84,51 @@ end
 end
 end
 
+namespace dense_embedding
+open set function filter
+variables {α : Type*} {β : Type*} {γ : Type*} {δ : Type*}
+variables [topological_space α] [topological_space β] [topological_space γ] [topological_space δ]
+
+variables {f : α → β} {g : α → γ} {h : β → δ} {i : γ → δ}
+/-
+    f
+  α → β
+g ↓   ↓ h
+  γ → δ
+    i
+-/
+-- The following lemma correct a typo in mathlib topology/maps.lean
+protected lemma continuous' (df : dense_embedding f) : continuous f :=
+continuous_iff_continuous_at.mpr $ λ a, df.continuous_at
+
+-- TODO: The first item in the next proof should be extracted as a lemma about functions with dense image
+
+lemma comp (df : dense_embedding f) (dh : dense_embedding h) : dense_embedding (h ∘ f) :=
+{ dense :=
+    begin
+      intro,
+      rw range_comp,
+      have Hf : closure (range f) = univ,
+        from eq_univ_of_forall df.dense,
+      have Hh : closure (range h) = univ,
+        from eq_univ_of_forall dh.dense,
+      rw [← image_univ, ← Hf] at Hh,
+      have : h '' (closure $ range f) ⊆ closure (h '' range f),
+        from image_closure_subset_closure_image dh.continuous',
+      have := closure_mono this,
+      rw closure_closure at this,
+      apply this,
+      simp [Hh]
+    end,
+  inj :=  function.injective_comp dh.inj df.inj,
+  induced := λ a, by rw [← comap_comap_comp, dh.induced, df.induced] }
+
+-- The next lemma is dubious. Maybe it needs more assumptions.
+lemma of_comm_square (dg : dense_embedding g) (di : dense_embedding i)
+  (dh : dense_embedding h) (H : h ∘ f = i ∘ g) : dense_embedding f :=
+sorry
+end dense_embedding
+
 section
 open filter
 variables  {α : Type*} [topological_space α] {β : Type*} [topological_space β] [discrete_topology β]
