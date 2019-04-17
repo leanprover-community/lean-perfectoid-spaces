@@ -6,6 +6,7 @@ import topology.opens
 import for_mathlib.prime
 import for_mathlib.is_cover
 import for_mathlib.sheaves.sheaf_of_topological_rings
+import for_mathlib.sheaves.stalk_of_rings
 
 import continuous_valuations
 import Spa
@@ -16,42 +17,49 @@ universe u
 open nat function
 open topological_space
 
-instance meh {X : Type*} [topological_space X] (𝒪X : sheaf_of_topological_rings X) (U : opens X) :
+namespace sheaf_of_topological_rings
+
+instance topological_space {X : Type*} [topological_space X] (𝒪X : sheaf_of_topological_rings X) (U : opens X) :
 topological_space (𝒪X.F.F U) := presheaf_of_topological_rings.topological_space_sections 𝒪X.F U
 
-
-instance meh' {X : Type*} [topological_space X] (𝒪X : sheaf_of_topological_rings X) (U : opens X) :
+instance topological_ring {X : Type*} [topological_space X] (𝒪X : sheaf_of_topological_rings X) (U : opens X) :
   topological_ring (𝒪X.F.F U) := presheaf_of_topological_rings.Ftop_ring 𝒪X.F U
 
-instance meh''' {X : Type*} [topological_space X] (𝒪X : sheaf_of_topological_rings X) (U : opens X) :
+instance topological_add_group {X : Type*} [topological_space X] (𝒪X : sheaf_of_topological_rings X) (U : opens X) :
   topological_add_group (𝒪X.F.F U) := topological_ring.to_topological_add_group (𝒪X.F.F U)
 
-instance meh'' {X : Type*} [topological_space X] (𝒪X : sheaf_of_topological_rings X) (U : opens X) :
+--FIXME -- should be local
+def uniform_space {X : Type*} [topological_space X] (𝒪X : sheaf_of_topological_rings X) (U : opens X) :
   uniform_space (𝒪X.F.F U) := topological_add_group.to_uniform_space (𝒪X.F.F U)
+
+end sheaf_of_topological_rings
+
+section 𝒱
+local attribute [instance] sheaf_of_topological_rings.uniform_space
 
 /-- Wedhorn's category 𝒱 -/
 structure 𝒱 (X : Type*) [topological_space X] :=
 (𝒪X : sheaf_of_topological_rings X)
 (complete : ∀ U : opens X, complete_space (𝒪X.F.F U))
+(valuation : ∀ x : X, Spv (stalk_of_rings 𝒪X.to_presheaf_of_topological_rings.to_presheaf_of_rings x))
+(local_stalks : ∀ x : X, is_local_ring (stalk_of_rings 𝒪X.to_presheaf_of_rings x))
+(supp_maximal : ∀ x : X, ideal.is_maximal (_root_.valuation.supp (valuation x).out))
 
+end 𝒱
 
 /-- An auxiliary category 𝒞.  -/
-structure 𝒞 (X : Type*) [topological_space X]
--- :=
---(𝓞X : presheaf of rings)
---(complete : 𝓞X U is a complete topological ring)
---(local : stalks are local)
---(val : valuation on each stalk with support the max ideal)
+structure 𝒞 (X : Type*) [topological_space X] :=
+(𝒪X : presheaf_of_topological_rings X)
+(valuation: ∀ x : X, Spv (stalk_of_rings 𝒪X.to_presheaf_of_rings x))
 
-/-
-We denote by 𝓥pre the category of tuples X = (X, O X , (v x ) x∈X ), where
-(a) X is a topological space,
-(b) 𝓞_X is a presheaf of complete topological rings on X such that the stalk 𝓞_X,x of
-𝓞_X (considered as a presheaf of rings) is a local ring,
-(c) v_x is an equivalence class of valuations on the stalk 𝓞_X,x such that supp(v_x) is the
-maximal ideal of 𝓞_X,x .
-
-Wedhorn p76 shows how Spa(A) gives an object of this for A a Huber pair
+def 𝒱.to_𝒞 {X : Type*} [topological_space X] (F : 𝒱 X) : 𝒞 X :=
+{ 𝒪X := F.𝒪X.to_presheaf_of_topological_rings,
+  valuation := F.valuation}
+/- todo :
+Term of type 𝒞 for each Huber pair
+Open set in X -> induced 𝒞 structure
+morphisms and isomorphisms in 𝒞
+definition of adic space
 -/
 
 --definition affinoid_adic_space (A : Huber_pair) : 𝓥pre := sorry

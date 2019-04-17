@@ -39,10 +39,16 @@ structure sheaf_of_topological_rings (α : Type u) [T : topological_space α] :=
 
 section sheaf_of_topological_rings
 
-instance sheaf_of_topological_rings.to_presheaf_of_topological_rings
-  {α : Type u} [topological_space α] :
-  has_coe (sheaf_of_rings α) (presheaf_of_rings α) :=
-⟨λ S, S.F⟩
+def sheaf_of_topological_rings.to_presheaf_of_topological_rings
+  {α : Type u} [topological_space α] (S : sheaf_of_topological_rings α) :
+(presheaf_of_topological_rings α) := S.F
+
+def sheaf_of_topological_rings.to_presheaf_of_rings {α : Type u} [topological_space α]
+  (F : sheaf_of_topological_rings α) : presheaf_of_rings α := {..F.F }
+
+def sheaf_of_topological_rings.to_sheaf_of_rings {α : Type u} [topological_space α]
+  (F : sheaf_of_topological_rings α) : sheaf_of_rings α :=
+{ F := {..F.F} ..F}
 
 instance sheaf_of_topological_rings.to_presheaf {α : Type u} [topological_space α] :
   has_coe (sheaf_of_topological_rings α) (presheaf α) :=
