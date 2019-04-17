@@ -23,4 +23,5 @@ class perfectoid_ring (R : Type u) [Huber_ring R] extends Tate_ring R : Prop :=
 
 class perfectoid_space (X : Type u) extends adic_space X :=
 (perfectoid_cover : ∀ x : X, ∃ (U : opens X) (A : Huber_pair) [perfectoid_ring A.R],
-  (x ∈ U) ∧ is_preadic_space_equiv U (Spa A))
+  (x ∈ U) ∧ sorry)
+-- is_preadic_space_equiv U (Spa A))
