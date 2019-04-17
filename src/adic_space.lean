@@ -39,28 +39,54 @@ local attribute [instance] sheaf_of_topological_rings.uniform_space
 
 /-- Wedhorn's category 𝒱 -/
 structure 𝒱 (X : Type*) [topological_space X] :=
-(𝒪X : sheaf_of_topological_rings X)
-(complete : ∀ U : opens X, complete_space (𝒪X.F.F U))
-(valuation : ∀ x : X, Spv (stalk_of_rings 𝒪X.to_presheaf_of_topological_rings.to_presheaf_of_rings x))
-(local_stalks : ∀ x : X, is_local_ring (stalk_of_rings 𝒪X.to_presheaf_of_rings x))
+(ℱ : sheaf_of_topological_rings X)
+(complete : ∀ U : opens X, complete_space (ℱ.F.F U))
+(valuation : ∀ x : X, Spv (stalk_of_rings ℱ.to_presheaf_of_topological_rings.to_presheaf_of_rings x))
+(local_stalks : ∀ x : X, is_local_ring (stalk_of_rings ℱ.to_presheaf_of_rings x))
 (supp_maximal : ∀ x : X, ideal.is_maximal (_root_.valuation.supp (valuation x).out))
 
 end 𝒱
 
 /-- An auxiliary category 𝒞.  -/
 structure 𝒞 (X : Type*) [topological_space X] :=
-(𝒪X : presheaf_of_topological_rings X)
-(valuation: ∀ x : X, Spv (stalk_of_rings 𝒪X.to_presheaf_of_rings x))
+(F : presheaf_of_topological_rings X)
+(valuation: ∀ x : X, Spv (stalk_of_rings F.to_presheaf_of_rings x))
 
-def 𝒱.to_𝒞 {X : Type*} [topological_space X] (F : 𝒱 X) : 𝒞 X :=
-{ 𝒪X := F.𝒪X.to_presheaf_of_topological_rings,
-  valuation := F.valuation}
-/- todo :
+def 𝒱.to_𝒞 {X : Type*} [topological_space X] (ℱ : 𝒱 X) : 𝒞 X :=
+{ F := ℱ.ℱ.to_presheaf_of_topological_rings,
+  valuation := ℱ.valuation}
+
+/- todo for this def:
 Term of type 𝒞 for each Huber pair
-Open set in X -> induced 𝒞 structure
-morphisms and isomorphisms in 𝒞
-definition of adic space
+  need continuity of + and * and - on sections
+  need continuity of projection maps
 -/
+def 𝒞.Spa (A : Huber_pair) : 𝒞 (Spa A) := sorry
+
+/- Remainder of this file:
+
+morphisms and isomorphisms in 𝒞
+Open set in X -> induced 𝒞 structure
+definition of adic space
+
+-/
+
+-- need a construction `stalk_map` attached to an f-hom; should follow from UMP
+-- Need this before we embark on 𝒞.map
+
+def stalk_map : Type := sorry
+
+-- not finished -- need maps on stalks first
+structure 𝒞.map {X : Type*} [topological_space X] {Y : Type*} [topological_space Y]
+  (F : 𝒞 X) (G : 𝒞 Y) :=
+(map : X → Y)
+(continuous : continuous map)
+(sheaf_map : ∀ U : opens Y, G.F U → F.F (opens.comap continuous U))
+(sheaf_map_continuous : ∀ U : opens Y, _root_.continuous (sheaf_map U))
+
+
+def 𝒞.res {X : Type*} [topological_space X] (U : opens X) (F : 𝒞 X) : 𝒞 U :=
+sorry
 
 --definition affinoid_adic_space (A : Huber_pair) : 𝓥pre := sorry
 
