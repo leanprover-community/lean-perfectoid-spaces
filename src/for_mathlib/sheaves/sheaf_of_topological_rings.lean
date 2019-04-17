@@ -33,12 +33,13 @@ def presheaf_of_topological_rings.homeo {α : Type u} [topological_space α]
 
 structure sheaf_of_topological_rings (α : Type u) [T : topological_space α] :=
 (F        : presheaf_of_topological_rings α)
-(locality : locality F.to_presheaf)
-(gluing   : gluing F.to_presheaf)
-(homeo    : presheaf_of_topological_rings.homeo F)
+(locality : locality F.to_presheaf) -- two sections which are locally equal are equal
+(gluing   : gluing F.to_presheaf) -- a section can be defined locally
+(homeo    : presheaf_of_topological_rings.homeo F) -- topology on sections is compatible with glueing
 
 section sheaf_of_topological_rings
 
+-- still a bit unsure about which of these instances are good ideas. No diamond risks though
 instance sheaf_of_topological_rings.to_presheaf_of_topological_rings
   {α : Type u} [topological_space α] :
   has_coe (sheaf_of_rings α) (presheaf_of_rings α) :=
