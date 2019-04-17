@@ -1,4 +1,3 @@
-
 import data.nat.prime
 import algebra.group_power
 import topology.algebra.ring
@@ -6,6 +5,7 @@ import topology.opens
 
 import for_mathlib.prime
 import for_mathlib.is_cover
+import for_mathlib.sheaves.sheaf_of_topological_rings
 
 import continuous_valuations
 import Spa
@@ -16,8 +16,25 @@ universe u
 open nat function
 open topological_space
 
+instance meh {X : Type*} [topological_space X] (𝒪X : sheaf_of_topological_rings X) (U : opens X) :
+topological_space (𝒪X.F.F U) := presheaf_of_topological_rings.topological_space_sections 𝒪X.F U
+
+
+instance meh' {X : Type*} [topological_space X] (𝒪X : sheaf_of_topological_rings X) (U : opens X) :
+  topological_ring (𝒪X.F.F U) := presheaf_of_topological_rings.Ftop_ring 𝒪X.F U
+
+instance meh''' {X : Type*} [topological_space X] (𝒪X : sheaf_of_topological_rings X) (U : opens X) :
+  topological_add_group (𝒪X.F.F U) := topological_ring.to_topological_add_group (𝒪X.F.F U)
+
+instance meh'' {X : Type*} [topological_space X] (𝒪X : sheaf_of_topological_rings X) (U : opens X) :
+  uniform_space (𝒪X.F.F U) := topological_add_group.to_uniform_space (𝒪X.F.F U)
+
+/-- Wedhorn's category 𝒱 -/
 structure 𝒱 (X : Type*) [topological_space X] :=
-(𝒪X : sheaf of )
+(𝒪X : sheaf_of_topological_rings X)
+(complete : ∀ U : opens X, complete_space (𝒪X.F.F U))
+
+
 /-- An auxiliary category 𝒞.  -/
 structure 𝒞 (X : Type*) [topological_space X]
 -- :=
@@ -48,7 +65,7 @@ instance (A : Huber_pair) : preadic_space (Spa A) := sorry
 -- attribute [class] _root_.is_open
 
 instance preadic_space_restriction {X : Type*} [preadic_space X] {U : opens X} :
-  preadic_space U := sorry
+  preadic_space U.val := sorry
 
 -- unwritten
 class adic_space (X : Type*) extends preadic_space X

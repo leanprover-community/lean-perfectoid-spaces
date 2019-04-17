@@ -39,7 +39,7 @@ def pushforward.morphism (F G : presheaf α) (φ : F ⟶ G)
 
 end pushforward
 
--- f induces a functor PSh(β) ⟶ PSh(α). Simplified to the case when f is 'nice'.
+-- f induces a functor PSh(β) ⟶ PSh(α). Simplified to the case when f is open.
 
 section pullback
 

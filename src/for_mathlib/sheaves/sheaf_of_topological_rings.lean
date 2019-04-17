@@ -1,6 +1,7 @@
 /-
   Sheaf of topological rings.
 -/
+import algebra.pi_instances
 
 import for_mathlib.sheaves.sheaf_of_rings
 import for_mathlib.sheaves.presheaf_of_topological_rings
@@ -11,23 +12,44 @@ universes u
 -- that the map from 𝒪_X(U) to ∏𝒪_X(U_i) is a homeomorphism onto its image
 -- (and not just continuous).
 
+open topological_space presheaf_of_topological_rings
+
+def sheaf.gluing_map {α : Type u} [topological_space α]
+  (F : presheaf_of_topological_rings α) {U : opens α} (OC : covering U) :
+  F U → {s : Π i, F (OC.Uis i) //
+(∀ j k, res_to_inter_left F.to_presheaf (OC.Uis j) (OC.Uis k) (s j) =
+        res_to_inter_right F (OC.Uis j) (OC.Uis k) (s k))} :=
+λ S, ⟨λ i, F.res U (OC.Uis i) (subset_covering i) S, begin
+  intros,
+  unfold res_to_inter_right,
+  unfold res_to_inter_left,
+  rw ←F.to_presheaf.Hcomp',
+  exact F.to_presheaf.Hcomp' U (OC.Uis k) _ _ _ S,
+end⟩
+
+def presheaf_of_topological_rings.homeo {α : Type u} [topological_space α]
+  (F : presheaf_of_topological_rings α) :=
+∀ {U} (OC : covering U), is_open_map (sheaf.gluing_map F OC)
+
 structure sheaf_of_topological_rings (α : Type u) [T : topological_space α] :=
-(F        : sheaf_of_rings α)
+(F        : presheaf_of_topological_rings α)
 (locality : locality F.to_presheaf)
 (gluing   : gluing F.to_presheaf)
+(homeo    : presheaf_of_topological_rings.homeo F)
 
-section sheaf_of_rings
+section sheaf_of_topological_rings
 
-instance sheaf_of_rings.to_presheaf_of_rings {α : Type u} [topological_space α]
-: has_coe (sheaf_of_rings α) (presheaf_of_rings α) :=
+instance sheaf_of_topological_rings.to_presheaf_of_topological_rings
+  {α : Type u} [topological_space α] :
+  has_coe (sheaf_of_rings α) (presheaf_of_rings α) :=
 ⟨λ S, S.F⟩
 
-instance sheaf_of_rings.to_presheaf {α : Type u} [topological_space α]
-: has_coe (sheaf_of_rings α) (presheaf α) :=
+instance sheaf_of_topological_rings.to_presheaf {α : Type u} [topological_space α] :
+  has_coe (sheaf_of_topological_rings α) (presheaf α) :=
 ⟨λ S, S.F.to_presheaf⟩
 
-def is_sheaf_of_rings {α : Type u} [topological_space α] (F : presheaf_of_rings α) :=
-  locality F.to_presheaf
-∧ gluing F.to_presheaf
+def is_sheaf_of_topological_rings {α : Type u} [topological_space α]
+  (F : presheaf_of_topological_rings α) :=
+locality F.to_presheaf ∧ gluing F.to_presheaf ∧ presheaf_of_topological_rings.homeo F
 
-end sheaf_of_rings
+end sheaf_of_topological_rings

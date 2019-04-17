@@ -8,6 +8,8 @@ import for_mathlib.sheaves.presheaf_of_rings
 
 universes u v
 
+open topological_space
+
 -- Definition of a presheaf of topological rings.
 
 structure presheaf_of_topological_rings (α : Type u) [topological_space α]
@@ -16,9 +18,13 @@ extends presheaf_of_rings α :=
 (Ftop_ring : ∀ (U), topological_ring (F U))
 (res_continuous : ∀ (U V) (HVU : V ⊆ U), continuous (res U V HVU))
 
-instance {α : Type u} [topological_space α]
-: has_coe (presheaf_of_topological_rings α) (presheaf_of_rings α)
-:= ⟨λ F, F.to_presheaf_of_rings⟩
+instance presheaf_of_topological_rings.has_coe {α : Type u} [topological_space α] :
+  has_coe (presheaf_of_topological_rings α) (presheaf α) :=
+⟨λ F, F.to_presheaf⟩
+
+instance presheaf_of_topological_rings.topological_space_sections {α : Type u} [topological_space α]
+  (F : presheaf_of_topological_rings α) (U : opens α) : topological_space (F U) :=
+F.Ftop U
 
 attribute [instance] presheaf_of_topological_rings.Ftop
 attribute [instance] presheaf_of_topological_rings.Ftop_ring
