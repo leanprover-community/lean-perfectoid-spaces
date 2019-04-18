@@ -31,7 +31,6 @@ instance topological_add_group {X : Type*} [topological_space X] (𝒪X : sheaf_
   topological_add_group (𝒪X.F.F U) :=
 topological_ring.to_topological_add_group (𝒪X.F.F U)
 
---FIXME -- should be local
 def uniform_space {X : Type*} [topological_space X] (𝒪X : sheaf_of_topological_rings X)
   (U : opens X) : uniform_space (𝒪X.F.F U) :=
 topological_add_group.to_uniform_space (𝒪X.F.F U)

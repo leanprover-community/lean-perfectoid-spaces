@@ -10,6 +10,7 @@
 
 import valuation.localization_Huber
 import for_mathlib.sheaves.stalk_of_rings -- for defining valuations on stalks
+import valuation.field -- where KB just dumped valuation_on_completion
 
 variable {A : Huber_pair}
 
@@ -17,14 +18,31 @@ open topological_space valuation Spv Spa
 
 namespace Spa.r_o_d_completion
 
-noncomputable instance uniform_space' (v : Spa A) : uniform_space (valuation_field (out (v.val))) :=
+section scary_uniform_space_instance
+
+set_option class.instance_max_depth 100
+
+noncomputable def uniform_space' (v : Spa A) : uniform_space (valuation_field (out (v.val))) :=
 topological_add_group.to_uniform_space _
+
+local attribute [instance] uniform_space'
 
 instance (v : Spa A) : uniform_add_group (valuation_field (out (v.val))) := topological_add_group_is_uniform
 
 noncomputable def to_complete_valuation_field {r : rational_open_data A} {v : Spa A} (hv : v ∈ r.rational_open) :
 r_o_d_completion r → ring_completion (valuation_field (Spv.out v.1)) :=
 ring_completion.map (Huber_pair.rational_open_data.to_valuation_field hv)
+
+example {r : rational_open_data A} {v : Spa A} (hv : v ∈ r.rational_open) :
+is_ring_hom (Huber_pair.rational_open_data.to_valuation_field hv) := by apply_instance
+
+example {r : rational_open_data A} {v : Spa A} (hv : v ∈ r.rational_open) :
+is_ring_hom (Huber_pair.rational_open_data.to_valuation_field hv) := by apply_instance
+
+instance {r : rational_open_data A} {v : Spa A} (hv : v ∈ r.rational_open) :
+  is_ring_hom (to_complete_valuation_field hv) :=
+ring_completion.map_is_ring_hom (rational_open_data.localization r) (valuation_field (Spv.out v.1))
+  (Huber_pair.rational_open_data.to_valuation_field_cts hv)
 
 -- next we need to show that the completed maps to K_v-hat all commute with the
 -- restriction maps
@@ -43,6 +61,8 @@ begin
   convert ring_completion.map_comp uc1 _,
   apply uniform_continuous_of_continuous uc2,
 end
+
+end scary_uniform_space_instance
 
 end Spa.r_o_d_completion
 
@@ -78,12 +98,39 @@ classical.some_spec $ Spa.exists_rational_open_subset hv hA
 namespace Spa.presheaf
 variable (hA : topological_space.is_topological_basis (rational_basis A))
 
+section scary_uniform_space_instance
+
+set_option class.instance_max_depth 100
+
+noncomputable def uniform_space' (v : Spa A) : uniform_space (valuation_field (out (v.val))) :=
+topological_add_group.to_uniform_space _
+
+local attribute [instance] uniform_space'
+
 /-- The map from F(U) to K_v for v ∈ U -/
 noncomputable def to_valuation_field_completion {v : Spa A} {U : opens (Spa A)} (hv : v ∈ U)
   (hA : topological_space.is_topological_basis (rational_basis' A))
   (f : Spa.presheaf_value U) : ring_completion (valuation_field (Spv.out v.1)) :=
 Spa.r_o_d_completion.to_complete_valuation_field (Spa.mem_rational_open_subset_nhd hv hA) $
   f.1 $ Spa.rational_open_subset_nhd hv hA
+
+instance {v : Spa A}
+  (hA : topological_space.is_topological_basis (rational_basis' A))
+  {U : opens (Spa A)} (hv : v ∈ U) :
+  is_ring_hom (to_valuation_field_completion hv hA) := begin
+  delta to_valuation_field_completion,
+  let F := (λ (f : presheaf_value U),
+       Spa.r_o_d_completion.to_complete_valuation_field (Spa.mem_rational_open_subset_nhd hv hA)
+       (f.val (Spa.rational_open_subset_nhd hv hA))),
+  show is_ring_hom F,
+  have H : F = ((Spa.r_o_d_completion.to_complete_valuation_field (Spa.mem_rational_open_subset_nhd hv hA))
+    ∘ (λ (f : presheaf_value U), (f.val (Spa.rational_open_subset_nhd hv hA)))),
+    refl,
+  rw H,
+  refine is_ring_hom.comp _ _,
+end
+
+end scary_uniform_space_instance
 
 -- I need now to prove that if V ⊆ U then to_valuation_field_completion commutes with res
 
@@ -197,6 +244,12 @@ end
 
 local attribute [instance, priority 0] classical.prop_decidable
 
+section scary_uniform_space_instance
+
+set_option class.instance_max_depth 100
+
+local attribute [instance] uniform_space'
+
 noncomputable def stalk_to_valuation_field (x : Spa A)
   (hA : topological_space.is_topological_basis (rational_basis' A)) :
   stalk_of_rings (Spa.presheaf_of_topological_rings A).to_presheaf_of_rings x →
@@ -204,5 +257,17 @@ noncomputable def stalk_to_valuation_field (x : Spa A)
 to_stalk.rec (Spa.presheaf_of_topological_rings A).to_presheaf_of_rings x
   (ring_completion (valuation_field (Spv.out x.1))) (λ U hxU, to_valuation_field_completion hxU hA)
   (λ U V HUV r hxU, (to_valuation_field_completion_commutes hxU HUV hA r).symm)
+
+instance is_ring_hom' (x : Spa A) (hA : topological_space.is_topological_basis (rational_basis' A)) :
+  is_ring_hom (stalk_to_valuation_field x hA) := to_stalk.rec_is_ring_hom _ _ _ _ _
+
+noncomputable def stalk_valuation (x : Spa A)
+  (hA : topological_space.is_topological_basis (rational_basis' A)) :
+valuation (stalk_of_rings (Spa.presheaf_of_topological_rings A).to_presheaf_of_rings x)
+  (value_group (out x.1)) :=
+valuation.comap (valuation_on_completion (out x.1)) (stalk_to_valuation_field x hA)
+
+
+end scary_uniform_space_instance
 
 end Spa.presheaf

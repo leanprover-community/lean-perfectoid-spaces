@@ -715,6 +715,12 @@ begin
   apply topological_subring (presheaf_value_set U),
 end
 
+instance (U : opens (Spa A)) (r : rational_open_data_subsets U) :
+  is_ring_hom (λ (f : presheaf_value U), f.val r) :=
+{ map_one := rfl,
+  map_mul := λ _ _, rfl,
+  map_add := λ _ _, rfl }
+
 def presheaf_map {U V : opens (Spa A)} (hUV : U ≤ V) :
   presheaf_value V → presheaf_value U :=
 λ f, ⟨λ rd, f.val ⟨rd.val, set.subset.trans rd.2 hUV⟩,
