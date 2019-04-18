@@ -123,10 +123,29 @@ lemma comp (df : dense_embedding f) (dh : dense_embedding h) : dense_embedding (
   inj :=  function.injective_comp dh.inj df.inj,
   induced := λ a, by rw [← comap_comap_comp, dh.induced, df.induced] }
 
--- The next lemma is dubious. Maybe it needs more assumptions.
+-- density proof should be easier
 lemma of_comm_square (dg : dense_embedding g) (di : dense_embedding i)
   (dh : dense_embedding h) (H : h ∘ f = i ∘ g) : dense_embedding f :=
-sorry
+have dhf : dense_embedding (h ∘ f),
+  by {rw H, exact comp dg di},
+{ dense := begin
+    intro x,
+    have H := dhf.dense (h x),
+    rw mem_closure_iff_nhds at H ⊢,
+    intros t ht,
+    rw [←dh.induced x, mem_comap_sets] at ht,
+    rcases ht with ⟨u, hu, hinc⟩,
+    replace H := H u hu,
+    rw ne_empty_iff_exists_mem at H ⊢,
+    rcases H with ⟨v, hv1, a, rfl⟩,
+    use f a,
+    split, swap, apply mem_range_self,
+    apply mem_of_mem_of_subset _ hinc,
+    rwa mem_preimage_eq,
+  end ,
+  inj := λ a b H, dhf.inj (by {show h (f a) = _, rw H}),
+  induced := λ a, by rw [←dhf.induced a, ←@comap_comap_comp _ _ _ _ _ h, dh.induced] }
+
 end dense_embedding
 
 section
