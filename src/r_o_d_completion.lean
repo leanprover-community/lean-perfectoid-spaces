@@ -197,7 +197,8 @@ end
 
 local attribute [instance, priority 0] classical.prop_decidable
 
-noncomputable def stalk_to_valuation_field (x : Spa A) (hA : topological_space.is_topological_basis (rational_basis' A)):
+noncomputable def stalk_to_valuation_field (x : Spa A)
+  (hA : topological_space.is_topological_basis (rational_basis' A)) :
   stalk_of_rings (Spa.presheaf_of_topological_rings A).to_presheaf_of_rings x →
   ring_completion (valuation_field (Spv.out x.1)) :=
 to_stalk.rec (Spa.presheaf_of_topological_rings A).to_presheaf_of_rings x
