@@ -46,7 +46,14 @@ class non_discrete_group (G : Type*) [add_group G] [topological_space G] :=
 namespace non_discrete_group
 variables (G : Type*) [add_group G] [topological_space G] [non_discrete_group G]
 lemma zero_not_mem_nhds : ({0} : set G) ∉ nhds (0 : G) :=
-sorry
+begin
+  intro h,
+  rcases mem_nhds_sets_iff.1 h with ⟨U, U_sub, U_op, z_in⟩,
+  have : U = {0},
+    from subset.antisymm U_sub (singleton_subset_iff.2 z_in),
+  rw this at U_op,
+  exact zero_not_open _ U_op,
+end
 end non_discrete_group
 
 class completable_top_field [separated K]:=
@@ -75,7 +82,7 @@ begin
     { rw [h, mem_closure_iff_nhds],
       rintros U U_in,
       have : U ≠ {0},
-        from λ H, zero_not_mem_nhds K (H ▸ U_in),
+        from λ H, non_discrete_group.zero_not_mem_nhds K (H ▸ U_in),
       intro H,
       apply this,
       ext y,
