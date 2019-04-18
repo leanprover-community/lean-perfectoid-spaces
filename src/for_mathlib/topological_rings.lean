@@ -49,3 +49,9 @@ begin
   { refine ⟨⟨f '' I, embedding_open emb hf hI, by apply_instance⟩, ideal.subset_span⟩,
     apply_instance }
 end
+
+instance pi_topological_ring {I : Type*} {R : I → Type*} [∀ i, comm_ring (R i)] [∀ i, topological_space (R i)]
+  [h : ∀ i, topological_ring (R i)] : topological_ring (Π (i : I), R i) :=
+{ continuous_add := continuous_pi₂ (λ i, (h i).continuous_add),
+  continuous_mul := continuous_pi₂ (λ i, (h i).continuous_mul),
+  continuous_neg := continuous_pi₁ (λ i, (h i).continuous_neg) }

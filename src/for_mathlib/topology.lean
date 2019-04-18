@@ -148,18 +148,17 @@ begin
 end
 end
 
-def continuous_pi_prod {I : Type*} {R : I → Type*} {S : I → Type*} {T : I → Type*}
+-- tools for proving that a product of top rings is a top ring
+def continuous_pi₁ {I : Type*} {R : I → Type*} {S : I → Type*}
+  [∀ i, topological_space (R i)] [∀ i, topological_space (S i)]
+  {f : Π (i : I), (R i) → (S i)} (Hfi : ∀ i, continuous (f i)) :
+  continuous (λ rs i, f i (rs i) : (Π (i : I), R i) → Π (i : I), S i) :=
+continuous_pi (λ i, continuous.comp (continuous_apply i) (Hfi i))
+
+def continuous_pi₂ {I : Type*} {R : I → Type*} {S : I → Type*} {T : I → Type*}
   [∀ i, topological_space (R i)] [∀ i, topological_space (S i)] [∀ i, topological_space (T i)]
   {f : Π (i : I), (R i) × (S i) → (T i)} (Hfi : ∀ i, continuous (f i)) :
 continuous (λ rs i, f i ⟨rs.1 i, rs.2 i⟩ : (Π (i : I), R i) × (Π (i : I), S i) → Π (i : I), T i) :=
-begin
-  apply continuous_pi,
-  intro i,
-  have H : (λ (rs : (Π (i : I), R i) × Π (i : I), S i), f i (rs.fst i, rs.snd i)) =
-  (f i) ∘ (λ (rs : (Π (i : I), R i) × Π (i : I), S i), (⟨rs.fst i, rs.snd i⟩ : R i × S i)) := rfl,
-  rw H,
-  apply continuous.comp,
-    swap, exact Hfi i,
-  apply continuous.prod_mk,
-  sorry, sorry
-end
+continuous_pi (λ i, continuous.comp
+  (continuous.prod_mk (continuous.comp (continuous_fst) (continuous_apply i))
+    (continuous.comp (continuous_snd) (continuous_apply i))) (Hfi i))

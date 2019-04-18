@@ -9,6 +9,7 @@ import for_mathlib.data.set.finite
 import for_mathlib.uniform_space.ring -- need completions of rings plus UMP
 import for_mathlib.group -- some stupid lemma about units
 import for_mathlib.sheaves.presheaf_of_topological_rings
+import for_mathlib.topological_rings -- subring of a top ring
 
 universes u₁ u₂ u₃
 
@@ -656,11 +657,17 @@ def presheaf_value (U : opens (Spa A)) :=
    ∀ (rd1 rd2 : rational_open_data_subsets U) (h : rd1.1 ≤ rd2.1),
      r_o_d_completion.restriction h (f rd1) = (f rd2)} -- agrees on overlaps
 
+def presheaf_value_set (U : opens (Spa A)) :=
+{f : Π (rd : rational_open_data_subsets U), r_o_d_completion rd.1 |
+   ∀ (rd1 rd2 : rational_open_data_subsets U) (h : rd1.1 ≤ rd2.1),
+     r_o_d_completion.restriction h (f rd1) = (f rd2)}
+
 -- We need to check it's a ring
-noncomputable instance presheaf_comm_ring (U : opens (Spa A)) : comm_ring (presheaf_value U) :=
+
+
+instance presheaf_subring (U : opens (Spa A)) : is_subring (presheaf_value_set U) :=
 begin
-  apply @subset.comm_ring _ pi.comm_ring _ _, apply_instance,
-  refine {..}, -- now five goals
+refine {..},
   { -- zero_mem
     intros rd₁ rd₂ h,
     exact is_ring_hom.map_zero _ },
@@ -684,19 +691,29 @@ begin
     rw [ha _ _ h, hb _ _ h] }
 end
 
+noncomputable instance presheaf_comm_ring (U : opens (Spa A)) : comm_ring (presheaf_value U) :=
+begin
+  apply @subset.comm_ring _ pi.comm_ring _ _, apply_instance,
+  exact Spa.presheaf_subring U
+end
+
 instance presheaf_top_space (U : opens (Spa A)) : topological_space (presheaf_value U) :=
 by unfold presheaf_value; apply_instance
 
--- we need to check it's a topological ring!
-instance presheaf_top_add_monoid (U : opens (Spa A)) : topological_add_monoid (presheaf_value U) :=
-{ continuous_add := sorry,
-..Spa.presheaf_top_space U, ..Spa.presheaf_comm_ring U}
+example (U : opens (Spa A)) :
+  topological_ring (Π (rd : rational_open_data_subsets U), r_o_d_completion (rd.1)) :=
+by apply_instance
 
+-- tactic mode because I can't get Lean to behave. Note: switching to tactic
+-- mode indicated the problem was that Lean was not finding the two instances I flag
+-- with haveI and letI; probably now I know this one could try to go back into term mode.
 instance presheaf_top_ring (U : opens (Spa A)) : topological_ring (presheaf_value U) :=
-{ continuous_mul := sorry,
-  continuous_neg := sorry,
-  ..Spa.presheaf_top_add_monoid U,
-..Spa.presheaf_top_space U, ..Spa.presheaf_comm_ring U}
+begin
+  haveI := Spa.presheaf_subring U,
+  letI : topological_ring (Π (rd : rational_open_data_subsets U), r_o_d_completion (rd.1)) :=
+    by apply_instance,
+  apply topological_subring (presheaf_value_set U),
+end
 
 def presheaf_map {U V : opens (Spa A)} (hUV : U ≤ V) :
   presheaf_value V → presheaf_value U :=
@@ -723,7 +740,8 @@ is_ring_hom (presheaf_map hUV) :=
   map_add := λ _ _, rfl }
 
 def presheaf_map_cts {U V : opens (Spa A)} (hUV : U ≤ V) :
-continuous (presheaf_map hUV) := sorry
+  continuous (presheaf_map hUV) :=
+continuous_subtype_mk _ (continuous_pi (λ i, (continuous.comp (continuous_subtype_val) (continuous_apply _))))
 
 noncomputable def presheaf_of_topological_rings : presheaf_of_topological_rings (Spa A) :=
 { F := presheaf_value,
