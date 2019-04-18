@@ -280,6 +280,6 @@ begin
     exact valuation.unit_map.ext v _ _ (valuation.map_eq_of_sub_lt v vy) },
   exact continuous_extend_of_open_kernel de key,
 end
-#check (units_completion_dense_embedding v).extend v.unit_map
-#check continuous_extend_of_open_kernel
+--#check (units_completion_dense_embedding v).extend v.unit_map
+--#check continuous_extend_of_open_kernel
 end
