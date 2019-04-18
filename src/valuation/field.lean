@@ -302,6 +302,6 @@ local attribute [instance] valuation_field.uniform_space
 instance (v : valuation R Γ) : ring (ring_completion (valuation_field v)) := sorry
 
 def valuation_on_completion {R : Type*} [comm_ring R] (v : valuation R Γ) :
-  valuation (ring_completion (valuation.valuation_field v)) Γ := sorry
+  valuation (ring_completion (valuation.valuation_field v)) (value_group v) := sorry
 
 end -- section
