@@ -18,18 +18,23 @@ open topological_space
 
 namespace sheaf_of_topological_rings
 
-instance topological_space {X : Type*} [topological_space X] (𝒪X : sheaf_of_topological_rings X) (U : opens X) :
-topological_space (𝒪X.F.F U) := presheaf_of_topological_rings.topological_space_sections 𝒪X.F U
+instance topological_space {X : Type*} [topological_space X] (𝒪X : sheaf_of_topological_rings X)
+  (U : opens X) :
+  topological_space (𝒪X.F.F U) := presheaf_of_topological_rings.topological_space_sections 𝒪X.F U
 
-instance topological_ring {X : Type*} [topological_space X] (𝒪X : sheaf_of_topological_rings X) (U : opens X) :
+instance topological_ring {X : Type*} [topological_space X] (𝒪X : sheaf_of_topological_rings X)
+  (U : opens X) :
   topological_ring (𝒪X.F.F U) := presheaf_of_topological_rings.Ftop_ring 𝒪X.F U
 
-instance topological_add_group {X : Type*} [topological_space X] (𝒪X : sheaf_of_topological_rings X) (U : opens X) :
-  topological_add_group (𝒪X.F.F U) := topological_ring.to_topological_add_group (𝒪X.F.F U)
+instance topological_add_group {X : Type*} [topological_space X] (𝒪X : sheaf_of_topological_rings X)
+  (U : opens X) :
+  topological_add_group (𝒪X.F.F U) :=
+topological_ring.to_topological_add_group (𝒪X.F.F U)
 
 --FIXME -- should be local
-def uniform_space {X : Type*} [topological_space X] (𝒪X : sheaf_of_topological_rings X) (U : opens X) :
-  uniform_space (𝒪X.F.F U) := topological_add_group.to_uniform_space (𝒪X.F.F U)
+def uniform_space {X : Type*} [topological_space X] (𝒪X : sheaf_of_topological_rings X)
+  (U : opens X) : uniform_space (𝒪X.F.F U) :=
+topological_add_group.to_uniform_space (𝒪X.F.F U)
 
 end sheaf_of_topological_rings
 
