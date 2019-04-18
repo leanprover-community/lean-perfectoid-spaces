@@ -647,7 +647,7 @@ lemma restriction_is_uniform_continuous {r1 r2 : rational_open_data A} (h : r1 �
 uniform_continuous (r_o_d_completion.restriction h) :=
 ring_completion.map_uniform_continuous $ localization_map_is_uniform_continuous h
 
-end r_o_d_completion
+end r_o_d_completion -- namespace
 
 open topological_space
 
@@ -743,6 +743,7 @@ def presheaf_map_cts {U V : opens (Spa A)} (hUV : U ≤ V) :
   continuous (presheaf_map hUV) :=
 continuous_subtype_mk _ (continuous_pi (λ i, (continuous.comp (continuous_subtype_val) (continuous_apply _))))
 
+variable (A)
 noncomputable def presheaf_of_topological_rings : presheaf_of_topological_rings (Spa A) :=
 { F := presheaf_value,
   res := λ U V, presheaf_map,
@@ -756,7 +757,7 @@ noncomputable def presheaf_of_topological_rings : presheaf_of_topological_rings 
 }
 
 
-end Spa
+end Spa -- namespace I think
 
 -- old notes
 
