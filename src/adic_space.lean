@@ -6,10 +6,9 @@ import topology.opens
 import for_mathlib.prime
 import for_mathlib.is_cover
 import for_mathlib.sheaves.sheaf_of_topological_rings
-import for_mathlib.sheaves.stalk_of_rings
 
 import continuous_valuations
-import Spa
+import r_o_d_completion
 import Huber_pair
 
 universe u

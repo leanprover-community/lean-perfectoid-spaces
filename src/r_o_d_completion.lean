@@ -9,6 +9,7 @@
 -- we need this for the valuations on the stalks.
 
 import valuation.localization_Huber
+import for_mathlib.sheaves.stalk_of_rings -- for defining valuations on stalks
 
 variable {A : Huber_pair}
 
@@ -192,5 +193,15 @@ begin
   refl,
 end
 
+-- now we can define the valuation on the stalks
+
+local attribute [instance, priority 0] classical.prop_decidable
+
+noncomputable def stalk_to_valuation_field (x : Spa A) (hA : topological_space.is_topological_basis (rational_basis' A)):
+  stalk_of_rings (Spa.presheaf_of_topological_rings A).to_presheaf_of_rings x →
+  ring_completion (valuation_field (Spv.out x.1)) :=
+to_stalk.rec (Spa.presheaf_of_topological_rings A).to_presheaf_of_rings x
+  (ring_completion (valuation_field (Spv.out x.1))) (λ U hxU, to_valuation_field_completion hxU hA)
+  (λ U V HUV r hxU, (to_valuation_field_completion_commutes hxU HUV hA r).symm)
 
 end Spa.presheaf
