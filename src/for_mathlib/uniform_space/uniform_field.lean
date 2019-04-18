@@ -44,6 +44,7 @@ class non_discrete_group (G : Type*) [add_group G] [topological_space G] :=
 (zero_not_open : ¬ is_open ({0} : set G))
 
 namespace non_discrete_group
+open function
 variables (G : Type*) [add_group G] [topological_space G] [non_discrete_group G]
 lemma zero_not_mem_nhds : ({0} : set G) ∉ nhds (0 : G) :=
 begin
@@ -54,7 +55,46 @@ begin
   rw this at U_op,
   exact zero_not_open _ U_op,
 end
+
+-- TODO write an efficient proof instead of being upset about trivialities
+lemma dense_compl_zero : ∀ (x : G), x ∈ closure (-({0} : set G)) :=
+begin
+  intro x,
+  by_cases h : x = 0,
+  { rw [h, mem_closure_iff_nhds],
+    rintros U U_in,
+    have : U ≠ {0},
+      from λ H, non_discrete_group.zero_not_mem_nhds G (H ▸ U_in),
+    intro H,
+    apply this,
+    ext y,
+    split ; intro hy,
+    { by_contradiction h',
+      have : y ∈ U ∩ -{0}, from ⟨hy, h'⟩,
+      rwa H at this },
+    { rw mem_singleton_iff at hy,
+      rw hy,
+      rcases mem_nhds_sets_iff.1 U_in with ⟨_, H, _, H'⟩,
+      exact H H' } },
+  { have : x ∈ -({0} : set G),
+    { rw mem_compl_singleton_iff,
+      exact h },
+    exact subset_closure this },
+end
+
+attribute [to_additive is_add_group_hom.trivial_ker_of_inj] is_group_hom.trivial_ker_of_inj
+
+variables {G} {H : Type*} [add_group H] [topological_space H]
+lemma of_non_discrete_inj_hom {f : G → H} [is_add_group_hom f] (inj : injective f)
+  (cont : continuous f) : non_discrete_group H :=
+⟨assume H,
+  have k : f ⁻¹' {0} = {0}, from is_add_group_hom.trivial_ker_of_inj f inj,
+  zero_not_open G (k ▸ (cont _ H))⟩
 end non_discrete_group
+
+instance ring_completion.non_discrete [non_discrete_group K]: non_discrete_group (hat K) :=
+have ue : uniform_embedding coe, from uniform_embedding_coe K,
+non_discrete_group.of_non_discrete_inj_hom ue.1 ue.uniform_continuous.continuous
 
 class completable_top_field [separated K]:=
 (nice : ∀ F : filter (units K), cauchy_of units.val F → zero_not_adh F →
@@ -72,51 +112,48 @@ begin
     simp [units.mk0] }
 end
 
--- TODO write an efficient proof instead of being upset about trivialities
 lemma de_units_val [non_discrete_group K] : dense_embedding (units.val : units K → K) :=
 begin
   constructor,
   { rw range_units_val K,
-    intro x,
-    by_cases h : x = 0,
-    { rw [h, mem_closure_iff_nhds],
-      rintros U U_in,
-      have : U ≠ {0},
-        from λ H, non_discrete_group.zero_not_mem_nhds K (H ▸ U_in),
-      intro H,
-      apply this,
-      ext y,
-      split ; intro hy,
-      { by_contradiction h',
-        have : y ∈ U ∩ -{0}, from ⟨hy, h'⟩,
-        rwa H at this },
-      { rw mem_singleton_iff at hy,
-        rw hy,
-        rcases mem_nhds_sets_iff.1 U_in with ⟨_, H, _, H'⟩,
-        exact H H' } },
-    { have : x ∈ -({0} : set K),
-      { rw mem_compl_singleton_iff,
-        exact h },
-      exact subset_closure this } },
+    apply non_discrete_group.dense_compl_zero },
   { intros x y h,
     ext,
     exact h },
   { intros a, rw nhds_induced },
 end
 
-lemma de_hat_star : dense_embedding (subtype.val : hat_star K → hat K) :=
-sorry
+lemma de_hat_star [non_discrete_group K]: dense_embedding (subtype.val : hat_star K → hat K) :=
+begin
+  constructor,
+  { rw subtype.val_range,
+    intro x,
+    convert non_discrete_group.dense_compl_zero (hat K) x,
+    ext,
+    rw mem_compl_singleton_iff,
+    refl },
+  { intros x y h,
+    exact subtype.ext.2 h },
+  { intros a, rw nhds_induced },
+end
 
-lemma de_coe_units : dense_embedding (coe_units K : units K → hat_star K) :=
-sorry
+lemma de_coe_units [non_discrete_group K]: dense_embedding (coe_units K : units K → hat_star K) :=
+begin
+  have ue : uniform_embedding coe, from uniform_embedding_coe K,
+  have := ue.dense_embedding (ring_completion.dense_coe K),
+  apply dense_embedding.of_comm_square (de_units_val K) this (de_hat_star K),
+  ext, simp [coe_units]
+end
 
 
 lemma range_units_hat_star : range (subtype.val : hat_star K → hat K) = -{0} :=
 by { rw subtype.val_range, ext, rw mem_compl_singleton_iff, refl }
 
+variables [non_discrete_group K]
+
 def inv_hat_star : hat_star K → hat_star K := (de_coe_units K).extend $ coe_units K ∘ (λ x, x⁻¹)
 
-lemma continuous_inv_hat_star [non_discrete_group K] [completable_top_field K]: continuous (inv_hat_star K) :=
+lemma continuous_inv_hat_star [completable_top_field K]: continuous (inv_hat_star K) :=
 begin
   let dkX := de_coe_units K, -- dense embedding K* → hat K*
   let diX := de_units_val K, -- dense embedding K* → K

@@ -237,6 +237,27 @@ by dunfold ring_completion ; apply_instance
 
 instance : separated (ring_completion α) :=
 by dunfold ring_completion ; apply_instance
+
+lemma uniform_space.completion.dense' : ∀ x : completion α, x ∈ closure (range (coe : α → completion α)) :=
+by { rw ← eq_univ_iff_forall, exact uniform_space.completion.dense }
+
+lemma sep_quot.surjective_mk : ∀ x : sep_quot α, ∃ a : α, sep_quot.mk a = x :=
+quotient.exists_rep
+
+
+lemma sep_quot.range_mk : range (sep_quot.mk : α → sep_quot α) = univ :=
+by { rw eq_univ_iff_forall, exact sep_quot.surjective_mk α }
+
+lemma ring_completion.dense_coe : ∀ x, x ∈ closure (range (coe : α → ring_completion α)) :=
+begin
+  intro x,
+  let f := (quotient.mk ∘ Cauchy.pure_cauchy : sep_quot α → ring_completion α),
+  let g := (sep_quot.mk : α → sep_quot α),
+  change x ∈ closure (range $ f ∘ g),
+  rw show range (f ∘ g) = range f,
+    by rw [range_comp, sep_quot.range_mk α, image_univ],
+  exact  uniform_space.completion.dense' (sep_quot α) x,
+end
 end ring_completion
 
 namespace ring_completion
