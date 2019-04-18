@@ -283,3 +283,25 @@ end
 --#check (units_completion_dense_embedding v).extend v.unit_map
 --#check continuous_extend_of_open_kernel
 end
+
+-- Kevin has added the thing he needs
+
+section -- paranoid about this uniform space instance
+
+variables {R : Type*} [comm_ring R]
+
+open valuation
+
+-- ring_with_zero_nhd (valuation_field v) is in valuation/topology.lean
+
+noncomputable def valuation_field.uniform_space (v : valuation R Γ) :
+uniform_space (valuation_field v) := topological_add_group.to_uniform_space _
+
+local attribute [instance] valuation_field.uniform_space
+
+instance (v : valuation R Γ) : ring (ring_completion (valuation_field v)) := sorry
+
+def valuation_on_completion {R : Type*} [comm_ring R] (v : valuation R Γ) :
+  valuation (ring_completion (valuation.valuation_field v)) Γ := sorry
+
+end -- section
