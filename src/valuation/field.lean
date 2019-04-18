@@ -299,7 +299,12 @@ uniform_space (valuation_field v) := topological_add_group.to_uniform_space _
 
 local attribute [instance] valuation_field.uniform_space
 
-instance (v : valuation R Γ) : ring (ring_completion (valuation_field v)) := sorry
+def valuation_field.uniform_add_group (v : valuation R Γ) : uniform_add_group (valuation_field v) :=
+topological_add_group_is_uniform
+
+local attribute [instance]  valuation_field.uniform_add_group
+
+noncomputable example (v : valuation R Γ) : comm_ring (ring_completion (valuation_field v)) := by apply_instance
 
 def valuation_on_completion {R : Type*} [comm_ring R] (v : valuation R Γ) :
   valuation (ring_completion (valuation.valuation_field v)) (value_group v) := sorry
