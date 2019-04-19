@@ -356,7 +356,7 @@ variables (hg : ∀ U V (H : U ⊆ V) r, ∀ (h : x ∈ U), G U h (F.res V U H r
 def to_stalk (U : opens α) (HxU : x ∈ U) (s : F.F U) : stalk_of_rings F x
 := ⟦{U := U, HxU := HxU, s := s}⟧
 
-lemma to_stalk.is_ring_hom (U) (HxU) : is_ring_hom (to_stalk F x U HxU) :=
+instance to_stalk.is_ring_hom (U) (HxU) : is_ring_hom (to_stalk F x U HxU) :=
 { map_one := quotient.sound $ ⟨U, HxU, set.subset.refl _, λ x Hx, trivial,
     begin
         erw (F.res_is_ring_hom _ _ _).map_one,

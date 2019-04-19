@@ -14,3 +14,13 @@ def functor.is_open_map.map (h : is_open_map f) : opens α ⥤ opens β :=
   map := λ X Y hXY, ⟨⟨set.mono_image  hXY.1.1⟩⟩,
   map_id' := λ _, rfl,
   map_comp' := λ _ _ _ _ _, rfl }
+
+def continuous.comap {X : Type*} [topological_space X] {Y : Type*} [topological_space Y]
+  {f : X → Y} (hf : continuous f) (V : opens Y) : opens X := ⟨f ⁻¹' V.1, hf V.1 V.2⟩
+
+def continuous.comap_id {X : Type*} [topological_space X] (U : opens X) :
+continuous.comap (continuous_id) U = U := by ext; refl
+
+def continuous.comap_mono {X : Type*} [topological_space X] {Y : Type*} [topological_space Y]
+  {f : X → Y} (hf : continuous f) {V W : opens Y} (hVW : V ⊆ W) : hf.comap V ⊆ hf.comap W :=
+λ _ h, hVW h
