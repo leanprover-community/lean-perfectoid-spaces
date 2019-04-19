@@ -103,9 +103,9 @@ structure presheaf_of_topological_rings.f_hom
 (presheaf_f_flat : ∀ V W : opens Y, ∀ (hWV : W ⊆ V),
   ∀ s : G V, F.res _ _ (hf.comap_mono hWV) (f_flat V s) = f_flat W (G.res V W hWV s))
 
-def presheaf_of_topological_rings.f_hom.to_presheaf_of_rings.f_hom
+def presheaf_of_topological_rings.f_hom.to_presheaf_of_rings_f_hom
   {X : Type*} [topological_space X] {Y : Type*} [topological_space Y]
-  (F : presheaf_of_topological_rings X) (G : presheaf_of_topological_rings Y)
+  {F : presheaf_of_topological_rings X} {G : presheaf_of_topological_rings Y}
   (f : presheaf_of_topological_rings.f_hom F G) :
   presheaf_of_rings.f_hom F.to_presheaf_of_rings G.to_presheaf_of_rings :=
 { ..f}
@@ -113,16 +113,25 @@ def presheaf_of_topological_rings.f_hom.to_presheaf_of_rings.f_hom
 -- need a construction `stalk_map` attached to an f-hom; should follow from UMP
 -- Need this before we embark on 𝒞.map
 
-def stalk_map : Type := sorry
+--set_option pp.all true
+local attribute [instance, priority 0] classical.prop_decidable
+noncomputable def stalk_map {X : Type*} [topological_space X] {Y : Type*} [topological_space Y]
+  {F : presheaf_of_rings X} {G : presheaf_of_rings Y} (f : presheaf_of_rings.f_hom F G)
+  (x : X) : stalk_of_rings G (f.f x) → stalk_of_rings F x :=
+to_stalk.rec G (f.f x) (stalk_of_rings F x)
+  (λ V hfx s, ⟦⟨f.hf.comap V, hfx, f.f_flat V s⟩⟧)
+  (λ V W H r hfx, quotient.sound begin
+    use [f.hf.comap V, hfx, set.subset.refl _, f.hf.comap_mono H],
+    erw F.to_presheaf.Hid,
+    symmetry,
+    apply f.presheaf_f_flat
+  end )
 
--- not finished -- need maps on stalks first
+-- not right -- just committing before reboot
 structure 𝒞.map {X : Type*} [topological_space X] {Y : Type*} [topological_space Y]
   (F : 𝒞 X) (G : 𝒞 Y) :=
-(map : X → Y)
-(continuous : continuous map)
-(sheaf_map : ∀ U : opens Y, G.F U → F.F (opens.comap continuous U))
-(sheaf_map_continuous : ∀ U : opens Y, _root_.continuous (sheaf_map U))
-
+(fmap : presheaf_of_topological_rings.f_hom F.F G.F)
+(stalk : ∀ x : X, stalk_map fmap.to_presheaf_of_rings_f_hom x 0 = 0)
 
 def 𝒞.res {X : Type*} [topological_space X] (U : opens X) (F : 𝒞 X) : 𝒞 U :=
 sorry
