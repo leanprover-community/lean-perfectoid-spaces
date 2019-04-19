@@ -37,8 +37,21 @@ instance : zero_ne_one_class (hat K) :=
 { zero_ne_one := assume h, zero_ne_one $ (uniform_embedding_coe K).1 h,
   ..ring_completion.comm_ring K }
 
+variables {K}
+lemma hat_units_ne_zero (x : units $ hat K) : x.val ≠ 0 :=
+assume h, have zero_one : (0 : hat K) = 1 := zero_mul x.inv ▸ (h ▸ x.val_inv), zero_ne_one zero_one
+variables (K)
+
 def coe_units : units K → hat_star K :=
 λ x, ⟨x.val, λ h, units.ne_zero x $ (uniform_embedding_coe K).1 h⟩
+
+@[simp]
+lemma mul_coe_units (x y : units K) : (coe_units K x).val * (coe_units K y).val = (coe_units K $ x*y).val :=
+by { simp only [coe_units], rw ← (ring_completion.coe_is_ring_hom K).map_mul, refl }
+
+@[simp]
+lemma coe_units_one :(coe_units K 1).val = 1 :=
+by simpa [coe_units]
 
 class non_discrete_group (G : Type*) [add_group G] [topological_space G] :=
 (zero_not_open : ¬ is_open ({0} : set G))
@@ -96,10 +109,6 @@ instance ring_completion.non_discrete [non_discrete_group K]: non_discrete_group
 have ue : uniform_embedding coe, from uniform_embedding_coe K,
 non_discrete_group.of_non_discrete_inj_hom ue.1 ue.uniform_continuous.continuous
 
-class completable_top_field [separated K]:=
-(nice : ∀ F : filter (units K), cauchy_of units.val F → zero_not_adh F →
-  cauchy_of units.val (map (λ x, x⁻¹) F) ∧ zero_not_adh (map (λ x, x⁻¹) F))
-
 lemma range_units_val : range (units.val : units K → K) = -{0} :=
 begin
   ext x,
@@ -153,7 +162,17 @@ variables [non_discrete_group K]
 
 def inv_hat_star : hat_star K → hat_star K := (de_coe_units K).extend $ coe_units K ∘ (λ x, x⁻¹)
 
-lemma continuous_inv_hat_star [completable_top_field K]: continuous (inv_hat_star K) :=
+@[simp]
+lemma inv_hat_star_coe_units (x : units K) : inv_hat_star K (coe_units K x) = coe_units K x⁻¹ :=
+(de_coe_units K).extend_e_eq x
+
+class completable_top_field [separated K]:=
+(nice : ∀ F : filter (units K), cauchy_of units.val F → zero_not_adh F →
+  cauchy_of units.val (map (λ x, x⁻¹) F) ∧ zero_not_adh (map (λ x, x⁻¹) F))
+
+variables [completable_top_field K]
+
+lemma continuous_inv_hat_star : continuous (inv_hat_star K) :=
 begin
   let dkX := de_coe_units K, -- dense embedding K* → hat K*
   let diX := de_units_val K, -- dense embedding K* → K
@@ -182,15 +201,21 @@ begin
 end
 
 lemma inv_hat_is_inv : ∀ x : hat_star K, x.val*(inv_hat_star K x).val = 1 :=
-sorry
+begin
+  have cl : is_closed {x : hat_star K | x.val*(inv_hat_star K x).val = 1},
+    from is_closed_eq
+      (continuous_mul continuous_subtype_val ((continuous_inv_hat_star K).comp continuous_subtype_val))
+      continuous_const,
+  have dense : closure (range (coe_units K)) = univ,
+    from eq_univ_of_forall (de_coe_units K).dense,
+  simp [is_closed_property dense cl]
+end
 
 /-- homeomorphim between non-zero elements of hat K and units of hat K -/
 def hat_star_is_units : hat_star K ≃ₜ units (hat K) :=
 { to_fun := λ x, ⟨x.val, (inv_hat_star K x).val,
       inv_hat_is_inv K x, mul_comm x.val (inv_hat_star K x).val ▸ (inv_hat_is_inv K x)⟩ ,
-  inv_fun := λ x, ⟨x.val, assume h,
-                          have (0 : hat K) = 1 := zero_mul x.inv ▸ (h ▸ x.val_inv),
-                          zero_ne_one this⟩,
+  inv_fun := λ x, ⟨x.val, hat_units_ne_zero x⟩,
   left_inv := λ x, by simp,
   right_inv := λ x, units.ext rfl,
   continuous_to_fun := continuous_induced_rng continuous_induced_dom,
@@ -203,7 +228,13 @@ def hat_inv (x : hat K) : hat K := if h : x = 0 then 0 else
 subtype.val (inv_hat_star K ⟨x , h⟩)
 
 lemma invinv : (λ (a : units (hat K)), a⁻¹) = ψ ∘ (inv_hat_star K) ∘ ψ⁻¹ :=
-sorry
+begin
+  ext x,
+  congr,
+  apply mul_eq_one_iff_inv_eq.1,
+  apply units.ext,
+  exact inv_hat_is_inv K ⟨x.val, hat_units_ne_zero x⟩,
+end
 
 variables (K)
 
@@ -213,9 +244,12 @@ by simp [hat_inv]
 instance hat_has_inv : has_inv (hat K) := ⟨hat_inv K⟩
 
 lemma hat_mul_inv : ∀ a : hat K, a ≠ 0 → a * a⁻¹ = 1 :=
-sorry
+begin
+  intros a a_ne,
+  change a*(hat_inv K a) = 1,
+  simp [hat_inv, a_ne, inv_hat_is_inv K ⟨a, a_ne⟩]
+end
 
-example : topological_space (units $ hat K) := by apply_instance
 instance : discrete_field (hat K) :=
 { inv := hat_inv K,
   zero_ne_one := assume h, discrete_field.zero_ne_one K ((uniform_embedding_coe K).1 h),
@@ -230,7 +264,7 @@ instance : discrete_field (hat K) :=
 -- TODO: investigate this issue
 instance help_tcs : topological_space (units $ hat K) := topological_ring.units_topological_space _
 
-instance [non_discrete_group K] [completable_top_field K] : topological_division_ring (hat K) :=
+instance : topological_division_ring (hat K) :=
 { continuous_inv :=
     begin
       rw invinv K,
