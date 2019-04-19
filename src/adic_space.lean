@@ -59,20 +59,56 @@ def 𝒱.to_𝒞 {X : Type*} [topological_space X] (ℱ : 𝒱 X) : 𝒞 X :=
 { F := ℱ.ℱ.to_presheaf_of_topological_rings,
   valuation := ℱ.valuation}
 
-/- todo for this def:
-Term of type 𝒞 for each Huber pair
-  need continuity of + and * and - on sections
-  need continuity of projection maps
--/
-def 𝒞.Spa (A : Huber_pair) : 𝒞 (Spa A) := sorry
+noncomputable def 𝒞.Spa (A : Huber_pair)
+  (hA : topological_space.is_topological_basis (rational_basis' A)) :
+  𝒞 (Spa A) :=
+{ F := Spa.presheaf_of_topological_rings A,
+  valuation := λ x, Spv.mk (Spa.presheaf.stalk_valuation x hA) }
 
 /- Remainder of this file:
 
-morphisms and isomorphisms in 𝒞
+morphisms and isomorphisms in 𝒞.
 Open set in X -> induced 𝒞 structure
 definition of adic space
 
+A morphism in 𝒞 is a map of top spaces, an f-map of presheaves, such that the induced
+map on the stalks pulls one valuation back to the other.
 -/
+
+def continuous.comap {X : Type*} [topological_space X] {Y : Type*} [topological_space Y]
+  {f : X → Y} (hf : continuous f) (V : opens Y) : opens X := ⟨f ⁻¹' V.1, hf V.1 V.2⟩
+
+def continuous.comap_mono {X : Type*} [topological_space X] {Y : Type*} [topological_space Y]
+  {f : X → Y} (hf : continuous f) {V W : opens Y} (hVW : V ⊆ W) : hf.comap V ⊆ hf.comap W :=
+λ _ h, hVW h
+
+
+
+structure presheaf_of_rings.f_hom
+  {X : Type*} [topological_space X] {Y : Type*} [topological_space Y]
+  (F : presheaf_of_rings X) (G : presheaf_of_rings Y) :=
+(f : X → Y)
+(hf : continuous f)
+(f_flat : ∀ V : opens Y, G V → F (hf.comap V))
+(presheaf_f_flat : ∀ V W : opens Y, ∀ (hWV : W ⊆ V),
+  ∀ s : G V, F.res _ _ (hf.comap_mono hWV) (f_flat V s) = f_flat W (G.res V W hWV s))
+
+structure presheaf_of_topological_rings.f_hom
+  {X : Type*} [topological_space X] {Y : Type*} [topological_space Y]
+  (F : presheaf_of_topological_rings X) (G : presheaf_of_topological_rings Y) :=
+(f : X → Y)
+(hf : continuous f)
+(f_flat : ∀ V : opens Y, G V → F (hf.comap V))
+(cont_f_flat : ∀ V : opens Y, continuous (f_flat V))
+(presheaf_f_flat : ∀ V W : opens Y, ∀ (hWV : W ⊆ V),
+  ∀ s : G V, F.res _ _ (hf.comap_mono hWV) (f_flat V s) = f_flat W (G.res V W hWV s))
+
+def presheaf_of_topological_rings.f_hom.to_presheaf_of_rings.f_hom
+  {X : Type*} [topological_space X] {Y : Type*} [topological_space Y]
+  (F : presheaf_of_topological_rings X) (G : presheaf_of_topological_rings Y)
+  (f : presheaf_of_topological_rings.f_hom F G) :
+  presheaf_of_rings.f_hom F.to_presheaf_of_rings G.to_presheaf_of_rings :=
+{ ..f}
 
 -- need a construction `stalk_map` attached to an f-hom; should follow from UMP
 -- Need this before we embark on 𝒞.map
