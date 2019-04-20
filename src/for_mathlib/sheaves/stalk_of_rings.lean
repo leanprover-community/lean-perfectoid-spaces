@@ -390,7 +390,7 @@ theorem to_stalk.rec_to_stalk (U HxU s)
 
 include HG
 
-lemma to_stalk.rec_is_ring_hom : is_ring_hom (to_stalk.rec F x S G hg) :=
+instance to_stalk.rec_is_ring_hom : is_ring_hom (to_stalk.rec F x S G hg) :=
 { map_one := (HG opens.univ (set.mem_univ x)).map_one ▸ rfl,
   map_add := λ y z, quotient.induction_on₂' y z $ λ ⟨U, HxU, s⟩ ⟨V, HxV, t⟩,
     begin
