@@ -367,17 +367,22 @@ def presheaf_of_rings.restrict {X : Type*} [topological_space X] (U : opens X)
     res_is_ring_hom := λ V W HWV, G.res_is_ring_hom (topological_space.opens.map U V)
       (topological_space.opens.map U W) (topological_space.opens.map_mono HWV) }
 
+noncomputable def presheaf_of_rings.restrict_stalk_map {X : Type*} [topological_space X] (U : opens X)
+  (G : presheaf_of_rings X) (u : U) : stalk_of_rings (presheaf_of_rings.restrict U G) u →
+  stalk_of_rings G u :=
+to_stalk.rec (presheaf_of_rings.restrict U G) u (stalk_of_rings G u) (λ V hu, sorry) sorry
+
 def presheaf_of_topological_rings.restrict {X : Type*} [topological_space X] (U : opens X)
   (G : presheaf_of_topological_rings X) : presheaf_of_topological_rings U :=
   { Ftop := λ V, G.Ftop (topological_space.opens.map U V),
     Ftop_ring := λ V, G.Ftop_ring (topological_space.opens.map U V),
     res_continuous := λ V W HWV, G.res_continuous (topological_space.opens.map U V)
       (topological_space.opens.map U W) (topological_space.opens.map_mono HWV),
-  .. }
+  ..presheaf_of_rings.restrict U G.to_presheaf_of_rings }
 
 def 𝒞.restrict {X : Type*} [topological_space X] (U : opens X) (G : 𝒞 X) : 𝒞 U :=
 { F := presheaf_of_topological_rings.restrict U G.F,
-  valuation := _ }
+  valuation := sorry }
 
 --definition affinoid_adic_space (A : Huber_pair) : 𝓥pre := sorry
 
