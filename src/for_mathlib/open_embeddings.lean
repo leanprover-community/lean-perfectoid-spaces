@@ -50,6 +50,15 @@ is_open_map.map subtype.val $ is_open_map_of_open U.2
 def opens.map_mono {U : opens α} {V W : opens U} (HVW : V ⊆ W) : opens.map U V ⊆ opens.map U W :=
 λ x h, set.image_subset _ HVW h
 
+def opens.map_mem_of_mem {U : opens α} {V : opens U} {x : U} (h : x ∈ V) : x.1 ∈ opens.map U V :=
+begin
+  rcases x with ⟨v, hv⟩,
+  use v,
+    exact hv,
+  exact ⟨h, rfl⟩
+end
+
+
 end is_open_map
 
 end topological_space
