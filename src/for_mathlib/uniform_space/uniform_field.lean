@@ -1,3 +1,55 @@
+/-
+The goal of this file is to prove, modulo continuous_extend_of_really_wants_to, part of
+Proposition 7 of Bourbaki GT III 6.8 :
+
+The completion hat K of a Hausdorff topological field is a field if the image under
+the mapping x ↦ x⁻¹ of every Cauchy filter (with respect to the additive uniform structure)
+which does not have a cluster point at 0 is a Cauchy filter
+(with respect to the additive uniform structure).
+
+Bourbaki does *not* prove this proposition, he refers to the general discussion of extending
+function defined on a dense subset with values in a complete Hausdorff space. In particular
+the subtlety about clustering at zero is totally left to readers.
+
+In this file I tried a proof distinguishing between the case where K is discrete, hence complete
+hence the statement is obvious, and the case where it's not.
+
+The main discussion revolves aroung the diagram
+
+                 x ↦ x⁻¹
+    K ←———— K^x ————————→ K^x ——————⟶ K
+    |        |            |          |
+    |        |            |          |
+    ↓        ↓            ↓          ↓
+  hat K ←— hat K* - - → hat K* ——⟶ hat K
+
+Where hat K* := hat K ∖ {0}, which will hopefully become the units of hat K
+
+Of course there is type theory inclusion hell everywhere.
+
+Note that, by definition of a topological field, the unit group, endowed with multiplication
+and the topology *induced by inclusion*, is a topological group.
+
+Once the completion becomes a topological field, then we want the map
+units.map : units K → units (hat K)
+to be a continuous group morphism which is a dense embedding.
+
+All this is very general. The application we have in mind is extension of valuations.
+In this application K will be equipped with a valuation and the topology on K will be the
+nonarchimedean topology coming from v. Checking that this topology is completable in the sense
+of the current file is very easy on paper. But, in valuation/field.lean I can't even state it
+without type class search hell. Assuming we can prove that, the remaining work revolves around
+the diagram
+
+  units K ———→ Γ
+     |       ↗
+     |      /
+     ↓     /
+units (hat K)
+
+but constructing that diagonal arrow is ok if the vertical one is indeed a dense group embedding.
+-/
+
 import for_mathlib.uniform_space.ring
 import for_mathlib.topological_field
 import for_mathlib.uniform_space.uniform_embedding
@@ -21,36 +73,37 @@ variables {K : Type*} [discrete_field K] [topological_space K] [topological_ring
 /-- Zero is not adherent to F -/
 def zero_not_adh (F : filter $ units K) : Prop := comap units.val 𝓝 0 ⊓ F = ⊥
 
-variables (K) [separated K]
+variables (K)
 
 instance : topological_space (units K) := topological_space.induced units.val (by apply_instance)
 
 local notation `hat` K := ring_completion K
 
-instance help_tc_search : uniform_space (hat K) := ring_completion.uniform_space K
+def help_tc_search : uniform_space (hat K) := ring_completion.uniform_space K
+local attribute [instance] help_tc_search
 
 def hat_star := {x : hat K // x ≠ 0}
 
 instance : topological_space (hat_star K) := subtype.topological_space
 
-instance : zero_ne_one_class (hat K) :=
+instance [separated K] : zero_ne_one_class (hat K) :=
 { zero_ne_one := assume h, zero_ne_one $ (uniform_embedding_coe K).1 h,
   ..ring_completion.comm_ring K }
 
 variables {K}
-lemma hat_units_ne_zero (x : units $ hat K) : x.val ≠ 0 :=
+lemma hat_units_ne_zero [separated K] (x : units $ hat K) : x.val ≠ 0 :=
 assume h, have zero_one : (0 : hat K) = 1 := zero_mul x.inv ▸ (h ▸ x.val_inv), zero_ne_one zero_one
 variables (K)
 
-def coe_units : units K → hat_star K :=
+def coe_units [separated K] : units K → hat_star K :=
 λ x, ⟨x.val, λ h, units.ne_zero x $ (uniform_embedding_coe K).1 h⟩
 
 @[simp]
-lemma mul_coe_units (x y : units K) : (coe_units K x).val * (coe_units K y).val = (coe_units K $ x*y).val :=
+lemma mul_coe_units [separated K] (x y : units K) : (coe_units K x).val * (coe_units K y).val = (coe_units K $ x*y).val :=
 by { simp only [coe_units], rw ← (ring_completion.coe_is_ring_hom K).map_mul, refl }
 
 @[simp]
-lemma coe_units_one :(coe_units K 1).val = 1 :=
+lemma coe_units_one [separated K] : (coe_units K 1).val = 1 :=
 by simpa [coe_units]
 
 class non_discrete_group (G : Type*) [add_group G] [topological_space G] :=
@@ -105,7 +158,7 @@ lemma of_non_discrete_inj_hom {f : G → H} [is_add_group_hom f] (inj : injectiv
   zero_not_open G (k ▸ (cont _ H))⟩
 end non_discrete_group
 
-instance ring_completion.non_discrete [non_discrete_group K]: non_discrete_group (hat K) :=
+instance ring_completion.non_discrete [separated K] [non_discrete_group K]: non_discrete_group (hat K) :=
 have ue : uniform_embedding coe, from uniform_embedding_coe K,
 non_discrete_group.of_non_discrete_inj_hom ue.1 ue.uniform_continuous.continuous
 
@@ -132,7 +185,7 @@ begin
   { intros a, rw nhds_induced },
 end
 
-lemma de_hat_star [non_discrete_group K]: dense_embedding (subtype.val : hat_star K → hat K) :=
+lemma de_hat_star [separated K] [non_discrete_group K]: dense_embedding (subtype.val : hat_star K → hat K) :=
 begin
   constructor,
   { rw subtype.val_range,
@@ -146,7 +199,7 @@ begin
   { intros a, rw nhds_induced },
 end
 
-lemma de_coe_units [non_discrete_group K]: dense_embedding (coe_units K : units K → hat_star K) :=
+lemma de_coe_units [separated K] [non_discrete_group K]: dense_embedding (coe_units K : units K → hat_star K) :=
 begin
   have ue : uniform_embedding coe, from uniform_embedding_coe K,
   have := ue.dense_embedding (ring_completion.dense_coe K),
@@ -155,22 +208,27 @@ begin
 end
 
 
-lemma range_units_hat_star : range (subtype.val : hat_star K → hat K) = -{0} :=
+lemma range_units_hat_star [separated K] : range (subtype.val : hat_star K → hat K) = -{0} :=
 by { rw subtype.val_range, ext, rw mem_compl_singleton_iff, refl }
 
-variables [non_discrete_group K]
+section
 
-def inv_hat_star : hat_star K → hat_star K := (de_coe_units K).extend $ coe_units K ∘ (λ x, x⁻¹)
-
-@[simp]
-lemma inv_hat_star_coe_units (x : units K) : inv_hat_star K (coe_units K x) = coe_units K x⁻¹ :=
-(de_coe_units K).extend_e_eq x
-
-class completable_top_field [separated K]:=
+class completable_non_discrete_top_field : Prop :=
+(separated : separated K)
 (nice : ∀ F : filter (units K), cauchy_of units.val F → zero_not_adh F →
   cauchy_of units.val (map (λ x, x⁻¹) F) ∧ zero_not_adh (map (λ x, x⁻¹) F))
 
-variables [completable_top_field K]
+attribute [instance] completable_non_discrete_top_field.separated
+variables [non_discrete_group K]
+
+def inv_hat_star [separated K] : hat_star K → hat_star K := (de_coe_units K).extend $ coe_units K ∘ (λ x, x⁻¹)
+
+@[simp]
+lemma inv_hat_star_coe_units [separated K] (x : units K) : inv_hat_star K (coe_units K x) = coe_units K x⁻¹ :=
+(de_coe_units K).extend_e_eq x
+
+
+variables [completable_non_discrete_top_field K]
 
 lemma continuous_inv_hat_star : continuous (inv_hat_star K) :=
 begin
@@ -194,7 +252,7 @@ begin
     { rw range_units_val K, simp },
     have non_unit_zero : ∀ (x : K), x ∉ set.range (units.val : units K → K) → x = 0,
     { rw range_units_val K, simp },
-    cases completable_top_field.nice F cauchyF (hF (0 : K) zero_non_unit) with h₁ h₂,
+    cases completable_non_discrete_top_field.nice F cauchyF (hF (0 : K) zero_non_unit) with h₁ h₂,
     refine ⟨h₁, _⟩,
     intros x hx,
     rwa non_unit_zero x hx },
@@ -272,3 +330,40 @@ instance : topological_division_ring (hat K) :=
         (continuous_inv_hat_star K).comp (hat_star_is_units K).continuous_to_fun)
     end,
   ..ring_completion.topological_ring K }
+end
+
+/-- A topological field is completable if it is either discrete (in the topological sense)
+    or if satisfies the completable_non_discrete_top_field condition -/
+class completable_top_field (F : Type*) [discrete_field F] [t : topological_space F] [topological_division_ring F]:=
+(completable := t = ⊤ ∨ completable_non_discrete_top_field F)
+
+#check completable_top_field
+
+namespace completable_top_field
+variables (F : Type*) [discrete_field F] [topological_space F] [topological_division_ring F]
+ [completable_top_field F]
+
+instance coe_is_ring_hom  := ring_completion.coe_is_ring_hom K
+
+instance : discrete_field (hat K) :=
+sorry
+
+instance : topological_division_ring (hat F) := sorry
+
+instance come_on_lean : is_monoid_hom (coe : F → hat F) :=
+{ map_one := sorry,
+  map_mul := sorry }
+
+--#check units (hat K)
+--#check is_ring_hom
+--#check (completable_top_field.coe_is_ring_hom K)
+--#check @units.map K (hat K) _ _ (coe : K → hat K) (completable_top_field.come_on_lean K)
+
+lemma dense_units_map :
+  dense_embedding (units.map (coe : F → hat F) : units F → units (hat F)) :=
+begin
+
+  sorry
+end
+
+end completable_top_field

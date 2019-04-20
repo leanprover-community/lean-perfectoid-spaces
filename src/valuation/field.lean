@@ -1,6 +1,7 @@
 import for_mathlib.topological_field
 import for_mathlib.topology
 import for_mathlib.division_ring
+import for_mathlib.uniform_space.uniform_field
 import valuation.topology
 
 open filter set
@@ -150,10 +151,6 @@ begin
     rw H, refl },
   { simp [le_refl] }
 end
-
-lemma valued_ring.completion_embedding :
-  embedding (coe : (valued_ring K v) → ring_completion (valued_ring K v)) :=
-(ring_completion.uniform_embedding_coe (valued_ring K v)).embedding
 end
 end
 
@@ -213,31 +210,23 @@ begin
 end
 
 -- and here. It's probaly paying for the wrapper type valued_ring K v
-noncomputable instance : topological_space (units $ ring_completion $ valued_ring K v) :=
+/- noncomputable instance : topological_space (units $ ring_completion $ valued_ring K v) :=
 topological_ring.units_topological_space _
+  -/
 
-lemma units_completion_dense_embedding :
-  dense_embedding (units.map (coe : (valued_ring K v) → ring_completion (valued_ring K v))) :=
-begin
-  let emb := valued_ring.completion_embedding v,
-  constructor,
-  {
-    sorry },
-  {
-    sorry },
-  {
-    sorry },
-end
+instance : discrete_field (valued_ring K v) := by unfold valued_ring ; apply_instance
+
+
+instance valued_ring.completable : completable_top_field (valued_ring K v) := sorry
 
 instance : topological_group (units $ valued_ring K v) :=
 topological_division_ring.units_top_group (valued_ring K v)
-
---instance : division_ring (ring_completion (valued_ring K v)) := sorry
---instance : topological_division_ring (ring_completion (valued_ring K v)) := sorry
-
-instance ring_completion.units_top_group : topological_group (units $ ring_completion $ valued_ring K v) :=
-sorry
---topological_division_ring.units_top_group (ring_completion $ valued_ring K v)
+--#check completable_top_field.dense_units_map (valued_ring K v)
+/- lemma units_completion_dense_embedding :
+dense_embedding (units.map (coe : (valued_ring K v) → ring_completion (valued_ring K v))) :=
+completable_top_field.dense_units_map
+ -/--instance ring_completion.units_top_group : topological_group (units $ ring_completion $ valued_ring K v) :=
+--sorry
 
 instance regular_of_discrete {α : Type*} [topological_space α] [discrete_topology α] : regular_space α :=
 ⟨begin
@@ -261,7 +250,7 @@ begin
   exact @of_subgroups.mem_nhds_zero K _ Γ _ (λ γ : Γ, {k | v k < γ}) _ _ _ _ _ γ
 end
 
-lemma continous_unit_extension : continuous ((units_completion_dense_embedding v).extend v.unit_map) :=
+/- lemma continous_unit_extension : continuous ((units_completion_dense_embedding v).extend v.unit_map) :=
 begin
   let Kv := valued_ring K v,
   let ι := units.map (coe : (valued_ring K v) → ring_completion (valued_ring K v)),
@@ -282,7 +271,7 @@ begin
     exact valuation.unit_map.ext v _ _ (valuation.map_eq_of_sub_lt v vy) },
   exact continuous_extend_of_open_kernel de key,
 end
---#check (units_completion_dense_embedding v).extend v.unit_map
+ -/--#check (units_completion_dense_embedding v).extend v.unit_map
 --#check continuous_extend_of_open_kernel
 end
 
