@@ -355,6 +355,8 @@ structure 𝒞.equiv {X : Type*} [topological_space X] {Y : Type*} [topological_
 (left_inv : 𝒞.map_comp to_fun inv_fun = 𝒞.map_id F)
 (right_inv : 𝒞.map_comp inv_fun to_fun = 𝒞.map_id G)
 
+notation A ` ≅ `:50 B := nonempty (𝒞.equiv A B)
+
 def presheaf_of_rings.restrict {X : Type*} [topological_space X] (U : opens X)
   (G : presheaf_of_rings X) : presheaf_of_rings U :=
   { F := λ V, G.F (topological_space.opens.map U V),
@@ -403,30 +405,7 @@ structure adic_space (X : Type u) [topological_space X] :=
   (Rgood : Π (i : I), (topological_space.is_topological_basis (rational_basis' (R i)))),
   ∀ i : I, nonempty (𝒞.equiv (𝒞.Spa (R i) (Rgood i)) (𝒞.restrict (U i) locally_ringed_valued_space.to_𝒞)))
 
-#exit
---#print axioms adic_space
-
--- not logically necessary but should be easy
-instance (A : Huber_pair) : preadic_space (Spa A) := sorry
-
--- attribute [class] _root_.is_open
-
-instance preadic_space_restriction {X : Type*} [preadic_space X] {U : opens X} :
-  preadic_space U.val := sorry
-
--- unwritten
-class adic_space (X : Type*) extends preadic_space X
--- note Wedhorn remark 8.19; being a sheaf of top rings involves a topological condition
-
--- a preadic_space_equiv is just an isom in 𝓥pre, or an isomorphism of preadic spaces.
--- unwritten
-structure preadic_space_equiv (X Y : Type*) [AX : preadic_space X] [AY : preadic_space Y] extends equiv X Y
-
-definition is_preadic_space_equiv (X Y : Type*) [AX : preadic_space X] [AY : preadic_space Y] :=
-  nonempty (preadic_space_equiv X Y)
-
-definition preadic_space_pullback {X : Type*} [preadic_space X] (U : set X) := {x : X // x ∈ U}
-
-instance pullback_is_preadic_space {X : Type*} [preadic_space X] (U : set X) : preadic_space (preadic_space_pullback U) := sorry
-
--- notation `is_open` := _root_.is_open
+-- note that currently we can't even prove that Spa(A) is a pre-adic space,
+-- because we don't know that the rational opens are a basis. I didn't
+-- even bother defining a pre-adic space -- one would have to define 𝒱^{pre}
+-- which is 𝒱 with the sheaf axiom dropped.

@@ -1,4 +1,3 @@
-#exit
 -- definitions of adic_space, preadic_space, Huber_pair etc
 import topology.algebra.group
 import adic_space
@@ -21,7 +20,10 @@ class perfectoid_ring (R : Type u) [Huber_ring R] extends Tate_ring R : Prop :=
 (ramified : ∃ ϖ : pseudo_uniformizer R, (ϖ^p : Rᵒ) ∣ p)
 (Frob     : ∀ a : Rᵒ, ∃ b : Rᵒ, (p : Rᵒ) ∣ (b^p - a : Rᵒ))
 
-class perfectoid_space (X : Type u) extends adic_space X :=
-(perfectoid_cover : ∀ x : X, ∃ (U : opens X) (A : Huber_pair) [perfectoid_ring A.R],
-  (x ∈ U) ∧ sorry)
+class perfectoid_space (X : Type u) [topological_space X] extends adic_space X :=
+(perfectoid_cover : ∀ x : X, ∃ (U : opens X) (A : Huber_pair) [perfectoid_ring A.R]
+  -- next hypothesis is always true although we're yet to prove this
+  (rational_basis : is_topological_basis (rational_basis' A)),
+  (x ∈ U) ∧ nonempty (𝒞.equiv (𝒞.Spa A (rational_basis) : 𝒞 (Spa A))
+    ((locally_ringed_valued_space).to_𝒞.restrict U : 𝒞 U)))
 -- is_preadic_space_equiv U (Spa A))
