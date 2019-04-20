@@ -367,10 +367,21 @@ def presheaf_of_rings.restrict {X : Type*} [topological_space X] (U : opens X)
     res_is_ring_hom := λ V W HWV, G.res_is_ring_hom (topological_space.opens.map U V)
       (topological_space.opens.map U W) (topological_space.opens.map_mono HWV) }
 
-noncomputable def presheaf_of_rings.restrict_stalk_map {X : Type*} [topological_space X] (U : opens X)
-  (G : presheaf_of_rings X) (u : U) : stalk_of_rings (presheaf_of_rings.restrict U G) u →
-  stalk_of_rings G u :=
-to_stalk.rec (presheaf_of_rings.restrict U G) u (stalk_of_rings G u) (λ V hu, sorry) sorry
+noncomputable def presheaf_of_rings.restrict_stalk_map {X : Type*} [topological_space X]
+  {U : opens X} (G : presheaf_of_rings X) (u : U) :
+  stalk_of_rings (presheaf_of_rings.restrict U G) u → stalk_of_rings G u :=
+to_stalk.rec (presheaf_of_rings.restrict U G) u (stalk_of_rings G u)
+  (λ V hu, to_stalk G u (topological_space.opens.map U V) ( opens.map_mem_of_mem hu))
+  (λ W V HWV s huW, quotient.sound (begin
+    use [(topological_space.opens.map U W), opens.map_mem_of_mem huW],
+    use [(set.subset.refl (topological_space.opens.map U W)), topological_space.opens.map_mono HWV],
+    rw G.Hid (topological_space.opens.map U W),
+    refl,
+  end))
+
+instance {X : Type*} [topological_space X] {U : opens X} (G : presheaf_of_rings X) (u : U) :
+  is_ring_hom (presheaf_of_rings.restrict_stalk_map G u) :=
+by unfold presheaf_of_rings.restrict_stalk_map; apply_instance
 
 def presheaf_of_topological_rings.restrict {X : Type*} [topological_space X] (U : opens X)
   (G : presheaf_of_topological_rings X) : presheaf_of_topological_rings U :=
@@ -380,14 +391,20 @@ def presheaf_of_topological_rings.restrict {X : Type*} [topological_space X] (U 
       (topological_space.opens.map U W) (topological_space.opens.map_mono HWV),
   ..presheaf_of_rings.restrict U G.to_presheaf_of_rings }
 
-def 𝒞.restrict {X : Type*} [topological_space X] (U : opens X) (G : 𝒞 X) : 𝒞 U :=
+noncomputable def 𝒞.restrict {X : Type*} [topological_space X] (U : opens X) (G : 𝒞 X) : 𝒞 U :=
 { F := presheaf_of_topological_rings.restrict U G.F,
-  valuation := sorry }
+  valuation :=
+    λ u, Spv.mk (valuation.comap (G.valuation u).out (presheaf_of_rings.restrict_stalk_map _ _)) }
 
---definition affinoid_adic_space (A : Huber_pair) : 𝓥pre := sorry
+structure adic_space (X : Type u) [topological_space X] :=
+(locally_ringed_valued_space : 𝒱 X)
+(Hlocally_affinoid : ∃ (I : Type u) (U : I → opens X) (Hcover : set.Union (λ i, (U i).1) = set.univ)
+  (R : I → Huber_pair)
+  (Rgood : Π (i : I), (topological_space.is_topological_basis (rational_basis' (R i)))),
+  ∀ i : I, nonempty (𝒞.equiv (𝒞.Spa (R i) (Rgood i)) (𝒞.restrict (U i) locally_ringed_valued_space.to_𝒞)))
 
--- unwritten -- it's a full subcat of 𝓥pre
-class preadic_space (X : Type*) extends topological_space X
+#exit
+--#print axioms adic_space
 
 -- not logically necessary but should be easy
 instance (A : Huber_pair) : preadic_space (Spa A) := sorry
