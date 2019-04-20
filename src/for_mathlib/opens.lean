@@ -6,11 +6,11 @@ variables {α : Type*} {β : Type*} [topological_space α] [topological_space β
 
 open topological_space
 
-def is_open_map.map (h : is_open_map f) : opens α → opens β :=
+def topological_space.is_open_map_map (h : is_open_map f) : opens α → opens β :=
 λ U, ⟨f '' U.1, h U.1 U.2⟩
 
 def functor.is_open_map.map (h : is_open_map f) : opens α ⥤ opens β :=
-{ obj := is_open_map.map h,
+{ obj := topological_space.is_open_map_map h,
   map := λ X Y hXY, ⟨⟨set.mono_image  hXY.1.1⟩⟩,
   map_id' := λ _, rfl,
   map_comp' := λ _ _ _ _ _, rfl }

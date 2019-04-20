@@ -44,6 +44,12 @@ variables {α : Type*} {β : Type*} [topological_space α] [topological_space β
 def is_open_map.map (h : is_open_map f) : opens α → opens β :=
 λ U, ⟨f '' U.1, h U.1 U.2⟩
 
+def opens.map (U : opens α) : opens U → opens α :=
+is_open_map.map subtype.val $ is_open_map_of_open U.2
+
+def opens.map_mono {U : opens α} {V W : opens U} (HVW : V ⊆ W) : opens.map U V ⊆ opens.map U W :=
+λ x h, set.image_subset _ HVW h
+
 end is_open_map
 
 end topological_space

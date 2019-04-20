@@ -7,6 +7,7 @@ import for_mathlib.prime
 import for_mathlib.is_cover
 import for_mathlib.sheaves.sheaf_of_topological_rings
 import for_mathlib.opens
+import for_mathlib.open_embeddings
 
 import continuous_valuations
 import r_o_d_completion
@@ -354,8 +355,29 @@ structure 𝒞.equiv {X : Type*} [topological_space X] {Y : Type*} [topological_
 (left_inv : 𝒞.map_comp to_fun inv_fun = 𝒞.map_id F)
 (right_inv : 𝒞.map_comp inv_fun to_fun = 𝒞.map_id G)
 
-def 𝒞.res {X : Type*} [topological_space X] (U : opens X) (F : 𝒞 X) : 𝒞 U :=
-sorry
+def presheaf_of_rings.restrict {X : Type*} [topological_space X] (U : opens X)
+  (G : presheaf_of_rings X) : presheaf_of_rings U :=
+  { F := λ V, G.F (topological_space.opens.map U V),
+    res := λ V W HWV, G.res _ _ (topological_space.opens.map_mono HWV),
+    Hid := λ V, G.Hid (topological_space.opens.map U V),
+    Hcomp := λ V₁ V₂ V₃ H12 H23, G.Hcomp (topological_space.opens.map U V₁)
+      (topological_space.opens.map U V₂) (topological_space.opens.map U V₃)
+      (topological_space.opens.map_mono H12) (topological_space.opens.map_mono H23),
+    Fring := λ V, G.Fring (topological_space.opens.map U V),
+    res_is_ring_hom := λ V W HWV, G.res_is_ring_hom (topological_space.opens.map U V)
+      (topological_space.opens.map U W) (topological_space.opens.map_mono HWV) }
+
+def presheaf_of_topological_rings.restrict {X : Type*} [topological_space X] (U : opens X)
+  (G : presheaf_of_topological_rings X) : presheaf_of_topological_rings U :=
+  { Ftop := λ V, G.Ftop (topological_space.opens.map U V),
+    Ftop_ring := λ V, G.Ftop_ring (topological_space.opens.map U V),
+    res_continuous := λ V W HWV, G.res_continuous (topological_space.opens.map U V)
+      (topological_space.opens.map U W) (topological_space.opens.map_mono HWV),
+  .. }
+
+def 𝒞.restrict {X : Type*} [topological_space X] (U : opens X) (G : 𝒞 X) : 𝒞 U :=
+{ F := presheaf_of_topological_rings.restrict U G.F,
+  valuation := _ }
 
 --definition affinoid_adic_space (A : Huber_pair) : 𝓥pre := sorry
 
