@@ -326,7 +326,7 @@ def 𝒞.map_id {X : Type*} [topological_space X] (F : 𝒞 X) : 𝒞.map F F :=
   end }
 
 def 𝒞.map_comp {X : Type*} [topological_space X] {Y : Type*} [topological_space Y]
-  {Z : Type*} [topological_space Z] (F : 𝒞 X) (G : 𝒞 Y) (H : 𝒞 Z)
+  {Z : Type*} [topological_space Z] {F : 𝒞 X} {G : 𝒞 Y} {H : 𝒞 Z}
   (a : 𝒞.map F G) (b : 𝒞.map G H) : 𝒞.map F H :=
 { fmap := presheaf_of_topological_rings.f_map_comp a.fmap b.fmap,
   stalk := λ x, begin refine valuation.is_equiv.trans _ (b.stalk (a.fmap.f x)),
@@ -346,6 +346,13 @@ def 𝒞.map_comp {X : Type*} [topological_space X] {Y : Type*} [topological_spa
     rw ←stalk_map_comp',
     refl,
   end }
+
+structure 𝒞.equiv {X : Type*} [topological_space X] {Y : Type*} [topological_space Y]
+  (F : 𝒞 X) (G : 𝒞 Y) :=
+(to_fun : 𝒞.map F G)
+(inv_fun : 𝒞.map G F)
+(left_inv : 𝒞.map_comp to_fun inv_fun = 𝒞.map_id F)
+(right_inv : 𝒞.map_comp inv_fun to_fun = 𝒞.map_id G)
 
 def 𝒞.res {X : Type*} [topological_space X] (U : opens X) (F : 𝒞 X) : 𝒞 U :=
 sorry
