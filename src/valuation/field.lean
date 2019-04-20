@@ -36,31 +36,32 @@ variables x y : units K
 -- The following is meant to be the main technical lemma ensuring that inversion is continuous
 -- in the topology induced by a valuation on a division ring (ie the next instance)
 -- [BouAC, VI.5.1 Lemme 1]
-lemma top_div_ring_aux {x y : units K} {γ : Γ} (h : v (x - y) < min (γ*((v y)*(v y))) (v y)) :
+lemma top_div_ring_aux {x y : units K} {γ : Γ} (h : v (x - y) < min (γ * ((v y) * (v y))) (v y)) :
   v (x⁻¹.val - y⁻¹.val) < γ :=
 begin
-  have hyp1 : v (x - y) < γ*((v y)*(v y)),
+  have hyp1 : v (x - y) < γ * ((v y) * (v y)),
     from lt_of_lt_of_le h (min_le_left _ _),
-  have hyp1' : v (x - y)*((v y)*(v y))⁻¹ < γ,
+  have hyp1' : v (x - y) * ((v y) * (v y))⁻¹ < γ,
     from with_zero.mul_inv_lt_of_lt_mul hyp1,
   have hyp2 : v (x - y) < v y,
     from lt_of_lt_of_le h (min_le_right _ _),
   have key : v x = v y, from valuation.map_eq_of_sub_lt v hyp2,
-  have decomp : x⁻¹.val - y⁻¹.val = x⁻¹.val*(y.val-x.val)*y⁻¹.val,
+  have decomp : x⁻¹.val - y⁻¹.val = x⁻¹.val * (y.val - x.val) * y⁻¹.val,
   by rw [mul_sub_left_distrib, sub_mul, mul_assoc,
         show y.val * y⁻¹.val = 1, from y.val_inv,
         show x⁻¹.val * x.val = 1, from x.inv_val, mul_one, one_mul],
   calc
-    v (x⁻¹.val - y⁻¹.val) = v (x⁻¹.val*(y.val-x.val)*y⁻¹.val) : by rw decomp
-    ... = (v x⁻¹.val)*(v $ y.val-x.val)*(v y⁻¹.val) : by repeat { rw valuation.map_mul }
-    ... = (v x)⁻¹*(v $ y.val-x.val)*(v y)⁻¹ : by repeat { rw valuation.map_inv }
-    ... = (v $ y.val-x.val)*((v y)*(v y))⁻¹ : by rw [mul_assoc,mul_comm, key, mul_assoc, ← with_zero.mul_inv_rev]
-    ... = (v $ y - x)*((v y)*(v y))⁻¹ : rfl
-    ... = (v $ x - y)*((v y)*(v y))⁻¹ : by rw valuation.map_sub_swap
+    v (x⁻¹.val - y⁻¹.val) = v (x⁻¹.val * (y.val - x.val) * y⁻¹.val) : by rw decomp
+    ... = (v x⁻¹.val) * (v $ y.val - x.val) * (v y⁻¹.val) : by repeat { rw valuation.map_mul }
+    ... = (v x)⁻¹ * (v $ y.val - x.val) * (v y)⁻¹ : by repeat { rw valuation.map_inv }
+    ... = (v $ y.val - x.val) * ((v y) * (v y))⁻¹ : by
+      rw [mul_assoc, mul_comm, key, mul_assoc, ← with_zero.mul_inv_rev]
+    ... = (v $ y - x) * ((v y) * (v y))⁻¹ : rfl
+    ... = (v $ x - y) * ((v y) * (v y))⁻¹ : by rw valuation.map_sub_swap
     ... < γ : hyp1',
 end
 
-/-- The topology coming from a valuation on a division ring make it a topological division ring
+/-- The topology coming from a valuation on a division rings make it a topological division ring
     [BouAC, VI.5.1 middle of Proposition 1] -/
 instance valuation.topological_division_ring : topological_division_ring (valued_ring K v) :=
 { continuous_inv :=
@@ -77,7 +78,7 @@ instance valuation.topological_division_ring : topological_division_ring (valued
       intros V V_in,
       cases (of_subgroups.nhds_zero _).1 V_in with γ Hγ,
       let x' : units K := units.mk (x.val : K) (x.inv : K) x.val_inv x.inv_val,
-      use { k : Kv | v k < min (γ*((v x')*(v x'))) (v x')},
+      use { k : Kv | v k < min (γ* ((v x') * (v x'))) (v x')},
       split,
       { refine (of_subgroups.nhds_zero _).2 _,
         cases valuation.unit_is_some v x' with γ' hγ',
@@ -166,8 +167,8 @@ variables {L : Type*} [group L] [topological_space L] [topological_group L]
 variables {ι : G → H} [is_group_hom ι] (de : dense_embedding ι)
 variables {φ : G → L} [is_group_hom φ]
 
-lemma topological_group.extend_is_group_hom (hφ : continuous φ) (h : continuous (de.extend φ)):
-is_group_hom (de.extend φ) :=
+lemma topological_group.extend_is_group_hom (hφ : continuous φ) (h : continuous (de.extend φ)) :
+  is_group_hom (de.extend φ) :=
 ⟨begin
   let Φ := de.extend φ,
   let P := λ x y : H, Φ (x*y) = Φ x*Φ y,
@@ -203,7 +204,8 @@ instance : comm_ring (valued_ring K v) :=
 by unfold valued_ring ; apply_instance
 
 -- Patrick doesn't have any idea why Lean needs help here:
-instance valued_ring.coe_is_monoid_hom : is_monoid_hom (coe : (valued_ring K v) → ring_completion (valued_ring K v)) :=
+instance valued_ring.coe_is_monoid_hom :
+  is_monoid_hom (coe : (valued_ring K v) → ring_completion (valued_ring K v)) :=
 begin
   let Kv := valued_ring K v,
   haveI := @is_ring_hom.is_semiring_hom Kv (ring_completion Kv) _ _ coe _,
