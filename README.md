@@ -20,10 +20,23 @@ basic results about perfectoid spaces within Lean. Is this sort of thing
 feasible? We don't know. We think so though, and we're not really sure if
 anyone has tried this sort of thing before. Let's find out!
 
-### Getting it working.
+### Getting it working
 
 This project is not yet finished. It usually compiles, or mostly
 compiles, with Lean 3.4.2 and Mathlib HEAD. Usually there are some sorries but no errors. When there are no sorries, we will be finished.
+
+## Getting it working: brief version
+```bash
+$ git clone https://github.com/leanprover-community/lean-perfectoid-spaces
+$ cd lean-perfectoid-spaces
+/lean-perfectoid-spaces$ leanpkg configure
+/lean-perfectoid-spaces$ update-mathlib
+/lean-perfectoid-spaces$ leanpkg build
+```
+
+Note (21st April) : `master` is currently broken while we try to understand typeclasses better.
+
+### Getting it working: longer version
 
 A brief guide to compiling the library on your machine:
 
