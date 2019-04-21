@@ -337,16 +337,13 @@ end
 class completable_top_field (F : Type*) [discrete_field F] [t : topological_space F] [topological_division_ring F]:=
 (completable := t = ⊤ ∨ completable_non_discrete_top_field F)
 
-#check completable_top_field
-
 namespace completable_top_field
 variables (F : Type*) [discrete_field F] [topological_space F] [topological_division_ring F]
  [completable_top_field F]
 
 instance coe_is_ring_hom  := ring_completion.coe_is_ring_hom K
 
-instance : discrete_field (hat K) :=
-sorry
+instance : division_ring (hat F) := sorry
 
 instance : topological_division_ring (hat F) := sorry
 
@@ -362,7 +359,6 @@ instance come_on_lean : is_monoid_hom (coe : F → hat F) :=
 lemma dense_units_map :
   dense_embedding (units.map (coe : F → hat F) : units F → units (hat F)) :=
 begin
-
   sorry
 end
 
