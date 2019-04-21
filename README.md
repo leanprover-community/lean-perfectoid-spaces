@@ -33,6 +33,14 @@ $ cd lean-perfectoid-spaces
 /lean-perfectoid-spaces$ update-mathlib
 /lean-perfectoid-spaces$ leanpkg build
 ```
+Cut'n'paste-friendly version:
+```
+git clone https://github.com/leanprover-community/lean-perfectoid-spaces
+cd lean-perfectoid-spaces
+leanpkg configure
+update-mathlib
+leanpkg build
+```
 
 Note (21st April) : `master` is currently broken while we try to understand typeclasses better.
 
