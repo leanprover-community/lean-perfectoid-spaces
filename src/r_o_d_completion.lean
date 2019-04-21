@@ -27,17 +27,19 @@ topological_add_group.to_uniform_space _
 
 local attribute [instance] uniform_space'
 
-instance (v : Spa A) : uniform_add_group (valuation_field (out (v.val))) := topological_add_group_is_uniform
+instance (v : Spa A) : uniform_add_group (valuation_field (out (v.val))) :=
+topological_add_group_is_uniform
 
-noncomputable def to_complete_valuation_field {r : rational_open_data A} {v : Spa A} (hv : v ∈ r.rational_open) :
-r_o_d_completion r → ring_completion (valuation_field (Spv.out v.1)) :=
+noncomputable def to_complete_valuation_field {r : rational_open_data A} {v : Spa A}
+  (hv : v ∈ r.rational_open) :
+  r_o_d_completion r → ring_completion (valuation_field (Spv.out v.1)) :=
 ring_completion.map (Huber_pair.rational_open_data.to_valuation_field hv)
 
 example {r : rational_open_data A} {v : Spa A} (hv : v ∈ r.rational_open) :
-is_ring_hom (Huber_pair.rational_open_data.to_valuation_field hv) := by apply_instance
+  is_ring_hom (Huber_pair.rational_open_data.to_valuation_field hv) := by apply_instance
 
 example {r : rational_open_data A} {v : Spa A} (hv : v ∈ r.rational_open) :
-is_ring_hom (Huber_pair.rational_open_data.to_valuation_field hv) := by apply_instance
+  is_ring_hom (Huber_pair.rational_open_data.to_valuation_field hv) := by apply_instance
 
 instance {r : rational_open_data A} {v : Spa A} (hv : v ∈ r.rational_open) :
   is_ring_hom (to_complete_valuation_field hv) :=
@@ -54,10 +56,12 @@ theorem to_valuation_field_commutes {r1 r2 : Spa.rational_open_data A} {v : Spa 
 begin
   delta to_complete_valuation_field,
   delta r_o_d_completion.restriction,
-  let uc1 : uniform_continuous (rational_open_data.localization_map h) := localization_map_is_uniform_continuous h,
+  let uc1 : uniform_continuous (rational_open_data.localization_map h) :=
+  localization_map_is_uniform_continuous h,
   let uc2 : continuous (Huber_pair.rational_open_data.to_valuation_field hv2) :=
     Huber_pair.rational_open_data.to_valuation_field_cts hv2,
-  rw Huber_pair.rational_open_data.to_valuation_field_commutes hv1 hv2 h, -- is the noncompleted commute.
+  rw Huber_pair.rational_open_data.to_valuation_field_commutes hv1 hv2 h,
+  -- is the noncompleted commute.
   convert ring_completion.map_comp uc1 _,
   apply uniform_continuous_of_continuous uc2,
 end
@@ -123,7 +127,8 @@ instance {v : Spa A}
        Spa.r_o_d_completion.to_complete_valuation_field (Spa.mem_rational_open_subset_nhd hv hA)
        (f.val (Spa.rational_open_subset_nhd hv hA))),
   show is_ring_hom F,
-  have H : F = ((Spa.r_o_d_completion.to_complete_valuation_field (Spa.mem_rational_open_subset_nhd hv hA))
+  have H : F =
+    ((Spa.r_o_d_completion.to_complete_valuation_field (Spa.mem_rational_open_subset_nhd hv hA))
     ∘ (λ (f : presheaf_value U), (f.val (Spa.rational_open_subset_nhd hv hA)))),
     refl,
   rw H,
