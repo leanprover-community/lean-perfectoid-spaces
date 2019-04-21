@@ -27,7 +27,7 @@ compiles, with Lean 3.4.2 and Mathlib HEAD. Usually there are some sorries but n
 
 ## Getting it working: brief version
 ```bash
-$ git clone https://github.com/leanprover-community/lean-perfectoid-spaces
+$ git clone git@github.com:leanprover-community/lean-perfectoid-spaces.git
 $ cd lean-perfectoid-spaces
 /lean-perfectoid-spaces$ leanpkg configure
 /lean-perfectoid-spaces$ update-mathlib
