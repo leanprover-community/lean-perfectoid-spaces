@@ -6,6 +6,9 @@ import for_mathlib.uniform_space.group
 noncomputable theory
 local attribute [instance, priority 0] classical.prop_decidable
 
+local notation `𝓝` x:70 := nhds x
+local notation `𝓤` := uniformity
+
 open classical set lattice filter topological_space add_comm_group
 local attribute [instance] classical.prop_decidable
 noncomputable theory
@@ -238,6 +241,9 @@ by dunfold ring_completion ; apply_instance
 instance : separated (ring_completion α) :=
 by dunfold ring_completion ; apply_instance
 
+instance : complete_space (ring_completion α) :=
+by dunfold ring_completion ; apply_instance
+
 lemma uniform_space.completion.dense' : ∀ x : completion α, x ∈ closure (range (coe : α → completion α)) :=
 by { rw ← eq_univ_iff_forall, exact uniform_space.completion.dense }
 
@@ -338,6 +344,20 @@ end
 variables (α)
 lemma uniform_embedding_coe [separated α] : uniform_embedding (coe : α → ring_completion α) :=
 (uniform_embedding.comp sep_quot.uniform_embedding (completion.uniform_embedding_coe $sep_quot α) : _)
+
+variables {α}
+lemma comap_nhds_eq [separated α] (x : α) :
+  comap (coe : α → ring_completion α) (nhds (x : ring_completion α)) = nhds x :=
+((ring_completion.uniform_embedding_coe α).dense_embedding (ring_completion.dense_coe α)).induced x
+
+lemma comap_uniformity : comap (λ (p : α × α), ((p.1 : ring_completion α), (p.snd : ring_completion α))) (𝓤 (ring_completion α)) ≤ 𝓤 α :=
+begin
+  dsimp [ring_completion],
+  rw [show 𝓤 α = comap (λ p : α × α, (sep_quot.mk p.1, sep_quot.mk p.2)) (𝓤 $ sep_quot  α),
+       from comap_quotient_eq_uniformity.symm,
+      ← completion.comap_coe_eq_uniformity (sep_quot α), filter.comap_comap_comp],
+  exact le_refl _,
+end
 end ring_completion
 
 section ring_completion
