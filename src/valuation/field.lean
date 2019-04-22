@@ -1,7 +1,7 @@
 import for_mathlib.topological_field
 import for_mathlib.topology
 import for_mathlib.division_ring
-import for_mathlib.uniform_space.uniform_field
+--import for_mathlib.uniform_space.uniform_field
 import valuation.topology
 
 open filter set
@@ -217,7 +217,7 @@ topological_ring.units_topological_space _
 instance : discrete_field (valued_ring K v) := by unfold valued_ring ; apply_instance
 
 
-instance valued_ring.completable : completable_top_field (valued_ring K v) := sorry
+--instance valued_ring.completable : completable_top_field (valued_ring K v) := sorry
 
 instance : topological_group (units $ valued_ring K v) :=
 topological_division_ring.units_top_group (valued_ring K v)
