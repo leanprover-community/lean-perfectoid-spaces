@@ -114,8 +114,14 @@ lemma coe_units_one [separated K] : (coe_units K 1).val = 1 :=
 by simpa [coe_units]
 
 @[simp]
-lemma for_kevin {α : Type*} [division_ring α] (x : units α) :(x : α)⁻¹ = x.inv :=
-sorry
+lemma division_ring.inv_val_eq_inv {α : Type*} [division_ring α] (x : units α) :(x : α)⁻¹ = x.inv :=
+begin
+  rw (show x.inv = (x⁻¹ : units α), from rfl),
+  rw ←one_div_eq_inv,
+  symmetry,
+  apply eq_one_div_of_mul_eq_one,
+  exact x.mul_inv
+end
 
 lemma coe_units_comm_square [separated K]: subtype.val ∘ coe_units K = (coe : K → hat K) ∘ units.val :=
 by { ext x, simp [coe_units] }
@@ -196,13 +202,13 @@ attribute [instance] completable_top_field.separated
 
 variables [completable_top_field K]
 
-def inv_hat_star : hat_star K → hat K := (de_coe_units K).extend (λ x, ((x⁻¹ : K) : hat K))
+def inv_hat_star_hat : hat_star K → hat K := (de_coe_units K).extend (λ x, ((x⁻¹ : K) : hat K))
 
 @[simp]
-lemma inv_hat_star_coe_units [separated K] (x : units K) : inv_hat_star K (coe_units K x) = ((x⁻¹ : K) : hat K) :=
+lemma inv_hat_star_coe_units [separated K] (x : units K) : inv_hat_star_hat K (coe_units K x) = ((x⁻¹ : K) : hat K) :=
 (de_coe_units K).extend_e_eq x
 
-lemma continuous_inv_hat_star : continuous (inv_hat_star K : hat_star K → hat K) :=
+lemma continuous_inv_hat_star_hat : continuous (inv_hat_star_hat K : hat_star K → hat K) :=
 begin
   refine (de_coe_units K).continuous_extend _,
   intro x,
@@ -241,25 +247,39 @@ begin
   simp,
 end
 
-lemma inv_hat_is_inv : ∀ x : hat_star K, x.val*(inv_hat_star K x) = 1 :=
+lemma inv_hat_is_inv : ∀ x : hat_star K, x.val*(inv_hat_star_hat K x) = 1 :=
 begin
-  have cl : is_closed {x : hat_star K | x.val*(inv_hat_star K x) = 1},
+  have cl : is_closed {x : hat_star K | x.val*(inv_hat_star_hat K x) = 1},
     from is_closed_eq
-      (continuous_mul continuous_subtype_val (continuous_inv_hat_star K))
+      (continuous_mul continuous_subtype_val (continuous_inv_hat_star_hat K))
       continuous_const,
   have dense : closure (range (coe_units K)) = univ,
     from eq_univ_of_forall (de_coe_units K).dense,
   apply is_closed_property dense cl,
   intro x,
-  rw [inv_hat_star_coe_units, for_kevin, coe_units_val,
+  rw [inv_hat_star_coe_units, division_ring.inv_val_eq_inv, coe_units_val,
       ← (ring_completion.coe_is_ring_hom K).map_mul, x.val_inv,
       (ring_completion.coe_is_ring_hom K).map_one]
 end
 
+lemma inv_hat_ne_zero (x : hat_star K) : inv_hat_star_hat K x ≠ 0 :=
+λ h,
+begin
+  have := inv_hat_is_inv K x,
+  rw [h, mul_zero] at this,
+  exact zero_ne_one this,
+end
+
+def inv_hat_star : hat_star K → hat_star K :=
+λ x, ⟨inv_hat_star_hat K x, inv_hat_ne_zero K x⟩
+
+lemma continuous_inv_hat_star : continuous (inv_hat_star K) :=
+continuous_induced_rng (continuous_inv_hat_star_hat K)
+
 /-- homeomorphim between non-zero elements of hat K and units of hat K -/
 def hat_star_is_units : hat_star K ≃ₜ units (hat K) :=
-{ to_fun := λ x, ⟨x.val, (inv_hat_star K x),
-      inv_hat_is_inv K x, mul_comm x.val (inv_hat_star K x) ▸ (inv_hat_is_inv K x)⟩ ,
+{ to_fun := λ x, ⟨x.val, (inv_hat_star_hat K x),
+      inv_hat_is_inv K x, mul_comm x.val (inv_hat_star_hat K x) ▸ (inv_hat_is_inv K x)⟩ ,
   inv_fun := λ x, ⟨x.val, hat_units_ne_zero x⟩,
   left_inv := λ x, by simp,
   right_inv := λ x, units.ext rfl,
@@ -270,9 +290,9 @@ local notation `ψ` := (hat_star_is_units K).to_equiv.to_fun
 local notation `ψ⁻¹` := (hat_star_is_units K).to_equiv.inv_fun
 
 def hat_inv (x : hat K) : hat K := if h : x = 0 then 0 else
-inv_hat_star K ⟨x , h⟩
+inv_hat_star_hat K ⟨x , h⟩
 
-/- lemma invinv : (λ (a : units (hat K)), a⁻¹) = ψ ∘ (inv_hat_star K) ∘ ψ⁻¹ :=
+lemma invinv : (λ (a : units (hat K)), a⁻¹) = ψ ∘ (inv_hat_star K) ∘ ψ⁻¹ :=
 begin
   ext x,
   congr,
@@ -280,7 +300,7 @@ begin
   apply units.ext,
   exact inv_hat_is_inv K ⟨x.val, hat_units_ne_zero x⟩,
 end
- -/
+
 variables (K)
 
 lemma hat_inv_zero : hat_inv _ (0 : hat K) = (0 : hat K) :=
@@ -289,7 +309,11 @@ by simp [hat_inv]
 instance hat_has_inv : has_inv (hat K) := ⟨hat_inv K⟩
 
 lemma hat_mul_inv : ∀ a : hat K, a ≠ 0 → a * a⁻¹ = 1 :=
-sorry
+begin
+  intros a a_ne,
+  change a * (hat_inv K a) = 1,
+  simp [if_neg, a_ne, hat_inv, inv_hat_is_inv K ⟨a, a_ne⟩]
+end
 
 instance : discrete_field (hat K) :=
 { inv := hat_inv K,
@@ -303,14 +327,14 @@ instance : discrete_field (hat K) :=
 -- Unfortunately, the above instance loose TC search when it comes to finding a topology on
 -- units (hat K)
 -- TODO: investigate this issue
---instance help_tcs : topological_space (units $ hat K) := topological_ring.units_topological_space _
+instance help_tcs : topological_space (units $ hat K) := topological_ring.units_topological_space _
 
 instance : topological_division_ring (hat K) :=
-{ continuous_inv := sorry,
-    /- begin
+{ continuous_inv :=
+    begin
       rw invinv K,
       exact (hat_star_is_units K).continuous_inv_fun.comp (
         (continuous_inv_hat_star K).comp (hat_star_is_units K).continuous_to_fun)
-    end, -/
+    end,
   ..ring_completion.topological_ring K }
 end
