@@ -10,7 +10,7 @@ import for_mathlib.opens
 import for_mathlib.open_embeddings
 
 import continuous_valuations
-import r_o_d_completion
+import r_o_d_completion stalk_valuation
 import Huber_pair
 
 universe u

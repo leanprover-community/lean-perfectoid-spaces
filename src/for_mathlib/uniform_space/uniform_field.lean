@@ -75,7 +75,8 @@ def zero_not_adh (F : filter $ units K) : Prop := comap units.val 𝓝 0 ⊓ F =
 
 variables (K)
 
-instance : topological_space (units K) := topological_space.induced units.val (by apply_instance)
+def ts_units : topological_space (units K) := topological_space.induced units.val (by apply_instance)
+local attribute [instance] ts_units
 
 local notation `hat` K := ring_completion K
 
@@ -88,7 +89,8 @@ local attribute [instance] help_tc_search''
 
 def hat_star := {x : hat K // x ≠ 0}
 
-instance : topological_space (hat_star K) := subtype.topological_space
+def ts_hat_star : topological_space (hat_star K) := subtype.topological_space
+local attribute [instance] ts_hat_star
 
 instance [separated K] : zero_ne_one_class (hat K) :=
 { zero_ne_one := assume h, zero_ne_one $ (uniform_embedding_coe K).1 h,
@@ -198,7 +200,7 @@ class completable_top_field : Prop :=
 (nice : ∀ F : filter (units K), cauchy_of units.val F → zero_not_adh F →
   cauchy_of units.val (map (λ x, x⁻¹) F))
 
-attribute [instance] completable_top_field.separated
+local attribute [instance] completable_top_field.separated
 
 variables [completable_top_field K]
 
@@ -327,7 +329,8 @@ instance : discrete_field (hat K) :=
 -- Unfortunately, the above instance loose TC search when it comes to finding a topology on
 -- units (hat K)
 -- TODO: investigate this issue
-instance help_tcs : topological_space (units $ hat K) := topological_ring.units_topological_space _
+def help_tcs : topological_space (units $ hat K) := topological_ring.units_topological_space _
+local attribute [instance] help_tcs
 
 instance : topological_division_ring (hat K) :=
 { continuous_inv :=
@@ -337,4 +340,9 @@ instance : topological_division_ring (hat K) :=
         (continuous_inv_hat_star K).comp (hat_star_is_units K).continuous_to_fun)
     end,
   ..ring_completion.topological_ring K }
+
+instance toto : topological_group (units $ hat K) := sorry
+
+lemma dense_units_map : dense_embedding (units.map (coe : K → hat K) : units K → units (hat K)) :=
+sorry
 end

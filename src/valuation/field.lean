@@ -1,7 +1,7 @@
 import for_mathlib.topological_field
 import for_mathlib.topology
 import for_mathlib.division_ring
---import for_mathlib.uniform_space.uniform_field
+import for_mathlib.uniform_space.uniform_field
 import valuation.topology
 
 open filter set
@@ -221,12 +221,6 @@ instance : discrete_field (valued_ring K v) := by unfold valued_ring ; apply_ins
 
 instance : topological_group (units $ valued_ring K v) :=
 topological_division_ring.units_top_group (valued_ring K v)
---#check completable_top_field.dense_units_map (valued_ring K v)
-/- lemma units_completion_dense_embedding :
-dense_embedding (units.map (coe : (valued_ring K v) → ring_completion (valued_ring K v))) :=
-completable_top_field.dense_units_map
- -/--instance ring_completion.units_top_group : topological_group (units $ ring_completion $ valued_ring K v) :=
---sorry
 
 instance regular_of_discrete {α : Type*} [topological_space α] [discrete_topology α] : regular_space α :=
 ⟨begin
@@ -250,29 +244,81 @@ begin
   exact @of_subgroups.mem_nhds_zero K _ Γ _ (λ γ : Γ, {k | v k < γ}) _ _ _ _ _ γ
 end
 
-/- lemma continous_unit_extension : continuous ((units_completion_dense_embedding v).extend v.unit_map) :=
+instance : completable_top_field (valued_ring K v) :=
+sorry
+
+local notation `hat` K := ring_completion (valued_ring K v)
+
+local attribute [instance] help_tcs
+
+lemma continous_unit_extension : continuous ((dense_units_map (valued_ring K v)).extend v.unit_map) :=
 begin
   let Kv := valued_ring K v,
-  let ι := units.map (coe : (valued_ring K v) → ring_completion (valued_ring K v)),
-  let de : dense_embedding ι := units_completion_dense_embedding v,
+ -- let hatK := ring_completion (valued_ring K v),
+  let ι := units.map (coe : Kv → hat K),
+  let de := dense_units_map (valued_ring K v),
+
   -- Patrick hates the three next lines. He is clearly punished for something
   haveI : is_group_hom ι := units.is_group_hom _,
-  letI : topological_space (units K) := @topological_ring.units_topological_space Kv _ _,
-  haveI : topological_space K := (by apply_instance : topological_space Kv),
-  have key : is_open (is_group_hom.ker (v.unit_map : units Kv → Γ)),
+  letI : topological_space (units Kv) := @topological_ring.units_topological_space Kv _ _,
+  haveI : topological_group (units hat K) := topological_division_ring.units_top_group _,
+  have key : @is_open (units $ valued_ring K v) _ (is_group_hom.ker (v.unit_map : units (valued_ring K v) → Γ)),
   { rw is_open_iff_mem_nhds,
     intros x x_in,
     rw [nhds_induced],
-    refine ⟨{y | v (y - x) < v.unit_map x }, nhds_of_valuation_lt v _ _, _⟩,
+    refine ⟨{y : Kv | v (y - x.val) < v.unit_map x }, nhds_of_valuation_lt v _ _, _⟩,
     intros y vy,
     simp [mem_preimage_eq] at vy,
     rw is_group_hom.mem_ker at *,
     rw ← x_in,
     exact valuation.unit_map.ext v _ _ (valuation.map_eq_of_sub_lt v vy) },
-  exact continuous_extend_of_open_kernel de key,
+
+  exact @continuous_extend_of_open_kernel (units Kv) _ _ _ (units $ hat K) _ _ _
+    Γ _ _ _ _ ι _ de (valuation.unit_map v) _ key,
 end
- -/--#check (units_completion_dense_embedding v).extend v.unit_map
---#check continuous_extend_of_open_kernel
+
+noncomputable
+def valuation.unit_completion_extend : units (hat K) → Γ :=
+(dense_units_map (valued_ring K v)).extend v.unit_map
+
+local notation `hatv` := valuation.unit_completion_extend v
+
+
+lemma valuation.unit_completion_extend_mul : ∀ x y : units (hat K),
+ hatv (x*y) = hatv x * hatv y :=
+begin
+  let ι := units.map (coe : valued_ring K v → hat K),
+  let de := dense_units_map (valued_ring K v),
+  letI : topological_space ((units $ hat K) × (units $hat K)) := prod.topological_space, -- WTF?
+  have cl : is_closed {p : (units $ hat K) × (units $hat K) | hatv (p.1*p.2) = hatv p.1 * hatv p.2},
+  sorry,
+  have : ∀ x y : units (valued_ring K v), hatv (ι x * ι y) = (hatv $ ι x)*(hatv $ ι y),
+  sorry,
+  exact is_closed_property2 de cl this
+end
+
+noncomputable
+def valuation.completion_extend : valuation (ring_completion $ valued_ring K v) Γ :=
+⟨λ x, if h : x = 0 then 0 else some (valuation.unit_completion_extend v $ units.mk0 x h),
+{ map_zero := by simp,
+  map_one := begin
+    suffices : some (valuation.unit_completion_extend v (units.mk0 (1 : hat K) zero_ne_one.symm)) = (1 : Γ),
+    by simp[this] ; refl,
+    have : units.mk0 (1 : hat K) zero_ne_one.symm = (units.map coe 1), sorry,
+    dsimp [valuation.unit_completion_extend],
+    rw [this, dense_embedding.extend_e_eq], swap, apply_instance,
+    simp [v.map_one],
+    sorry
+  end,
+  map_mul := λ x y,
+  begin
+    by_cases hx : x = 0 ; simp [hx],
+    by_cases hy : y = 0 ; simp [hy],
+    have : x*y ≠ 0, sorry,
+    simp [this],
+    sorry
+  end,
+  map_add := sorry }⟩
 end
 
 -- Kevin has added the thing he needs
