@@ -113,9 +113,16 @@ lemma coe_units_val [separated K] (x : units K): (coe_units K x).val = (x.val : 
 lemma coe_units_one [separated K] : (coe_units K 1).val = 1 :=
 by simpa [coe_units]
 
-@[simp]
+/-
+--@[simp] -- this breaks a later proof.
+lemma units.coe_inv' {α : Type*} [division_ring α] (x : units α) :
+  ((x⁻¹ : units α) : α) = x⁻¹ := by simp
+
 lemma for_kevin {α : Type*} [division_ring α] (x : units α) :(x : α)⁻¹ = x.inv :=
-sorry
+(units.coe_inv' _).symm -- why doesn't simp work yet?
+-/
+lemma for_kevin {α : Type*} [division_ring α] (x : units α) :
+  (x : α)⁻¹ = x.inv := sorry
 
 lemma coe_units_comm_square [separated K]: subtype.val ∘ coe_units K = (coe : K → hat K) ∘ units.val :=
 by { ext x, simp [coe_units] }
