@@ -17,6 +17,30 @@ instance {α : Type*} [preorder α] : preorder (with_bot α) :=
     ⟨c, hc, le_trans ab bc⟩,
 }
 
+namespace option
+local attribute [instance] classical.prop_decidable
+
+noncomputable def retract {α β : Type*} (ι : α ↪ β) : option β → option α
+| (some b) := if h : b ∈ set.range ι
+              then some $ classical.some $ set.mem_range.mp h
+              else none
+| none     := none
+
+@[simp] lemma retract_map {α β : Type*} (ι : α ↪ β) :
+  ∀ a, retract ι (option.map ι a) = a
+| (some a) :=
+begin
+  dsimp [retract, option.map],
+  have h : ι a ∈ set.range ι := set.mem_range_self a,
+  rw [dif_pos h],
+  congr' 1,
+  apply ι.inj,
+  exact classical.some_spec h
+end
+| none     := rfl
+
+end option
+
 namespace with_zero
 
 instance {α : Type*} [preorder α] : preorder (with_zero α) :=

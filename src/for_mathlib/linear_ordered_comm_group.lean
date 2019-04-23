@@ -36,6 +36,10 @@ namespace linear_ordered_comm_group
 variables {α : Type u} [linear_ordered_comm_group α] {x y z : α}
 variables {β : Type v} [linear_ordered_comm_group β]
 
+instance subtype.linear_ordered_comm_group (s : set α) [is_subgroup s] :
+  linear_ordered_comm_group s :=
+{ mul_le_mul_left := λ a b h c, linear_ordered_comm_group.mul_le_mul_left h c }
+
 class is_hom (f : α → β) extends is_group_hom f : Prop :=
 (ord : ∀ {a b : α}, a ≤ b → f a ≤ f b)
 
