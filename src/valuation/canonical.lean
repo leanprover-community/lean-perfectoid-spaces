@@ -138,8 +138,8 @@ instance : linear_ordered_comm_group (value_group v) :=
     change v.on_valuation_field a ≤ v.on_valuation_field b at h,
     change value_group_quotient v c * value_group_quotient v a
     ≤ value_group_quotient v c * value_group_quotient v b,
-    rw ←is_group_hom.mul (value_group_quotient v),
-    rw ←is_group_hom.mul (value_group_quotient v),
+    rw ←is_group_hom.map_mul (value_group_quotient v),
+    rw ←is_group_hom.map_mul (value_group_quotient v),
     change v.on_valuation_field (c * a) ≤ v.on_valuation_field (c * b),
     rw v.on_valuation_field.map_mul,
     rw v.on_valuation_field.map_mul,
@@ -179,7 +179,7 @@ is_valuation (valuation_field.canonical_valuation_v v) :=
 { map_zero := dif_pos rfl,
   map_one := begin unfold valuation_field.canonical_valuation_v, rw dif_neg zero_ne_one.symm,
     apply option.some_inj.2,
-    convert is_group_hom.one (value_group_quotient v),
+    convert is_group_hom.map_one (value_group_quotient v),
     exact inv_one
   end,
   map_mul := λ x y, begin
@@ -330,7 +330,7 @@ show (valuation_field.canonical_valuation_v v (localization.of sq)) *
   show some _ = some _,
   congr,
   show value_group_quotient v _ * value_group_quotient v _ = value_group_quotient v _,
-  rw ←(value_group_quotient.is_group_hom v).mul,
+  rw ←(value_group_quotient.is_group_hom v).map_mul,
   congr,
   apply units.ext,
   show localization.of sq * _ = localization.of rq,

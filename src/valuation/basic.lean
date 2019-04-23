@@ -260,7 +260,7 @@ is_valuation v₁ :=
 { map_zero := with_zero.map_inj Hiψ $
     by erw [H12, H.map_zero, ← with_zero.map_zero],
   map_one := with_zero.map_inj Hiψ $
-    by erw [H12, H.map_one, with_zero.map_some, is_group_hom.one ψ]; refl,
+    by erw [H12, H.map_one, with_zero.map_some, is_group_hom.map_one ψ]; refl,
   map_mul := λ r s, with_zero.map_inj Hiψ $
     by rw [H12, H.map_mul, ←H12 r, ←H12 s]; exact (with_zero.map_mul _ _ _).symm,
   map_add := λ r s,
@@ -295,7 +295,7 @@ valuation R Γ₁ :=
     map_one :=
     begin
       show with_zero.map f (_) = 1,
-      erw [v.map_one, with_zero.map_some, is_group_hom.one f],
+      erw [v.map_one, with_zero.map_some, is_group_hom.map_one f],
       refl
     end,
     map_mul := λ x y,

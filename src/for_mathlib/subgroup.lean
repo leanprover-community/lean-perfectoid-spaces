@@ -30,7 +30,7 @@ le_antisymm
   (by rintros _ ⟨x, hx, rfl⟩; exact in_closure.rec_on hx
   (λ a ha, mem_closure ⟨a, ha, rfl⟩)
   (by {rw [is_add_monoid_hom.map_zero f]; apply is_add_submonoid.zero_mem, })
-  (by {intros, rw [is_add_group_hom.neg f]; apply is_add_subgroup.neg_mem, assumption })
+  (by {intros, rw [is_add_group_hom.map_neg f]; apply is_add_subgroup.neg_mem, assumption })
   (by {intros, rw [is_add_monoid_hom.map_add f]; apply is_add_submonoid.add_mem, assumption' }))
   (closure_subset $ set.image_subset _ subset_closure)
 

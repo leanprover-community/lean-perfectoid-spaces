@@ -392,7 +392,7 @@ begin
           refine ⟨_, _, _, ⟨t, ht, rfl⟩, rfl⟩,
           rw mem_singleton_iff at hsinv ⊢,
           subst hsinv,
-          erw [← units.coe_map (lift T s hs), ← units.ext_iff, is_group_hom.inv (units.map _),
+          erw [← units.coe_map (lift T s hs), ← units.ext_iff, is_group_hom.map_inv (units.map _),
             inv_eq_iff_inv_eq, units.ext_iff, units.coe_inv, hs],
           { symmetry, exact lift_of T s hs s },
           { apply_instance } },
