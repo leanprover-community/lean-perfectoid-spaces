@@ -42,8 +42,6 @@ update-mathlib
 leanpkg build
 ```
 
-Note (21st April) : `master` is currently broken while we try to understand typeclasses better.
-
 ### Getting it working: longer version
 
 A brief guide to compiling the library on your machine:
