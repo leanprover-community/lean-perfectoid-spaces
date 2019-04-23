@@ -189,4 +189,11 @@ lemma eq_mul_inv_of_mul_eq {x : with_zero α} (h : x ≠ 0) {y z : with_zero α}
 
 end group
 
+def has_mem (α : Type*) : has_mem (with_zero α) (set α) :=
+⟨λ a s,
+match a with
+| (some a) := a ∈ s
+| none := false
+end⟩
+
 end with_zero

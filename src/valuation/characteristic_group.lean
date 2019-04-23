@@ -32,13 +32,9 @@ option.retract (set_coe_embedding H) ∘ v.canonical_valuation
 
 variables (v : valuation R Γ) (H : set v.value_group) [is_subgroup H]
 
-@[priority 1] instance (α : Type*) : has_mem (with_zero α) (set α) :=
-⟨λ a s,
-match a with
-| (some a) := a ∈ s
-| none := false
-end⟩
+local attribute [instance] with_zero.has_mem
 
+-- Wedhorn Rmk 4.15
 def is_valuation : is_valuation (to_fun v H) ↔ (v.characteristic_group ⊆ H ∧ is_convex H) :=
 begin
   split; intro h,
@@ -48,10 +44,12 @@ begin
       rw set.not_subset at hH,
       rcases hH with ⟨γ, ⟨h₁, ⟨r, hr⟩⟩, h₂⟩,
       have hr_add_one : v.canonical_valuation (r+1) ∉ H,
+      { sorry },
       apply @with_zero.coe_ne_zero H 1,
+      sorry
       },
-    { } },
-  {  }
+    { sorry } },
+  { sorry }
 end
 
 end horizontal_specialization
