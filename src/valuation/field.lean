@@ -178,9 +178,9 @@ lemma topological_group.extend_is_group_hom (hφ : continuous φ) (h : continuou
   apply is_closed_property2 de closed,
   intros x y,
   dsimp [P, Φ],
-  rw ← is_group_hom.mul ι,
+  rw ← is_group_hom.map_mul ι,
   repeat { rw dense_embedding.extend_e_eq },
-  rw is_group_hom.mul φ
+  rw is_group_hom.map_mul φ
 end⟩
 end top_group_extend
 

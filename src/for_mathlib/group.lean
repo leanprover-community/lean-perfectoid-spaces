@@ -25,7 +25,7 @@ def group_equiv.quot_eq_of_eq {G1 : set G} [normal_subgroup G1] {G2 : set G} [no
     let f : G → quotient G2 := quotient_group.mk,
     have h2 := quotient_group.is_group_hom_quotient_lift G1 f,
     have h3 := h2 (λ x hx, by rwa [←is_group_hom.mem_ker f, quotient_group.ker_mk G2, ←h]),
-    have h4 := h3.mul,
+    have h4 := h3.map_mul,
     exact h4 a b,
   end⟩
   }

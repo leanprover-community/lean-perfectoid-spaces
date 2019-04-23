@@ -41,7 +41,7 @@ begin
     { apply_instance },
     { rwa ← set.image_subset_iff at hV } },
   { apply continuous.tendsto (emb.continuous),
-    rwa is_group_hom.one f }
+    rwa is_group_hom.map_one f }
 end
 
 end topological_group
@@ -355,7 +355,7 @@ begin
   letI rnz := (of_subgroups _ h_directed h_left_mul h_right_mul h_mul),
   apply topological_add_group.continuous_of_continuous_at_zero f,
   intros U hU,
-  rw [is_add_group_hom.zero f, of_subgroups.nhds_zero] at hU,
+  rw [is_add_group_hom.map_zero f, of_subgroups.nhds_zero] at hU,
   cases hU with i hi,
   rw mem_map_sets_iff,
   refine ⟨f ⁻¹' G i, mem_nhds_sets (h i) _, set.subset.trans _ hi⟩,
