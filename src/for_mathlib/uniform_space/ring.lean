@@ -105,7 +105,7 @@ have hf : uniform_continuous f, from uniform_continuous_of_continuous hf,
       (continuous_add'.comp continuous_extension)
       (continuous_add (continuous_fst.comp continuous_extension) (continuous_snd.comp continuous_extension)))
     (assume a b,
-      by rw [← coe_add, extension_coe hf, extension_coe hf, extension_coe hf, is_add_group_hom.add f]),
+      by rw [← coe_add, extension_coe hf, extension_coe hf, extension_coe hf, is_add_group_hom.map_add f]),
   map_mul := assume a b, completion.induction_on₂ a b
     (is_closed_eq
       ((continuous_mul' α).comp continuous_extension)
@@ -181,7 +181,7 @@ instance : topological_ring (sep_quot α) :=
 instance sep_quot.is_ring_hom_mk : is_ring_hom (quotient.mk : α → sep_quot α) :=
 { map_one := rfl,
   map_mul := λ x y, eq.symm (sep_quot.map₂_mk_mk separated_map_mul x y),
-  map_add := is_add_group_hom.add _ }
+  map_add := is_add_group_hom.map_add _ }
 
 -- Turning the following into an instance wouldn't work because of the continuity assumption
 def sep_quot.is_ring_hom_lift [separated β] {f : α → β} [hom : is_ring_hom f] (hf : continuous f) : is_ring_hom (sep_quot.lift f) :=
@@ -189,7 +189,7 @@ have sep : separated_map f, from separated_of_group_hom hf,
 { map_one := by change sep_quot.lift f ⟦1⟧ = 1 ; rw [sep_quot.lift_mk sep, hom.map_one ],
   map_mul := begin rintro ⟨x⟩ ⟨y⟩,  rw [quot_mk_quotient_mk, quot_mk_quotient_mk, ←sep_quot.is_ring_hom_mk.map_mul],
     repeat {rw sep_quot.lift_mk sep} , rw hom.map_mul, end,
-  map_add := by haveI := sep_quot.is_add_group_hom_lift hf ; exact is_add_group_hom.add _ }
+  map_add := by haveI := sep_quot.is_add_group_hom_lift hf ; exact is_add_group_hom.map_add _ }
 
 -- Turning the following into an instance wouldn't work because of the continuity assumption
 def sep_quot.is_ring_hom_map {f : α → β} [is_ring_hom f] (hf : continuous f) : is_ring_hom (sep_quot.map f) :=

@@ -135,13 +135,13 @@ def ker (f : α → β) (hf : is_hom f) : set α :=
 { x | f x = 1 }
 
 theorem ker.is_convex (f : α → β) (hf : is_hom f) : is_convex (ker f hf) :=
-{ one_mem := is_group_hom.one f,
+{ one_mem := is_group_hom.map_one f,
   mul_mem := λ x y hx hy, show f (x * y) = 1, by dsimp [ker] at hx hy; rw
-    [(hf.1).mul, hx, hy, mul_one],
+    [(hf.1).map_mul, hx, hy, mul_one],
   inv_mem := λ x hx, show f x⁻¹ = 1, by dsimp [ker] at hx;
-    rw [@is_group_hom.inv _ _ _ _ f (hf.1) x, hx, one_inv],
+    rw [@is_group_hom.map_inv _ _ _ _ f (hf.1) x, hx, one_inv],
   mem_of_between := λ x y hxy hy1 hx,
-    le_antisymm (is_group_hom.one f ▸ is_hom.ord _ hy1) (hx ▸ is_hom.ord _ hxy) }
+    le_antisymm (is_group_hom.map_one f ▸ is_hom.ord _ hy1) (hx ▸ is_hom.ord _ hxy) }
 
 def height (α : Type) [linear_ordered_comm_group α] : cardinal :=
 cardinal.mk {S : set α // is_proper_convex S}
@@ -160,7 +160,7 @@ begin
   cases hx : x; cases hy : y; try {refl},
   show some (f (val * val_1)) = some ((f val) * (f val_1)),
   apply option.some_inj.2,
-  exact is_group_hom.mul f val val_1
+  exact is_group_hom.map_mul f val val_1
 end
 
 lemma mul_le_mul_left : ∀ a b : with_zero α, a ≤ b → ∀ c : with_zero α, c * a ≤ c * b

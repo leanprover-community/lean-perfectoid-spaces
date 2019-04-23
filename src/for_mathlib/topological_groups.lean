@@ -111,11 +111,11 @@ end
 lemma continuous_of_continuous_at_one (h : continuous_at f 1) :
   continuous f :=
 begin
-  replace h : map f (nhds 1) ≤ nhds 1, by rw ← is_group_hom.one f ; exact h,
+  replace h : map f (nhds 1) ≤ nhds 1, by rw ← is_group_hom.map_one f ; exact h,
   rw continuous_iff_continuous_at,
   intro g,
   have key : (f ∘ λ (h : G), g * h) = (λ (h : H), (f g) * h) ∘ f,
-    by ext ; simp [is_group_hom.mul f],
+    by ext ; simp [is_group_hom.map_mul f],
   change map f (nhds g) ≤ nhds (f g),
   rw [← nhds_translation_mul_left g, ← nhds_translation_mul_left (f g),
       filter.map_comm key],
@@ -235,7 +235,7 @@ variables (K : Type*) [group K] [topological_space K] [topological_group K]
 
 @[symm] def symm (h : G ≃*ₜ H) : H ≃*ₜ G :=
 { hom := ⟨λ n₁ n₂, function.injective_of_left_inverse h.left_inv begin
-   rw h.hom.mul, unfold equiv.symm, rw [h.right_inv, h.right_inv, h.right_inv], end⟩,
+   rw h.hom.map_mul, unfold equiv.symm, rw [h.right_inv, h.right_inv, h.right_inv], end⟩,
   continuous_to_fun := h.continuous_inv_fun,
   continuous_inv_fun := h.continuous_to_fun,
   ..h.to_equiv.symm}
@@ -312,7 +312,7 @@ begin
       from mem_nhds_sets op_ker (is_submonoid.one_mem (ker φ)),
     rw [← de.induced, mem_comap_sets_of_inj de.inj] at this,
     rcases this with ⟨V, V_in, hV⟩,
-    rw one ι at V_in,
+    rw map_one ι at V_in,
     use [V, V_in, hV] },
   rcases this with ⟨V, V_in, hV⟩,
   have : ∃ V' ∈ nhds (1 : H), ∀ x y ∈ V', x*y⁻¹ ∈ V,
@@ -330,7 +330,7 @@ begin
   rcases y_in with ⟨vy, vy_in, hy⟩,
   change vₓ * h = ι x at hx,
   change vy * h = ι y at hy,
-  rw [inv_iff_ker φ, hV, mem_preimage_eq, mul ι, inv ι, ← hx, ← hy],
+  rw [inv_iff_ker φ, hV, mem_preimage_eq, map_mul ι, map_inv ι, ← hx, ← hy],
   simp [mul_assoc],
   simp [hV', *],
 end

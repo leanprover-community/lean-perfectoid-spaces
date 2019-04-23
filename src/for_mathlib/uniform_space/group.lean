@@ -71,7 +71,7 @@ instance sep_quot.is_add_group_hom_lift [separated β]  [hom : is_add_group_hom 
   repeat { rw quot_mk_quotient_mk },
   rw [sep_quot.add_mk],
   repeat { rw sep_quot.lift_mk (separated_of_group_hom hf) },
-  rw hom.add,
+  rw hom.map_add,
 end⟩
 
 instance sep_quot.is_add_group_hom_map [hom : is_add_group_hom f](hf : continuous f) : is_add_group_hom (sep_quot.map f) :=
