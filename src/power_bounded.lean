@@ -77,6 +77,16 @@ begin
     exact mul_mem_mul (subset_span hv) (subset_span hb) }
 end
 
+lemma is_ideal_adic.topologically_nilpotent {J : ideal R} (h : is-J-adic) :
+  is_topologically_nilpotent_subset (↑J : set R) :=
+begin
+  rw is_ideal_adic_iff at h,
+  intros U hU,
+  cases h.2 U hU with n hn,
+  use n,
+  exact set.subset.trans (J.pow_subset_pow) hn
+end
+
 end
 
 namespace bounded

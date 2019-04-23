@@ -4,8 +4,19 @@ import group_theory.group_action
 namespace set
 local attribute [instance] set.pointwise_mul_semiring
 local attribute [instance] set.singleton.is_monoid_hom
+local attribute [instance] pointwise_mul pointwise_add
 
-variables {α : Type*} [monoid α]
+variables {α : Type*}
+
+instance pointwise_mul_fintype [has_mul α] [decidable_eq α] (s t : set α) [hs : fintype s] [ht : fintype t] :
+  fintype (s * t : set α) := by {rw pointwise_mul_eq_image, apply set.fintype_image}
+
+instance pointwise_add_fintype [has_add α] [decidable_eq α] (s t : set α) [hs : fintype s] [ht : fintype t] :
+  fintype (s + t : set α) := by {rw pointwise_add_eq_image, apply set.fintype_image}
+
+attribute [to_additive set.pointwise_add_fintype] set.pointwise_mul_fintype
+
+variables [monoid α]
 
 instance : mul_action α (set α) :=
 { smul := λ a s, ({a} : set α) * s,
@@ -32,14 +43,12 @@ lemma mul_le_mul {s₁ s₂ t₁ t₂ : set α} (hs : s₁ ⊆ s₂) (ht : t₁ 
   s₁ * t₁ ⊆ s₂ * t₂ :=
 by { rintros _ ⟨a, ha, b, hb, rfl⟩, exact ⟨a, hs ha, b, ht hb, rfl⟩ }
 
-local attribute [instance] pointwise_mul pointwise_add
-
-instance pointwise_mul_fintype [has_mul α] [decidable_eq α] (s t : set α) [hs : fintype s] [ht : fintype t] :
-  fintype (s * t : set α) := by {rw pointwise_mul_eq_image, apply set.fintype_image}
-
-instance pointwise_add_fintype [has_add α] [decidable_eq α] (s t : set α) [hs : fintype s] [ht : fintype t] :
-  fintype (s + t : set α) := by {rw pointwise_add_eq_image, apply set.fintype_image}
--- attribute [to_additive set.pointwise_add_fintype] or something should go here but KMB forgot the
--- syntax for when it wasn't auto generated
+instance pointwise_mul_fintype_pow [decidable_eq α] (T : set α) [fintype T] (n : ℕ) :
+  fintype (T^n : set α) :=
+begin
+  induction n with n ih,
+  { rw pow_zero, exact set.fintype_singleton _ },
+  { rw pow_succ, resetI, exact set.pointwise_mul_fintype _ _ }
+end
 
 end set
