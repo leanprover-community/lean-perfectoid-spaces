@@ -107,6 +107,9 @@ lemma mul_coe_units [separated K] (x y : units K) : (coe_units K x).val * (coe_u
 by { simp only [coe_units], rw ← (ring_completion.coe_is_ring_hom K).map_mul, refl }
 
 @[simp]
+lemma coe_units_val [separated K] (x : units K): (coe_units K x).val = (x.val : hat K) := rfl
+
+@[simp]
 lemma coe_units_one [separated K] : (coe_units K 1).val = 1 :=
 by simpa [coe_units]
 
@@ -246,8 +249,11 @@ begin
       continuous_const,
   have dense : closure (range (coe_units K)) = univ,
     from eq_univ_of_forall (de_coe_units K).dense,
-  sorry
-  --simp [is_closed_property dense cl]
+  apply is_closed_property dense cl,
+  intro x,
+  rw [inv_hat_star_coe_units, for_kevin, coe_units_val,
+      ← (ring_completion.coe_is_ring_hom K).map_mul, x.val_inv,
+      (ring_completion.coe_is_ring_hom K).map_one]
 end
 
 /-- homeomorphim between non-zero elements of hat K and units of hat K -/
