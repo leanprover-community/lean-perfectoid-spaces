@@ -10,7 +10,7 @@ Bourbaki does *not* prove this proposition, he refers to the general discussion 
 function defined on a dense subset with values in a complete Hausdorff space. In particular
 the subtlety about clustering at zero is totally left to readers.
 
-The main discussion revolves aroung the diagram
+The main discussion revolves around the diagram
 
                  x ↦ x⁻¹
     K ←———— K^x ————————→ K^x ——————⟶ K
@@ -341,8 +341,13 @@ instance : topological_division_ring (hat K) :=
     end,
   ..ring_completion.topological_ring K }
 
-instance toto : topological_group (units $ hat K) := sorry
-
 lemma dense_units_map : dense_embedding (units.map (coe : K → hat K) : units K → units (hat K)) :=
-sorry
+begin
+  rw show units.map (coe : K → hat K) = ((hat_star_is_units K) ∘ coe_units K),
+  { funext,
+    apply units.ext,
+    refl },
+  exact dense_embedding.comp (de_coe_units _) (dense_embedding.of_homeo $ hat_star_is_units _),
+end
+
 end

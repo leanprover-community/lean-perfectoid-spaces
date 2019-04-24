@@ -146,6 +146,24 @@ have dhf : dense_embedding (h ∘ f),
   inj := λ a b H, dhf.inj (by {show h (f a) = _, rw H}),
   induced := λ a, by rw [←dhf.induced a, ←@comap_comap_comp _ _ _ _ _ h, dh.induced] }
 
+lemma of_homeo (h : α ≃ₜ β) : dense_embedding h :=
+{ dense :=
+  begin
+    intro x,
+    erw range_iff_surjective.mpr (h.to_equiv.surjective),
+    simp
+  end,
+  inj := h.to_equiv.injective,
+  induced :=
+  begin
+    intro a,
+    symmetry,
+    apply embedding.nhds_eq_comap,
+    refine ⟨h.to_equiv.injective, _⟩,
+    symmetry,
+    apply homeomorph.induced_eq
+  end }
+
 end dense_embedding
 
 section
