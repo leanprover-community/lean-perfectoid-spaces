@@ -373,18 +373,20 @@ begin
   let de : dense_embedding ι := dense_units_map (valued_ring K v),
   let u := units (hat K),
   letI : topological_monoid u := topological_group.to_topological_monoid _,
-  have cl : is_closed {p : u × u | if h : p.1.val + p.2.val = 0 then true else
+  let C := {p : u × u | if h : p.1.val + p.2.val = 0 then true else
     hatv (units.mk0 (p.1.val + p.2.val) h) ≤ hatv p.1 ∨
     hatv (units.mk0 (p.1.val + p.2.val) h) ≤ hatv p.2 },
-  from let ch := continuous_unit_extension v in
-     is_closed_eq (continuous_mul'.comp ch) (continuous_mul (continuous_fst.comp ch)
-    (continuous_snd.comp ch)),
-  have : ∀ x y : units (valued_ring K v), hatv (ι x * ι y) = (hatv $ ι x)*(hatv $ ι y),
+  have cl : is_closed C,
+    sorry,
+--  from let ch := continuous_unit_extension v in
+--     is_closed_eq (continuous_mul'.comp ch) (continuous_mul (continuous_fst.comp ch)
+--    (continuous_snd.comp ch)),
+  have : ∀ x y : units (valued_ring K v), (ι x, ι y) ∈ C,
   { intros x y,
     have hx : hatv (ι x) = _:= de.extend_e_eq x,
     have hy : hatv (ι y) = _:= de.extend_e_eq y,
-    have hxy : hatv (ι $ x * y) = _:= de.extend_e_eq _,
-    rw [hx, hy, ← is_group_hom.map_mul ι x y, hxy, is_group_hom.map_mul (valuation.unit_map v)],
+    sorry,
+--    rw [hx, hy, ← is_group_hom.map_mul ι x y, hxy, is_group_hom.map_mul (valuation.unit_map v)],
      },
   exact is_closed_property2 de cl this
 end
