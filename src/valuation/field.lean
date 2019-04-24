@@ -251,7 +251,45 @@ The next sorry is meant to be the only mathematical content of that file, it's w
 at least three lines in BouAC
 -/
 instance : completable_top_field (valued_ring K v) :=
-sorry
+{ separated := by apply_instance,
+  nice :=
+  begin
+    rintros F hF h0,
+    delta zero_not_adh at h0,
+    rw ← filter.empty_in_sets_eq_bot at h0,
+    rw filter.mem_inf_sets at h0,
+    rcases h0 with ⟨t₁, ht₁, t₂, ht₂, h⟩,
+    rw filter.mem_comap_sets at ht₁,
+    rcases ht₁ with ⟨t₁', ht₁', ht₁⟩,
+    rw of_subgroups.nhds_zero at ht₁',
+    rcases ht₁' with ⟨γ₁, hγ₁⟩,
+    rcases hF with ⟨hF₁, hF₂⟩,
+    delta cauchy_of,
+    rw cauchy_map_iff,
+    split,
+    { exact hF₁ },
+    { refine le_trans _ hF₂,
+      rw map_le_iff_le_comap,
+      intros s hs,
+      rcases hs with ⟨t , ht, hts⟩,
+      have hγ₁t₁ := subset.trans (preimage_mono hγ₁) ht₁,
+      have hγ₁t₂ : _ ∩ t₂ = ∅,
+      { apply subset.antisymm _ (empty_subset _),
+        exact subset.trans (inter_subset_inter_left _ hγ₁t₁) h },
+        -- Dear Patrick, we're messing around a bit.
+        -- This is probably way too long. Now we are going to catch a train.
+        -- We'll try to hack more on this tonight.
+        sorry
+      -- rcases ht with ⟨V, hV, hVt⟩,
+      -- rw of_subgroups.nhds_zero at hV,
+      -- rcases hV with ⟨γ, hγ⟩,
+      -- let W := {k : valued_ring K v | v k < γ},
+      -- change W ⊆ V at hγ,
+      -- have hWt := subset.trans (preimage_mono hγ) hVt,
+      -- have hWs := subset.trans (preimage_mono hWt) hts,
+      -- rw ← preimage_comp at hWs,
+     }
+  end }
 
 noncomputable
 instance : topological_space (units (ring_completion (valued_ring K v))) :=
