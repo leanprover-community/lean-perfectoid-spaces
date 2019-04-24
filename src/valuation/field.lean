@@ -336,7 +336,8 @@ set_option class.instance_max_depth 46
 instance : is_group_hom (valuation.unit_map v) := by apply_instance
 
 -- This should be there already, but Lean and Patrick are tired of this
-instance titi : is_monoid_hom (coe : (valued_ring K v) → hat K) := sorry
+-- KB : it is indeed there already
+instance titi : is_monoid_hom (coe : (valued_ring K v) → hat K) := by apply_instance
 
 instance : is_group_hom (ring_completion.units_coe $ valued_ring K v) :=
 units.is_group_hom _
@@ -364,6 +365,31 @@ begin
   exact is_closed_property2 de cl this
 end
 
+lemma valuation.unit_completion_extend_add : ∀ x y : units (hat K),
+ if h : x.val + y.val = 0 then true else
+   hatv (units.mk0 (x.val + y.val) h) ≤ hatv x ∨ hatv (units.mk0 (x.val + y.val) h) ≤ hatv y :=
+begin
+  let ι := ring_completion.units_coe (valued_ring K v),
+  let de : dense_embedding ι := dense_units_map (valued_ring K v),
+  let u := units (hat K),
+  letI : topological_monoid u := topological_group.to_topological_monoid _,
+  have cl : is_closed {p : u × u | if h : p.1.val + p.2.val = 0 then true else
+    hatv (units.mk0 (p.1.val + p.2.val) h) ≤ hatv p.1 ∨
+    hatv (units.mk0 (p.1.val + p.2.val) h) ≤ hatv p.2 },
+  from let ch := continuous_unit_extension v in
+     is_closed_eq (continuous_mul'.comp ch) (continuous_mul (continuous_fst.comp ch)
+    (continuous_snd.comp ch)),
+  have : ∀ x y : units (valued_ring K v), hatv (ι x * ι y) = (hatv $ ι x)*(hatv $ ι y),
+  { intros x y,
+    have hx : hatv (ι x) = _:= de.extend_e_eq x,
+    have hy : hatv (ι y) = _:= de.extend_e_eq y,
+    have hxy : hatv (ι $ x * y) = _:= de.extend_e_eq _,
+    rw [hx, hy, ← is_group_hom.map_mul ι x y, hxy, is_group_hom.map_mul (valuation.unit_map v)],
+     },
+  exact is_closed_property2 de cl this
+end
+
+-- TODO -- this theorem has too many top spaces instances in its definition
 /-
 The first three sorries below are meant to be entertainment for Kevin
 The map_add sorry should be the same level of difficulty than the map_mul proof
@@ -374,31 +400,44 @@ def valuation.completion_extend : valuation (ring_completion $ valued_ring K v) 
 ⟨λ x, if h : x = 0 then 0 else some (valuation.unit_completion_extend v $ units.mk0 x h),
 { map_zero := by simp,
   map_one := begin
-    let ι := ring_completion.units_coe (valued_ring K v),
-    let de : dense_embedding ι := dense_units_map (valued_ring K v),
-    suffices : some (valuation.unit_completion_extend v (units.mk0 (1 : hat K) zero_ne_one.symm)) = (1 : Γ),
-    by simp[this] ; refl,
-    have : units.mk0 (1 : hat K) zero_ne_one.symm = (ι (1 : units $ valued_ring K v)), sorry,
-    dsimp [valuation.unit_completion_extend],
-    rw [this, de.extend_e_eq],
-    simp [v.map_one],
-    sorry
+    sorry -- code works but is slow
+    -- let ι := ring_completion.units_coe (valued_ring K v),
+    -- let de : dense_embedding ι := dense_units_map (valued_ring K v),
+    -- suffices : some (valuation.unit_completion_extend v (units.mk0 (1 : hat K) zero_ne_one.symm)) = (1 : Γ),
+    -- by simp [this] ; refl,
+    -- have : units.mk0 (1 : hat K) zero_ne_one.symm = (ι (1 : units $ valued_ring K v)),
+    --   apply units.ext, refl,
+    -- dsimp [valuation.unit_completion_extend],
+    -- rw [this, de.extend_e_eq],
+    -- simp [v.map_one],
+    -- exact v.map_one,
   end,
   map_mul := λ x y,
-  begin
+  begin --sorry -- this proof works fine
     by_cases hx : x = 0 ; simp [hx],
     by_cases hy : y = 0 ; simp [hy],
-    have : x*y ≠ 0, sorry,
+    have : x*y ≠ 0,
+      exact mul_ne_zero hx hy,
     simp [this],
-    have : units.mk0 (x * y) this = (units.mk0 x hx)*(units.mk0 y hy),
-    {
-      sorry },
+    have : units.mk0 (x * y) this = (units.mk0 x hx) * (units.mk0 y hy),
+    { apply units.ext, refl },
     rw this,
     rw  valuation.unit_completion_extend_mul,
     exact with_zero.mul_coe (valuation.unit_completion_extend v $ units.mk0 x hx)
                             (valuation.unit_completion_extend v $ units.mk0 y hy),
   end,
-  map_add := sorry }⟩
+  map_add := begin
+    intros x y,
+    split_ifs,
+      left, simp,
+      left, simp,
+      right, simp,
+      left, simp,
+      exfalso, revert h, subst h_1, subst h_2, simp,
+      right, subst h_1, convert le_refl _, simp,
+      subst h_2, left, simp,
+      sorry,
+  end }⟩
 end
 
 -- Kevin has added the thing he needs
