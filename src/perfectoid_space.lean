@@ -21,9 +21,8 @@ class perfectoid_ring (R : Type u) [Huber_ring R] extends Tate_ring R : Prop :=
 (Frob     : ∀ a : Rᵒ, ∃ b : Rᵒ, (p : Rᵒ) ∣ (b^p - a : Rᵒ))
 
 class perfectoid_space (X : Type u) [topological_space X] extends adic_space X :=
-(perfectoid_cover : ∀ x : X, ∃ (U : opens X) (A : Huber_pair) [perfectoid_ring A.R]
+(perfectoid_cover : ∀ x : X, ∃ (U : opens X) (A : Huber_pair) [perfectoid_ring A],
   -- next hypothesis is always true although we're yet to prove this
-  (rational_basis : is_topological_basis (rational_basis' A)),
-  (x ∈ U) ∧ nonempty (𝒞.equiv (𝒞.Spa A (rational_basis) : 𝒞 (Spa A))
+  (x ∈ U) ∧ nonempty (𝒞.equiv (𝒞.Spa A : 𝒞 (Spa A))
     ((locally_ringed_valued_space).to_𝒞.restrict U : 𝒞 U)))
 -- is_preadic_space_equiv U (Spa A))

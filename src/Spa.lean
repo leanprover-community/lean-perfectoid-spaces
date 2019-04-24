@@ -55,14 +55,14 @@ begin
   { apply (out_mk v).ne_zero, },
 end
 
-instance (A : Huber_pair) : topological_space (Spa A) :=
-topological_space.generate_from {U : set (Spa A) | ∃ r s : A, U = basic_open r s}
+-- instance (A : Huber_pair) : topological_space (Spa A) :=
+-- topological_space.generate_from {U : set (Spa A) | ∃ r s : A, U = basic_open r s}
 
-lemma basic_open.is_open (r s : A) : is_open (basic_open r s) :=
-topological_space.generate_open.basic (basic_open r s) ⟨r, s, rfl⟩
+-- lemma basic_open.is_open (r s : A) : is_open (basic_open r s) :=
+-- topological_space.generate_open.basic (basic_open r s) ⟨r, s, rfl⟩
 
-lemma basic_open.compact (r s : A) : compact (basic_open r s) :=
-sorry
+-- lemma basic_open.compact (r s : A) : compact (basic_open r s) :=
+-- sorry
 
 lemma basic_open_eq (s : A) : basic_open s s = {v | v s ≠ 0} :=
 set.ext $ λ v, ⟨λ h, h.right, λ h, ⟨le_refl _, h⟩⟩
@@ -349,17 +349,20 @@ r.s ∈ (insert_s r).T := by {left, refl}
 
 end rational_open_data
 
-lemma rational_open.is_open (s : A) (T : set A) [h : fintype T] :
-  is_open (rational_open s T) :=
-begin
-  rw rational_open_bInter,
-  apply is_open_inter,
-  { apply is_open_bInter ⟨h⟩,
-    intros,
-    apply basic_open.is_open },
-  { rw ← basic_open_eq s,
-    apply basic_open.is_open },
-end
+instance (A : Huber_pair) : topological_space (Spa A) :=
+topological_space.generate_from {U : set (Spa A) | ∃ r : rational_open_data A, U = r.rational_open}
+
+-- lemma rational_open.is_open (s : A) (T : set A) [h : fintype T] :
+--   is_open (rational_open s T) :=
+-- begin
+--   rw rational_open_bInter,
+--   apply is_open_inter,
+--   { apply is_open_bInter ⟨h⟩,
+--     intros,
+--     apply basic_open.is_open },
+--   { rw ← basic_open_eq s,
+--     apply basic_open.is_open },
+-- end
 
 lemma rational_open_inter.aux₁ {s₁ s₂ : A} {T₁ T₂ : set A}
   (h₁ : s₁ ∈ T₁) (h₂ : s₂ ∈ T₂) :
@@ -433,8 +436,11 @@ univ_subset_iff.1 $ λ v h, ⟨le_refl _,by erw valuation.map_one; exact one_ne_
 by simp
 
 def rational_basis (A : Huber_pair) : set (set (Spa A)) :=
-{U : set (Spa A) | ∃ {s : A} {T : set A} {hfin : fintype T} {hopen : is_open (↑(ideal.span T) : set A)},
-                   U = rational_open s T }
+{U : set (Spa A) | ∃ r : rational_open_data A, U = r.rational_open }
+
+-- def rational_basis (A : Huber_pair) : set (set (Spa A)) :=
+-- {U : set (Spa A) | ∃ {s : A} {T : set A} {hfin : fintype T} {hopen : is_open (↑(ideal.span T) : set A)},
+--                    U = rational_open s T }
 
 section
 open algebra lattice
@@ -602,7 +608,51 @@ begin
     sorry
   },
 end
+-/
 
+variable (A)
+
+def rational_open_data.univ : rational_open_data A :=
+{ s := 1,
+  T := {1},
+  Tfin := by apply_instance,
+  Hopen :=
+  begin
+    rw ideal.span_singleton_one,
+    exact is_open_univ
+  end }
+
+lemma rational_open_data_univ :
+  (rational_open_data.univ A).rational_open = univ :=
+begin
+  apply subset.antisymm (subset_univ _),
+  intros v hv,
+  split,
+  { intros t ht,
+    erw mem_singleton_iff at ht,
+    subst ht,
+    exact le_refl _ },
+  { show v 1 ≠ 0,
+    erw Spv.map_one,
+    simp }
+end
+
+lemma rational_basis.is_basis : topological_space.is_topological_basis (rational_basis A) :=
+begin
+  refine ⟨_, _, rfl⟩,
+  { rintros _ ⟨r₁, rfl⟩ _ ⟨r₂, rfl⟩ x hx,
+    refine ⟨_, _, hx, subset.refl _⟩,
+    { use rational_open_data.inter r₁ r₂,
+      symmetry,
+      apply rational_open_data.rational_open_data_inter } },
+  { apply subset.antisymm (subset_univ _),
+    apply subset_sUnion_of_mem,
+    exact ⟨_, (rational_open_data_univ A).symm⟩ }
+end
+
+variable {A}
+
+/-
 -- Current status: proof is broken with 2 sorries.
 -- We need this :-\
 lemma rational_basis.is_basis : topological_space.is_topological_basis (rational_basis A) :=

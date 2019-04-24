@@ -17,6 +17,7 @@ universe u
 
 open nat function
 open topological_space
+open Spa
 
 namespace sheaf_of_topological_rings
 
@@ -61,11 +62,9 @@ def 𝒱.to_𝒞 {X : Type*} [topological_space X] (ℱ : 𝒱 X) : 𝒞 X :=
 { F := ℱ.ℱ.to_presheaf_of_topological_rings,
   valuation := ℱ.valuation}
 
-noncomputable def 𝒞.Spa (A : Huber_pair)
-  (hA : topological_space.is_topological_basis (rational_basis' A)) :
-  𝒞 (Spa A) :=
+noncomputable def 𝒞.Spa (A : Huber_pair) : 𝒞 (Spa A) :=
 { F := Spa.presheaf_of_topological_rings A,
-  valuation := λ x, Spv.mk (Spa.presheaf.stalk_valuation x hA) }
+  valuation := λ x, Spv.mk (Spa.presheaf.stalk_valuation x) }
 
 /- Remainder of this file:
 
@@ -401,9 +400,8 @@ noncomputable def 𝒞.restrict {X : Type*} [topological_space X] (U : opens X) 
 structure adic_space (X : Type u) [topological_space X] :=
 (locally_ringed_valued_space : 𝒱 X)
 (Hlocally_affinoid : ∃ (I : Type u) (U : I → opens X) (Hcover : set.Union (λ i, (U i).1) = set.univ)
-  (R : I → Huber_pair)
-  (Rgood : Π (i : I), (topological_space.is_topological_basis (rational_basis' (R i)))),
-  ∀ i : I, nonempty (𝒞.equiv (𝒞.Spa (R i) (Rgood i)) (𝒞.restrict (U i) locally_ringed_valued_space.to_𝒞)))
+  (R : I → Huber_pair),
+  ∀ i : I, nonempty (𝒞.equiv (𝒞.Spa (R i)) (𝒞.restrict (U i) locally_ringed_valued_space.to_𝒞)))
 
 -- note that currently we can't even prove that Spa(A) is a pre-adic space,
 -- because we don't know that the rational opens are a basis. I didn't

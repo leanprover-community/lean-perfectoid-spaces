@@ -74,33 +74,29 @@ end Spa.r_o_d_completion
 -- to K_v-hat. We do this under the additional assumption that D(T,s) is a basis.
 -- First let's write a noncomputable function which gets a basis element.
 
-def rational_basis' (A : Huber_pair) : set (set (Spa A)) :=
-{U : set (Spa A) | ∃ r : rational_open_data A, U = r.rational_open }
+-- def rational_basis (A : Huber_pair) : set (set (Spa A)) :=
+-- {U : set (Spa A) | ∃ r : rational_open_data A, U = r.rational_open }
 
-lemma Spa.exists_rational_open_subset {v : Spa A} {U : opens (Spa A)} (hv : v ∈ U)
-  (hA : topological_space.is_topological_basis (rational_basis' A)) :
+lemma Spa.exists_rational_open_subset {v : Spa A} {U : opens (Spa A)} (hv : v ∈ U) :
   ∃ r : rational_open_data_subsets U, v ∈ r.1.rational_open :=
 begin
   suffices : U.1 ∈ nhds v,
-    rw mem_nhds_of_is_topological_basis hA at this,
+    rw mem_nhds_of_is_topological_basis (rational_basis.is_basis A) at this,
     rcases this with ⟨_, ⟨r, rfl⟩, hv, hr⟩,
     use ⟨r, hr⟩,
     exact hv,
   apply mem_nhds_sets U.2 hv,
 end
 
-noncomputable def Spa.rational_open_subset_nhd {v : Spa A} {U : opens (Spa A)} (hv : v ∈ U)
-  (hA : topological_space.is_topological_basis (rational_basis' A)) :
+noncomputable def Spa.rational_open_subset_nhd {v : Spa A} {U : opens (Spa A)} (hv : v ∈ U) :
   rational_open_data_subsets U :=
-classical.some $ Spa.exists_rational_open_subset hv hA
+classical.some $ Spa.exists_rational_open_subset hv
 
-def Spa.mem_rational_open_subset_nhd {v : Spa A} {U : opens (Spa A)} (hv : v ∈ U)
-  (hA : topological_space.is_topological_basis (rational_basis' A)) :
-  v ∈ (Spa.rational_open_subset_nhd hv hA).1.rational_open :=
-classical.some_spec $ Spa.exists_rational_open_subset hv hA
+def Spa.mem_rational_open_subset_nhd {v : Spa A} {U : opens (Spa A)} (hv : v ∈ U) :
+  v ∈ (Spa.rational_open_subset_nhd hv).1.rational_open :=
+classical.some_spec $ Spa.exists_rational_open_subset hv
 
 namespace Spa.presheaf
-variable (hA : topological_space.is_topological_basis (rational_basis A))
 
 section scary_uniform_space_instance
 
@@ -113,23 +109,21 @@ local attribute [instance] uniform_space'
 
 /-- The map from F(U) to K_v for v ∈ U -/
 noncomputable def to_valuation_field_completion {v : Spa A} {U : opens (Spa A)} (hv : v ∈ U)
-  (hA : topological_space.is_topological_basis (rational_basis' A))
   (f : Spa.presheaf_value U) : ring_completion (valuation_field (Spv.out v.1)) :=
-Spa.r_o_d_completion.to_complete_valuation_field (Spa.mem_rational_open_subset_nhd hv hA) $
-  f.1 $ Spa.rational_open_subset_nhd hv hA
+Spa.r_o_d_completion.to_complete_valuation_field (Spa.mem_rational_open_subset_nhd hv) $
+  f.1 $ Spa.rational_open_subset_nhd hv
 
 instance {v : Spa A}
-  (hA : topological_space.is_topological_basis (rational_basis' A))
   {U : opens (Spa A)} (hv : v ∈ U) :
-  is_ring_hom (to_valuation_field_completion hv hA) := begin
+  is_ring_hom (to_valuation_field_completion hv) := begin
   delta to_valuation_field_completion,
   let F := (λ (f : presheaf_value U),
-       Spa.r_o_d_completion.to_complete_valuation_field (Spa.mem_rational_open_subset_nhd hv hA)
-       (f.val (Spa.rational_open_subset_nhd hv hA))),
+       Spa.r_o_d_completion.to_complete_valuation_field (Spa.mem_rational_open_subset_nhd hv)
+       (f.val (Spa.rational_open_subset_nhd hv))),
   show is_ring_hom F,
   have H : F =
-    ((Spa.r_o_d_completion.to_complete_valuation_field (Spa.mem_rational_open_subset_nhd hv hA))
-    ∘ (λ (f : presheaf_value U), (f.val (Spa.rational_open_subset_nhd hv hA)))),
+    ((Spa.r_o_d_completion.to_complete_valuation_field (Spa.mem_rational_open_subset_nhd hv))
+    ∘ (λ (f : presheaf_value U), (f.val (Spa.rational_open_subset_nhd hv)))),
     refl,
   rw H,
   refine is_ring_hom.comp _ _,
@@ -142,7 +136,6 @@ end scary_uniform_space_instance
 -- before we even start with this terrifying noncomputable Spa.rational_open_subset_nhd
 -- let's check that Spa.r_o_d_completion.to_complete_valuation_field commutes with ≤
 lemma to_valuation_field_completion_well_defined_aux₁ {v : Spa A} {U : opens (Spa A)} (hv : v ∈ U)
-  (hA : topological_space.is_topological_basis (rational_basis' A))
   (f : Spa.presheaf_value U) {r1 r2 : rational_open_data_subsets U}
   (h1 : v ∈ r1.1.rational_open) (h2 : v ∈ r2.1.rational_open) :
 Spa.r_o_d_completion.to_complete_valuation_field h1 (f.1 r1) =
@@ -166,7 +159,6 @@ end
 
 -- now the other way
 lemma to_valuation_field_completion_well_defined_aux₂ {v : Spa A} {U : opens (Spa A)} (hv : v ∈ U)
-  (hA : topological_space.is_topological_basis (rational_basis' A))
   (f : Spa.presheaf_value U) {r1 r2 : rational_open_data_subsets U}
   (h1 : v ∈ r1.1.rational_open) (h2 : v ∈ r2.1.rational_open) :
 Spa.r_o_d_completion.to_complete_valuation_field h2 (f.1 r2) =
@@ -190,48 +182,45 @@ end
 
 -- now let's check it agrees on any rational_open_data_subsets
 lemma to_valuation_field_completion_well_defined_aux₃ {v : Spa A} {U : opens (Spa A)} (hv : v ∈ U)
-  (hA : topological_space.is_topological_basis (rational_basis' A))
   (f : Spa.presheaf_value U) {r1 r2 : rational_open_data_subsets U}
   (h1 : v ∈ r1.1.rational_open) (h2 : v ∈ r2.1.rational_open) :
   Spa.r_o_d_completion.to_complete_valuation_field h1 (f.1 r1) =
   Spa.r_o_d_completion.to_complete_valuation_field h2 (f.1 r2) :=
 begin
-  rw to_valuation_field_completion_well_defined_aux₁ hv hA f h1 h2,
-  rw to_valuation_field_completion_well_defined_aux₂ hv hA f h1 h2,
+  rw to_valuation_field_completion_well_defined_aux₁ hv f h1 h2,
+  rw to_valuation_field_completion_well_defined_aux₂ hv f h1 h2,
 end
 
 -- next I will prove that for every r : rational_open_data_subsets U with v ∈ r.1.rational_open,
 -- f gets sent to the same thing.
 lemma to_valuation_field_completion_well_defined {v : Spa A} {U : opens (Spa A)} (hv : v ∈ U)
-  (hA : topological_space.is_topological_basis (rational_basis' A))
   (f : Spa.presheaf_value U) (r : rational_open_data_subsets U) (hr : v ∈ r.1.rational_open):
-to_valuation_field_completion hv hA f =
+to_valuation_field_completion hv f =
   Spa.r_o_d_completion.to_complete_valuation_field hr (f.1 r) :=
-to_valuation_field_completion_well_defined_aux₃ hv hA f _ hr
+to_valuation_field_completion_well_defined_aux₃ hv f _ hr
 
 -- now the main goal
 /-- If v ∈ U then the map from 𝒪_X(U) to `completion (valuation_field v)`
     commutes with restriction (so we can get a map from the stalk at v) -/
 theorem to_valuation_field_completion_commutes {v : Spa A} {U V : opens (Spa A)} (hv : v ∈ U)
-  (hUV : U ⊆ V) (hA : topological_space.is_topological_basis (rational_basis' A))
-  (f : Spa.presheaf_value V) :
-  to_valuation_field_completion (hUV hv) hA f =
-  to_valuation_field_completion hv hA (Spa.presheaf_map hUV f) :=
+  (hUV : U ⊆ V) (f : Spa.presheaf_value V) :
+  to_valuation_field_completion (hUV hv) f =
+  to_valuation_field_completion hv (Spa.presheaf_map hUV f) :=
 begin
   -- to_valuation_field_completion involves choosing a random basis element.
-  let rU := Spa.rational_open_subset_nhd hv hA,
-  let rV := Spa.rational_open_subset_nhd (hUV hv) hA,
+  let rU := Spa.rational_open_subset_nhd hv,
+  let rV := Spa.rational_open_subset_nhd (hUV hv),
   -- we now need to intersect these two things.
   let rUV1 := rational_open_data.inter rU.1 rV.1,
-  rw to_valuation_field_completion_well_defined hv hA (Spa.presheaf_map hUV f)
+  rw to_valuation_field_completion_well_defined hv (Spa.presheaf_map hUV f)
     ⟨rUV1, begin rw rational_open_data.rational_open_data_inter,
     exact set.subset.trans (set.inter_subset_left _ _) rU.2 end⟩
     ( begin rw rational_open_data.rational_open_data_inter,
         split,
-          exact Spa.mem_rational_open_subset_nhd hv hA,
-        exact Spa.mem_rational_open_subset_nhd _ hA,
+          exact Spa.mem_rational_open_subset_nhd hv,
+        exact Spa.mem_rational_open_subset_nhd _,
       end),
-  rw to_valuation_field_completion_well_defined (hUV hv) hA f
+  rw to_valuation_field_completion_well_defined (hUV hv) f
     ⟨rUV1,
       begin rw rational_open_data.rational_open_data_inter,
         exact set.subset.trans (set.inter_subset_right _ _) rV.2
@@ -239,8 +228,8 @@ begin
     ( begin
         rw rational_open_data.rational_open_data_inter,
         split,
-          exact Spa.mem_rational_open_subset_nhd hv hA,
-        exact Spa.mem_rational_open_subset_nhd _ hA,
+          exact Spa.mem_rational_open_subset_nhd hv,
+        exact Spa.mem_rational_open_subset_nhd _,
       end),
   refl,
 end
