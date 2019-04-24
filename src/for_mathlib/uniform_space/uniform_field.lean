@@ -1,6 +1,5 @@
 /-
-The goal of this file is to prove, modulo continuous_extend_of_really_wants_to, part of
-Proposition 7 of Bourbaki GT III 6.8 :
+The goal of this file is to prove the main part of Proposition 7 of Bourbaki GT III 6.8 :
 
 The completion hat K of a Hausdorff topological field is a field if the image under
 the mapping x ↦ x⁻¹ of every Cauchy filter (with respect to the additive uniform structure)
@@ -10,9 +9,6 @@ which does not have a cluster point at 0 is a Cauchy filter
 Bourbaki does *not* prove this proposition, he refers to the general discussion of extending
 function defined on a dense subset with values in a complete Hausdorff space. In particular
 the subtlety about clustering at zero is totally left to readers.
-
-In this file I tried a proof distinguishing between the case where K is discrete, hence complete
-hence the statement is obvious, and the case where it's not.
 
 The main discussion revolves aroung the diagram
 
@@ -52,7 +48,7 @@ but constructing that diagonal arrow is ok if the vertical one is indeed a dense
 
 import for_mathlib.uniform_space.ring
 import for_mathlib.topological_field
-import for_mathlib.uniform_space.uniform_embedding
+import for_mathlib.division_ring
 
 noncomputable theory
 local attribute [instance, priority 0] classical.prop_decidable
@@ -60,13 +56,17 @@ local attribute [instance, priority 0] classical.prop_decidable
 lemma set.mem_compl_singleton_iff {α : Type*} (a x : α) : x ∈ -({a} : set α) ↔ x ≠ a :=
 by simp only [set.mem_singleton_iff, set.mem_compl_eq]
 
-set_option class.instance_max_depth 200
+def cauchy_of {α : Type*} {β : Type*} [U : uniform_space β] (f : α → β) (F : filter α) :=
+@cauchy α (uniform_space.comap f U) F
+
+set_option class.instance_max_depth 100
 
 open set ring_completion filter
 
 local attribute [instance] topological_add_group.to_uniform_space topological_add_group_is_uniform
 
 local notation `𝓝` x:70 := nhds x
+local notation `𝓤` := uniformity
 
 variables {K : Type*} [discrete_field K] [topological_space K] [topological_ring K]
 
@@ -81,6 +81,10 @@ local notation `hat` K := ring_completion K
 
 def help_tc_search : uniform_space (hat K) := ring_completion.uniform_space K
 local attribute [instance] help_tc_search
+def help_tc_search' : separated (hat K) := ring_completion.separated K
+local attribute [instance] help_tc_search'
+def help_tc_search'' : complete_space (hat K) := ring_completion.complete_space K
+local attribute [instance] help_tc_search''
 
 def hat_star := {x : hat K // x ≠ 0}
 
@@ -103,64 +107,24 @@ lemma mul_coe_units [separated K] (x y : units K) : (coe_units K x).val * (coe_u
 by { simp only [coe_units], rw ← (ring_completion.coe_is_ring_hom K).map_mul, refl }
 
 @[simp]
+lemma coe_units_val [separated K] (x : units K): (coe_units K x).val = (x.val : hat K) := rfl
+
+@[simp]
 lemma coe_units_one [separated K] : (coe_units K 1).val = 1 :=
 by simpa [coe_units]
 
-class non_discrete_group (G : Type*) [add_group G] [topological_space G] :=
-(zero_not_open : ¬ is_open ({0} : set G))
-
-namespace non_discrete_group
-open function
-variables (G : Type*) [add_group G] [topological_space G] [non_discrete_group G]
-lemma zero_not_mem_nhds : ({0} : set G) ∉ nhds (0 : G) :=
+@[simp]
+lemma division_ring.inv_val_eq_inv {α : Type*} [division_ring α] (x : units α) :(x : α)⁻¹ = x.inv :=
 begin
-  intro h,
-  rcases mem_nhds_sets_iff.1 h with ⟨U, U_sub, U_op, z_in⟩,
-  have : U = {0},
-    from subset.antisymm U_sub (singleton_subset_iff.2 z_in),
-  rw this at U_op,
-  exact zero_not_open _ U_op,
+  rw (show x.inv = (x⁻¹ : units α), from rfl),
+  rw ←one_div_eq_inv,
+  symmetry,
+  apply eq_one_div_of_mul_eq_one,
+  exact x.mul_inv
 end
 
--- TODO write an efficient proof instead of being upset about trivialities
-lemma dense_compl_zero : ∀ (x : G), x ∈ closure (-({0} : set G)) :=
-begin
-  intro x,
-  by_cases h : x = 0,
-  { rw [h, mem_closure_iff_nhds],
-    rintros U U_in,
-    have : U ≠ {0},
-      from λ H, non_discrete_group.zero_not_mem_nhds G (H ▸ U_in),
-    intro H,
-    apply this,
-    ext y,
-    split ; intro hy,
-    { by_contradiction h',
-      have : y ∈ U ∩ -{0}, from ⟨hy, h'⟩,
-      rwa H at this },
-    { rw mem_singleton_iff at hy,
-      rw hy,
-      rcases mem_nhds_sets_iff.1 U_in with ⟨_, H, _, H'⟩,
-      exact H H' } },
-  { have : x ∈ -({0} : set G),
-    { rw mem_compl_singleton_iff,
-      exact h },
-    exact subset_closure this },
-end
-
-attribute [to_additive is_add_group_hom.trivial_ker_of_inj] is_group_hom.trivial_ker_of_inj
-
-variables {G} {H : Type*} [add_group H] [topological_space H]
-lemma of_non_discrete_inj_hom {f : G → H} [is_add_group_hom f] (inj : injective f)
-  (cont : continuous f) : non_discrete_group H :=
-⟨assume H,
-  have k : f ⁻¹' {0} = {0}, from is_add_group_hom.trivial_ker_of_inj f inj,
-  zero_not_open G (k ▸ (cont _ H))⟩
-end non_discrete_group
-
-instance ring_completion.non_discrete [separated K] [non_discrete_group K]: non_discrete_group (hat K) :=
-have ue : uniform_embedding coe, from uniform_embedding_coe K,
-non_discrete_group.of_non_discrete_inj_hom ue.1 ue.uniform_continuous.continuous
+lemma coe_units_comm_square [separated K]: subtype.val ∘ coe_units K = (coe : K → hat K) ∘ units.val :=
+by { ext x, simp [coe_units] }
 
 lemma range_units_val : range (units.val : units K → K) = -{0} :=
 begin
@@ -174,105 +138,148 @@ begin
     simp [units.mk0] }
 end
 
-lemma de_units_val [non_discrete_group K] : dense_embedding (units.val : units K → K) :=
+lemma de_coe_units [separated K] : dense_embedding (coe_units K : units K → hat_star K) :=
+let de := uniform_embedding_coe K in
+⟨λ ⟨x, x_ne⟩, begin
+  have dense := ring_completion.dense_coe K x,
+  rw mem_closure_iff_nhds at *,
+  intros U U_nhds,
+  have : ∃ V ∈ 𝓝 x, (0 : hat K) ∉ V ∧ subtype.val ⁻¹' V ⊆ U,
+  { haveI : t1_space (hat K) := t2_space.t1_space, -- Why is this needed?!
+    rw [nhds_induced] at U_nhds,
+    rcases U_nhds with ⟨W, W_nhds, hW⟩,
+    use [W ∩ -{0}, inter_mem_sets W_nhds (compl_singleton_mem_nhds x_ne)],
+    split,
+    { intro h,
+      simpa only [not_true, mem_compl_eq, mem_singleton] using h.2 },
+    { intros z hz,
+      exact hW hz.1 } }, -- no idea why this line is so slow
+  rcases this with ⟨V, V_nhds, zero_V, hVU⟩,
+  rcases exists_mem_of_ne_empty (dense V V_nhds) with ⟨y, yV, k, hky⟩,
+  have y_ne : y ≠ 0,
+  { intro h,
+    apply zero_V,
+    rwa ← h },
+  have : (⟨y, y_ne⟩ : hat_star K) ∈ U ∩ range (coe_units K),
+  { split,
+  { apply hVU, exact yV },
+  { have : k ≠ 0,
+    { intro h,
+      rw [h] at hky,
+      exact y_ne hky.symm },
+    use units.mk0 k this,
+    rw subtype.ext,
+    exact hky, },
+     },
+  exact ne_empty_of_mem this
+end,
 begin
-  constructor,
-  { rw range_units_val K,
-    apply non_discrete_group.dense_compl_zero },
-  { intros x y h,
-    ext,
-    exact h },
-  { intros a, rw nhds_induced },
-end
-
-lemma de_hat_star [separated K] [non_discrete_group K]: dense_embedding (subtype.val : hat_star K → hat K) :=
+  intros x y h,
+  rw subtype.ext at h,
+  ext,
+  exact de.1 h
+end ,
 begin
-  constructor,
-  { rw subtype.val_range,
-    intro x,
-    convert non_discrete_group.dense_compl_zero (hat K) x,
-    ext,
-    rw mem_compl_singleton_iff,
-    refl },
-  { intros x y h,
-    exact subtype.ext.2 h },
-  { intros a, rw nhds_induced },
-end
-
-lemma de_coe_units [separated K] [non_discrete_group K]: dense_embedding (coe_units K : units K → hat_star K) :=
-begin
-  have ue : uniform_embedding coe, from uniform_embedding_coe K,
-  have := ue.dense_embedding (ring_completion.dense_coe K),
-  apply dense_embedding.of_comm_square (de_units_val K) this (de_hat_star K),
-  ext, simp [coe_units]
-end
-
+  intro x,
+  rw [nhds_induced units.val x,
+      ← ring_completion.comap_nhds_eq x.val,
+      nhds_subtype,
+      comap_comap_comp, coe_units_comm_square K, ← comap_comap_comp],
+  refl
+end⟩
 
 lemma range_units_hat_star [separated K] : range (subtype.val : hat_star K → hat K) = -{0} :=
 by { rw subtype.val_range, ext, rw mem_compl_singleton_iff, refl }
 
 section
 
-class completable_non_discrete_top_field : Prop :=
+class completable_top_field : Prop :=
 (separated : separated K)
 (nice : ∀ F : filter (units K), cauchy_of units.val F → zero_not_adh F →
-  cauchy_of units.val (map (λ x, x⁻¹) F) ∧ zero_not_adh (map (λ x, x⁻¹) F))
+  cauchy_of units.val (map (λ x, x⁻¹) F))
 
-attribute [instance] completable_non_discrete_top_field.separated
-variables [non_discrete_group K]
+attribute [instance] completable_top_field.separated
 
-def inv_hat_star [separated K] : hat_star K → hat_star K := (de_coe_units K).extend $ coe_units K ∘ (λ x, x⁻¹)
+variables [completable_top_field K]
+
+def inv_hat_star_hat : hat_star K → hat K := (de_coe_units K).extend (λ x, ((x⁻¹ : K) : hat K))
 
 @[simp]
-lemma inv_hat_star_coe_units [separated K] (x : units K) : inv_hat_star K (coe_units K x) = coe_units K x⁻¹ :=
+lemma inv_hat_star_coe_units [separated K] (x : units K) : inv_hat_star_hat K (coe_units K x) = ((x⁻¹ : K) : hat K) :=
 (de_coe_units K).extend_e_eq x
 
-
-variables [completable_non_discrete_top_field K]
-
-lemma continuous_inv_hat_star : continuous (inv_hat_star K) :=
+lemma continuous_inv_hat_star_hat : continuous (inv_hat_star_hat K : hat_star K → hat K) :=
 begin
-  let dkX := de_coe_units K, -- dense embedding K* → hat K*
-  let diX := de_units_val K, -- dense embedding K* → K
-  let ue := uniform_embedding_coe K, -- uniform embedding K → hat K
-  let diY := de_hat_star K, -- dense embedding hat K* → hat K
+  refine (de_coe_units K).continuous_extend _,
+  intro x,
+  set cu := coe_units K,
+  letI : uniform_space (units K) := uniform_space.comap units.val _,
+  letI : uniform_space (hat_star K) := uniform_space.comap subtype.val _,
+  have ne_bot : comap cu 𝓝 x ≠ ⊥,
+    from (de_coe_units K).comap_nhds_neq_bot,
+  have cauchy_fact : cauchy_of units.val (comap cu $ 𝓝 x),
+  { refine cauchy_comap _ cauchy_nhds ne_bot,
 
-  have comm : subtype.val ∘ coe_units K = coe ∘ units.val, by { ext, refl },
-  apply continuous_extend_of_really_wants_to (λ x : units K, x⁻¹) comm comm
-    diX dkX diY diX dkX diY ue ue,
-  { rw [range_units_val K, range_units_hat_star K, preimage_compl, compl_subset_compl,
-       singleton_subset_iff], simp, refl },
-  { rw [range_units_val K, range_units_hat_star K, compl_compl, compl_compl,
-        singleton_subset_iff],
-    use 0,
-    simp,
-    refl },
-  { intros F cauchyF hF,
-    have zero_non_unit : (0 : K) ∉ range (units.val : units K → K),
-    { rw range_units_val K, simp },
-    have non_unit_zero : ∀ (x : K), x ∉ set.range (units.val : units K → K) → x = 0,
-    { rw range_units_val K, simp },
-    cases completable_non_discrete_top_field.nice F cauchyF (hF (0 : K) zero_non_unit) with h₁ h₂,
-    refine ⟨h₁, _⟩,
-    intros x hx,
-    rwa non_unit_zero x hx },
+    have : (λ p : hat_star K × hat_star K, (p.1.val, p.2.val)) ∘ (λ p : units K × units K, (cu p.1, cu p.2)) =
+    (λ p : K × K, ((p.1 : hat K), (p.2 : hat K))) ∘ (λ p : units K × units K, (p.1, p.2)),
+    { ext ; simp [cu, coe_units] ; refl },
+    change comap (λ p : units K × units K, (cu p.1, cu p.2)) (comap (λ p : hat_star K × hat_star K, (p.1.val, p.2.val)) (𝓤 (hat K))) ≤ comap (λ p : units K × units K, (p.1.val, p.2.val)) (𝓤 K),
+    rw comap_comm this,
+    apply filter.comap_mono,
+    exact ring_completion.comap_uniformity },
+  have zero_not : zero_not_adh (comap cu 𝓝 x),
+  { have eq_bot : 𝓝 ↑(0 : K) ⊓ 𝓝 x.val = ⊥,
+    { by_contradiction h,
+      exact x.property (eq_of_nhds_neq_bot  h).symm},
+    unfold zero_not_adh,
+    rw [← ring_completion.comap_nhds_eq (0 : K), comap_comm (coe_units_comm_square K).symm,
+        nhds_induced, ← comap_inf, ← comap_inf, comap_comap_comp, eq_bot],
+    exact comap_bot },
+  have := completable_top_field.nice (comap cu 𝓝 x) cauchy_fact zero_not,
+  have : cauchy (map units.val $ map (λ (x : units K), x⁻¹) (comap cu 𝓝 x)),
+    from cauchy_map uniform_continuous_comap  this,
+  cases complete_space.complete (cauchy_map uniform_continuous_coe this) with y hy,
+  use y,
+  change map ((λ (x : units K), ↑(↑x)⁻¹) : units K → hat K) (comap cu 𝓝 x) ≤ 𝓝 y,
+  repeat {rw filter.map_map at hy },
+  convert hy,
+  ext,
+  simp,
 end
 
-lemma inv_hat_is_inv : ∀ x : hat_star K, x.val*(inv_hat_star K x).val = 1 :=
+lemma inv_hat_is_inv : ∀ x : hat_star K, x.val*(inv_hat_star_hat K x) = 1 :=
 begin
-  have cl : is_closed {x : hat_star K | x.val*(inv_hat_star K x).val = 1},
+  have cl : is_closed {x : hat_star K | x.val*(inv_hat_star_hat K x) = 1},
     from is_closed_eq
-      (continuous_mul continuous_subtype_val ((continuous_inv_hat_star K).comp continuous_subtype_val))
+      (continuous_mul continuous_subtype_val (continuous_inv_hat_star_hat K))
       continuous_const,
   have dense : closure (range (coe_units K)) = univ,
     from eq_univ_of_forall (de_coe_units K).dense,
-  simp [is_closed_property dense cl]
+  apply is_closed_property dense cl,
+  intro x,
+  rw [inv_hat_star_coe_units, division_ring.inv_val_eq_inv, coe_units_val,
+      ← (ring_completion.coe_is_ring_hom K).map_mul, x.val_inv,
+      (ring_completion.coe_is_ring_hom K).map_one]
 end
+
+lemma inv_hat_ne_zero (x : hat_star K) : inv_hat_star_hat K x ≠ 0 :=
+λ h,
+begin
+  have := inv_hat_is_inv K x,
+  rw [h, mul_zero] at this,
+  exact zero_ne_one this,
+end
+
+def inv_hat_star : hat_star K → hat_star K :=
+λ x, ⟨inv_hat_star_hat K x, inv_hat_ne_zero K x⟩
+
+lemma continuous_inv_hat_star : continuous (inv_hat_star K) :=
+continuous_induced_rng (continuous_inv_hat_star_hat K)
 
 /-- homeomorphim between non-zero elements of hat K and units of hat K -/
 def hat_star_is_units : hat_star K ≃ₜ units (hat K) :=
-{ to_fun := λ x, ⟨x.val, (inv_hat_star K x).val,
-      inv_hat_is_inv K x, mul_comm x.val (inv_hat_star K x).val ▸ (inv_hat_is_inv K x)⟩ ,
+{ to_fun := λ x, ⟨x.val, (inv_hat_star_hat K x),
+      inv_hat_is_inv K x, mul_comm x.val (inv_hat_star_hat K x) ▸ (inv_hat_is_inv K x)⟩ ,
   inv_fun := λ x, ⟨x.val, hat_units_ne_zero x⟩,
   left_inv := λ x, by simp,
   right_inv := λ x, units.ext rfl,
@@ -283,7 +290,7 @@ local notation `ψ` := (hat_star_is_units K).to_equiv.to_fun
 local notation `ψ⁻¹` := (hat_star_is_units K).to_equiv.inv_fun
 
 def hat_inv (x : hat K) : hat K := if h : x = 0 then 0 else
-subtype.val (inv_hat_star K ⟨x , h⟩)
+inv_hat_star_hat K ⟨x , h⟩
 
 lemma invinv : (λ (a : units (hat K)), a⁻¹) = ψ ∘ (inv_hat_star K) ∘ ψ⁻¹ :=
 begin
@@ -304,8 +311,8 @@ instance hat_has_inv : has_inv (hat K) := ⟨hat_inv K⟩
 lemma hat_mul_inv : ∀ a : hat K, a ≠ 0 → a * a⁻¹ = 1 :=
 begin
   intros a a_ne,
-  change a*(hat_inv K a) = 1,
-  simp [hat_inv, a_ne, inv_hat_is_inv K ⟨a, a_ne⟩]
+  change a * (hat_inv K a) = 1,
+  simp [if_neg, a_ne, hat_inv, inv_hat_is_inv K ⟨a, a_ne⟩]
 end
 
 instance : discrete_field (hat K) :=
@@ -331,35 +338,3 @@ instance : topological_division_ring (hat K) :=
     end,
   ..ring_completion.topological_ring K }
 end
-
-/-- A topological field is completable if it is either discrete (in the topological sense)
-    or if satisfies the completable_non_discrete_top_field condition -/
-class completable_top_field (F : Type*) [discrete_field F] [t : topological_space F] [topological_division_ring F]:=
-(completable := t = ⊤ ∨ completable_non_discrete_top_field F)
-
-namespace completable_top_field
-variables (F : Type*) [discrete_field F] [topological_space F] [topological_division_ring F]
- [completable_top_field F]
-
-instance coe_is_ring_hom  := ring_completion.coe_is_ring_hom K
-
-instance : division_ring (hat F) := sorry
-
-instance : topological_division_ring (hat F) := sorry
-
-instance come_on_lean : is_monoid_hom (coe : F → hat F) :=
-{ map_one := sorry,
-  map_mul := sorry }
-
---#check units (hat K)
---#check is_ring_hom
---#check (completable_top_field.coe_is_ring_hom K)
---#check @units.map K (hat K) _ _ (coe : K → hat K) (completable_top_field.come_on_lean K)
-
-lemma dense_units_map :
-  dense_embedding (units.map (coe : F → hat F) : units F → units (hat F)) :=
-begin
-  sorry
-end
-
-end completable_top_field
