@@ -244,19 +244,29 @@ begin
   exact @of_subgroups.mem_nhds_zero K _ Γ _ (λ γ : Γ, {k | v k < γ}) _ _ _ _ _ γ
 end
 
+local notation `hat` K := ring_completion (valued_ring K v)
+
+/-
+The next sorry is meant to be the only mathematical content of that file, it's worth
+at least three lines in BouAC
+-/
 instance : completable_top_field (valued_ring K v) :=
 sorry
 
-local notation `hat` K := ring_completion (valued_ring K v)
+noncomputable
+instance : topological_space (units (ring_completion (valued_ring K v))) :=
+topological_ring.units_topological_space _
+
+instance tata : topological_group (units (ring_completion (valued_ring K v))) :=
+toto _
 
 local attribute [instance] help_tcs
 
-lemma continous_unit_extension : continuous ((dense_units_map (valued_ring K v)).extend v.unit_map) :=
+lemma continuous_unit_extension : continuous ((dense_units_map (valued_ring K v)).extend v.unit_map) :=
 begin
   let Kv := valued_ring K v,
- -- let hatK := ring_completion (valued_ring K v),
-  let ι := units.map (coe : Kv → hat K),
-  let de := dense_units_map (valued_ring K v),
+  let ι := ring_completion.units_coe (valued_ring K v),
+  let de : dense_embedding ι := dense_units_map (valued_ring K v),
 
   -- Patrick hates the three next lines. He is clearly punished for something
   haveI : is_group_hom ι := units.is_group_hom _,
@@ -283,30 +293,56 @@ def valuation.unit_completion_extend : units (hat K) → Γ :=
 
 local notation `hatv` := valuation.unit_completion_extend v
 
+set_option class.instance_max_depth 46
+
+instance : is_group_hom (valuation.unit_map v) := by apply_instance
+
+-- This should be there already, but Lean and Patrick are tired of this
+instance titi : is_monoid_hom (coe : (valued_ring K v) → hat K) := sorry
+
+instance : is_group_hom (ring_completion.units_coe $ valued_ring K v) :=
+units.is_group_hom _
+
+instance tutu : topological_group (units $ hat K) := topological_division_ring.units_top_group (hat K)
 
 lemma valuation.unit_completion_extend_mul : ∀ x y : units (hat K),
  hatv (x*y) = hatv x * hatv y :=
 begin
-  let ι := units.map (coe : valued_ring K v → hat K),
-  let de := dense_units_map (valued_ring K v),
-  letI : topological_space ((units $ hat K) × (units $hat K)) := prod.topological_space, -- WTF?
-  have cl : is_closed {p : (units $ hat K) × (units $hat K) | hatv (p.1*p.2) = hatv p.1 * hatv p.2},
-  sorry,
+  let ι := ring_completion.units_coe (valued_ring K v),
+  let de : dense_embedding ι := dense_units_map (valued_ring K v),
+  let u := units (hat K),
+  letI : topological_monoid u := topological_group.to_topological_monoid _,
+  have cl : is_closed {p : u × u | hatv (p.1*p.2) = hatv p.1 * hatv p.2},
+  from let ch := continuous_unit_extension v in
+     is_closed_eq (continuous_mul'.comp ch) (continuous_mul (continuous_fst.comp ch)
+    (continuous_snd.comp ch)),
   have : ∀ x y : units (valued_ring K v), hatv (ι x * ι y) = (hatv $ ι x)*(hatv $ ι y),
-  sorry,
+  { intros x y,
+    have hx : hatv (ι x) = _:= de.extend_e_eq x,
+    have hy : hatv (ι y) = _:= de.extend_e_eq y,
+    have hxy : hatv (ι $ x * y) = _:= de.extend_e_eq _,
+    rw [hx, hy, ← is_group_hom.map_mul ι x y, hxy, is_group_hom.map_mul (valuation.unit_map v)],
+     },
   exact is_closed_property2 de cl this
 end
 
+/-
+The first three sorries below are meant to be entertainment for Kevin
+The map_add sorry should be the same level of difficulty than the map_mul proof
+Bourbaki's proof (for the whole thing): the extension is a valuation by continuity
+-/
 noncomputable
 def valuation.completion_extend : valuation (ring_completion $ valued_ring K v) Γ :=
 ⟨λ x, if h : x = 0 then 0 else some (valuation.unit_completion_extend v $ units.mk0 x h),
 { map_zero := by simp,
   map_one := begin
+    let ι := ring_completion.units_coe (valued_ring K v),
+    let de : dense_embedding ι := dense_units_map (valued_ring K v),
     suffices : some (valuation.unit_completion_extend v (units.mk0 (1 : hat K) zero_ne_one.symm)) = (1 : Γ),
     by simp[this] ; refl,
-    have : units.mk0 (1 : hat K) zero_ne_one.symm = (units.map coe 1), sorry,
+    have : units.mk0 (1 : hat K) zero_ne_one.symm = (ι (1 : units $ valued_ring K v)), sorry,
     dsimp [valuation.unit_completion_extend],
-    rw [this, dense_embedding.extend_e_eq], swap, apply_instance,
+    rw [this, dense_embedding.extend_e_eq],
     simp [v.map_one],
     sorry
   end,
@@ -316,7 +352,13 @@ def valuation.completion_extend : valuation (ring_completion $ valued_ring K v) 
     by_cases hy : y = 0 ; simp [hy],
     have : x*y ≠ 0, sorry,
     simp [this],
-    sorry
+    have : units.mk0 (x * y) this = (units.mk0 x hx)*(units.mk0 y hy),
+    {
+      sorry },
+    rw this,
+    rw  valuation.unit_completion_extend_mul,
+    exact with_zero.mul_coe (valuation.unit_completion_extend v $ units.mk0 x hx)
+                            (valuation.unit_completion_extend v $ units.mk0 y hy),
   end,
   map_add := sorry }⟩
 end
