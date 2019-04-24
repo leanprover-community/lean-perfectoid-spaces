@@ -342,7 +342,7 @@ def valuation.completion_extend : valuation (ring_completion $ valued_ring K v) 
     by simp[this] ; refl,
     have : units.mk0 (1 : hat K) zero_ne_one.symm = (ι (1 : units $ valued_ring K v)), sorry,
     dsimp [valuation.unit_completion_extend],
-    rw [this, dense_embedding.extend_e_eq],
+    rw [this, de.extend_e_eq],
     simp [v.map_one],
     sorry
   end,

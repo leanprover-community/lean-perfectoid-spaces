@@ -341,6 +341,10 @@ instance : topological_division_ring (hat K) :=
     end,
   ..ring_completion.topological_ring K }
 
+def ring_completion.units_coe := (units.map (coe : K → hat K) : units K → units (hat K))
+
+instance toto : topological_group (units $ hat K) := topological_division_ring.units_top_group _
+
 lemma dense_units_map : dense_embedding (units.map (coe : K → hat K) : units K → units (hat K)) :=
 begin
   rw show units.map (coe : K → hat K) = ((hat_star_is_units K) ∘ coe_units K),
