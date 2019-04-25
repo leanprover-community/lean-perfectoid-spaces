@@ -10,11 +10,15 @@ open filter set
 local attribute [instance, priority 0] classical.decidable_linear_order
 variables {Γ : Type*} [linear_ordered_comm_group Γ]
 
-instance with_zero.topological_space : topological_space (with_zero Γ) :=
+section with_zero_topology
+
+def with_zero.topological_space : topological_space (with_zero Γ) :=
 topological_space.generate_from
 ({U | ∃ γ : Γ, U = {γ}} ∪ {U | ∃ γ₀ : Γ, U = {γ | γ < γ₀}})
 
-instance with_zero.ordered_topology : ordered_topology (with_zero Γ) :=
+local attribute [instance] with_zero.topological_space
+
+def with_zero.ordered_topology : ordered_topology (with_zero Γ) :=
 { is_closed_le' :=
   begin
     show is_open {p : with_zero Γ × with_zero Γ | ¬p.fst ≤ p.snd},
@@ -57,10 +61,10 @@ instance with_zero.ordered_topology : ordered_topology (with_zero Γ) :=
         rw with_zero.ne_zero_iff_exists at hb,
         rcases hb with ⟨b, rfl⟩,
         exact ⟨_, rfl⟩ },
-      { simp * at * }
-},
-
+      { simp * at * } }
   end }
+
+end with_zero_topology
 
 def valued_ring (R : Type*) [ring R] (v : valuation R Γ) := R
 
@@ -291,19 +295,22 @@ instance : discrete_field (valued_ring K v) := by unfold valued_ring ; apply_ins
 instance : topological_group (units $ valued_ring K v) :=
 topological_division_ring.units_top_group (valued_ring K v)
 
-instance regular_of_discrete {α : Type*} [topological_space α] [discrete_topology α] : regular_space α :=
-⟨begin
-  intros s a s_closed a_not,
-  refine ⟨s, is_open_discrete s, subset.refl s, _⟩,
-  rw [← empty_in_sets_eq_bot, mem_inf_sets],
-  use {a},
-  rw nhds_discrete α,
-  simp,
-  refine ⟨s, subset.refl s, _ ⟩,
-  rintro x ⟨xa, xs⟩,
-  rw ← mem_singleton_iff.1 xa at a_not,
-  exact a_not xs
-end⟩
+instance regular_of_discrete {α : Type*} [topological_space α] [discrete_topology α] :
+  regular_space α :=
+{ t1 := λ x, is_open_discrete _,
+  regular :=
+  begin
+    intros s a s_closed a_not,
+    refine ⟨s, is_open_discrete s, subset.refl s, _⟩,
+    erw [← empty_in_sets_eq_bot, mem_inf_sets],
+    use {a},
+    rw nhds_discrete α,
+    simp,
+    refine ⟨s, subset.refl s, _ ⟩,
+    rintro x ⟨xa, xs⟩,
+    rw ← mem_singleton_iff.1 xa at a_not,
+    exact a_not xs
+  end }
 
 lemma nhds_of_valuation_lt (x : valued_ring K v) (γ : Γ) :
   {y : K | v (y - x) < γ} ∈ nhds x :=
@@ -421,9 +428,14 @@ begin
   let u := units (hat K),
   letI : topological_monoid u := topological_group.to_topological_monoid _,
   have cl : is_closed {p : u × u | hatv (p.1*p.2) = hatv p.1 * hatv p.2},
-  from let ch := continuous_unit_extension v in
-     is_closed_eq (continuous_mul'.comp ch) (continuous_mul (continuous_fst.comp ch)
-    (continuous_snd.comp ch)),
+  { let ch := continuous_unit_extension v,
+    refine @is_closed_eq Γ (u × u) (by apply_instance) (by apply_instance) (by apply_instance)
+    begin
+      exact t2_space_discrete
+    end
+    (by apply_instance) _ _
+      (continuous_mul'.comp ch)
+      (continuous_mul (continuous_fst.comp ch) (continuous_snd.comp ch)) },
   have : ∀ x y : units (valued_ring K v), hatv (ι x * ι y) = (hatv $ ι x)*(hatv $ ι y),
   { intros x y,
     have hx : hatv (ι x) = _:= de.extend_e_eq x,
