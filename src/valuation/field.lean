@@ -3,12 +3,64 @@ import for_mathlib.topology
 import for_mathlib.division_ring
 import for_mathlib.uniform_space.uniform_field
 import valuation.topology
+import topology.algebra.ordered
 
 open filter set
 
 local attribute [instance, priority 0] classical.decidable_linear_order
 variables {Γ : Type*} [linear_ordered_comm_group Γ]
 
+instance with_zero.topological_space : topological_space (with_zero Γ) :=
+topological_space.generate_from
+({U | ∃ γ : Γ, U = {γ}} ∪ {U | ∃ γ₀ : Γ, U = {γ | γ < γ₀}})
+
+instance with_zero.ordered_topology : ordered_topology (with_zero Γ) :=
+{ is_closed_le' :=
+  begin
+    show is_open {p : with_zero Γ × with_zero Γ | ¬p.fst ≤ p.snd},
+    simp only [not_le],
+    rw is_open_iff_mem_nhds,
+    rintros ⟨a,b⟩ hab,
+    change b < a at hab,
+    by_cases hb : b = 0,
+    { change b = 0 at hb, subst hb,
+      have ha := lt_iff_le_and_ne.mp hab,
+      cases ha with h₁ h₂,
+      replace h₂ := h₂.symm,
+      rw with_zero.ne_zero_iff_exists at h₂,
+      rcases h₂ with ⟨a, rfl⟩,
+      refine mem_sets_of_superset
+        (prod_mem_nhds_sets
+          (mem_nhds_sets (topological_space.generate_open.basic _ _) (mem_singleton _))
+          (mem_nhds_sets (topological_space.generate_open.basic _ _) _)) _,
+      work_on_goal 1 { left, exact ⟨a, rfl⟩ },
+      work_on_goal 1 { right, exact ⟨a, rfl⟩ },
+      work_on_goal 0 { exact hab },
+      rintro _ ⟨_, _⟩, simp * at * },
+    { refine mem_sets_of_superset
+        (prod_mem_nhds_sets
+          (mem_nhds_sets _ (mem_singleton _))
+          (mem_nhds_sets _ (mem_singleton _))) _,
+      { apply topological_space.generate_open.basic,
+        left,
+        have ha : a ≠ 0,
+        { rintro rfl,
+          rw lt_iff_le_and_ne at hab,
+          cases hab,
+          simp * at * },
+        rw with_zero.ne_zero_iff_exists at ha,
+        rcases ha with ⟨a, rfl⟩,
+        exact ⟨_, rfl⟩ },
+      { apply topological_space.generate_open.basic,
+        left,
+        change b ≠ 0 at hb,
+        rw with_zero.ne_zero_iff_exists at hb,
+        rcases hb with ⟨b, rfl⟩,
+        exact ⟨_, rfl⟩ },
+      { simp * at * }
+},
+
+  end }
 
 def valued_ring (R : Type*) [ring R] (v : valuation R Γ) := R
 
@@ -27,6 +79,23 @@ instance : uniform_add_group (valued_ring R v) := topological_add_group_is_unifo
 variables {K : Type*} [division_ring K] (ν : valuation K Γ)
 
 instance : division_ring (valued_ring K ν) := ‹division_ring K›
+
+def valuation : valuation (valued_ring R v) Γ := v
+
+-- TODO(jmc): we might not need this
+-- lemma continuous_valuation : continuous (valued_ring.valuation v) :=
+-- begin
+--   apply continuous_generated_from _,
+--   rintros U hU,
+--   rcases hU with ⟨γ, rfl⟩ | ⟨γ₀, rfl⟩,
+--   { sorry },
+--   { rw preimage_set_of_eq,
+--     delta valued_ring.valuation,
+--     delta valued_ring,
+--     exact of_subgroups.is_open γ₀
+-- }
+-- end
+
 end valued_ring
 
 section
