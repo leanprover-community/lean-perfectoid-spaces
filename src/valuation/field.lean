@@ -446,6 +446,8 @@ begin
   exact is_closed_property2 de cl this
 end
 
+set_option class.instance_max_depth 80
+
 lemma valuation.unit_completion_extend_add : ∀ x y : units (hat K),
  if h : x.val + y.val = 0 then true else
    hatv (units.mk0 (x.val + y.val) h) ≤ hatv x ∨ hatv (units.mk0 (x.val + y.val) h) ≤ hatv y :=
@@ -455,8 +457,8 @@ begin
   let u := units (hat K),
   letI : topological_monoid u := topological_group.to_topological_monoid _,
   let C := {p : u × u | if h : p.1.val + p.2.val = 0 then true else
-    hatv (units.mk0 (p.1.val + p.2.val) h) ≤ hatv p.1 ∨
-    hatv (units.mk0 (p.1.val + p.2.val) h) ≤ hatv p.2 },
+    hatv (units.mk0 ((p.1 : hat K) + p.2) h) ≤ hatv p.1 ∨
+    hatv (units.mk0 ((p.1 : hat K) + p.2) h) ≤ hatv p.2 },
   have cl : is_closed C,
     sorry,
 --  from let ch := continuous_unit_extension v in
@@ -466,7 +468,26 @@ begin
   { intros x y,
     have hx : hatv (ι x) = _:= de.extend_e_eq x,
     have hy : hatv (ι y) = _:= de.extend_e_eq y,
-    sorry,
+    show dite _ _ _,
+    split_ifs,
+    { exact trivial },
+    { dsimp [valuation.unit_completion_extend, ι],
+      erw dense_embedding.extend_e_eq de x,
+      erw dense_embedding.extend_e_eq de y,
+      dsimp at h,
+      change ((ι x) : hat K) + (ι y) ≠ 0 at h,
+      erw units.coe_map at h,
+      erw units.coe_map at h,
+      rw ← @is_ring_hom.map_add _ _ _ _ (coe : (valued_ring K v) → hat K) (ring_completion.coe_is_ring_hom _) at h,
+      have : (x : valued_ring K v) + y ≠ 0,
+      { intro H, rw H at h,
+        rw @is_ring_hom.map_zero _ _ _ _ (coe : (valued_ring K v) → hat K) (ring_completion.coe_is_ring_hom _) at h,
+        apply h,
+        refl },
+      -- erw units.coe_map,
+      sorry
+      -- rw valuation.unit_map_eq, -- doesn't work yet. First need to move goal to with_zero Γ
+    },
 --    rw [hx, hy, ← is_group_hom.map_mul ι x y, hxy, is_group_hom.map_mul (valuation.unit_map v)],
      },
   exact is_closed_property2 de cl this
