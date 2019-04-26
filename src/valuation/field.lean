@@ -411,8 +411,6 @@ set_option class.instance_max_depth 46
 
 instance : is_group_hom (valuation.unit_map v) := by apply_instance
 
--- This should be there already, but Lean and Patrick are tired of this
--- KB : it is indeed there already
 instance titi : is_monoid_hom (coe : (valued_ring K v) → hat K) := by apply_instance
 
 instance : is_group_hom (ring_completion.units_coe $ valued_ring K v) :=
@@ -460,38 +458,48 @@ begin
     hatv (units.mk0 ((p.1 : hat K) + p.2) h) ≤ hatv p.1 ∨
     hatv (units.mk0 ((p.1 : hat K) + p.2) h) ≤ hatv p.2 },
   have cl : is_closed C,
-    sorry,
---  from let ch := continuous_unit_extension v in
---     is_closed_eq (continuous_mul'.comp ch) (continuous_mul (continuous_fst.comp ch)
---    (continuous_snd.comp ch)),
+    sorry, -- see line 429 for mul proof. This is topology.
   have : ∀ x y : units (valued_ring K v), (ι x, ι y) ∈ C,
   { intros x y,
     have hx : hatv (ι x) = _:= de.extend_e_eq x,
     have hy : hatv (ι y) = _:= de.extend_e_eq y,
     show dite _ _ _,
-    split_ifs,
-    { exact trivial },
-    { dsimp [valuation.unit_completion_extend, ι],
-      erw dense_embedding.extend_e_eq de x,
-      erw dense_embedding.extend_e_eq de y,
-      dsimp at h,
-      change ((ι x) : hat K) + (ι y) ≠ 0 at h,
-      erw units.coe_map at h,
-      erw units.coe_map at h,
-      rw ← @is_ring_hom.map_add _ _ _ _ (coe : (valued_ring K v) → hat K) (ring_completion.coe_is_ring_hom _) at h,
-      have : (x : valued_ring K v) + y ≠ 0,
-      { intro H, rw H at h,
-        rw @is_ring_hom.map_zero _ _ _ _ (coe : (valued_ring K v) → hat K) (ring_completion.coe_is_ring_hom _) at h,
-        apply h,
-        refl },
-      -- erw units.coe_map,
-      sorry
-      -- rw valuation.unit_map_eq, -- doesn't work yet. First need to move goal to with_zero Γ
-    },
---    rw [hx, hy, ← is_group_hom.map_mul ι x y, hxy, is_group_hom.map_mul (valuation.unit_map v)],
-     },
+    split_ifs, exact trivial,
+    dsimp [valuation.unit_completion_extend, ι],
+    erw dense_embedding.extend_e_eq de x,
+    erw dense_embedding.extend_e_eq de y,
+    dsimp at h,
+    let h' : ((ι x) : hat K) + (ι y) ≠ 0 := h,
+    erw units.coe_map at h',
+    erw units.coe_map at h',
+    rw ← @is_ring_hom.map_add _ _ _ _ (coe : (valued_ring K v) → hat K)
+      (ring_completion.coe_is_ring_hom _) at h',
+    have add_ne_zero : (x : valued_ring K v) + y ≠ 0,
+    { intro H, rw H at h',
+      rw @is_ring_hom.map_zero _ _ _ _ (coe : (valued_ring K v) → hat K)
+        (ring_completion.coe_is_ring_hom _) at h',
+      apply h',
+      refl },
+    suffices H : dense_embedding.extend de (valuation.unit_map v)
+      (units.mk0
+        (↑(ring_completion.units_coe (valued_ring K v) x) +
+         ↑(ring_completion.units_coe (valued_ring K v) y)) h) =
+        valuation.unit_map v (units.mk0 ((x : valued_ring K v) + (y : valued_ring K v)) add_ne_zero),
+    { rw H,
+      rw ←with_zero.some_le_some,
+      rw ←@with_zero.some_le_some _ _ _ (valuation.unit_map v y),
+      rw valuation.unit_map_eq,
+      rw valuation.unit_map_eq,
+      rw valuation.unit_map_eq,
+      exact v.map_add (x : valued_ring K v) (y : valued_ring K v) },
+    convert de.extend_e_eq _,
+    -- the next line took about an hour to write, and has been much minimised
+    exact units.ext
+      (@is_ring_hom.map_add _ _ _ _ _ (ring_completion.coe_is_ring_hom _) x.val y.val).symm
+  },
   exact is_closed_property2 de cl this
 end
+.
 
 -- TODO -- this theorem has too many top spaces instances in its definition
 /-
@@ -504,17 +512,17 @@ def valuation.completion_extend : valuation (ring_completion $ valued_ring K v) 
 ⟨λ x, if h : x = 0 then 0 else some (valuation.unit_completion_extend v $ units.mk0 x h),
 { map_zero := by simp,
   map_one := begin
-    sorry -- code works but is slow
-    -- let ι := ring_completion.units_coe (valued_ring K v),
-    -- let de : dense_embedding ι := dense_units_map (valued_ring K v),
-    -- suffices : some (valuation.unit_completion_extend v (units.mk0 (1 : hat K) zero_ne_one.symm)) = (1 : Γ),
-    -- by simp [this] ; refl,
-    -- have : units.mk0 (1 : hat K) zero_ne_one.symm = (ι (1 : units $ valued_ring K v)),
-    --   apply units.ext, refl,
-    -- dsimp [valuation.unit_completion_extend],
-    -- rw [this, de.extend_e_eq],
-    -- simp [v.map_one],
-    -- exact v.map_one,
+    -- sorry -- code works but is slow
+    let ι := ring_completion.units_coe (valued_ring K v),
+    let de : dense_embedding ι := dense_units_map (valued_ring K v),
+    suffices : some (valuation.unit_completion_extend v (units.mk0 (1 : hat K) zero_ne_one.symm)) = (1 : Γ),
+    by simp [this] ; refl,
+    have : units.mk0 (1 : hat K) zero_ne_one.symm = (ι (1 : units $ valued_ring K v)),
+      apply units.ext, refl,
+    dsimp [valuation.unit_completion_extend],
+    rw [this, de.extend_e_eq],
+    simp [v.map_one],
+    exact v.map_one,
   end,
   map_mul := λ x y,
   begin --sorry -- this proof works fine
@@ -540,7 +548,11 @@ def valuation.completion_extend : valuation (ring_completion $ valued_ring K v) 
       exfalso, revert h, subst h_1, subst h_2, simp,
       right, subst h_1, convert le_refl _, simp,
       subst h_2, left, simp,
-      sorry,
+      rw with_zero.some_le_some,
+      rw with_zero.some_le_some,
+      have H : dite (x + y = 0) _ _ := v.unit_completion_extend_add (units.mk0 x h_1) (units.mk0 y h_2),
+      rw dif_neg h at H,
+      exact H,
   end }⟩
 end
 
