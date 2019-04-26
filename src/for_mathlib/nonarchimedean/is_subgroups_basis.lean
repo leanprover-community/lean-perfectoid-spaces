@@ -1,5 +1,6 @@
 import for_mathlib.nonarchimedean.basic
 import for_mathlib.topological_rings
+import for_mathlib.data.set.basic
 
 open set filter function lattice add_group_with_zero_nhd
 
@@ -85,6 +86,18 @@ end
 
 lemma mem_nhds_zero (i : ι) : G i ∈ nhds (0 : A) := by { rw nhds_zero, use i}
 
+lemma le_nhds_zero (f : filter A) : f ≤ nhds (0 : A) ↔  ∀  i,  G i ∈ f :=
+begin
+  split ; intro h,
+  { intro i,
+    exact h (mem_nhds_zero G i),
+    },
+  { intros U U_in,
+    rw nhds_zero at U_in,
+    cases U_in with i hi,
+    exact mem_sets_of_superset (h i) hi}
+end
+
 lemma is_op (i : ι) : is_open (G i) :=
 begin
   rw is_open_iff_nhds,
@@ -121,6 +134,24 @@ begin
   exact ⟨⟨G i, is_op G i, by apply_instance⟩, hi⟩,
 end
 
+def to_uniform_space : uniform_space A :=
+topological_add_group.to_uniform_space A
+
+local attribute [instance] to_uniform_space
+
+
+-- Patrick is not sure f ≠ ⊥ cannot be deduced from the other condition. Too tired
+lemma cauchy_iff (f : filter A) : cauchy f ↔ f ≠ ⊥ ∧ ∀ i, ∃ M ∈ f, ∀ x y ∈ M,  y - x ∈  G i :=
+begin
+  suffices : filter.prod f f ≤ uniformity A ↔ ∀ (i : ι), ∃ (M : set A) (H : M ∈ f), ∀ (x y : A), x ∈ M → y ∈ M → y - x ∈ G i,
+    by split; rintro ⟨nebot, H⟩; [ rw this at H, rw ← this at H] ; exact ⟨nebot, H⟩,
+  rw uniformity_eq_comap_nhds_zero',
+  rw ← map_le_iff_le_comap,
+  rw le_nhds_zero,
+  simp only [mem_map, mem_prod_same_iff],
+  split ; intros h i ; rcases h i with ⟨M, M_in, hM⟩ ; use [M, M_in] ;
+  [rw set.prod_subset_iff at hM, rw set.prod_subset_iff] ; exact hM,
+end
 
 section continuity
 variables {G} {α : Type*} [add_group α] [topological_space α] [topological_add_group α]
