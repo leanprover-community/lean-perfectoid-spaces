@@ -204,3 +204,28 @@ lemma le_iff : U ≤ V ↔ (U : set G) ⊆ V := iff.rfl
 attribute [to_additive open_add_subgroup.le_iff] open_subgroup.le_iff
 
 end open_add_subgroup
+
+namespace submodule
+variables {R : Type*} {M : Type*} [comm_ring R]
+variables [add_comm_group M] [topological_space M] [topological_add_group M] [module R M]
+
+lemma is_open_of_open_submodule {P : submodule R M}
+  (h : ∃ U : submodule R M, is_open (U : set M) ∧ U ≤ P) : is_open (P : set M) :=
+begin
+  letI H : is_add_subgroup (P : set M) := by apply_instance,
+  apply open_add_subgroup.is_open_of_open_add_subgroup H,
+  rcases h with ⟨U, h₁, h₂⟩,
+  exact ⟨⟨U, h₁, by apply_instance⟩, h₂⟩
+end
+
+end submodule
+
+namespace ideal
+variables {R : Type*} [comm_ring R]
+variables [topological_space R] [topological_ring R]
+
+lemma is_open_of_open_subideal {I : ideal R}
+  (h : ∃ U : ideal R, is_open (U : set R) ∧ U ≤ I) : is_open (I : set R) :=
+submodule.is_open_of_open_submodule h
+
+end ideal

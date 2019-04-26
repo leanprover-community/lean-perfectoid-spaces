@@ -72,6 +72,9 @@ namespace valued_ring
 variables {R : Type*} [ring R]
 variables (v : valuation R Γ)
 
+local attribute [instance] ring_with_zero_nhd.topological_space
+local attribute [instance] ring_with_zero_nhd.is_topological_ring
+
 instance : ring (valued_ring R v) := ‹ring R›
 
 instance : ring_with_zero_nhd (valued_ring R v) := valuation.ring_with_zero_nhd v
@@ -79,6 +82,8 @@ instance : ring_with_zero_nhd (valued_ring R v) := valuation.ring_with_zero_nhd 
 instance : uniform_space (valued_ring R v) := topological_add_group.to_uniform_space _
 
 instance : uniform_add_group (valued_ring R v) := topological_add_group_is_uniform
+
+instance : topological_ring (valued_ring R v) := by apply_instance
 
 variables {K : Type*} [division_ring K] (ν : valuation K Γ)
 
@@ -103,6 +108,10 @@ def valuation : valuation (valued_ring R v) Γ := v
 end valued_ring
 
 section
+open is_subgroups_basis
+
+local attribute [instance] valuation.subgroups_basis
+
 variables {K : Type*} [division_ring K] (v : valuation K Γ)
 
 variables x y : units K
@@ -150,11 +159,11 @@ instance valuation.topological_division_ring : topological_division_ring (valued
       unfold continuous_at,
       rw  topological_add_group.tendsto_nhds_nhds_iff (λ (x : Kv), x⁻¹) x.val x.val⁻¹,
       intros V V_in,
-      cases (of_subgroups.nhds_zero _).1 V_in with γ Hγ,
+      cases (nhds_zero _ _).1 V_in with γ Hγ,
       let x' : units K := units.mk (x.val : K) (x.inv : K) x.val_inv x.inv_val,
       use { k : Kv | v k < min (γ* ((v x') * (v x'))) (v x')},
       split,
-      { refine (of_subgroups.nhds_zero _).2 _,
+      { refine (nhds_zero _ _).2 _,
         cases valuation.unit_is_some v x' with γ' hγ',
         use min (γ * γ' * γ') γ',
         intro k,
@@ -202,7 +211,7 @@ begin
   use {y | v y < v.unit_map x },
   split,
   { -- Patrick has no idea why Lean needs so much baby-sitting. Patrick is tired
-    exact @of_subgroups.mem_nhds_zero K _ Γ _ (λ γ : Γ, {k | v k < γ}) _ _ _ _ _ (v.unit_map x) },
+    exact @mem_nhds_zero _ _  _  _ (λ γ : Γ, {k | v k < γ}) _ _ },
   { intros z hz,
     rw [valuation.coe_unit_map] at hz,
     rw [mem_preimage_eq, mem_singleton_iff] at *,
@@ -220,7 +229,7 @@ begin
   cases this with γ H,
   split,
   { -- again, this will be an ugly win
-    convert @of_subgroups.mem_nhds_zero K _ Γ _ (λ γ : Γ, {k | v k < γ}) _ _ _ _ _ γ,
+    convert @mem_nhds_zero K _ Γ _ (λ γ : Γ, {k | v k < γ}) _ _ ,
     rw H, refl },
   { simp [le_refl] }
 end
@@ -312,12 +321,15 @@ instance regular_of_discrete {α : Type*} [topological_space α] [discrete_topol
     exact a_not xs
   end }
 
+open is_subgroups_basis
+local attribute [instance] valuation.subgroups_basis
+
 lemma nhds_of_valuation_lt (x : valued_ring K v) (γ : Γ) :
   {y : K | v (y - x) < γ} ∈ nhds x :=
 begin
   rw [← nhds_translation_add_neg x],
   refine ⟨{k | v k < γ}, _ , subset.refl _⟩,
-  exact @of_subgroups.mem_nhds_zero K _ Γ _ (λ γ : Γ, {k | v k < γ}) _ _ _ _ _ γ
+  exact @mem_nhds_zero K _ Γ _ (λ γ : Γ, {k | v k < γ}) _ _
 end
 
 local notation `hat` K := ring_completion (valued_ring K v)
@@ -337,7 +349,7 @@ instance : completable_top_field (valued_ring K v) :=
     rcases h0 with ⟨t₁, ht₁, t₂, ht₂, h⟩,
     rw filter.mem_comap_sets at ht₁,
     rcases ht₁ with ⟨t₁', ht₁', ht₁⟩,
-    rw of_subgroups.nhds_zero at ht₁',
+    rw nhds_zero at ht₁',
     rcases ht₁' with ⟨γ₁, hγ₁⟩,
     rcases hF with ⟨hF₁, hF₂⟩,
     delta cauchy_of,

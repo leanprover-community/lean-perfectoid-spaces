@@ -199,3 +199,51 @@ continuous (λ rs i, f i ⟨rs.1 i, rs.2 i⟩ : (Π (i : I), R i) × (Π (i : I)
 continuous_pi (λ i, continuous.comp
   (continuous.prod_mk (continuous.comp (continuous_fst) (continuous_apply i))
     (continuous.comp (continuous_snd) (continuous_apply i))) (Hfi i))
+
+
+section bases
+open filter set
+variables {α : Type*} {ι : Type*} {s : ι → set α} [inhabited ι]
+lemma generate_eq_of_base (H : ∀ i j, ∃ k, s k ⊆ s i ∩ s j) (U : set α) :
+  U ∈ generate (range s) ↔ ∃ i, s i ⊆ U :=
+begin
+  split ; intro h,
+  { induction h with U U_in U V U_gen UV U_union U V U_gen V_gen U_union V_union,
+    { rcases U_in with ⟨i, rfl⟩,
+      use i },
+    { use default ι,
+      exact (univ_mem_sets : univ ∈ principal (s $ default ι))},
+    { cases U_union with i Ui,
+      use i,
+      exact subset.trans Ui UV },
+    { cases U_union with i Ui,
+      cases V_union with j Vj,
+      cases H i j with k k_sub,
+      use k,
+      cases subset_inter_iff.1 k_sub with ki kj,
+      exact subset_inter_iff.2 ⟨subset.trans ki Ui, subset.trans kj Vj⟩ }},
+  { cases h with i Ui,
+    exact generate_sets.superset (generate_sets.basic $ mem_range_self i) Ui },
+end
+
+lemma mem_infi_range_of_base (H : ∀ i j, ∃ k, s k ⊆ s i ∩ s j) (U : set α) :
+  U ∈ (⨅ i, principal (s i)) ↔ ∃ i, s i ⊆ U :=
+begin
+  rw mem_infi,
+  { split,
+    { exact λ ⟨_, ⟨i, rfl⟩, Ui⟩, ⟨i, Ui⟩ },
+    { rintro ⟨i, Ui⟩,
+      rw mem_Union,
+      use [i, Ui] } },
+  { rintros i j,
+    cases H i j with k k_sub,
+    use k,
+    split ; apply principal_mono.2 ; simp [set.subset_inter_iff.1 k_sub] },
+  { apply_instance }
+end
+
+lemma generate_eq_infi (H : ∀ i j, ∃ k, s k ⊆ s i ∩ s j) :
+  generate (range s) = ⨅ i, principal (s i) :=
+by ext t ; rw [generate_eq_of_base H, mem_infi_range_of_base H]
+
+end bases

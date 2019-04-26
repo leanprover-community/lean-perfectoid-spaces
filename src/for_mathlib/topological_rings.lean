@@ -55,3 +55,58 @@ instance pi_topological_ring {I : Type*} {R : I → Type*} [∀ i, comm_ring (R 
 { continuous_add := continuous_pi₂ (λ i, (h i).continuous_add),
   continuous_mul := continuous_pi₂ (λ i, (h i).continuous_mul),
   continuous_neg := continuous_pi₁ (λ i, (h i).continuous_neg) }
+
+section
+open filter
+
+class ring_with_zero_nhd (α : Type u) extends ring α:=
+(Z : filter α)
+(zero_Z {} : pure 0 ≤ Z)
+(sub_Z {} : tendsto (λp:α×α, p.1 - p.2) (Z.prod Z) Z)
+(left_mul (x₀ : α) : tendsto (λ x : α, x₀ * x) Z Z)
+(right_mul (x₀ : α) : tendsto (λ x : α, x * x₀) Z Z)
+(mul_Z {} : tendsto (λp:α×α, p.1 * p.2) (Z.prod Z) Z)
+
+end
+
+namespace ring_with_zero_nhd
+variables (α : Type*) [ring_with_zero_nhd α]
+open filter add_group_with_zero_nhd function
+local notation `Z` := add_group_with_zero_nhd.Z
+
+def to_add_group_with_zero_nhd {α :Type*} [ring_with_zero_nhd α] :
+  add_group_with_zero_nhd α :=
+{..‹ring_with_zero_nhd α›}
+
+local attribute [instance] to_add_group_with_zero_nhd
+
+def topological_space : topological_space α := by apply_instance
+
+def is_topological_ring : topological_ring α :=
+begin
+  refine {..add_group_with_zero_nhd.topological_add_group, ..},
+  rw continuous_iff_continuous_at,
+  rintro ⟨x₀, y₀⟩,
+  rw [continuous_at, nhds_prod_eq, nhds_eq', nhds_eq', nhds_eq', filter.prod_map_map_eq,
+      tendsto_map'_iff],
+  suffices :
+  tendsto ((λ (x : α), x + x₀ * y₀) ∘ (λ (p : α × α), p.fst + p.snd) ∘
+            (λ (p : α × α), (p.1*y₀ + x₀*p.2, p.1*p.2)))
+    (filter.prod (Z α) $ Z α)
+    (map (λ (x : α), x + x₀ * y₀) $ Z α),
+  { convert this using 1,
+    { ext, simp only [comp_app],
+      repeat { rw mul_add <|> rw add_mul },
+      abel },
+    simp },
+  refine tendsto.comp _ tendsto_map,
+  refine tendsto.comp _ add_Z,
+  apply tendsto.prod_mk _ ring_with_zero_nhd.mul_Z,
+  { change tendsto ((λ p : α × α, p.1 + p.2) ∘ (λ (x : α × α), (x.fst * y₀, x₀ * x.snd))) (filter.prod (Z α) (Z α)) (Z α),
+    refine tendsto.comp _ add_Z,
+    apply tendsto.prod_mk,
+    { exact tendsto_fst.comp (ring_with_zero_nhd.right_mul y₀) },
+    { exact tendsto_snd.comp (ring_with_zero_nhd.left_mul  x₀) } },
+end
+
+end ring_with_zero_nhd

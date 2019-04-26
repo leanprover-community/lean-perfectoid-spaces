@@ -6,7 +6,7 @@ import tactic.ring
 
 import for_mathlib.submonoid
 import for_mathlib.topological_rings
-import for_mathlib.nonarchimedean.basic
+import for_mathlib.nonarchimedean.adic_topology
 
 local attribute [instance] set.pointwise_mul_semiring
 

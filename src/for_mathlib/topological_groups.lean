@@ -155,6 +155,16 @@ lemma tendsto_nhds_nhds_iff (f : G → H) (g : G) (h : H) :
 topological_add_group.tendsto_nhds_nhds_iff' _ _ _
 end topological_add_group
 
+namespace add_group_with_zero_nhd
+variables {α : Type*} [add_group_with_zero_nhd α]
+open filter
+
+lemma nhds_eq' (a : α) : nhds a = map (λx, a + x) (Z α) :=
+by convert nhds_eq a ; ext ; simp
+
+end add_group_with_zero_nhd
+
+
 
 section
 variables (G : Type u) [add_comm_group G] [topological_space G] [topological_add_group G]

@@ -96,11 +96,16 @@ def localization (r : rational_open_data A) := Huber_ring.away r.T r.s
 
 instance ring_with_zero_nhd_of_localization (r : rational_open_data A) :
   ring_with_zero_nhd (localization r) :=
-Huber_ring.away.ring_with_zero_nhd r.T r.s r.Hopen
+Huber_ring.away.ring_with_nhds  r.T r.s r.Hopen
 
 instance (r : rational_open_data A) : comm_ring (localization r) :=
 by unfold localization; apply_instance
 
+instance (r : rational_open_data A) : topological_space (localization r) :=
+ring_with_zero_nhd.topological_space _
+
+instance (r : rational_open_data A) : topological_ring (localization r) :=
+ring_with_zero_nhd.is_topological_ring _
 open algebra
 
 instance (r : rational_open_data A) : algebra A (localization r) := Huber_ring.away.algebra r.T r.s
@@ -194,9 +199,9 @@ Huber_ring.away.lift r1.T r1.s
 instance {r1 r2 : rational_open_data A} (h : r1 ≤ r2) : is_ring_hom
 (localization_map h) := by delta localization_map; apply_instance
 
-def localization.nonarchimedean (r : rational_open_data A) :
+lemma localization.nonarchimedean (r : rational_open_data A) :
   topological_add_group.nonarchimedean (localization r) :=
-of_submodules_comm.nonarchimedean
+@is_subgroups_basis.nonarchimedean _ _ _ _ _ (Huber_ring.away.is_basis _ _ _)
 
 section
 open localization submodule Huber_ring.away
@@ -212,13 +217,14 @@ set_option class.instance_max_depth 50
 theorem localization.power_bounded (r : rational_open_data A) :
   is_power_bounded_subset (localization.power_bounded_data r) :=
 begin
+  haveI := Huber_ring.away.is_basis r.T r.s r.Hopen,
   apply bounded.subset,
   work_on_goal 0 { apply add_group.subset_closure },
   show is_bounded (ring.closure (localization.power_bounded_data r)),
   intros U hU,
-  rw of_submodules_comm.nhds_zero at hU,
+  rw is_subgroups_basis.nhds_zero at hU,
   cases hU with V hV,
-  refine ⟨_, mem_nhds_sets (of_submodules_comm.is_open V) _, _⟩,
+  refine ⟨_, mem_nhds_sets (is_subgroups_basis.is_op _ V) _, _⟩,
   { rw submodule.mem_coe,
     exact submodule.zero_mem _ },
   { intros v hv b hb,

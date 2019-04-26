@@ -1,4 +1,5 @@
 import for_mathlib.nonarchimedean.basic
+import for_mathlib.topological_rings
 
 open set filter function lattice add_group_with_zero_nhd
 
@@ -12,6 +13,8 @@ class is_subgroups_basis {A : Type*} [ring A] {ι : Type*} [inhabited ι] (G : �
   (h_mul : ∀ i, ∃ j, G j * G j ⊆ G i)
 
 namespace is_subgroups_basis
+
+section basics
 variables {A : Type*} [ring A] {ι : Type*} [inhabited ι] (G : ι → set A) [is_subgroups_basis G]
 include G
 
@@ -70,6 +73,8 @@ def to_ring_with_zero_nhd : ring_with_zero_nhd A :=
   to_ring := ‹ring A› }
 
 local attribute [instance, priority 0] to_ring_with_zero_nhd
+  ring_with_zero_nhd.topological_space
+  ring_with_zero_nhd.to_add_group_with_zero_nhd
 
 lemma nhds_zero (U : set A) : U ∈ nhds (0 : A) ↔ ∃ i, G i ⊆ U :=
 begin
@@ -103,6 +108,11 @@ begin
   { apply_instance }
 end
 
+
+def is_topological_add_group : topological_add_group A :=
+  add_group_with_zero_nhd.topological_add_group
+local attribute [instance] is_topological_add_group
+
 lemma nonarchimedean : topological_add_group.nonarchimedean A :=
 begin
   intros U hU,
@@ -111,8 +121,9 @@ begin
   exact ⟨⟨G i, is_op G i, by apply_instance⟩, hi⟩,
 end
 
-section
-variables {α : Type*} [add_group α] [topological_space α] [topological_add_group α]
+
+section continuity
+variables {G} {α : Type*} [add_group α] [topological_space α] [topological_add_group α]
 variables (f : α → A) [is_add_group_hom f]
 
 lemma continuous_into (h : ∀ i, is_open (f ⁻¹' (G i))) :
@@ -144,17 +155,64 @@ begin
   cases h U hU with i hi,
   exact mem_sets_of_superset (mem_nhds_zero G i) hi
 end
-end
 
-variables {B : Type*} [ring B] {J : Type*} [inhabited J] (H : J → set B) [is_subgroups_basis H]
-variables (f : A → B) [is_add_group_hom f]
+variables {B : Type*} [ring B] {J : Type*} [inhabited J] {H : J → set B} [is_subgroups_basis H]
+variables (φ : A → B) [is_add_group_hom φ]
 
-lemma continuous_both (h : ∀ j, ∃ i, G i ⊆ f ⁻¹' (H j)) : continuous f :=
+lemma continuous_both (h : ∀ j, ∃ i, G i ⊆ φ ⁻¹' (H j)) : continuous φ :=
 begin
-  refine continuous_from G f _,
+  refine continuous_from _ _,
   intros U U_nhds,
   cases (nhds_zero H U).1 U_nhds with j hj,
   cases h j with i hi,
   exact ⟨i, subset.trans hi $ preimage_mono hj⟩,
 end
+end continuity
+end basics
+
+section comm_ring
+
+variables {A : Type*} [comm_ring A] {ι : Type*} [inhabited ι] (G : ι → set A) [∀ i, is_add_subgroup $ G i]
+  (h_directed : ∀ i j, ∃ k, G k ⊆ G i ∩ G j)
+  (h_left_mul : ∀ (x : A) i, ∃ j, x • (G j) ⊆ G i)
+  (h_mul : ∀ i, ∃ j, G j * G j ⊆ G i)
+include h_directed h_left_mul h_mul
+
+lemma of_comm : is_subgroups_basis G :=
+{ sub_groups := λ i, by apply_instance,
+  h_directed := h_directed,
+  h_left_mul := by simpa only [set.smul_set_eq_image] using h_left_mul,
+  h_right_mul := by simpa only [set.smul_set_eq_image, mul_comm] using h_left_mul,
+  h_mul := h_mul }
+end comm_ring
+
+section comm_algebra
+open algebra submodule
+
+variables {R : Type*} {A: Type*} [comm_ring R] [comm_ring A] [algebra R A]
+  {ι : Type*} [inhabited ι] (M : ι → submodule R A)
+  (h_directed : ∀ i j, ∃ k, M k ≤ M i ⊓ M j)
+  (h_left_mul : ∀ (a : A) i, ∃ j, a • M j ≤ M i)
+  (h_mul      : ∀ i, ∃ j, M j * M j ≤ M i)
+include h_directed h_left_mul h_mul
+
+
+lemma of_submodules_comm : is_subgroups_basis (λ i, (M i).carrier) :=
+begin
+  letI : ∀ i, is_add_subgroup (M i).carrier := λ i, submodule.submodule_is_add_subgroup _,
+  apply is_subgroups_basis.of_comm _ h_directed,
+  { intros x i,
+    cases h_left_mul x i with j hj,
+    use j,
+    erw smul_singleton at hj,
+    rw set.smul_set_eq_image,
+    exact hj },
+  { intro i,
+    cases h_mul i with j hj,
+    use j,
+    rintros _ ⟨x, hx, y, hy, rfl⟩,
+    exact hj (mul_mem_mul hx hy) },
+end
+end comm_algebra
+
 end is_subgroups_basis

@@ -277,17 +277,18 @@ begin
   exact le_trans (smul_le_smul (le_refl _) hV) hW
 end
 
-instance (hT : is_open (↑(ideal.span T) : set A)) :
-  topological_space ATs :=
-topology_of_submodules_comm
-(λ U : open_add_subgroup A, span D (of_id A ATs '' U.1))
-(directed T s) (mul_left T s hT) (mul_le T s Huber_ring.nonarchimedean)
+lemma is_basis (hT : is_open (↑(ideal.span T) : set A)) :
+  is_subgroups_basis (λ U : open_add_subgroup A, (span D (of_id A ATs '' U.1) : set ATs)) :=
+is_subgroups_basis.of_submodules_comm _
+  (directed T s) (mul_left T s hT) (mul_le T s Huber_ring.nonarchimedean)
 
-instance (hT : is_open (↑(ideal.span T) : set A)) :
+def ring_with_nhds (hT : is_open (↑(ideal.span T) : set A)) :
   ring_with_zero_nhd ATs :=
-of_submodules_comm
-(λ U : open_add_subgroup A, span D (of_id A ATs '' U.1))
-(directed T s) (mul_left T s hT) (mul_le T s Huber_ring.nonarchimedean)
+@is_subgroups_basis.to_ring_with_zero_nhd ATs _ _ _
+(λ U : open_add_subgroup A, (span D (of_id A ATs '' U.1) : set ATs)) (away.is_basis T s hT)
+
+def top_space (hT : is_open (↑(ideal.span T) : set A)) : topological_space ATs :=
+@ring_with_zero_nhd.topological_space ATs (ring_with_nhds T s hT)
 
 section
 variables {B : Type*} [comm_ring B] [topological_space B] [topological_ring B]
@@ -317,9 +318,9 @@ localization.away.lift.is_ring_hom f _
 -- TODO: this has nothing to do with lift so should perhaps be elsewhere
 -- (because KMB keeps confusing it with the next lemma ;-))
 lemma of_continuous (hT : is_open (↑(ideal.span T) : set A)) :
-  @continuous _ _ _ (away.topological_space T s hT) (of : A → ATs) :=
+  @continuous _ _ _ (away.top_space T s hT) (of : A → ATs) :=
 begin
-  apply of_submodules_comm.continuous _,
+  apply is_subgroups_basis.continuous_into _,
   all_goals {try {apply_instance}},
   intro U,
   apply open_add_subgroup.is_open_of_open_add_subgroup _,
@@ -332,10 +333,11 @@ begin
 end
 
 include hB hf hT hTB
-lemma lift_continuous : @continuous _ _ (away.topological_space T s hT) _ (lift T s hs) :=
+lemma lift_continuous : @continuous _ _ (away.top_space T s hT) _ (lift T s hs) :=
 begin
   apply continuous_of_continuous_at_zero _ _,
   all_goals {try {apply_instance}},
+  apply is_subgroups_basis.is_topological_add_group,
   intros U hU,
   rw is_ring_hom.map_zero (lift T s hs) at hU,
   rw filter.mem_map_sets_iff,
@@ -350,7 +352,7 @@ begin
   cases Huber_ring.nonarchimedean W hW with Y hY,
   refine ⟨↑(Dspan Y), _, _⟩,
   { apply mem_nhds_sets,
-    { convert of_submodules_comm.is_open Y },
+    { convert is_subgroups_basis.is_op _ Y },
     { exact (Dspan ↑Y).zero_mem } },
   { refine set.subset.trans _ hVF,
     rintros _ ⟨x, hx, rfl⟩,

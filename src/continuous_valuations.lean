@@ -99,7 +99,7 @@ begin
   conv at HU in (valuation_field_mk v 0) begin
     rw is_ring_hom.map_zero (valuation_field_mk v),
   end,
-  rw of_subgroups.nhds_zero U at HU, swap, by apply_instance,
+  rw is_subgroups_basis.nhds_zero _ U at HU,
   cases HU with γ Hγ,
   show valuation_field_mk v ⁻¹' U ∈ (nhds (0 : R)),
   let V := {r : R | (canonical_valuation v) r < ↑γ},

@@ -71,13 +71,13 @@ lemma v_le_one_is_bounded {R : Type*} [comm_ring R] (v : valuation R Γ) :
 begin
   let v' := valuation_field.canonical_valuation v,
   intros U HU,
-  rw of_subgroups.nhds_zero at HU,
+  rw is_subgroups_basis.nhds_zero at HU,
   rcases HU with ⟨γ, HU⟩,
   let V := {k : valuation_field v | v' k < ↑γ},
   use V,
   existsi _, swap,
   { apply mem_nhds_sets,
-      apply of_subgroups.is_open,
+      apply is_subgroups_basis.is_op,
     show v' 0 < γ,
     rw v'.map_zero,
     exact with_zero.zero_lt_some
@@ -123,9 +123,11 @@ Huber_ring.away.lift T s (unit_aux hs)
 instance (hs : v s ≠ 0) : is_ring_hom (to_valuation_field hs) :=
 by delta to_valuation_field; apply_instance
 
+local attribute [instance] valuation.subgroups_basis
+
 theorem to_valuation_field_cts' (hs : v s ≠ 0)(hT2 : ∀ t : A, t ∈ T → v t ≤ v s) (hv : is_continuous v) :
   continuous (to_valuation_field hs) :=
-Huber_ring.away.lift_continuous T s (of_subgroups.nonarchimedean)
+Huber_ring.away.lift_continuous T s (is_subgroups_basis.nonarchimedean _)
   (continuous_valuation_field_mk_of_continuous v hv) (unit_aux hs) (rd.Hopen)
   (v_T_over_s_is_power_bounded hs hT2)
 
