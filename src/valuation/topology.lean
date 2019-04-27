@@ -22,6 +22,12 @@ lemma valuation.lt_is_add_subgroup (γ : Γ): is_add_subgroup {x | v x < γ} :=
   add_mem := λ x y x_in y_in, lt_of_le_of_lt (map_add_le_max v x y) (max_lt x_in y_in),
   neg_mem := λ x x_in, by rwa [mem_set_of_eq, map_neg] }
 
+-- is this an OK place to put this?
+lemma valuation.le_is_add_subgroup (γ : Γ): is_add_subgroup {x | v x ≤ γ} :=
+{ zero_mem := by simp only [valuation.map_zero, mem_set_of_eq]; apply le_of_lt (with_zero.zero_lt_some),
+  add_mem := λ x y x_in y_in, le_trans (map_add_le_max v x y) (max_le x_in y_in),
+  neg_mem := λ x x_in, by rwa [mem_set_of_eq, map_neg] }
+
 local attribute [instance] valuation.lt_is_add_subgroup
 
 lemma valuation.subgroups_basis : is_subgroups_basis (λ γ : Γ, {x | v x < γ}) :=
