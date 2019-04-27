@@ -62,6 +62,7 @@ variable {U}
 instance : inhabited (open_subgroup G) :=
 { default := ⟨set.univ, ⟨is_open_univ, by apply_instance⟩⟩ }
 
+--Gouezel points out that we only need a non-empty open subset in s, not a subgroup
 @[to_additive open_add_subgroup.is_open_of_open_add_subgroup]
 lemma is_open_of_open_subgroup {s : set G} (h₁ : is_subgroup s)
   (h₂ : ∃ U : open_subgroup G, (U : set G) ⊆ s) : is_open s :=
@@ -108,7 +109,7 @@ begin
 end
 
 -- to_additive fail
-def open_add_subgroup.is_closed {G : Type*} [add_group G] [topological_space G]
+def to_additive.is_closed {G : Type*} [add_group G] [topological_space G]
   [topological_add_group G] (U : open_add_subgroup G) : _root_.is_closed (U : set G) := sorry
 
 section

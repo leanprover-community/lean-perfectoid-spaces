@@ -96,29 +96,39 @@ local attribute [instance] with_zero.topological_space with_zero.ordered_topolog
 
 local attribute [instance] valuation.subgroups_basis
 
-instance (γ : Γ) : is_add_subgroup {r : valued_ring R v | v r ≤ ↑γ} := sorry
+instance (γ : Γ) : is_add_subgroup {r : valued_ring R v | v r ≤ ↑γ} :=
+valuation.le_is_add_subgroup v γ
 
 lemma continuous_valuation : continuous (valued_ring.valuation v) :=
 begin
   apply continuous_generated_from _,
   rintros U hU,
   rcases hU with ⟨γ, rfl⟩ | ⟨γ₀, rfl⟩,
-  { convert topological_space.is_open_inter _ {r : valued_ring R v | v r ≤ γ} {r : valued_ring R v | v r ≥ γ} _ _,
+  { convert topological_space.is_open_inter _ {r : valued_ring R v | v r ≤ γ}
+      {r : valued_ring R v | (γ : with_zero Γ) ≤ v r} _ _,
     {ext, convert @le_antisymm_iff _ _ (v x) γ, simp, refl},
     { apply open_add_subgroup.is_open_of_open_add_subgroup _ _,
       { apply_instance},
       { apply_instance},
-      { apply is_add_subgroup.mk,
-        sorry,
-      },
-      { sorry}
+      { apply_instance},
+      { use {r : valued_ring R v | v r < γ}, split,
+        { exact @is_subgroups_basis.is_op _ _ _ _ (λ γ : Γ, {k | v k < γ}) _ _},
+        { exact valuation.lt_is_add_subgroup v γ},
+        { intro _, exact le_of_lt},
+      }
     },
-    { sorry},
+    { suffices : is_closed {r : valued_ring R v | v r < ↑γ},
+      { convert this, ext r, simp, refl },
+      apply open_subgroup.to_additive.is_closed ⟨{r : valued_ring R v | v r < ↑γ}, _⟩,
+      split,
+      { exact @is_subgroups_basis.is_op _ _ _ _ (λ γ : Γ, {k | v k < γ}) _ _},
+      { exact valuation.lt_is_add_subgroup v γ}
+    },
   },
   { rw preimage_set_of_eq,
     delta valued_ring.valuation,
     delta valued_ring,
-    exact @is_subgroups_basis.is_op _ _ _ _ (λ γ : Γ, {k | v k < γ}) _ _ },
+    exact @is_subgroups_basis.is_op _ _ _ _ (λ γ : Γ, {k | v k < γ}) _ _ }
 end
 
 end valued_ring
