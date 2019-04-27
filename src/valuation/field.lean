@@ -448,11 +448,6 @@ def valuation.unit_completion_extend : units (hat K) → Γ :=
 
 local notation `hatv` := valuation.unit_completion_extend v
 
-noncomputable def valuation_on_completion_v (x : hat K) : with_zero Γ :=
-  if h : x = 0 then 0 else some (valuation.unit_completion_extend v $ units.mk0 x h)
-
-local notation `vhat` := valuation_on_completion_v v
-
 set_option class.instance_max_depth 46
 
 instance : is_group_hom (valuation.unit_map v) := by apply_instance
@@ -490,66 +485,160 @@ begin
   exact is_closed_property2 de cl this
 end
 
+-- vhat is the extension of v to hat K
+
 set_option class.instance_max_depth 80
 
---lemma valuation_on_completion_extend_add (x y : hat K) :
---  vhat (x + y) ≤ vhat x ∨ vhat (x + y) ≤ vhat y := sorry -- what Patrick thinks
+noncomputable def valuation_on_completion_v (x : hat K) : with_zero Γ :=
+  if h : x = 0 then 0 else some (valuation.unit_completion_extend v $ units.mk0 x h)
+
+local notation `vhat` := valuation_on_completion_v v
+
+lemma valuation_on_completion_v_zero : valuation_on_completion_v v 0 = 0 := dif_pos rfl
+
+lemma valuation_on_completion_v_nonzero (x : hat K) (hx : x ≠ 0) :
+  valuation_on_completion_v v x = some (valuation.unit_completion_extend v $ units.mk0 x hx)
+:= dif_neg hx
+
+section continuity_of_vhat -- making with_zero.topological_space an instance
+
+local attribute [instance] with_zero.topological_space
 
 
-lemma valuation.unit_completion_extend_add : ∀ x y : units (hat K),
- if h : x.val + y.val = 0 then true else
-   hatv (units.mk0 (x.val + y.val) h) ≤ hatv x ∨ hatv (units.mk0 (x.val + y.val) h) ≤ hatv y :=
+/-- continuity of v-hat -/
+lemma continuous_vhat : continuous vhat :=
 begin
-  let ι := ring_completion.units_coe (valued_ring K v),
-  let de : dense_embedding ι := dense_units_map (valued_ring K v),
-  let u := units (hat K),
-  letI : topological_monoid u := topological_group.to_topological_monoid _,
-  let C := {p : u × u | if h : p.1.val + p.2.val = 0 then true else
-    hatv (units.mk0 ((p.1 : hat K) + p.2) h) ≤ hatv p.1 ∨
-    hatv (units.mk0 ((p.1 : hat K) + p.2) h) ≤ hatv p.2 },
-  have cl : is_closed C,
-    sorry, -- see line 429 for mul proof. This is topology.
-  have : ∀ x y : units (valued_ring K v), (ι x, ι y) ∈ C,
-  { intros x y,
-    have hx : hatv (ι x) = _:= de.extend_e_eq x,
-    have hy : hatv (ι y) = _:= de.extend_e_eq y,
-    show dite _ _ _,
-    split_ifs, exact trivial,
-    dsimp [valuation.unit_completion_extend, ι],
-    erw dense_embedding.extend_e_eq de x,
-    erw dense_embedding.extend_e_eq de y,
-    dsimp at h,
-    let h' : ((ι x) : hat K) + (ι y) ≠ 0 := h,
-    erw units.coe_map at h',
-    erw units.coe_map at h',
-    rw ← @is_ring_hom.map_add _ _ _ _ (coe : (valued_ring K v) → hat K)
-      (ring_completion.coe_is_ring_hom _) at h',
-    have add_ne_zero : (x : valued_ring K v) + y ≠ 0,
-    { intro H, rw H at h',
-      rw @is_ring_hom.map_zero _ _ _ _ (coe : (valued_ring K v) → hat K)
-        (ring_completion.coe_is_ring_hom _) at h',
-      apply h',
-      refl },
-    suffices H : dense_embedding.extend de (valuation.unit_map v)
-      (units.mk0
-        (↑(ring_completion.units_coe (valued_ring K v) x) +
-         ↑(ring_completion.units_coe (valued_ring K v) y)) h) =
-        valuation.unit_map v (units.mk0 ((x : valued_ring K v) + (y : valued_ring K v)) add_ne_zero),
-    { rw H,
-      rw ←with_zero.some_le_some,
-      rw ←@with_zero.some_le_some _ _ _ (valuation.unit_map v y),
-      rw valuation.unit_map_eq,
-      rw valuation.unit_map_eq,
-      rw valuation.unit_map_eq,
-      exact v.map_add (x : valued_ring K v) (y : valued_ring K v) },
-    convert de.extend_e_eq _,
-    -- the next line took about an hour to write, and has been much minimised
-    exact units.ext
-      (@is_ring_hom.map_add _ _ _ _ _ (ring_completion.coe_is_ring_hom _) x.val y.val).symm
+  rw continuous_iff_continuous_at,
+  intro x,
+  by_cases h : x = 0,
+  {
+    sorry
   },
-  exact is_closed_property2 de cl this
+  { let u : units (ring_completion (valued_ring K v)) := units.mk0 x h,
+    sorry
+  }
+end
+
+lemma coe_inj : function.injective (coe : valued_ring K v → hat K) := sorry
+
+lemma coe_de : dense_embedding (coe : valued_ring K v → hat K) := sorry
+
+lemma vhat_extends (r : valued_ring K v) : vhat (↑r) = v r :=
+begin
+  by_cases h : r = 0,
+  { -- zero case
+    rw h,
+    convert (v.map_zero).symm,
+    convert valuation_on_completion_v_zero v,
+  },
+  { -- nonzero
+    have H : (r : hat K) ≠ 0,
+    { intro h2, apply h, convert coe_inj v h2,
+    },
+    convert valuation_on_completion_v_nonzero v r H,
+    let u : units (valued_ring K v) := units.mk0 r h,
+    let ι := ring_completion.units_coe (valued_ring K v),
+    let de : dense_embedding ι := dense_units_map (valued_ring K v),
+    change v (u : valued_ring K v)= _,
+    rw ←valuation.unit_map_eq,
+    congr' 1,
+    convert (de.extend_e_eq (units.mk0 r _)).symm,
+    apply units.ext, refl,
+  }
+end
+
+end continuity_of_vhat
+
+-- Kevin pulled this lemma out because it takes forever to compile and takes Lean's
+-- deterministic timeout meter right to the edge
+lemma valuation_on_completion_extend_add_aux :
+  is_closed {p : (hat K) × (hat K) | vhat (p.1 + p.2) ≤ vhat p.1 ∨ vhat (p.1 + p.2) ≤ vhat p.2} :=
+begin
+  letI := @with_zero.topological_space Γ,
+  letI := @with_zero.ordered_topology Γ, -- Γ should be explicit in these functions
+  convert @is_closed_union _ {p : (hat K) × (hat K) | vhat (p.1 + p.2) ≤ vhat p.1}
+    {p : (hat K) × (hat K) | vhat (p.1 + p.2) ≤ vhat p.2 } _ _ _,
+  { exact is_closed_le ((continuous_add').comp (continuous_vhat v)) (continuous_fst.comp (continuous_vhat v)) },
+  { apply is_closed_le _ _, apply_instance, apply_instance,
+    { apply (continuous_add').comp, exact (continuous_vhat v), apply_instance},
+    { apply continuous_snd.comp, exact (continuous_vhat v)},
+  }
 end
 .
+
+lemma valuation_on_completion_extend_add (x y : hat K) :
+  vhat (x + y) ≤ vhat x ∨ vhat (x + y) ≤ vhat y :=
+begin
+  let C := {p : (hat K) × (hat K) | vhat (p.1 + p.2) ≤ vhat p.1 ∨ vhat (p.1 + p.2) ≤ vhat p.2},
+  have cl : is_closed C := valuation_on_completion_extend_add_aux v,
+  have : ∀ x y : valued_ring K v, ((x : hat K), (y : hat K)) ∈ C,
+  { intros x y,
+    show vhat (x + y) ≤ vhat x ∨ vhat (x + y) ≤ vhat y,
+    convert v.map_add x y,
+    { convert vhat_extends v (x + y), exact (is_ring_hom.map_add _).symm},
+    { exact vhat_extends v x},
+    { convert vhat_extends v (x + y), exact (is_ring_hom.map_add _).symm},
+    { exact vhat_extends v y},
+  },
+  -- why does Lean hate Kevin?
+  exact @is_closed_property2 _ _ _ _ _ (λ x y, vhat (x + y) ≤ vhat x ∨ vhat (x + y) ≤ vhat y) (coe_de v) cl this x y,
+end
+
+-- horrible units version which we now no longer need
+-- lemma valuation.unit_completion_extend_add' : ∀ x y : units (hat K),
+--  if h : x.val + y.val = 0 then true else
+--    hatv (units.mk0 (x.val + y.val) h) ≤ hatv x ∨ hatv (units.mk0 (x.val + y.val) h) ≤ hatv y :=
+-- begin
+--   let ι := ring_completion.units_coe (valued_ring K v),
+--   let de : dense_embedding ι := dense_units_map (valued_ring K v),
+--   let u := units (hat K),
+--   letI : topological_monoid u := topological_group.to_topological_monoid _,
+--   let C := {p : u × u | if h : p.1.val + p.2.val = 0 then true else
+--     hatv (units.mk0 ((p.1 : hat K) + p.2) h) ≤ hatv p.1 ∨
+--     hatv (units.mk0 ((p.1 : hat K) + p.2) h) ≤ hatv p.2 },
+--   have cl : is_closed C,
+--   { sorry},
+--   -- see line 429 for mul proof. This is topology.
+--   have : ∀ x y : units (valued_ring K v), (ι x, ι y) ∈ C,
+--   { intros x y,
+--     have hx : hatv (ι x) = _:= de.extend_e_eq x,
+--     have hy : hatv (ι y) = _:= de.extend_e_eq y,
+--     show dite _ _ _,
+--     split_ifs, exact trivial,
+--     dsimp [valuation.unit_completion_extend, ι],
+--     erw dense_embedding.extend_e_eq de x,
+--     erw dense_embedding.extend_e_eq de y,
+--     dsimp at h,
+--     let h' : ((ι x) : hat K) + (ι y) ≠ 0 := h,
+--     erw units.coe_map at h',
+--     erw units.coe_map at h',
+--     rw ← @is_ring_hom.map_add _ _ _ _ (coe : (valued_ring K v) → hat K)
+--       (ring_completion.coe_is_ring_hom _) at h',
+--     have add_ne_zero : (x : valued_ring K v) + y ≠ 0,
+--     { intro H, rw H at h',
+--       rw @is_ring_hom.map_zero _ _ _ _ (coe : (valued_ring K v) → hat K)
+--         (ring_completion.coe_is_ring_hom _) at h',
+--       apply h',
+--       refl },
+--     suffices H : dense_embedding.extend de (valuation.unit_map v)
+--       (units.mk0
+--         (↑(ring_completion.units_coe (valued_ring K v) x) +
+--          ↑(ring_completion.units_coe (valued_ring K v) y)) h) =
+--         valuation.unit_map v (units.mk0 ((x : valued_ring K v) + (y : valued_ring K v)) add_ne_zero),
+--     { rw H,
+--       rw ←with_zero.some_le_some,
+--       rw ←@with_zero.some_le_some _ _ _ (valuation.unit_map v y),
+--       rw valuation.unit_map_eq,
+--       rw valuation.unit_map_eq,
+--       rw valuation.unit_map_eq,
+--       exact v.map_add (x : valued_ring K v) (y : valued_ring K v) },
+--     convert de.extend_e_eq _,
+--     -- the next line took about an hour to write, and has been much minimised
+--     exact units.ext
+--       (@is_ring_hom.map_add _ _ _ _ _ (ring_completion.coe_is_ring_hom _) x.val y.val).symm
+--   },
+--   exact is_closed_property2 de cl this
+-- end
 
 -- TODO -- this theorem has too many top spaces instances in its definition
 /-
@@ -575,7 +664,7 @@ def valuation.completion_extend : valuation (ring_completion $ valued_ring K v) 
     exact v.map_one,
   end,
   map_mul := λ x y,
-  begin --sorry -- this proof works fine
+  begin --sorry -- this proof works fine but is slow
     by_cases hx : x = 0 ; simp [hx],
     by_cases hy : y = 0 ; simp [hy],
     have : x*y ≠ 0,
@@ -588,23 +677,25 @@ def valuation.completion_extend : valuation (ring_completion $ valued_ring K v) 
     exact with_zero.mul_coe (valuation.unit_completion_extend v $ units.mk0 x hx)
                             (valuation.unit_completion_extend v $ units.mk0 y hy),
   end,
-  map_add := begin
-    intros x y,
-    split_ifs,
-      left, simp,
-      left, simp,
-      right, simp,
-      left, simp,
-      exfalso, revert h, subst h_1, subst h_2, simp,
-      right, subst h_1, convert le_refl _, simp,
-      subst h_2, left, simp,
-      rw with_zero.some_le_some,
-      rw with_zero.some_le_some,
-      have H : dite (x + y = 0) _ _ := v.unit_completion_extend_add (units.mk0 x h_1) (units.mk0 y h_2),
-      rw dif_neg h at H,
-      exact H,
-  end }⟩
+  map_add := valuation_on_completion_extend_add v }⟩
 end
+--   begin
+--     intros x y,
+--     split_ifs,
+--       left, simp,
+--       left, simp,
+--       right, simp,
+--       left, simp,
+--       exfalso, revert h, subst h_1, subst h_2, simp,
+--       right, subst h_1, convert le_refl _, simp,
+--       subst h_2, left, simp,
+--       rw with_zero.some_le_some,
+--       rw with_zero.some_le_some,
+--       have H : dite (x + y = 0) _ _ := v.unit_completion_extend_add' (units.mk0 x h_1) (units.mk0 y h_2),
+--       rw dif_neg h at H,
+--       exact H,
+--   end }⟩
+-- end
 
 -- Kevin has added the thing he needs
 
