@@ -354,7 +354,7 @@ structure 𝒞.equiv {X : Type*} [topological_space X] {Y : Type*} [topological_
 (left_inv : 𝒞.map_comp to_fun inv_fun = 𝒞.map_id F)
 (right_inv : 𝒞.map_comp inv_fun to_fun = 𝒞.map_id G)
 
-notation A ` ≅ `:50 B := nonempty (𝒞.equiv A B)
+notation A ` ≅_𝒞 `:50 B := nonempty (𝒞.equiv A B)
 
 def presheaf_of_rings.restrict {X : Type*} [topological_space X] (U : opens X)
   (G : presheaf_of_rings X) : presheaf_of_rings U :=
