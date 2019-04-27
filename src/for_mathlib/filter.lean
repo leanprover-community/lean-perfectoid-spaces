@@ -40,3 +40,9 @@ begin
   { use [t, ht],
     rwa hts }
 end
+
+lemma filter.inf_eq_bot_iff {α : Type*} (f g : filter α) : f ⊓ g = ⊥ ↔ ∃ (U ∈ f) (V ∈ g), U ∩ V = ∅ :=
+by { rw [← empty_in_sets_eq_bot, mem_inf_sets], simp [subset_empty_iff] }
+
+lemma filter.ne_bot_of_map {α : Type*} {β : Type*} {f : α → β} {F : filter α} (h : map f F ≠ ⊥) : F ≠ ⊥ :=
+λ H, (H ▸ h : map f ⊥ ≠ ⊥) map_bot

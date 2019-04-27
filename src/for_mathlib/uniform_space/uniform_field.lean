@@ -53,12 +53,24 @@ import for_mathlib.division_ring
 noncomputable theory
 local attribute [instance, priority 0] classical.prop_decidable
 
+open filter
+
 lemma set.mem_compl_singleton_iff {α : Type*} (a x : α) : x ∈ -({a} : set α) ↔ x ≠ a :=
 by simp only [set.mem_singleton_iff, set.mem_compl_eq]
 
 def cauchy_of {α : Type*} {β : Type*} [U : uniform_space β] (f : α → β) (F : filter α) :=
 @cauchy α (uniform_space.comap f U) F
 
+lemma cauchy_of_iff_map {α : Type*} {β : Type*} [U : uniform_space β] (f : α → β) (F : filter α) :
+cauchy_of f F ↔ cauchy (map f F):=
+begin
+  split ; intro h ; cases h with ne_bot H,
+  { refine ⟨map_ne_bot ne_bot, _⟩,
+    rwa [prod_map_map_eq, map_le_iff_le_comap] },
+  { split,
+    { exact filter.ne_bot_of_map ne_bot },
+    { rwa [prod_map_map_eq, map_le_iff_le_comap] at H } },
+end
 set_option class.instance_max_depth 100
 
 open set ring_completion filter

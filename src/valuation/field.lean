@@ -360,49 +360,52 @@ end
 
 local notation `hat` K := ring_completion (valued_ring K v)
 
-/-
-The next sorry is meant to be the only mathematical content of that file, it's worth
-at least three lines in BouAC
--/
 instance : completable_top_field (valued_ring K v) :=
 { separated := by apply_instance,
   nice :=
   begin
+    set Kv := valued_ring K v,
     rintros F hF h0,
-    delta zero_not_adh at h0,
-    rw ← filter.empty_in_sets_eq_bot at h0,
-    rw filter.mem_inf_sets at h0,
-    rcases h0 with ⟨t₁, ht₁, t₂, ht₂, h⟩,
-    rw filter.mem_comap_sets at ht₁,
-    rcases ht₁ with ⟨t₁', ht₁', ht₁⟩,
-    rw nhds_zero at ht₁',
-    rcases ht₁' with ⟨γ₁, hγ₁⟩,
-    rcases hF with ⟨hF₁, hF₂⟩,
-    delta cauchy_of,
-    rw cauchy_map_iff,
-    split,
-    { exact hF₁ },
-    { refine le_trans _ hF₂,
-      rw map_le_iff_le_comap,
-      intros s hs,
-      rcases hs with ⟨t , ht, hts⟩,
-      have hγ₁t₁ := subset.trans (preimage_mono hγ₁) ht₁,
-      have hγ₁t₂ : _ ∩ t₂ = ∅,
-      { apply subset.antisymm _ (empty_subset _),
-        exact subset.trans (inter_subset_inter_left _ hγ₁t₁) h },
-        -- Dear Patrick, we're messing around a bit.
-        -- This is probably way too long. Now we are going to catch a train.
-        -- We'll try to hack more on this tonight.
-        sorry
-      -- rcases ht with ⟨V, hV, hVt⟩,
-      -- rw of_subgroups.nhds_zero at hV,
-      -- rcases hV with ⟨γ, hγ⟩,
-      -- let W := {k : valued_ring K v | v k < γ},
-      -- change W ⊆ V at hγ,
-      -- have hWt := subset.trans (preimage_mono hγ) hVt,
-      -- have hWs := subset.trans (preimage_mono hWt) hts,
-      -- rw ← preimage_comp at hWs,
-     }
+    have cau : cauchy (map units.val F),
+      from (cauchy_of_iff_map _ _).1 hF,
+    rw [cauchy_of_iff_map, filter.map_map, is_subgroups_basis.cauchy_iff],
+    rw [cauchy_of_iff_map, is_subgroups_basis.cauchy_iff] at hF,
+    replace hF := hF.2,
+    refine ⟨map_ne_bot (ne_bot_of_map cau.1), _⟩,
+    intro γ,
+    have : ∃ (γ₀ : Γ) (M ∈ F), ∀ x : units Kv, x ∈ M → v x.val ≥ γ₀,
+    { unfold zero_not_adh at h0,
+      rcases (filter.inf_eq_bot_iff _ _).1 h0 with ⟨U, U_in, M, M_in, H⟩,
+      rcases mem_comap_sets.1 U_in with ⟨W, W_in, UW⟩,
+      cases (is_subgroups_basis.nhds_zero _ _).1 W_in with γ Hγ,
+      use [γ, M, M_in],
+      intros x xM,
+      apply le_of_not_lt _,
+      intro hyp,
+      have : x ∈ U ∩ M := ⟨UW (Hγ hyp), xM⟩,
+      rwa H at this },
+    rcases this with ⟨γ₀, M₀, M₀_in, H₀⟩,
+    rcases hF (min (γ * γ₀ * γ₀) γ₀) with ⟨M₁, M₁_in, H₁⟩,
+    set inv := λ (x : units (valued_ring K v)), x⁻¹,
+    let M := units.val '' (inv '' (M₀ ∩ units.val ⁻¹' M₁)),
+    have M_in : M ∈ map (units.val ∘ inv) F,
+    { rw ← filter.map_map,
+      exact image_mem_map (image_mem_map $ inter_mem_sets M₀_in M₁_in) },
+    use [M, M_in],
+    rintros _ _ ⟨_, ⟨x, ⟨x_in₀, x_in₁⟩, rfl⟩, rfl⟩ ⟨_, ⟨y, ⟨y_in₀, y_in₁⟩, rfl⟩, rfl⟩,
+    replace H₁ : v (y.val- x.val) < ↑(min (γ * γ₀ * γ₀) γ₀) := H₁ _ _ x_in₁ y_in₁,
+    specialize H₀ x x_in₀,
+    have : v (y.val - x.val) < (min (γ * ((v x.val) * (v x.val))) (v x.val)),
+    { refine lt_of_lt_of_le H₁ _,
+      rw with_zero.coe_min,
+      apply min_le_min _ H₀,
+      rw mul_assoc,
+      rw ← with_zero.mul_coe,
+      have : ((γ₀ * γ₀ : Γ) : with_zero Γ) ≤ v (x.val) * v (x.val),
+        from calc ↑γ₀ * ↑γ₀ ≤ ↑γ₀ * v x.val :   actual_ordered_comm_monoid.mul_le_mul_left' H₀
+                        ... ≤ _ : actual_ordered_comm_monoid.mul_le_mul_right' H₀,
+      exact actual_ordered_comm_monoid.mul_le_mul_left' this },
+    exact top_div_ring_aux v this
   end }
 
 noncomputable
