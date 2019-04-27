@@ -45,6 +45,7 @@ lemma coe_injective : injective (λ U : open_subgroup G, (U : set G)) :=
 instance : is_subgroup (U : set G) := U.2.2
 
 variable (U)
+@[to_additive open_add_subgroup.is_open]
 protected lemma is_open : is_open (U : set G) := U.2.1
 
 protected lemma one_mem : (1 : G) ∈ U := is_submonoid.one_mem (U : set G)
@@ -85,7 +86,7 @@ begin
     exact h₂U.to_is_submonoid }
 end
 
---@[to_additive open_add_subgroup.is_closed]
+@[to_additive open_add_subgroup.is_closed]
 lemma is_closed (U : open_subgroup G) : is_closed (U : set G) :=
 begin
   show is_open (-(U : set G)),
@@ -107,10 +108,6 @@ begin
     rw mul_inv_self,
     exact is_submonoid.one_mem _ }
 end
-
--- to_additive fail
-def to_additive.is_closed {G : Type*} [add_group G] [topological_space G]
-  [topological_add_group G] (U : open_add_subgroup G) : _root_.is_closed (U : set G) := sorry
 
 section
 variables {H : Type*} [group H] [topological_space H] [topological_group H]
@@ -158,8 +155,11 @@ variables {G : Type*} [add_group G] [topological_space G] [topological_add_group
 variables {U V : open_add_subgroup G}
 
 variable (U)
-protected lemma is_open : is_open (U : set G) := U.2.1
-attribute [to_additive open_add_subgroup.is_open] open_subgroup.is_open
+-- Kevin added this attribute to open_subgroup.is_open when it was
+-- defined, and this works and makes to_additive work better.
+
+--protected lemma is_open : is_open (U : set G) := U.2.1
+--attribute [to_additive open_add_subgroup.is_open] open_subgroup.is_open
 
 protected lemma zero_mem : (0 : G) ∈ U := is_add_submonoid.zero_mem (U : set G)
 attribute [to_additive open_add_subgroup.zero_mem] open_subgroup.one_mem

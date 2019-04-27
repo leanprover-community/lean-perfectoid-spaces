@@ -119,7 +119,7 @@ begin
     },
     { suffices : is_closed {r : valued_ring R v | v r < ↑γ},
       { convert this, ext r, simp, refl },
-      apply open_subgroup.to_additive.is_closed ⟨{r : valued_ring R v | v r < ↑γ}, _⟩,
+      apply open_add_subgroup.is_closed ⟨{r : valued_ring R v | v r < ↑γ}, _⟩,
       split,
       { exact @is_subgroups_basis.is_op _ _ _ _ (λ γ : Γ, {k | v k < γ}) _ _},
       { exact valuation.lt_is_add_subgroup v γ}
