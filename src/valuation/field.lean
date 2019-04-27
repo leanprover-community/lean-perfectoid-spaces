@@ -719,7 +719,26 @@ local attribute [instance]  valuation_field.uniform_add_group
 
 noncomputable example (v : valuation R Γ) : comm_ring (ring_completion (valuation_field v)) := by apply_instance
 
-def valuation_on_completion {R : Type*} [comm_ring R] (v : valuation R Γ) :
-  valuation (ring_completion (valuation.valuation_field v)) (value_group v) := sorry
+--set_option pp.all true
+--set_option pp.universes false
+set_option class.instance_max_depth 100
+--set_option trace.class_instances true
+universe u
+
+/-
+noncomputable def valuation_on_completion' {R : Type u} [comm_ring R] (v : valuation R Γ) :
+  valuation
+    (ring_completion
+      (valued_ring (valuation.valuation_field v) (valuation_field.canonical_valuation v)))
+    (value_group v) :=
+valuation.completion_extend (valuation_field.canonical_valuation v)
+-/
+
+noncomputable def valuation_on_completion {R : Type u} [comm_ring R] (v : valuation R Γ) :
+  valuation
+    (ring_completion
+      (valuation.valuation_field v))
+    (value_group v) :=
+valuation.completion_extend (valuation_field.canonical_valuation v)
 
 end -- section
