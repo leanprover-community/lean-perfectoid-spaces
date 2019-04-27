@@ -84,6 +84,33 @@ begin
     exact h₂U.to_is_submonoid }
 end
 
+--@[to_additive open_add_subgroup.is_closed]
+lemma is_closed (U : open_subgroup G) : is_closed (U : set G) :=
+begin
+  show is_open (-(U : set G)),
+  rw is_open_iff_forall_mem_open,
+  intros x hx,
+  use (λ y, y * x⁻¹) ⁻¹' U,
+  split,
+  { intros u hux,
+    erw set.mem_preimage_eq at hux,
+    rw set.mem_compl_iff at hx ⊢,
+    intro hu, apply hx,
+    convert is_submonoid.mul_mem (is_subgroup.inv_mem hux) hu,
+    simp },
+  split,
+  { apply continuous_mul continuous_id continuous_const,
+    { exact U.is_open },
+    { apply_instance } },
+  { erw set.mem_preimage_eq,
+    rw mul_inv_self,
+    exact is_submonoid.one_mem _ }
+end
+
+-- to_additive fail
+def open_add_subgroup.is_closed {G : Type*} [add_group G] [topological_space G]
+  [topological_add_group G] (U : open_add_subgroup G) : _root_.is_closed (U : set G) := sorry
+
 section
 variables {H : Type*} [group H] [topological_space H] [topological_group H]
 
