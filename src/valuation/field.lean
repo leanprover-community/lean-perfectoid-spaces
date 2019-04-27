@@ -4,6 +4,7 @@ import for_mathlib.division_ring
 import for_mathlib.uniform_space.uniform_field
 import valuation.topology
 import topology.algebra.ordered
+import tactic.where
 
 open filter set
 
@@ -91,19 +92,34 @@ instance : division_ring (valued_ring K ν) := ‹division_ring K›
 
 def valuation : valuation (valued_ring R v) Γ := v
 
--- TODO(jmc): we might not need this
--- lemma continuous_valuation : continuous (valued_ring.valuation v) :=
--- begin
---   apply continuous_generated_from _,
---   rintros U hU,
---   rcases hU with ⟨γ, rfl⟩ | ⟨γ₀, rfl⟩,
---   { sorry },
---   { rw preimage_set_of_eq,
---     delta valued_ring.valuation,
---     delta valued_ring,
---     exact of_subgroups.is_open γ₀
--- }
--- end
+local attribute [instance] with_zero.topological_space with_zero.ordered_topology
+
+local attribute [instance] valuation.subgroups_basis
+
+instance (γ : Γ) : is_add_subgroup {r : valued_ring R v | v r ≤ ↑γ} := sorry
+
+lemma continuous_valuation : continuous (valued_ring.valuation v) :=
+begin
+  apply continuous_generated_from _,
+  rintros U hU,
+  rcases hU with ⟨γ, rfl⟩ | ⟨γ₀, rfl⟩,
+  { convert topological_space.is_open_inter _ {r : valued_ring R v | v r ≤ γ} {r : valued_ring R v | v r ≥ γ} _ _,
+    {ext, convert @le_antisymm_iff _ _ (v x) γ, simp, refl},
+    { apply open_add_subgroup.is_open_of_open_add_subgroup _ _,
+      { apply_instance},
+      { apply_instance},
+      { apply is_add_subgroup.mk,
+        sorry,
+      },
+      { sorry}
+    },
+    { sorry},
+  },
+  { rw preimage_set_of_eq,
+    delta valued_ring.valuation,
+    delta valued_ring,
+    exact @is_subgroups_basis.is_op _ _ _ _ (λ γ : Γ, {k | v k < γ}) _ _ },
+end
 
 end valued_ring
 
@@ -419,6 +435,11 @@ def valuation.unit_completion_extend : units (hat K) → Γ :=
 
 local notation `hatv` := valuation.unit_completion_extend v
 
+noncomputable def valuation_on_completion_v (x : hat K) : with_zero Γ :=
+  if h : x = 0 then 0 else some (valuation.unit_completion_extend v $ units.mk0 x h)
+
+local notation `vhat` := valuation_on_completion_v v
+
 set_option class.instance_max_depth 46
 
 instance : is_group_hom (valuation.unit_map v) := by apply_instance
@@ -457,6 +478,10 @@ begin
 end
 
 set_option class.instance_max_depth 80
+
+--lemma valuation_on_completion_extend_add (x y : hat K) :
+--  vhat (x + y) ≤ vhat x ∨ vhat (x + y) ≤ vhat y := sorry -- what Patrick thinks
+
 
 lemma valuation.unit_completion_extend_add : ∀ x y : units (hat K),
  if h : x.val + y.val = 0 then true else
