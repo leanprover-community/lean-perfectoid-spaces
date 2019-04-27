@@ -19,6 +19,20 @@ topological_space.generate_from
 
 local attribute [instance] with_zero.topological_space
 
+lemma with_zero.is_open_point (γ : Γ) : is_open ({γ} : set $ with_zero Γ) :=
+topological_space.generate_open.basic _ (or.inl ⟨γ, rfl⟩)
+
+lemma with_zero.nhds_coe (γ : Γ) : nhds (γ : with_zero Γ) = pure (γ : with_zero Γ) :=
+begin
+  apply le_antisymm,
+  { intros U U_in,
+    rw mem_pure_iff at U_in,
+    rw mem_nhds_sets_iff,
+    exact ⟨({γ} : set $ with_zero Γ),
+           ⟨singleton_subset_iff.2 U_in, with_zero.is_open_point γ, mem_singleton _⟩⟩ },
+  exact pure_le_nhds _,
+end
+
 def with_zero.ordered_topology : ordered_topology (with_zero Γ) :=
 { is_closed_le' :=
   begin
@@ -500,12 +514,33 @@ lemma valuation_on_completion_v_nonzero (x : hat K) (hx : x ≠ 0) :
   valuation_on_completion_v v x = some (valuation.unit_completion_extend v $ units.mk0 x hx)
 := dif_neg hx
 
+lemma vhat_extends_hatv :
+  (coe : Γ → with_zero Γ) ∘ hatv = vhat ∘ units.val :=
+begin
+  funext u,
+  show _ = valuation_on_completion_v v ↑u,
+  rw valuation_on_completion_v_nonzero v ↑u (units.ne_zero u),
+  congr',
+  apply units.ext,
+  refl,
+end
+
 section continuity_of_vhat -- making with_zero.topological_space an instance
 
 local attribute [instance] with_zero.topological_space
+open function
 
+lemma filter.comap_pure {α : Type*} {β : Type*} {f : α → β} (h : injective f) (a : α) :
+  pure a = comap f (pure $ f a) :=
+by rw [← filter.map_pure, comap_map h]
 
-/-- continuity of v-hat -/
+lemma with_zero.comap_coe_nhds (γ : Γ) : nhds γ = comap coe (nhds (γ : with_zero Γ)) :=
+begin
+  rw [nhds_discrete, filter.comap_pure (λ _ _ h, with_zero.coe_inj.1 h) γ],
+  change comap coe (pure (γ : with_zero Γ)) = comap coe (nhds ↑γ),
+  rw ← with_zero.nhds_coe γ,
+end
+
 lemma continuous_vhat : continuous vhat :=
 begin
   rw continuous_iff_continuous_at,
@@ -515,10 +550,27 @@ begin
     sorry
   },
   { let u : units (ring_completion (valued_ring K v)) := units.mk0 x h,
-    sorry
+    let c := (coe : Γ → with_zero Γ),
+    have comm : c ∘ hatv = vhat ∘ units.val, from vhat_extends_hatv v,
+    have H : nhds (hatv u) = comap c (nhds $ c (hatv u)),
+      from with_zero.comap_coe_nhds _,
+    have H' : map units.val (nhds u) = (nhds x),
+    { have : range units.val ∈ nhds (u.val),
+      { refine mem_nhds_sets _ ⟨u, rfl⟩,
+        rw [range_units_val (hat K), is_open_compl_iff],
+        -- Lean needs psychological support
+        haveI : t1_space (hat K) := @t2_space.t1_space (hat K) _ (@separated_t2 (hat K) _ _),
+        exact is_closed_singleton },
+      rw [nhds_induced, map_comap this],
+      refl },
+    have : map hatv (nhds u) ≤ (nhds $ hatv u) :=  continuous.tendsto (continuous_unit_extension v) u,
+    rw [H, ← map_le_iff_le_comap, map_comm comm, H'] at this,
+    unfold continuous_at,
+    rw valuation_on_completion_v_nonzero v x h,
+    exact this,
   }
 end
-
+#check nhds_discrete
 lemma coe_inj : function.injective (coe : valued_ring K v → hat K) :=
 (ring_completion.uniform_embedding_coe _).1
 

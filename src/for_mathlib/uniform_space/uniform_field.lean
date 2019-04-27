@@ -140,7 +140,7 @@ end
 lemma coe_units_comm_square [separated K]: subtype.val ∘ coe_units K = (coe : K → hat K) ∘ units.val :=
 by { ext x, simp [coe_units] }
 
-lemma range_units_val : range (units.val : units K → K) = -{0} :=
+lemma range_units_val (K' : Type*) [discrete_field K']: range (units.val : units K' → K') = -{0} :=
 begin
   ext x,
   rw mem_compl_singleton_iff,
