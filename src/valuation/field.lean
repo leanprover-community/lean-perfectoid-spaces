@@ -519,9 +519,11 @@ begin
   }
 end
 
-lemma coe_inj : function.injective (coe : valued_ring K v → hat K) := sorry
+lemma coe_inj : function.injective (coe : valued_ring K v → hat K) :=
+(ring_completion.uniform_embedding_coe _).1
 
-lemma coe_de : dense_embedding (coe : valued_ring K v → hat K) := sorry
+lemma coe_de : dense_embedding (coe : valued_ring K v → hat K) :=
+(ring_completion.uniform_embedding_coe _).dense_embedding (ring_completion.dense_coe K)
 
 lemma vhat_extends (r : valued_ring K v) : vhat (↑r) = v r :=
 begin
