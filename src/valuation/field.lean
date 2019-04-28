@@ -4,7 +4,6 @@ import for_mathlib.division_ring
 import for_mathlib.uniform_space.uniform_field
 import valuation.topology
 import topology.algebra.ordered
-import tactic.where
 
 open filter set
 
@@ -12,26 +11,93 @@ local attribute [instance, priority 0] classical.decidable_linear_order
 variables {Γ : Type*} [linear_ordered_comm_group Γ]
 
 section with_zero_topology
+open topological_space
+
+variables (Γ)
+def with_zero.nhds_fun : with_zero Γ → filter (with_zero Γ) :=
+  (λ x : with_zero Γ, if x = 0 then ⨅ (γ₀ : Γ), principal {γ | γ < γ₀} else pure x)
 
 def with_zero.topological_space : topological_space (with_zero Γ) :=
-topological_space.generate_from
-({U | ∃ γ : Γ, U = {γ}} ∪ {U | ∃ γ₀ : Γ, U = {γ | γ < γ₀}})
+topological_space.mk_of_nhds (with_zero.nhds_fun Γ)
 
 local attribute [instance] with_zero.topological_space
 
-lemma with_zero.is_open_point (γ : Γ) : is_open ({γ} : set $ with_zero Γ) :=
-topological_space.generate_open.basic _ (or.inl ⟨γ, rfl⟩)
-
-lemma with_zero.nhds_coe (γ : Γ) : nhds (γ : with_zero Γ) = pure (γ : with_zero Γ) :=
+lemma with_zero.directed_lt : directed (≥) (λ (γ₀ : Γ), principal {γ : with_zero Γ | γ < ↑γ₀}) :=
 begin
-  apply le_antisymm,
-  { intros U U_in,
-    rw mem_pure_iff at U_in,
-    rw mem_nhds_sets_iff,
-    exact ⟨({γ} : set $ with_zero Γ),
-           ⟨singleton_subset_iff.2 U_in, with_zero.is_open_point γ, mem_singleton _⟩⟩ },
-  exact pure_le_nhds _,
+  intros γ₁ γ₂,
+  use min γ₁ γ₂,
+  split,
+  { change  principal {γ : with_zero Γ | γ < ↑(min γ₁ γ₂)} ≤ principal {γ : with_zero Γ | γ < ↑γ₁},
+    rw [principal_mono, with_zero.coe_min],
+    intros x x_in,
+    calc x < min ↑γ₁ ↑γ₂ : x_in
+        ... ≤ γ₁ : min_le_left _ _ },
+  { change  principal {γ : with_zero Γ | γ < ↑(min γ₁ γ₂)} ≤ principal {γ : with_zero Γ | γ < ↑γ₂},
+    rw [principal_mono, with_zero.coe_min],
+    intros x x_in,
+    calc x < min ↑γ₁ ↑γ₂ : x_in
+        ... ≤ γ₂ : min_le_right _ _ }
 end
+
+lemma with_zero.pure_le_nhds_fun : pure ≤ with_zero.nhds_fun Γ :=
+begin
+  intro x,
+  induction x using with_zero.cases_on ; simp [with_zero.nhds_fun],
+  exact λ γ, with_zero.zero_lt_some,
+end
+
+lemma with_zero.nhds_fun_ok : ∀ (x : with_zero Γ) (s ∈ with_zero.nhds_fun Γ x),
+  (∃ t ∈ with_zero.nhds_fun Γ x, t ⊆ s ∧ ∀ y ∈ t, s ∈ with_zero.nhds_fun Γ y) :=
+begin
+  intros x U U_in,
+  induction x using with_zero.cases_on,
+  { simp [with_zero.nhds_fun] at U_in ⊢,
+    rw [mem_infi (with_zero.directed_lt Γ) ⟨1⟩, mem_Union] at U_in,
+    cases U_in with γ₀ h,
+    use {γ : with_zero Γ | γ < ↑γ₀},
+    rw mem_principal_sets at h,
+    split,
+    { apply mem_infi_sets γ₀,
+      rw mem_principal_sets},
+    { refine ⟨h, _⟩,
+      intros x x_in,
+      induction x using with_zero.cases_on ; simp,
+      { apply mem_infi_sets γ₀,
+        rwa mem_principal_sets },
+      { exact h x_in } } },
+  { simp [with_zero.nhds_fun] at *,
+    use {x},
+    refine ⟨mem_singleton _, singleton_subset_iff.2 U_in, _⟩,
+    intros y y_in,
+    rw mem_singleton_iff at y_in,
+    rw y_in,
+    simpa }
+end
+
+variables  {Γ}
+lemma with_zero.nhds_coe (γ : Γ) : nhds (γ : with_zero Γ) = pure (γ : with_zero Γ) :=
+nhds_mk_of_nhds (with_zero.nhds_fun Γ) γ (with_zero.pure_le_nhds_fun Γ) (with_zero.nhds_fun_ok Γ)
+
+lemma with_zero.singleton_nhds (γ : Γ) : ({γ} : set $ with_zero Γ) ∈ nhds (γ : with_zero Γ) :=
+by simp [with_zero.nhds_coe γ]
+
+lemma with_zero.nhds_zero_mem (U : set $ with_zero Γ) : U ∈ nhds (0 : with_zero Γ) ↔ ∃ γ₀ : Γ,  {x : with_zero Γ | x < γ₀} ⊆ U :=
+begin
+  rw nhds_mk_of_nhds (with_zero.nhds_fun Γ) 0 (with_zero.pure_le_nhds_fun Γ) (with_zero.nhds_fun_ok Γ),
+  simp [with_zero.nhds_fun],
+  rw mem_infi (with_zero.directed_lt Γ) ⟨1⟩,
+  { split,
+    { rintro ⟨_, ⟨γ₀, rfl⟩, H⟩,
+      rw mem_principal_sets at H,
+      use [γ₀, H] },
+    { rintro ⟨γ₀, H⟩,
+      rw mem_Union,
+      use γ₀,
+      rwa mem_principal_sets } }
+end
+
+lemma with_zero.nhds_zero (γ : Γ) : {x : with_zero Γ | x < γ} ∈ nhds (0 : with_zero Γ) :=
+by { rw with_zero.nhds_zero_mem, use γ }
 
 def with_zero.ordered_topology : ordered_topology (with_zero Γ) :=
 { is_closed_le' :=
@@ -41,42 +107,21 @@ def with_zero.ordered_topology : ordered_topology (with_zero Γ) :=
     rw is_open_iff_mem_nhds,
     rintros ⟨a,b⟩ hab,
     change b < a at hab,
-    by_cases hb : b = 0,
-    { change b = 0 at hb, subst hb,
-      have ha := lt_iff_le_and_ne.mp hab,
-      cases ha with h₁ h₂,
-      replace h₂ := h₂.symm,
-      rw with_zero.ne_zero_iff_exists at h₂,
-      rcases h₂ with ⟨a, rfl⟩,
-      refine mem_sets_of_superset
-        (prod_mem_nhds_sets
-          (mem_nhds_sets (topological_space.generate_open.basic _ _) (mem_singleton _))
-          (mem_nhds_sets (topological_space.generate_open.basic _ _) _)) _,
-      work_on_goal 1 { left, exact ⟨a, rfl⟩ },
-      work_on_goal 1 { right, exact ⟨a, rfl⟩ },
-      work_on_goal 0 { exact hab },
-      rintro _ ⟨_, _⟩, simp * at * },
-    { refine mem_sets_of_superset
-        (prod_mem_nhds_sets
-          (mem_nhds_sets _ (mem_singleton _))
-          (mem_nhds_sets _ (mem_singleton _))) _,
-      { apply topological_space.generate_open.basic,
-        left,
-        have ha : a ≠ 0,
-        { rintro rfl,
-          rw lt_iff_le_and_ne at hab,
-          cases hab,
-          simp * at * },
-        rw with_zero.ne_zero_iff_exists at ha,
-        rcases ha with ⟨a, rfl⟩,
-        exact ⟨_, rfl⟩ },
-      { apply topological_space.generate_open.basic,
-        left,
-        change b ≠ 0 at hb,
-        rw with_zero.ne_zero_iff_exists at hb,
-        rcases hb with ⟨b, rfl⟩,
-        exact ⟨_, rfl⟩ },
-      { simp * at * } }
+    cases with_zero.some_of_gt hab with γ H,
+    rw [nhds_prod_eq, mem_prod_iff, H],
+    induction b using with_zero.cases_on,
+    { use [{γ}, with_zero.singleton_nhds γ, {x : with_zero Γ | x < γ}, with_zero.nhds_zero γ],
+      intros p p_in,
+      cases mem_prod.1 p_in with h1 h2,
+      rw mem_singleton_iff at h1,
+      change p.2 < p.1,
+      rwa h1 },
+    { use [{γ}, with_zero.singleton_nhds γ, {b}, with_zero.singleton_nhds b],
+      intros p p_in,
+      cases mem_prod.1 p_in with h1 h2,
+      rw mem_singleton_iff at h1 h2,
+      change p.2 < p.1,
+      rwa [h1, h2, ← H] }
   end }
 
 end with_zero_topology
@@ -115,7 +160,8 @@ valuation.le_is_add_subgroup v γ
 
 lemma continuous_valuation : continuous (valued_ring.valuation v) :=
 begin
-  apply continuous_generated_from _,
+
+  /- apply continuous_generated_from _,
   rintros U hU,
   rcases hU with ⟨γ, rfl⟩ | ⟨γ₀, rfl⟩,
   { convert topological_space.is_open_inter _ {r : valued_ring R v | v r ≤ γ}
@@ -142,7 +188,8 @@ begin
   { rw preimage_set_of_eq,
     delta valued_ring.valuation,
     delta valued_ring,
-    exact @is_subgroups_basis.is_op _ _ _ _ (λ γ : Γ, {k | v k < γ}) _ _ }
+    exact @is_subgroups_basis.is_op _ _ _ _ (λ γ : Γ, {k | v k < γ}) _ _ } -/
+  sorry
 end
 
 end valued_ring
@@ -525,59 +572,13 @@ begin
   refl,
 end
 
-section continuity_of_vhat -- making with_zero.topological_space an instance
-
-local attribute [instance] with_zero.topological_space
-open function
-
-lemma filter.comap_pure {α : Type*} {β : Type*} {f : α → β} (h : injective f) (a : α) :
-  pure a = comap f (pure $ f a) :=
-by rw [← filter.map_pure, comap_map h]
-
-lemma with_zero.comap_coe_nhds (γ : Γ) : nhds γ = comap coe (nhds (γ : with_zero Γ)) :=
-begin
-  rw [nhds_discrete, filter.comap_pure (λ _ _ h, with_zero.coe_inj.1 h) γ],
-  change comap coe (pure (γ : with_zero Γ)) = comap coe (nhds ↑γ),
-  rw ← with_zero.nhds_coe γ,
-end
-
-lemma continuous_vhat : continuous vhat :=
-begin
-  rw continuous_iff_continuous_at,
-  intro x,
-  by_cases h : x = 0,
-  {
-    sorry
-  },
-  { let u : units (ring_completion (valued_ring K v)) := units.mk0 x h,
-    let c := (coe : Γ → with_zero Γ),
-    have comm : c ∘ hatv = vhat ∘ units.val, from vhat_extends_hatv v,
-    have H : nhds (hatv u) = comap c (nhds $ c (hatv u)),
-      from with_zero.comap_coe_nhds _,
-    have H' : map units.val (nhds u) = (nhds x),
-    { have : range units.val ∈ nhds (u.val),
-      { refine mem_nhds_sets _ ⟨u, rfl⟩,
-        rw [range_units_val (hat K), is_open_compl_iff],
-        -- Lean needs psychological support
-        haveI : t1_space (hat K) := @t2_space.t1_space (hat K) _ (@separated_t2 (hat K) _ _),
-        exact is_closed_singleton },
-      rw [nhds_induced, map_comap this],
-      refl },
-    have : map hatv (nhds u) ≤ (nhds $ hatv u) :=  continuous.tendsto (continuous_unit_extension v) u,
-    rw [H, ← map_le_iff_le_comap, map_comm comm, H'] at this,
-    unfold continuous_at,
-    rw valuation_on_completion_v_nonzero v x h,
-    exact this,
-  }
-end
-#check nhds_discrete
 lemma coe_inj : function.injective (coe : valued_ring K v → hat K) :=
 (ring_completion.uniform_embedding_coe _).1
 
 lemma coe_de : dense_embedding (coe : valued_ring K v → hat K) :=
 (ring_completion.uniform_embedding_coe _).dense_embedding (ring_completion.dense_coe K)
 
-lemma vhat_extends (r : valued_ring K v) : vhat (↑r) = v r :=
+lemma vhat_extends_v (r : valued_ring K v) : vhat (↑r) = v r :=
 begin
   by_cases h : r = 0,
   { -- zero case
@@ -601,6 +602,92 @@ begin
   }
 end
 
+section continuity_of_vhat -- making with_zero.topological_space an instance
+
+local attribute [instance] with_zero.topological_space
+open function
+
+lemma filter.comap_pure {α : Type*} {β : Type*} {f : α → β} (h : injective f) (a : α) :
+  pure a = comap f (pure $ f a) :=
+by rw [← filter.map_pure, comap_map h]
+
+lemma with_zero.comap_coe_nhds (γ : Γ) : nhds γ = comap coe (nhds (γ : with_zero Γ)) :=
+begin
+  rw [nhds_discrete, filter.comap_pure (λ _ _ h, with_zero.coe_inj.1 h) γ],
+  change comap coe (pure (γ : with_zero Γ)) = comap coe (nhds ↑γ),
+  rw ← with_zero.nhds_coe γ,
+end
+
+lemma continuous_vhat_aux {x : hat K} (h : x ≠ 0) : continuous_at vhat x :=
+begin
+  let u : units (ring_completion (valued_ring K v)) := units.mk0 x h,
+  let c := (coe : Γ → with_zero Γ),
+  have comm : c ∘ hatv = vhat ∘ units.val, from vhat_extends_hatv v,
+  have H : nhds (hatv u) = comap c (nhds $ c (hatv u)),
+    from with_zero.comap_coe_nhds _,
+  have H' : map units.val (nhds u) = (nhds x),
+  { have : range units.val ∈ nhds (u.val),
+    { refine mem_nhds_sets _ ⟨u, rfl⟩,
+      rw [range_units_val (hat K), is_open_compl_iff],
+      -- Lean needs psychological support
+      haveI : t1_space (hat K) := @t2_space.t1_space (hat K) _ (@separated_t2 (hat K) _ _),
+      exact is_closed_singleton },
+    rw [nhds_induced, map_comap this],
+    refl },
+  have : map hatv (nhds u) ≤ (nhds $ hatv u) :=  continuous.tendsto (continuous_unit_extension v) u,
+  rw [H, ← map_le_iff_le_comap, map_comm comm, H'] at this,
+  unfold continuous_at,
+  rw valuation_on_completion_v_nonzero v x h,
+  exact this,
+end
+
+lemma continuous_vhat : continuous vhat :=
+begin
+  rw continuous_iff_continuous_at,
+  intro x,
+  by_cases h : x = 0,
+  { rw h,
+    change map vhat (nhds 0) ≤ _,
+    rw valuation_on_completion_v_zero,
+    intros U U_in,
+    cases (with_zero.nhds_zero_mem U).1 U_in with γ₀ H,
+    rw mem_map,
+    clear h x,
+    refine mem_sets_of_superset _ (preimage_mono H),
+    rw preimage_set_of_eq,
+    let Kv := valued_ring K v,
+    set hatK := ring_completion (valued_ring K v),
+    let ι := (coe : Kv → hat K),
+    -- The next line shouldn't be rewritten over and over, it needs (has already?) a name
+    let de : dense_embedding ι := (ring_completion.uniform_embedding_coe (valued_ring K v)).dense_embedding
+      (ring_completion.dense_coe (valued_ring K v)),
+    let G := { x : Kv | v x < γ₀ },
+    have G_in : G ∈ nhds (0 : Kv),  from is_subgroups_basis.mem_nhds_zero _ γ₀,
+    have : closure (ι '' G) ∈ _ := de.closure_image_nhds_of_nhds G_in,
+    rw is_ring_hom.map_zero ι at this,
+    apply mem_sets_of_superset this,
+    intros y y_in,
+    by_cases h : y = 0,
+    { rw h,
+      rw [mem_set_of_eq, valuation_on_completion_v_zero v],
+      exact with_zero.zero_lt_some },
+    { let u := units.mk0 y h,
+      let γ := (hatv u : Γ),
+      rw [mem_set_of_eq, show vhat y  = γ, from valuation_on_completion_v_nonzero v y h],
+      have key : vhat ⁻¹' ({γ} : set $ with_zero Γ) ∈ nhds y,
+      { have cont : map vhat (nhds y) ≤ nhds (vhat y) := continuous_vhat_aux v h,
+        rw valuation_on_completion_v_nonzero v y h at cont,
+        exact cont (with_zero.singleton_nhds γ) },
+      have := mem_closure_iff_nhds.1 y_in _ key,
+      rcases exists_mem_of_ne_empty this with ⟨_, H, ⟨x, x_in, rfl⟩⟩,
+      clear this key,
+      change v x < γ₀ at x_in,
+      rw [mem_preimage_eq, mem_singleton_iff] at H,
+      rwa [← vhat_extends_v v x, H] at x_in },
+  },
+  { exact continuous_vhat_aux v h }
+end
+
 end continuity_of_vhat
 
 -- Kevin pulled this lemma out because it takes forever to compile and takes Lean's
@@ -608,7 +695,7 @@ end continuity_of_vhat
 lemma valuation_on_completion_extend_add_aux :
   is_closed {p : (hat K) × (hat K) | vhat (p.1 + p.2) ≤ vhat p.1 ∨ vhat (p.1 + p.2) ≤ vhat p.2} :=
 begin
-  letI := @with_zero.topological_space Γ,
+/-   letI := @with_zero.topological_space Γ,
   letI := @with_zero.ordered_topology Γ, -- Γ should be explicit in these functions
   convert @is_closed_union _ {p : (hat K) × (hat K) | vhat (p.1 + p.2) ≤ vhat p.1}
     {p : (hat K) × (hat K) | vhat (p.1 + p.2) ≤ vhat p.2 } _ _ _,
@@ -616,7 +703,8 @@ begin
   { apply is_closed_le _ _, apply_instance, apply_instance,
     { apply (continuous_add').comp, exact (continuous_vhat v), apply_instance},
     { apply continuous_snd.comp, exact (continuous_vhat v)},
-  }
+  } -/
+  sorry
 end
 .
 
@@ -629,10 +717,10 @@ begin
   { intros x y,
     show vhat (x + y) ≤ vhat x ∨ vhat (x + y) ≤ vhat y,
     convert v.map_add x y,
-    { convert vhat_extends v (x + y), exact (is_ring_hom.map_add _).symm},
-    { exact vhat_extends v x},
-    { convert vhat_extends v (x + y), exact (is_ring_hom.map_add _).symm},
-    { exact vhat_extends v y},
+    { convert vhat_extends_v v (x + y), exact (is_ring_hom.map_add _).symm},
+    { exact vhat_extends_v v x},
+    { convert vhat_extends_v v (x + y), exact (is_ring_hom.map_add _).symm},
+    { exact vhat_extends_v v y},
   },
   -- why does Lean hate Kevin?
   exact @is_closed_property2 _ _ _ _ _ (λ x y, vhat (x + y) ≤ vhat x ∨ vhat (x + y) ≤ vhat y) (coe_de v) cl this x y,
