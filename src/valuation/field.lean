@@ -158,7 +158,7 @@ local attribute [instance] valuation.subgroups_basis
 instance (γ : Γ) : is_add_subgroup {r : valued_ring R v | v r ≤ ↑γ} :=
 valuation.le_is_add_subgroup v γ
 
-lemma continuous_valuation : continuous (valued_ring.valuation v) :=
+/- lemma continuous_valuation : continuous (valued_ring.valuation v) :=
 begin
 
   /- apply continuous_generated_from _,
@@ -190,7 +190,7 @@ begin
     delta valued_ring,
     exact @is_subgroups_basis.is_op _ _ _ _ (λ γ : Γ, {k | v k < γ}) _ _ } -/
   sorry
-end
+end -/
 
 end valued_ring
 
@@ -695,7 +695,7 @@ end continuity_of_vhat
 lemma valuation_on_completion_extend_add_aux :
   is_closed {p : (hat K) × (hat K) | vhat (p.1 + p.2) ≤ vhat p.1 ∨ vhat (p.1 + p.2) ≤ vhat p.2} :=
 begin
-/-   letI := @with_zero.topological_space Γ,
+  letI := @with_zero.topological_space Γ,
   letI := @with_zero.ordered_topology Γ, -- Γ should be explicit in these functions
   convert @is_closed_union _ {p : (hat K) × (hat K) | vhat (p.1 + p.2) ≤ vhat p.1}
     {p : (hat K) × (hat K) | vhat (p.1 + p.2) ≤ vhat p.2 } _ _ _,
@@ -703,8 +703,7 @@ begin
   { apply is_closed_le _ _, apply_instance, apply_instance,
     { apply (continuous_add').comp, exact (continuous_vhat v), apply_instance},
     { apply continuous_snd.comp, exact (continuous_vhat v)},
-  } -/
-  sorry
+  }
 end
 .
 
