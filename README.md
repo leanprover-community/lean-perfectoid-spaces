@@ -5,25 +5,21 @@ By [Kevin Buzzard](http://wwwf.imperial.ac.uk/~buzzard/), [Johan Commelin](http:
 
 ### Definition of a perfectoid space in the Lean Programming Language.
 
-This is a project whose first goal is to create a type in a certain
+This is a project whose first goal was to create a type in a certain
 computer language. The language is Lean, which is some version of
 dependent type theory. Dependent type theory is another foundation for
 mathematics, and in this type theory you can do all the things that
 mathematicians are used to doing in ZFC set theory.
 
-The name of the type we're constructing is `perfectoid_space`. One could
+The name of the type we've constructed is `perfectoid_space`. One could
 define a *perfectoid space* to be a term of this type. Hence any
 computer program which outputs a term of this type could be said to be a
-program which computed a perfectoid space. Our initial goal is to finish
-formalising the definition, and after that one could imagine proving
+program which computed a perfectoid space. Now one could imagine proving
 basic results about perfectoid spaces within Lean. Is this sort of thing
 feasible? We don't know. We think so though, and we're not really sure if
 anyone has tried this sort of thing before. Let's find out!
 
 ### Getting it working
-
-This project is not yet finished. It usually compiles, or mostly
-compiles, with Lean 3.4.2 and Mathlib HEAD. Usually there are some sorries but no errors. When there are no sorries, we will be finished.
 
 ## Getting it working: brief version
 ```bash
