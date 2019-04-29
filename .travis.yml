@@ -1,0 +1,20 @@
+language: c
+sudo: false
+os:
+  - linux
+install:
+  - |
+    if [ ! -d "$HOME/.elan/toolchains/" ]; then
+      curl https://raw.githubusercontent.com/Kha/elan/master/elan-init.sh -sSf | sh -s -- --default-toolchain none -y
+    fi
+  - source ~/.elan/env
+  - if [ "$GITHUB_CRED" != "" ]; then git config --add github.oauthtoken $GITHUB_CRED; echo setting up GitHub credentials; else echo no GitHub credentials available; fi
+  - sh _target/deps/mathlib/scripts/remote-install-update-mathlib.sh --global
+  - source $HOME/.profile
+  - update-mathlib
+jobs:
+  include:
+    - env: TASK="check build"
+      language: sh
+      script:
+        - leanpkg build
