@@ -1,5 +1,5 @@
 language: bash
-sudo: false
+sudo: true
 os:
   - linux
 install:
