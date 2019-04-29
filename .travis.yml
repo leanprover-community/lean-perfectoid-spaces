@@ -1,6 +1,4 @@
-language: python
-python:
-  - "3.6"
+language: sh
 sudo: false
 os:
   - linux
