@@ -2,6 +2,8 @@ language: bash
 sudo: true
 os:
   - linux
+dist:
+  - xenial
 install:
   - |
     if [ ! -d "$HOME/.elan/toolchains/" ]; then
