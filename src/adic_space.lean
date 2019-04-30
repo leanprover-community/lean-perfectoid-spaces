@@ -3,6 +3,8 @@ import algebra.group_power
 import topology.algebra.ring
 import topology.opens
 
+import category_theory.category
+
 import for_mathlib.prime
 import for_mathlib.is_cover
 import for_mathlib.sheaves.sheaf_of_topological_rings
@@ -52,6 +54,12 @@ structure 𝒱 (X : Type*) [topological_space X] :=
 (supp_maximal : ∀ x : X, ideal.is_maximal (_root_.valuation.supp (valuation x).out))
 
 end 𝒱
+
+structure PreValuedRingedSpace :=
+(space : Type u)
+(top   : topological_space space)
+(presheaf : presheaf_of_topological_rings space)
+(valuation : ∀ x : space, Spv (stalk_of_rings presheaf.to_presheaf_of_rings x))
 
 /-- An auxiliary category 𝒞.  -/
 structure 𝒞 (X : Type*) [topological_space X] :=
@@ -400,10 +408,22 @@ noncomputable def 𝒞.restrict {X : Type*} [topological_space X] (U : opens X) 
 structure adic_space (X : Type u) [topological_space X] :=
 (locally_ringed_valued_space : 𝒱 X)
 (Hlocally_affinoid : ∃ (I : Type u) (U : I → opens X) (Hcover : set.Union (λ i, (U i).1) = set.univ)
-  (R : I → Huber_pair),
+  (R : I → Huber_pair.{u}),
   ∀ i : I, nonempty (𝒞.equiv (𝒞.Spa (R i)) (𝒞.restrict (U i) locally_ringed_valued_space.to_𝒞)))
+
 
 -- note that currently we can't even prove that Spa(A) is a pre-adic space,
 -- because we don't know that the rational opens are a basis. I didn't
 -- even bother defining a pre-adic space -- one would have to define 𝒱^{pre}
 -- which is 𝒱 with the sheaf axiom dropped.
+
+structure AdicSpace :=
+(carrier : Type u)
+[top : topological_space carrier]
+(adic : adic_space carrier)
+
+open category_theory
+
+-- We aren't actually defining all morphisms of adic spaces; just the isomorphisms
+instance AdicSpace.groupoid : large_category AdicSpace :=
+{ hom := λ X Y, _ }
