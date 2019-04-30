@@ -4,6 +4,7 @@ import topology.algebra.ring
 import topology.opens
 
 import category_theory.category
+import category_theory.full_subcategory
 
 import for_mathlib.prime
 import for_mathlib.is_cover
@@ -42,19 +43,6 @@ topological_add_group.to_uniform_space (𝒪X.F.F U)
 
 end sheaf_of_topological_rings
 
-section 𝒱
-local attribute [instance] sheaf_of_topological_rings.uniform_space
-
-/-- Wedhorn's category 𝒱 -/
-structure 𝒱 (X : Type u) [topological_space X] :=
-(ℱ : sheaf_of_topological_rings X)
-(complete : ∀ U : opens X, complete_space (ℱ.F.F U))
-(valuation : ∀ x : X, Spv (stalk_of_rings ℱ.to_presheaf_of_topological_rings.to_presheaf_of_rings x))
-(local_stalks : ∀ x : X, is_local_ring (stalk_of_rings ℱ.to_presheaf_of_rings x))
-(supp_maximal : ∀ x : X, ideal.is_maximal (_root_.valuation.supp (valuation x).out))
-
-end 𝒱
-
 structure PreValuedRingedSpace :=
 (space : Type u)
 (top   : topological_space space)
@@ -77,10 +65,6 @@ end PreValuedRingedSpace
 structure 𝒞 (X : Type u) [topological_space X] :=
 (F : presheaf_of_topological_rings X)
 (valuation: ∀ x : X, Spv (stalk_of_rings F.to_presheaf_of_rings x))
-
-def 𝒱.to_𝒞 {X : Type u} [topological_space X] (ℱ : 𝒱 X) : 𝒞 X :=
-{ F := ℱ.ℱ.to_presheaf_of_topological_rings,
-  valuation := ℱ.valuation}
 
 noncomputable def 𝒞.Spa (A : Huber_pair) : 𝒞 (Spa A) :=
 { F := Spa.presheaf_of_topological_rings A,
@@ -497,12 +481,54 @@ noncomputable instance PreValuedRingedSpace.restrict {X : PreValuedRingedSpace.{
     valuation :=
       λ u, Spv.mk (valuation.comap (X.valuation u).out (presheaf_of_rings.restrict_stalk_map _ _)) }}
 
+section 𝒱
+local attribute [instance] sheaf_of_topological_rings.uniform_space
+
+/-- Wedhorn's category 𝒱 -/
+structure 𝒱 (X : Type u) [topological_space X] :=
+(ℱ : sheaf_of_topological_rings X)
+(complete : ∀ U : opens X, complete_space (ℱ.F.F U))
+(valuation : ∀ x : X, Spv (stalk_of_rings ℱ.to_presheaf_of_topological_rings.to_presheaf_of_rings x))
+(local_stalks : ∀ x : X, is_local_ring (stalk_of_rings ℱ.to_presheaf_of_rings x))
+(supp_maximal : ∀ x : X, ideal.is_maximal (_root_.valuation.supp (valuation x).out))
+
+end 𝒱
+
+def 𝒱.to_𝒞 {X : Type u} [topological_space X] (ℱ : 𝒱 X) : 𝒞 X :=
+{ F := ℱ.ℱ.to_presheaf_of_topological_rings,
+  valuation := ℱ.valuation}
+
 structure adic_space (X : Type u) [topological_space X] :=
 (locally_ringed_valued_space : 𝒱 X)
 (Hlocally_affinoid : ∃ (I : Type u) (U : I → opens X) (Hcover : set.Union (λ i, (U i).1) = set.univ)
   (R : I → Huber_pair.{u}),
   ∀ i : I, nonempty (𝒞.equiv (𝒞.Spa (R i)) (𝒞.restrict (U i) locally_ringed_valued_space.to_𝒞)))
 
+section
+local attribute [instance] sheaf_of_topological_rings.uniform_space
+
+structure CVLRS :=
+(space : Type u)
+(top   : topological_space space)
+(sheaf : sheaf_of_topological_rings space)
+(complete : ∀ U : opens space, complete_space (sheaf.F.F U))
+(valuation : ∀ x : space, Spv (stalk_of_rings sheaf.to_presheaf_of_topological_rings.to_presheaf_of_rings x))
+(local_stalks : ∀ x : space, is_local_ring (stalk_of_rings sheaf.to_presheaf_of_rings x))
+(supp_maximal : ∀ x : space, ideal.is_maximal (_root_.valuation.supp (valuation x).out))
+
+end
+
+namespace CVLRS
+open category_theory
+
+instance : has_coe CVLRS.{u} PreValuedRingedSpace.{u} :=
+⟨λ X, { presheaf := _, ..X }⟩
+
+-- instance : large_category CVLRS.{u} :=
+-- @induced_category.category CVLRS.{u} PreValuedRingedSpace.{u} _
+-- (λ X, X)
+
+end CVLRS
 
 -- note that currently we can't even prove that Spa(A) is a pre-adic space,
 -- because we don't know that the rational opens are a basis. I didn't
