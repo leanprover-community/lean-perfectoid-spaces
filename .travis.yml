@@ -4,6 +4,8 @@ os:
   - linux
 dist:
   - xenial
+before_install:
+  - sudo apt-get update
 install:
   - |
     if [ ! -d "$HOME/.elan/toolchains/" ]; then
