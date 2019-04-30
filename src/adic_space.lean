@@ -23,20 +23,20 @@ open Spa
 
 namespace sheaf_of_topological_rings
 
-instance topological_space {X : Type*} [topological_space X] (𝒪X : sheaf_of_topological_rings X)
+instance topological_space {X : Type u} [topological_space X] (𝒪X : sheaf_of_topological_rings X)
   (U : opens X) :
   topological_space (𝒪X.F.F U) := presheaf_of_topological_rings.topological_space_sections 𝒪X.F U
 
-instance topological_ring {X : Type*} [topological_space X] (𝒪X : sheaf_of_topological_rings X)
+instance topological_ring {X : Type u} [topological_space X] (𝒪X : sheaf_of_topological_rings X)
   (U : opens X) :
   topological_ring (𝒪X.F.F U) := presheaf_of_topological_rings.Ftop_ring 𝒪X.F U
 
-instance topological_add_group {X : Type*} [topological_space X] (𝒪X : sheaf_of_topological_rings X)
+instance topological_add_group {X : Type u} [topological_space X] (𝒪X : sheaf_of_topological_rings X)
   (U : opens X) :
   topological_add_group (𝒪X.F.F U) :=
 topological_ring.to_topological_add_group (𝒪X.F.F U)
 
-def uniform_space {X : Type*} [topological_space X] (𝒪X : sheaf_of_topological_rings X)
+def uniform_space {X : Type u} [topological_space X] (𝒪X : sheaf_of_topological_rings X)
   (U : opens X) : uniform_space (𝒪X.F.F U) :=
 topological_add_group.to_uniform_space (𝒪X.F.F U)
 
@@ -46,7 +46,7 @@ section 𝒱
 local attribute [instance] sheaf_of_topological_rings.uniform_space
 
 /-- Wedhorn's category 𝒱 -/
-structure 𝒱 (X : Type*) [topological_space X] :=
+structure 𝒱 (X : Type u) [topological_space X] :=
 (ℱ : sheaf_of_topological_rings X)
 (complete : ∀ U : opens X, complete_space (ℱ.F.F U))
 (valuation : ∀ x : X, Spv (stalk_of_rings ℱ.to_presheaf_of_topological_rings.to_presheaf_of_rings x))
@@ -61,12 +61,24 @@ structure PreValuedRingedSpace :=
 (presheaf : presheaf_of_topological_rings space)
 (valuation : ∀ x : space, Spv (stalk_of_rings presheaf.to_presheaf_of_rings x))
 
+namespace PreValuedRingedSpace
+
+variables (X : PreValuedRingedSpace.{u})
+
+instance : has_coe_to_sort PreValuedRingedSpace.{u} :=
+{ S := Type u,
+  coe := λ X, X.space }
+
+instance : topological_space X := X.top
+
+end PreValuedRingedSpace
+
 /-- An auxiliary category 𝒞.  -/
-structure 𝒞 (X : Type*) [topological_space X] :=
+structure 𝒞 (X : Type u) [topological_space X] :=
 (F : presheaf_of_topological_rings X)
 (valuation: ∀ x : X, Spv (stalk_of_rings F.to_presheaf_of_rings x))
 
-def 𝒱.to_𝒞 {X : Type*} [topological_space X] (ℱ : 𝒱 X) : 𝒞 X :=
+def 𝒱.to_𝒞 {X : Type u} [topological_space X] (ℱ : 𝒱 X) : 𝒞 X :=
 { F := ℱ.ℱ.to_presheaf_of_topological_rings,
   valuation := ℱ.valuation}
 
@@ -84,16 +96,16 @@ A morphism in 𝒞 is a map of top spaces, an f-map of presheaves, such that the
 map on the stalks pulls one valuation back to the other.
 -/
 
-instance presheaf_of_rings.comm_ring {X : Type*} [topological_space X]
+instance presheaf_of_rings.comm_ring {X : Type u} [topological_space X]
   (F : presheaf_of_rings X) (U : opens X) : comm_ring (F U) :=
 F.Fring U
 
-instance presheaf_of_topological_rings.comm_ring {X : Type*} [topological_space X]
+instance presheaf_of_topological_rings.comm_ring {X : Type u} [topological_space X]
   (F : presheaf_of_topological_rings X) (U : opens X) : comm_ring (F U) :=
 F.Fring U
 
 structure presheaf_of_rings.f_map
-  {X : Type*} [topological_space X] {Y : Type*} [topological_space Y]
+  {X : Type u} [topological_space X] {Y : Type u} [topological_space Y]
   (F : presheaf_of_rings X) (G : presheaf_of_rings Y) :=
 (f : X → Y)
 (hf : continuous f)
@@ -103,12 +115,12 @@ structure presheaf_of_rings.f_map
   ∀ s : G V, F.res _ _ (hf.comap_mono hWV) (f_flat V s) = f_flat W (G.res V W hWV s))
 
 instance presheaf_of_rings.f_map_flat_is_ring_hom
-  {X : Type*} [topological_space X] {Y : Type*} [topological_space Y]
+  {X : Type u} [topological_space X] {Y : Type u} [topological_space Y]
   {F : presheaf_of_rings X} {G : presheaf_of_rings Y}
   (f : presheaf_of_rings.f_map F G) (V : opens Y) :
   is_ring_hom (f.f_flat V) := f.f_flat_is_ring_hom V
 
-def presheaf_of_rings.f_map_id {X : Type*} [topological_space X]
+def presheaf_of_rings.f_map_id {X : Type u} [topological_space X]
   (F : presheaf_of_rings X) : presheaf_of_rings.f_map F F :=
 { f := λ x, x,
   hf := continuous_id,
@@ -129,7 +141,7 @@ def presheaf_of_rings.f_map_id {X : Type*} [topological_space X]
     end }
 
 def presheaf_of_rings.f_map_comp
-  {X : Type*} [topological_space X] {Y : Type*} [topological_space Y] {Z : Type*} [topological_space Z]
+  {X : Type u} [topological_space X] {Y : Type u} [topological_space Y] {Z : Type u} [topological_space Z]
   {F : presheaf_of_rings X} {G : presheaf_of_rings Y} {H : presheaf_of_rings Z}
   (a : presheaf_of_rings.f_map F G) (b : presheaf_of_rings.f_map G H) : presheaf_of_rings.f_map F H :=
 { f := λ x, b.f (a.f x),
@@ -143,7 +155,7 @@ def presheaf_of_rings.f_map_comp
   end }
 
 structure presheaf_of_topological_rings.f_map
-  {X : Type*} [topological_space X] {Y : Type*} [topological_space Y]
+  {X : Type u} [topological_space X] {Y : Type u} [topological_space Y]
   (F : presheaf_of_topological_rings X) (G : presheaf_of_topological_rings Y) :=
 (f : X → Y)
 (hf : continuous f)
@@ -154,7 +166,7 @@ structure presheaf_of_topological_rings.f_map
   ∀ s : G V, F.res _ _ (hf.comap_mono hWV) (f_flat V s) = f_flat W (G.res V W hWV s))
 
 instance presheaf_of_topological_rings.f_map_flat_is_ring_hom
-  {X : Type*} [topological_space X] {Y : Type*} [topological_space Y]
+  {X : Type u} [topological_space X] {Y : Type u} [topological_space Y]
   {F : presheaf_of_topological_rings X} {G : presheaf_of_topological_rings Y}
   (f : presheaf_of_topological_rings.f_map F G) (V : opens Y) :
   is_ring_hom (f.f_flat V) := f.f_flat_is_ring_hom V
@@ -162,14 +174,14 @@ instance presheaf_of_topological_rings.f_map_flat_is_ring_hom
 attribute [instance] presheaf_of_topological_rings.f_map.f_flat_is_ring_hom
 
 def presheaf_of_topological_rings.f_map.to_presheaf_of_rings_f_map
-  {X : Type*} [topological_space X] {Y : Type*} [topological_space Y]
+  {X : Type u} [topological_space X] {Y : Type u} [topological_space Y]
   {F : presheaf_of_topological_rings X} {G : presheaf_of_topological_rings Y}
   (f : presheaf_of_topological_rings.f_map F G) :
   presheaf_of_rings.f_map F.to_presheaf_of_rings G.to_presheaf_of_rings :=
 { ..f}
 
 def presheaf_of_topological_rings.f_map_id
-  {X : Type*} [topological_space X]
+  {X : Type u} [topological_space X]
   {F : presheaf_of_topological_rings X} : presheaf_of_topological_rings.f_map F F :=
 { cont_f_flat := λ U, begin
       show continuous (((F.to_presheaf_of_rings).to_presheaf).res U (continuous.comap continuous_id U) _),
@@ -183,8 +195,8 @@ def presheaf_of_topological_rings.f_map_id
   ..presheaf_of_rings.f_map_id F.to_presheaf_of_rings }
 
 def presheaf_of_topological_rings.f_map_comp
-  {X : Type*} [topological_space X] {Y : Type*} [topological_space Y]
-  {Z : Type*} [topological_space Z] {F : presheaf_of_topological_rings X}
+  {X : Type u} [topological_space X] {Y : Type u} [topological_space Y]
+  {Z : Type u} [topological_space Z] {F : presheaf_of_topological_rings X}
   {G : presheaf_of_topological_rings Y} {H : presheaf_of_topological_rings Z}
   (a : presheaf_of_topological_rings.f_map F G) (b : presheaf_of_topological_rings.f_map G H) :
   presheaf_of_topological_rings.f_map F H :=
@@ -203,7 +215,7 @@ def presheaf_of_topological_rings.f_map_comp
 local attribute [instance, priority 0] classical.prop_decidable
 
 /-- The map on stalks induced from an f-map -/
-noncomputable def stalk_map {X : Type*} [topological_space X] {Y : Type*} [topological_space Y]
+noncomputable def stalk_map {X : Type u} [topological_space X] {Y : Type u} [topological_space Y]
   {F : presheaf_of_rings X} {G : presheaf_of_rings Y} (f : presheaf_of_rings.f_map F G)
   (x : X) : stalk_of_rings G (f.f x) → stalk_of_rings F x :=
 to_stalk.rec G (f.f x) (stalk_of_rings F x)
@@ -215,11 +227,11 @@ to_stalk.rec G (f.f x) (stalk_of_rings F x)
     apply f.presheaf_f_flat
   end )
 
-instance {X : Type*} [topological_space X] {F : presheaf_of_rings X} (x : X) :
+instance {X : Type u} [topological_space X] {F : presheaf_of_rings X} (x : X) :
   comm_ring (quotient (stalk.setoid (F.to_presheaf) x)) :=
 stalk_of_rings_is_comm_ring F x
 
-instance f_flat_is_ring_hom {X : Type*} [topological_space X] {Y : Type*} [topological_space Y]
+instance f_flat_is_ring_hom {X : Type u} [topological_space X] {Y : Type u} [topological_space Y]
   {F : presheaf_of_rings X} {G : presheaf_of_rings Y} (f : presheaf_of_rings.f_map F G)
   (x : X) (V : opens Y) (hfx : f.f x ∈ V) :
   is_ring_hom (λ (s : G.F V), (⟦⟨f.hf.comap V, hfx, f.f_flat V s⟩⟧ : stalk_of_rings F x)) :=
@@ -228,11 +240,11 @@ begin
   refine is_ring_hom.comp _ _,
 end
 
-instance {X : Type*} [topological_space X] {Y : Type*} [topological_space Y]
+instance {X : Type u} [topological_space X] {Y : Type u} [topological_space Y]
   {F : presheaf_of_rings X} {G : presheaf_of_rings Y} (f : presheaf_of_rings.f_map F G)
   (x : X) : is_ring_hom (stalk_map f x) := to_stalk.rec_is_ring_hom _ _ _ _ _
 
-lemma stalk_map_id {X : Type*} [topological_space X]
+lemma stalk_map_id {X : Type u} [topological_space X]
   (F : presheaf_of_rings X) (x : X) (s : stalk_of_rings F x) :
   stalk_map (presheaf_of_rings.f_map_id F) x s = s :=
 begin
@@ -247,12 +259,12 @@ begin
   refl,
 end
 
-lemma stalk_map_id' {X : Type*} [topological_space X]
+lemma stalk_map_id' {X : Type u} [topological_space X]
   (F : presheaf_of_rings X) (x : X) :
   stalk_map (presheaf_of_rings.f_map_id F) x = id := by ext; apply stalk_map_id
 
-lemma stalk_map_comp {X : Type*} [topological_space X]
-  {Y : Type*} [topological_space Y] {Z : Type*} [topological_space Z]
+lemma stalk_map_comp {X : Type u} [topological_space X]
+  {Y : Type u} [topological_space Y] {Z : Type u} [topological_space Z]
    {F : presheaf_of_rings X}
   {G : presheaf_of_rings Y} {H : presheaf_of_rings Z}
   (a : presheaf_of_rings.f_map F G) (b : presheaf_of_rings.f_map G H) (x : X)
@@ -271,29 +283,100 @@ begin
 end
 
 
-lemma stalk_map_comp' {X : Type*} [topological_space X]
-  {Y : Type*} [topological_space Y] {Z : Type*} [topological_space Z]
+lemma stalk_map_comp' {X : Type u} [topological_space X]
+  {Y : Type u} [topological_space Y] {Z : Type u} [topological_space Z]
   {F : presheaf_of_rings X}
   {G : presheaf_of_rings Y} {H : presheaf_of_rings Z}
   (a : presheaf_of_rings.f_map F G) (b : presheaf_of_rings.f_map G H) (x : X) :
   stalk_map (presheaf_of_rings.f_map_comp a b) x =
   (stalk_map a x) ∘ (stalk_map b (a.f x)) := by ext; apply stalk_map_comp
 
-structure 𝒞.map {X : Type*} [topological_space X] {Y : Type*} [topological_space Y]
+structure 𝒞.map {X : Type u} [topological_space X] {Y : Type u} [topological_space Y]
   (F : 𝒞 X) (G : 𝒞 Y) :=
 (fmap : presheaf_of_topological_rings.f_map F.F G.F)
 (stalk : ∀ x : X, ((F.valuation x).out.comap (stalk_map fmap.to_presheaf_of_rings_f_map x)).is_equiv
   (G.valuation (fmap.f x)).out)
 
+namespace PreValuedRingedSpace
+open category_theory
+
+structure hom (X Y : PreValuedRingedSpace.{u}) :=
+(fmap : presheaf_of_topological_rings.f_map X.presheaf Y.presheaf)
+(stalk : ∀ x : X, ((X.valuation x).out.comap (stalk_map fmap.to_presheaf_of_rings_f_map x)).is_equiv
+  (Y.valuation (fmap.f x)).out)
+
+lemma hom_ext {X Y : PreValuedRingedSpace.{u}} (f g : hom X Y) :
+  f.fmap = g.fmap → f = g :=
+by { cases f, cases g, tidy }
+
+def id (X : PreValuedRingedSpace.{u}) : hom X X :=
+{ fmap := presheaf_of_topological_rings.f_map_id,
+  stalk := λ x, begin
+    show valuation.is_equiv
+    (valuation.comap (Spv.out (X.valuation x))
+       (stalk_map
+          (presheaf_of_rings.f_map_id X.presheaf.to_presheaf_of_rings)
+          x))
+    (Spv.out (X.valuation ((λ (x : X), x) x))),
+    simp only [stalk_map_id' X.presheaf.to_presheaf_of_rings x],
+    convert valuation.is_equiv.refl,
+    unfold valuation.comap,
+    dsimp,
+    unfold_coes,
+    rw subtype.ext,
+  end }
+
+def comp {X Y Z : PreValuedRingedSpace.{u}} (f : hom X Y) (g : hom Y Z) : hom X Z :=
+{ fmap := presheaf_of_topological_rings.f_map_comp f.fmap g.fmap,
+  stalk := λ x, begin refine valuation.is_equiv.trans _ (g.stalk (f.fmap.f x)),
+    let XXX := f.stalk x,
+    let YYY := valuation.is_equiv.comap (stalk_map (presheaf_of_topological_rings.f_map.to_presheaf_of_rings_f_map (g.fmap))
+          ((presheaf_of_topological_rings.f_map.to_presheaf_of_rings_f_map (f.fmap)).f x)) XXX,
+    show valuation.is_equiv _ (valuation.comap (Spv.out (Y.valuation ((f.fmap).f x))) _),
+    refine valuation.is_equiv.trans _ YYY,
+    rw ←valuation.comap_comp,
+    suffices : (stalk_map
+          (presheaf_of_topological_rings.f_map.to_presheaf_of_rings_f_map
+             (presheaf_of_topological_rings.f_map_comp (f.fmap) (g.fmap)))
+          x) = (stalk_map (presheaf_of_topological_rings.f_map.to_presheaf_of_rings_f_map (f.fmap)) x ∘
+          stalk_map (presheaf_of_topological_rings.f_map.to_presheaf_of_rings_f_map (g.fmap))
+            ((presheaf_of_topological_rings.f_map.to_presheaf_of_rings_f_map (f.fmap)).f x)),
+      simp [this],
+    rw ←stalk_map_comp',
+    refl,
+  end }
+
+instance large_category : large_category (PreValuedRingedSpace.{u}) :=
+{ hom  := hom,
+  id   := id,
+  comp := λ X Y Z f g, comp f g,
+  id_comp' :=
+  begin
+    -- intros X Y f,
+    -- apply hom_ext,
+    -- cases f, cases f_fmap,
+    -- cases X, cases X_presheaf, cases X_presheaf__to_presheaf_of_rings,
+    -- cases X_presheaf__to_presheaf_of_rings__to_presheaf,
+    -- dsimp [id, comp, continuous.comap, presheaf_of_rings.f_map_id, presheaf_of_rings.f_map_comp,
+    --   presheaf_of_topological_rings.f_map.to_presheaf_of_rings_f_map,
+    --   presheaf_of_topological_rings.f_map_comp, presheaf_of_topological_rings.f_map_id] at *,
+    -- congr,
+    -- clear f_stalk, funext,
+    sorry
+  end,
+  comp_id' := sorry }
+
+end PreValuedRingedSpace
+
 /- this is to check that equality of maps is what you think it is; we don't need this though.
-def 𝒞.map_ext_aux {X : Type*} [topological_space X] {Y : Type*} [topological_space Y]
+def 𝒞.map_ext_aux {X : Type u} [topological_space X] {Y : Type u} [topological_space Y]
   {F : 𝒞 X} {G : 𝒞 Y} {a b : 𝒞.map F G} (hf : a.fmap.f = b.fmap.f) (V : opens Y) : a.fmap.hf.comap V ⊆ b.fmap.hf.comap V :=
 begin
   show a.fmap.f ⁻¹' V ⊆ b.fmap.f ⁻¹' V,
   rw hf
 end
 
-def 𝒞.map_ext {X : Type*} [topological_space X] {Y : Type*} [topological_space Y]
+def 𝒞.map_ext {X : Type u} [topological_space X] {Y : Type u} [topological_space Y]
   {F : 𝒞 X} {G : 𝒞 Y} (a b : 𝒞.map F G) (hf : a.fmap.f = b.fmap.f)
   (hflat : ∀ V : opens Y, ∀ s : G.F V,
     a.fmap.f_flat V s = F.F.res _ _ (𝒞.map_ext_aux hf V) (b.fmap.f_flat V s)) : a = b :=
@@ -316,7 +399,7 @@ end
 -/
 
 -- getting sick of these crappy proofs
-def 𝒞.map_id {X : Type*} [topological_space X] (F : 𝒞 X) : 𝒞.map F F :=
+def 𝒞.map_id {X : Type u} [topological_space X] (F : 𝒞 X) : 𝒞.map F F :=
 { fmap := presheaf_of_topological_rings.f_map_id,
   stalk := λ x, begin
     show valuation.is_equiv
@@ -325,7 +408,7 @@ def 𝒞.map_id {X : Type*} [topological_space X] (F : 𝒞 X) : 𝒞.map F F :=
           (presheaf_of_rings.f_map_id F.F.to_presheaf_of_rings)
           x))
     (Spv.out (F.valuation ((λ (x : X), x) x))),
-    simp [stalk_map_id' F.F.to_presheaf_of_rings x],
+    simp only [stalk_map_id' F.F.to_presheaf_of_rings x],
     convert valuation.is_equiv.refl,
     unfold valuation.comap,
     dsimp,
@@ -333,8 +416,8 @@ def 𝒞.map_id {X : Type*} [topological_space X] (F : 𝒞 X) : 𝒞.map F F :=
     rw subtype.ext,
   end }
 
-def 𝒞.map_comp {X : Type*} [topological_space X] {Y : Type*} [topological_space Y]
-  {Z : Type*} [topological_space Z] {F : 𝒞 X} {G : 𝒞 Y} {H : 𝒞 Z}
+def 𝒞.map_comp {X : Type u} [topological_space X] {Y : Type u} [topological_space Y]
+  {Z : Type u} [topological_space Z] {F : 𝒞 X} {G : 𝒞 Y} {H : 𝒞 Z}
   (a : 𝒞.map F G) (b : 𝒞.map G H) : 𝒞.map F H :=
 { fmap := presheaf_of_topological_rings.f_map_comp a.fmap b.fmap,
   stalk := λ x, begin refine valuation.is_equiv.trans _ (b.stalk (a.fmap.f x)),
@@ -355,7 +438,7 @@ def 𝒞.map_comp {X : Type*} [topological_space X] {Y : Type*} [topological_spa
     refl,
   end }
 
-structure 𝒞.equiv {X : Type*} [topological_space X] {Y : Type*} [topological_space Y]
+structure 𝒞.equiv {X : Type u} [topological_space X] {Y : Type u} [topological_space Y]
   (F : 𝒞 X) (G : 𝒞 Y) :=
 (to_fun : 𝒞.map F G)
 (inv_fun : 𝒞.map G F)
@@ -364,7 +447,7 @@ structure 𝒞.equiv {X : Type*} [topological_space X] {Y : Type*} [topological_
 
 notation A ` ≅_𝒞 `:50 B := nonempty (𝒞.equiv A B)
 
-def presheaf_of_rings.restrict {X : Type*} [topological_space X] (U : opens X)
+def presheaf_of_rings.restrict {X : Type u} [topological_space X] (U : opens X)
   (G : presheaf_of_rings X) : presheaf_of_rings U :=
   { F := λ V, G.F (topological_space.opens.map U V),
     res := λ V W HWV, G.res _ _ (topological_space.opens.map_mono HWV),
@@ -376,7 +459,7 @@ def presheaf_of_rings.restrict {X : Type*} [topological_space X] (U : opens X)
     res_is_ring_hom := λ V W HWV, G.res_is_ring_hom (topological_space.opens.map U V)
       (topological_space.opens.map U W) (topological_space.opens.map_mono HWV) }
 
-noncomputable def presheaf_of_rings.restrict_stalk_map {X : Type*} [topological_space X]
+noncomputable def presheaf_of_rings.restrict_stalk_map {X : Type u} [topological_space X]
   {U : opens X} (G : presheaf_of_rings X) (u : U) :
   stalk_of_rings (presheaf_of_rings.restrict U G) u → stalk_of_rings G u :=
 to_stalk.rec (presheaf_of_rings.restrict U G) u (stalk_of_rings G u)
@@ -388,11 +471,11 @@ to_stalk.rec (presheaf_of_rings.restrict U G) u (stalk_of_rings G u)
     refl,
   end))
 
-instance {X : Type*} [topological_space X] {U : opens X} (G : presheaf_of_rings X) (u : U) :
+instance {X : Type u} [topological_space X] {U : opens X} (G : presheaf_of_rings X) (u : U) :
   is_ring_hom (presheaf_of_rings.restrict_stalk_map G u) :=
 by unfold presheaf_of_rings.restrict_stalk_map; apply_instance
 
-def presheaf_of_topological_rings.restrict {X : Type*} [topological_space X] (U : opens X)
+def presheaf_of_topological_rings.restrict {X : Type u} [topological_space X] (U : opens X)
   (G : presheaf_of_topological_rings X) : presheaf_of_topological_rings U :=
   { Ftop := λ V, G.Ftop (topological_space.opens.map U V),
     Ftop_ring := λ V, G.Ftop_ring (topological_space.opens.map U V),
@@ -400,10 +483,19 @@ def presheaf_of_topological_rings.restrict {X : Type*} [topological_space X] (U 
       (topological_space.opens.map U W) (topological_space.opens.map_mono HWV),
   ..presheaf_of_rings.restrict U G.to_presheaf_of_rings }
 
-noncomputable def 𝒞.restrict {X : Type*} [topological_space X] (U : opens X) (G : 𝒞 X) : 𝒞 U :=
+noncomputable def 𝒞.restrict {X : Type u} [topological_space X] (U : opens X) (G : 𝒞 X) : 𝒞 U :=
 { F := presheaf_of_topological_rings.restrict U G.F,
   valuation :=
     λ u, Spv.mk (valuation.comap (G.valuation u).out (presheaf_of_rings.restrict_stalk_map _ _)) }
+
+noncomputable instance PreValuedRingedSpace.restrict {X : PreValuedRingedSpace.{u}} :
+  has_coe (opens X) PreValuedRingedSpace :=
+{ coe := λ U,
+  { space := U,
+    top := by apply_instance,
+    presheaf := presheaf_of_topological_rings.restrict U X.presheaf,
+    valuation :=
+      λ u, Spv.mk (valuation.comap (X.valuation u).out (presheaf_of_rings.restrict_stalk_map _ _)) }}
 
 structure adic_space (X : Type u) [topological_space X] :=
 (locally_ringed_valued_space : 𝒱 X)
@@ -416,14 +508,3 @@ structure adic_space (X : Type u) [topological_space X] :=
 -- because we don't know that the rational opens are a basis. I didn't
 -- even bother defining a pre-adic space -- one would have to define 𝒱^{pre}
 -- which is 𝒱 with the sheaf axiom dropped.
-
-structure AdicSpace :=
-(carrier : Type u)
-[top : topological_space carrier]
-(adic : adic_space carrier)
-
-open category_theory
-
--- We aren't actually defining all morphisms of adic spaces; just the isomorphisms
-instance AdicSpace.groupoid : large_category AdicSpace :=
-{ hom := λ X Y, _ }
