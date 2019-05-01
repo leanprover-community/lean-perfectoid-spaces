@@ -521,12 +521,15 @@ end
 namespace CVLRS
 open category_theory
 
-instance : has_coe CVLRS.{u} PreValuedRingedSpace.{u} :=
-⟨λ X, { presheaf := _, ..X }⟩
+def to_PreValuedRingedSpace (X : CVLRS.{u}) : PreValuedRingedSpace.{u} :=
+{ presheaf := _, ..X }
 
--- instance : large_category CVLRS.{u} :=
--- @induced_category.category CVLRS.{u} PreValuedRingedSpace.{u} _
--- (λ X, X)
+instance : has_coe CVLRS.{u} PreValuedRingedSpace.{u} :=
+⟨to_PreValuedRingedSpace⟩
+
+instance : large_category CVLRS.{u} :=
+@induced_category.category CVLRS.{u} PreValuedRingedSpace.{u} _
+to_PreValuedRingedSpace
 
 end CVLRS
 
