@@ -66,7 +66,7 @@ begin
 end
 
 -- TODO : Quite ugly.
-lemma pullback_id.iso (F : presheaf_of_rings β) : (pullback_id F).carrier ≅ F :=
+lemma pullback_id.iso (F : presheaf_of_rings β) : nonempty $ (pullback_id F).carrier.iso F :=
 nonempty.intro
 { mor :=
     { map :=

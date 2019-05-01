@@ -46,7 +46,7 @@ end sheaf_of_topological_rings
 structure PreValuedRingedSpace :=
 (space : Type u)
 (top   : topological_space space)
-(presheaf : presheaf_of_topological_rings space)
+(presheaf : presheaf_of_topological_rings.{u u} space)
 (valuation : ∀ x : space, Spv (stalk_of_rings presheaf.to_presheaf_of_rings x))
 
 namespace PreValuedRingedSpace
@@ -479,7 +479,7 @@ noncomputable instance PreValuedRingedSpace.restrict {X : PreValuedRingedSpace.{
     top := by apply_instance,
     presheaf := presheaf_of_topological_rings.restrict U X.presheaf,
     valuation :=
-      λ u, Spv.mk (valuation.comap (X.valuation u).out (presheaf_of_rings.restrict_stalk_map _ _)) }}
+      λ u, Spv.mk (valuation.comap (X.valuation u).out (presheaf_of_rings.restrict_stalk_map _ _)) } }
 
 section 𝒱
 local attribute [instance] sheaf_of_topological_rings.uniform_space
@@ -510,7 +510,7 @@ local attribute [instance] sheaf_of_topological_rings.uniform_space
 structure CVLRS :=
 (space : Type u)
 (top   : topological_space space)
-(sheaf : sheaf_of_topological_rings space)
+(sheaf : sheaf_of_topological_rings.{u u} space)
 (complete : ∀ U : opens space, complete_space (sheaf.F.F U))
 (valuation : ∀ x : space, Spv (stalk_of_rings sheaf.to_presheaf_of_topological_rings.to_presheaf_of_rings x))
 (local_stalks : ∀ x : space, is_local_ring (stalk_of_rings sheaf.to_presheaf_of_rings x))
@@ -531,7 +531,29 @@ instance : large_category CVLRS.{u} :=
 @induced_category.category CVLRS.{u} PreValuedRingedSpace.{u} _
 to_PreValuedRingedSpace
 
+-- noncomputable instance restrict (X : CVLRS.{u}) : has_coe (opens X) CVLRS.{u} :=
+-- { coe := λ U,
+--   { space := U,
+--     top := by apply_instance,
+--     sheaf := _,
+--     complete := _,
+--     valuation := _,
+--     local_stalks := _,
+--     suppp_maximal := _ } }
+
 end CVLRS
+
+noncomputable def Spa' (A : Huber_pair.{u}) : PreValuedRingedSpace.{u} :=
+{ space     := Spa A,
+  top       := by apply_instance,
+  presheaf  := Spa.presheaf_of_topological_rings A,
+  valuation := λ x, Spv.mk (Spa.presheaf.stalk_valuation x) }
+
+open lattice
+
+def AdicSpace :=
+{X : CVLRS.{u} // ∃ (I : Type u) (U : I → opens X) (Hcover : supr U = ⊤) (R : I → Huber_pair.{u}),
+  ∀ i : I, nonempty ((Spa' (R i)) ≅ (U i))}
 
 -- note that currently we can't even prove that Spa(A) is a pre-adic space,
 -- because we don't know that the rational opens are a basis. I didn't

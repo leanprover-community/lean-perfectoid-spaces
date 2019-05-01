@@ -74,7 +74,7 @@ structure iso (F G : presheaf α) :=
 (mor_inv_id : mor ⊚ inv = id F)
 (inv_mor_id : inv ⊚ mor = id G)
 
-infix `≅`:80 := iso
+local infix `≅`:80 := iso
 
 end morphism
 
