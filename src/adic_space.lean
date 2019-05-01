@@ -336,19 +336,39 @@ instance large_category : large_category (PreValuedRingedSpace.{u}) :=
   comp := λ X Y Z f g, comp f g,
   id_comp' :=
   begin
-    -- intros X Y f,
-    -- apply hom_ext,
-    -- cases f, cases f_fmap,
-    -- cases X, cases X_presheaf, cases X_presheaf__to_presheaf_of_rings,
-    -- cases X_presheaf__to_presheaf_of_rings__to_presheaf,
-    -- dsimp [id, comp, continuous.comap, presheaf_of_rings.f_map_id, presheaf_of_rings.f_map_comp,
-    --   presheaf_of_topological_rings.f_map.to_presheaf_of_rings_f_map,
-    --   presheaf_of_topological_rings.f_map_comp, presheaf_of_topological_rings.f_map_id] at *,
-    -- congr,
-    -- clear f_stalk, funext,
-    sorry
+    intros X Y f,
+    apply hom_ext,
+    cases f, cases f_fmap,
+    cases X, cases X_presheaf, cases X_presheaf__to_presheaf_of_rings,
+    cases X_presheaf__to_presheaf_of_rings__to_presheaf,
+    dsimp [id, comp, continuous.comap, presheaf_of_rings.f_map_id, presheaf_of_rings.f_map_comp,
+      presheaf_of_topological_rings.f_map.to_presheaf_of_rings_f_map,
+      presheaf_of_topological_rings.f_map_comp, presheaf_of_topological_rings.f_map_id] at *,
+    congr,
+    clear f_stalk, funext,
+    exact congr_fun (X_presheaf__to_presheaf_of_rings__to_presheaf_Hid ⟨f_fmap_f ⁻¹' V.val, _⟩) (f_fmap_f_flat V s)
   end,
-  comp_id' := sorry }
+  comp_id' :=
+  begin
+    intros X Y f,
+    apply hom_ext,
+    cases f, cases f_fmap,
+    dsimp,
+    cases Y, cases Y_presheaf, cases Y_presheaf__to_presheaf_of_rings,
+    cases Y_presheaf__to_presheaf_of_rings__to_presheaf,
+    dsimp [id, comp, continuous.comap, presheaf_of_rings.f_map_id, presheaf_of_rings.f_map_comp,
+      presheaf_of_topological_rings.f_map.to_presheaf_of_rings_f_map,
+      presheaf_of_topological_rings.f_map_comp, presheaf_of_topological_rings.f_map_id] at *,
+    congr,
+    clear f_stalk, funext,
+    have H2 : f_fmap_f_flat V
+      (Y_presheaf__to_presheaf_of_rings__to_presheaf_res V V _ s) =
+      f_fmap_f_flat V s,
+      rw Y_presheaf__to_presheaf_of_rings__to_presheaf_Hid V, refl,
+    convert H2,
+      apply opens.ext,refl,
+      apply opens.ext,refl,
+  end }
 
 end PreValuedRingedSpace
 
