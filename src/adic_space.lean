@@ -527,6 +527,8 @@ structure adic_space (X : Type u) [topological_space X] :=
 section
 local attribute [instance] sheaf_of_topological_rings.uniform_space
 
+/--Category of topological spaces endowed with a sheaf of complete topological rings
+and (an equivalence class of) valuations on the stalks (which are required to be local rings).-/
 structure CVLRS :=
 (space : Type u)
 (top   : topological_space space)
@@ -572,8 +574,8 @@ noncomputable def Spa' (A : Huber_pair.{u}) : PreValuedRingedSpace.{u} :=
 open lattice
 
 def AdicSpace :=
-{X : CVLRS.{u} // ∃ (I : Type u) (U : I → opens X) (Hcover : supr U = ⊤) (R : I → Huber_pair.{u}),
-  ∀ i : I, nonempty ((Spa' (R i)) ≅ (U i))}
+{X : CVLRS.{u} // ∃ (I : Type u) (U : I → opens X) (R : I → Huber_pair.{u}),
+  ∀ i : I, nonempty ((Spa' (R i)) ≅ (U i)) ∧ supr U = ⊤}
 
 -- note that currently we can't even prove that Spa(A) is a pre-adic space,
 -- because we don't know that the rational opens are a basis. I didn't
