@@ -573,9 +573,21 @@ noncomputable def Spa' (A : Huber_pair.{u}) : PreValuedRingedSpace.{u} :=
 
 open lattice
 
-def AdicSpace :=
-{X : CVLRS.{u} // ∃ (I : Type u) (U : I → opens X) (R : I → Huber_pair.{u}),
-  ∀ i : I, nonempty ((Spa' (R i)) ≅ (U i)) ∧ supr U = ⊤}
+namespace CVLRS
+
+def is_adic_space (X : CVLRS.{u}) : Prop :=
+∀ x : X, ∃ (U : opens X) (R : Huber_pair.{u}), x ∈ U ∧ nonempty (Spa' R ≅ U)
+
+end CVLRS
+
+def AdicSpace := {X : CVLRS.{u} // X.is_adic_space}
+
+namespace AdicSpace
+open category_theory
+
+instance : large_category AdicSpace := category_theory.full_subcategory _
+
+end AdicSpace
 
 -- note that currently we can't even prove that Spa(A) is a pre-adic space,
 -- because we don't know that the rational opens are a basis. I didn't
