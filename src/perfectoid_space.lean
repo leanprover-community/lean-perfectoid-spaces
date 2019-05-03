@@ -27,7 +27,7 @@ structure perfectoid_ring (R : Type) [Huber_ring R] extends Tate_ring R : Prop :
 neighbourhood isomorphic to Spa(A) for some perfectoid ring A.-/
 def CLVRS.is_perfectoid (X : CLVRS) : Prop :=
 ∀ x : X, ∃ (U : opens X) (A : Huber_pair) [perfectoid_ring A],
-  (x ∈ U) ∧ (Spa' A ≊ U)
+  (x ∈ U) ∧ (Spa A ≊ U)
 
 /-- The category of perfectoid spaces.-/
 def PerfectoidSpace := {X : CLVRS // X.is_perfectoid}

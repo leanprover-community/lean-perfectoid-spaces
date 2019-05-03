@@ -20,7 +20,7 @@ universe u
 
 open nat function
 open topological_space
-open Spa
+open spa
 
 namespace sheaf_of_topological_rings
 
@@ -66,9 +66,9 @@ structure 𝒞 (X : Type u) [topological_space X] :=
 (F : presheaf_of_topological_rings X)
 (valuation: ∀ x : X, Spv (stalk_of_rings F.to_presheaf_of_rings x))
 
-noncomputable def 𝒞.Spa (A : Huber_pair) : 𝒞 (Spa A) :=
-{ F := Spa.presheaf_of_topological_rings A,
-  valuation := λ x, Spv.mk (Spa.presheaf.stalk_valuation x) }
+noncomputable def 𝒞.Spa (A : Huber_pair) : 𝒞 (spa A) :=
+{ F := spa.presheaf_of_topological_rings A,
+  valuation := λ x, Spv.mk (spa.presheaf.stalk_valuation x) }
 
 /- Remainder of this file:
 
@@ -563,11 +563,12 @@ instance : large_category CLVRS := induced_category.category to_PreValuedRingedS
 
 end CLVRS
 
-noncomputable def Spa' (A : Huber_pair) : PreValuedRingedSpace :=
-{ space     := Spa A,
+/--The adic spectrum of a Huber pair.-/
+noncomputable def Spa (A : Huber_pair) : PreValuedRingedSpace :=
+{ space     := spa A,
   top       := by apply_instance,
-  presheaf  := Spa.presheaf_of_topological_rings A,
-  valuation := λ x, Spv.mk (Spa.presheaf.stalk_valuation x) }
+  presheaf  := spa.presheaf_of_topological_rings A,
+  valuation := λ x, Spv.mk (spa.presheaf.stalk_valuation x) }
 
 open lattice
 
@@ -577,7 +578,7 @@ notation A `≊` B := nonempty (A ≅ B)
 namespace CLVRS
 
 def is_adic_space (X : CLVRS) : Prop :=
-∀ x : X, ∃ (U : opens X) (R : Huber_pair), x ∈ U ∧ (Spa' R ≊ U)
+∀ x : X, ∃ (U : opens X) (R : Huber_pair), x ∈ U ∧ (Spa R ≊ U)
 
 end CLVRS
 
