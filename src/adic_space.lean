@@ -528,7 +528,8 @@ section
 local attribute [instance] sheaf_of_topological_rings.uniform_space
 
 /--Category of topological spaces endowed with a sheaf of complete topological rings
-and (an equivalence class of) valuations on the stalks (which are required to be local rings).-/
+and (an equivalence class of) valuations on the stalks (which are required to be local rings).
+Wedhorn calls this category `𝒱`.-/
 structure CLVRS :=
 (space : Type) -- change this to (Type u) to enable universes
 (top   : topological_space space)
