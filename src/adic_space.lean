@@ -518,10 +518,10 @@ def 𝒱.to_𝒞 {X : Type u} [topological_space X] (ℱ : 𝒱 X) : 𝒞 X :=
 { F := ℱ.ℱ.to_presheaf_of_topological_rings,
   valuation := ℱ.valuation}
 
-structure adic_space (X : Type u) [topological_space X] :=
+structure adic_space (X : Type) [topological_space X] :=
 (locally_ringed_valued_space : 𝒱 X)
 (Hlocally_affinoid : ∃ (I : Type u) (U : I → opens X) (Hcover : set.Union (λ i, (U i).1) = set.univ)
-  (R : I → Huber_pair.{u}),
+  (R : I → Huber_pair),
   ∀ i : I, nonempty (𝒞.equiv (𝒞.Spa (R i)) (𝒞.restrict (U i) locally_ringed_valued_space.to_𝒞)))
 
 section
@@ -530,9 +530,9 @@ local attribute [instance] sheaf_of_topological_rings.uniform_space
 /--Category of topological spaces endowed with a sheaf of complete topological rings
 and (an equivalence class of) valuations on the stalks (which are required to be local rings).-/
 structure CVLRS :=
-(space : Type u)
+(space : Type) -- change this to (Type u) to enable universes
 (top   : topological_space space)
-(sheaf : sheaf_of_topological_rings.{u u} space)
+(sheaf : sheaf_of_topological_rings.{0 0} space)
 (complete : ∀ U : opens space, complete_space (sheaf.F.F U))
 (valuation : ∀ x : space, Spv (stalk_of_rings sheaf.to_presheaf_of_topological_rings.to_presheaf_of_rings x))
 (local_stalks : ∀ x : space, is_local_ring (stalk_of_rings sheaf.to_presheaf_of_rings x))
@@ -543,15 +543,13 @@ end
 namespace CVLRS
 open category_theory
 
-def to_PreValuedRingedSpace (X : CVLRS.{u}) : PreValuedRingedSpace.{u} :=
+def to_PreValuedRingedSpace (X : CVLRS) : PreValuedRingedSpace.{0} :=
 { presheaf := _, ..X }
 
-instance : has_coe CVLRS.{u} PreValuedRingedSpace.{u} :=
+instance : has_coe CVLRS PreValuedRingedSpace.{0} :=
 ⟨to_PreValuedRingedSpace⟩
 
-instance : large_category CVLRS.{u} :=
-@induced_category.category CVLRS.{u} PreValuedRingedSpace.{u} _
-to_PreValuedRingedSpace
+instance : large_category CVLRS := induced_category.category to_PreValuedRingedSpace
 
 -- noncomputable instance restrict (X : CVLRS.{u}) : has_coe (opens X) CVLRS.{u} :=
 -- { coe := λ U,
@@ -565,7 +563,7 @@ to_PreValuedRingedSpace
 
 end CVLRS
 
-noncomputable def Spa' (A : Huber_pair.{u}) : PreValuedRingedSpace.{u} :=
+noncomputable def Spa' (A : Huber_pair) : PreValuedRingedSpace :=
 { space     := Spa A,
   top       := by apply_instance,
   presheaf  := Spa.presheaf_of_topological_rings A,
@@ -575,12 +573,12 @@ open lattice
 
 namespace CVLRS
 
-def is_adic_space (X : CVLRS.{u}) : Prop :=
-∀ x : X, ∃ (U : opens X) (R : Huber_pair.{u}), x ∈ U ∧ nonempty (Spa' R ≅ U)
+def is_adic_space (X : CVLRS) : Prop :=
+∀ x : X, ∃ (U : opens X) (R : Huber_pair), x ∈ U ∧ nonempty (Spa' R ≅ U)
 
 end CVLRS
 
-def AdicSpace := {X : CVLRS.{u} // X.is_adic_space}
+def AdicSpace := {X : CVLRS // X.is_adic_space}
 
 namespace AdicSpace
 open category_theory
