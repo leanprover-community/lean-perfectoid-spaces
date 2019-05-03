@@ -11,7 +11,7 @@ local postfix `ᵒ` : 66 := power_bounded_subring
 open nat.Prime power_bounded_subring topological_space
 variable [nat.Prime] -- fix a prime p
 
-/-- A perfectoid ring, following Fontaine Sem Bourb-/
+/-- A perfectoid ring, following Fontaine Sem. Bourbaki-/
 structure perfectoid_ring (R : Type) [Huber_ring R] extends Tate_ring R : Prop :=
 (complete : is_complete_hausdorff R)
 (uniform  : is_uniform R)
