@@ -21,11 +21,11 @@ open set function Spv valuation
 variables {Γ : Type*} [linear_ordered_comm_group Γ]
 
 -- Wedhorn def 7.23.
-definition Spa (A : Huber_pair) : set (Spv A) :=
+definition spa (A : Huber_pair) : set (Spv A) :=
 {v | v.is_continuous ∧ ∀ r ∈ A⁺, v r ≤ 1}
 
-lemma mk_mem_Spa {A : Huber_pair} {v : valuation A Γ} :
-  mk v ∈ Spa A ↔ v.is_continuous ∧ ∀ r ∈ A⁺, v r ≤ 1 :=
+lemma mk_mem_spa {A : Huber_pair} {v : valuation A Γ} :
+  mk v ∈ spa A ↔ v.is_continuous ∧ ∀ r ∈ A⁺, v r ≤ 1 :=
 begin
   apply and_congr,
   { apply is_equiv.is_continuous_iff,
@@ -38,37 +38,28 @@ begin
     rw [valuation.map_one] }
 end
 
-namespace Spa
+namespace spa
 
 variable {A : Huber_pair}
 
-instance : has_coe (Spa A) (Spv A) := ⟨subtype.val⟩
+instance : has_coe (spa A) (Spv A) := ⟨subtype.val⟩
 
-definition basic_open (r s : A) : set (Spa A) :=
+definition basic_open (r s : A) : set (spa A) :=
 {v | v r ≤ v s ∧ v s ≠ 0 }
 
-lemma mk_mem_basic_open {r s : A} {v : valuation A Γ} {hv : mk v ∈ Spa A} :
-(⟨mk v, hv⟩ : Spa A) ∈ basic_open r s ↔ v r ≤ v s ∧ v s ≠ 0 :=
+lemma mk_mem_basic_open {r s : A} {v : valuation A Γ} {hv : mk v ∈ spa A} :
+(⟨mk v, hv⟩ : spa A) ∈ basic_open r s ↔ v r ≤ v s ∧ v s ≠ 0 :=
 begin
   apply and_congr,
   { apply out_mk, },
   { apply (out_mk v).ne_zero, },
 end
 
--- instance (A : Huber_pair) : topological_space (Spa A) :=
--- topological_space.generate_from {U : set (Spa A) | ∃ r s : A, U = basic_open r s}
-
--- lemma basic_open.is_open (r s : A) : is_open (basic_open r s) :=
--- topological_space.generate_open.basic (basic_open r s) ⟨r, s, rfl⟩
-
--- lemma basic_open.compact (r s : A) : compact (basic_open r s) :=
--- sorry
-
 lemma basic_open_eq (s : A) : basic_open s s = {v | v s ≠ 0} :=
 set.ext $ λ v, ⟨λ h, h.right, λ h, ⟨le_refl _, h⟩⟩
 
 -- should only be applied with (Hfin : fintype T) and (Hopen: is_open (span T))
-definition rational_open (s : A) (T : set A) : set (Spa A) :=
+definition rational_open (s : A) (T : set A) : set (spa A) :=
 {v | (∀ t ∈ T, (v t ≤ v s)) ∧ (v s ≠ 0)}
 
 -- Here's everything in one package.
@@ -89,7 +80,7 @@ begin
   congr; assumption
 end
 
-def rational_open (r : rational_open_data A) : set (Spa A) :=
+def rational_open (r : rational_open_data A) : set (spa A) :=
 rational_open r.s r.T
 
 def localization (r : rational_open_data A) := Huber_ring.away r.T r.s
@@ -189,7 +180,6 @@ noncomputable def s_inv_aux (r1 r2 : rational_open_data A) (h : r1 ≤ r2) : uni
     refl,
 end)
 
--- Spa.rational_open_data.localization_map : the map between the uncompleted rings A(T1/s1)->A(T2/s2)
 /-- The map A(T1/s1) -> A(T2/s2) coming from the inequality r1 ≤ r2 -/
 noncomputable def localization_map {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
   localization r1 → localization r2 :=
@@ -306,8 +296,8 @@ noncomputable def insert_s (r : rational_open_data A) : rational_open_data A :=
 
 end rational_open_data -- namespace
 
-lemma mk_mem_rational_open {s : A} {T : set A} {v : valuation A Γ} {hv : mk v ∈ Spa A} :
-  (⟨mk v, hv⟩ : Spa A) ∈ rational_open s T ↔ (∀ t ∈ T, (v t ≤ v s)) ∧ (v s ≠ 0) :=
+lemma mk_mem_rational_open {s : A} {T : set A} {v : valuation A Γ} {hv : mk v ∈ spa A} :
+  (⟨mk v, hv⟩ : spa A) ∈ rational_open s T ↔ (∀ t ∈ T, (v t ≤ v s)) ∧ (v s ≠ 0) :=
 begin
   apply and_congr,
   { apply forall_congr,
@@ -355,20 +345,8 @@ r.s ∈ (insert_s r).T := by {left, refl}
 
 end rational_open_data
 
-instance (A : Huber_pair) : topological_space (Spa A) :=
-topological_space.generate_from {U : set (Spa A) | ∃ r : rational_open_data A, U = r.rational_open}
-
--- lemma rational_open.is_open (s : A) (T : set A) [h : fintype T] :
---   is_open (rational_open s T) :=
--- begin
---   rw rational_open_bInter,
---   apply is_open_inter,
---   { apply is_open_bInter ⟨h⟩,
---     intros,
---     apply basic_open.is_open },
---   { rw ← basic_open_eq s,
---     apply basic_open.is_open },
--- end
+instance (A : Huber_pair) : topological_space (spa A) :=
+topological_space.generate_from {U : set (spa A) | ∃ r : rational_open_data A, U = r.rational_open}
 
 lemma rational_open_inter.aux₁ {s₁ s₂ : A} {T₁ T₂ : set A}
   (h₁ : s₁ ∈ T₁) (h₂ : s₂ ∈ T₂) :
@@ -441,12 +419,8 @@ univ_subset_iff.1 $ λ v h, ⟨le_refl _,by erw valuation.map_one; exact one_ne_
 @[simp] lemma rational_open_eq_univ : rational_open (1 : A) {(1 : A)} = univ :=
 by simp
 
-def rational_basis (A : Huber_pair) : set (set (Spa A)) :=
-{U : set (Spa A) | ∃ r : rational_open_data A, U = r.rational_open }
-
--- def rational_basis (A : Huber_pair) : set (set (Spa A)) :=
--- {U : set (Spa A) | ∃ {s : A} {T : set A} {hfin : fintype T} {hopen : is_open (↑(ideal.span T) : set A)},
---                    U = rational_open s T }
+def rational_basis (A : Huber_pair) : set (set (spa A)) :=
+{U : set (spa A) | ∃ r : rational_open_data A, U = r.rational_open }
 
 section
 open algebra lattice
@@ -556,66 +530,6 @@ begin
   { rw pow_succ, exact rational_basis.is_basis.mul _ _ hT ih }
 end
 
--- Rational opens form a basis of Spa(A). Current status: proof has some sorries.
--- Filling them may or may not be hard. We don't need it for the defition of an adic space.
-/-
-lemma exists_rational_open (X : set (Spa A)) (hX : compact X)
-  (s : A) (hs : ∀ v ∈ X, (v : Spv A) s ≠ 0) :
-  ∃ (T : set A) (fin : fintype T) (hT : is_open (↑(ideal.span T) : set A)),
-    X ⊆ rational_open s T :=
-begin
-  rcases Huber_ring.exists_pod_subset (univ : set A) (filter.univ_mem_sets)
-    with ⟨A₀, _, _, _, ⟨_, emb, hf, I, fg, top⟩, hI⟩,
-  rcases fg with ⟨T', hT'⟩,
-  resetI,
-  let T : set A := algebra_map A '' ↑T',
-  haveI : fintype T := @set.fintype_image _ _ (by apply_instance) _ _ (finset_coe.fintype _),
-  have hT : is_open (↑(ideal.span T) : set A) :=
-  begin
-    rw is_ideal_adic_iff at top,
-    apply submodule.is_open_of_open_submodule,
-    refine ⟨_, is_open_ideal_map_open_embedding emb hf I (pow_one I ▸ top.1 1), _⟩,
-    change ideal.span _ = _ at hT',
-    rw [← hT', ← ideal.span_image],
-    exact le_refl _,
-  end,
-  have HT : is_topologically_nilpotent_subset T :=
-  begin
-    sorry
-  end,
-  have key : X ⊆ ⋃ (n ∈ (univ : set ℕ)), rational_open s (T^n) :=
-  begin
-    intros v hv,
-    rw set.mem_Union,
-    let U := (v : Spv A) ⁻¹' {γ | γ ≤ v s},
-    cases HT U _ with n hn,
-    refine ⟨n, _, _, _⟩,
-    work_on_goal 1 { simp },
-    work_on_goal 0 {
-      split,
-      { intros t ht,
-        apply hn,
-        exact ht },
-      { exact hs v hv } },
-    { apply mem_nhds_sets,
-      have H := v.property.1,
-      sorry,
-      sorry }
-  end,
-  work_on_goal 0 {
-    rcases compact_elim_finite_subcover_image hX _ key with ⟨c, csub, cfin, hc⟩,
-    work_on_goal 1 { rintros _ ⟨n, rfl⟩, apply rational_open.is_open },
-    refine ⟨T^(Sup c), by apply_instance, rational_basis.is_basis.pow T hT _, _⟩,
-    refine set.subset.trans hc _,
-    apply set.bUnion_subset,
-    intros n hn v hv,
-    refine ⟨_, hv.2⟩,
-    intros t ht,
-    sorry
-  },
-end
--/
-
 variable (A)
 
 def rational_open_data.univ : rational_open_data A :=
@@ -658,69 +572,17 @@ end
 
 variable {A}
 
-/-
--- Current status: proof is broken with 2 sorries.
--- We need this :-\
-lemma rational_basis.is_basis : topological_space.is_topological_basis (rational_basis A) :=
-begin
-  split,
-  { rintros U₁ ⟨s₁, T₁, hfin₁, hopen₁, H₁⟩ U₂ ⟨s₂, T₂, hfin₂, hopen₂, H₂⟩ v hv,
-    refine ⟨U₁ ∩ U₂, _, hv, subset.refl _⟩,
-    rw rational_open_add_s at H₁ H₂,
-    simp only [H₁, H₂, rational_open_inter, set.mem_insert_iff, true_or, eq_self_iff_true],
-    resetI,
-    refine ⟨_, _, infer_instance, _, rfl⟩,
-    apply rational_basis.is_basis.mul,
-    all_goals {
-      apply submodule.is_open_of_open_submodule,
-      refine ⟨_, _, ideal.span_mono (subset_insert _ _)⟩,
-      assumption } },
-  split,
-  { apply le_antisymm,
-    { exact subset_univ _ },
-    { apply subset_sUnion_of_mem,
-      refine ⟨(1 : A), {(1 : A)}, infer_instance, _, by simp⟩,
-      rw ideal.span_singleton_one,
-      exact is_open_univ, } },
-  { apply le_antisymm,
-    { delta Spa.topological_space,
-      rw generate_from_le_iff_subset_is_open,
-      rintros _ ⟨r, s, rfl⟩,
-      rcases exists_rational_open _ (basic_open.compact r s) s (λ v hv, hv.2) with ⟨T, Tfin, hT, H⟩,
-      resetI,
-      have key : basic_open r s = rational_open s (insert r T) :=
-      begin
-        apply set.subset.antisymm,
-        all_goals { intros v hv, refine ⟨_, hv.2⟩ },
-        { intros t ht, rw mem_insert_iff at ht, rcases ht with rfl | ht,
-          { exact hv.1 },
-          { exact (H hv).1 t ht } },
-        { exact hv.1 r (mem_insert _ _) }
-      end,
-      rw key,
-      refine topological_space.generate_open.basic _ ⟨s, _, infer_instance, _, rfl⟩,
-      apply submodule.is_open_of_open_submodule,
-      exact ⟨_, hT, ideal.span_mono (subset_insert _ _)⟩ },
-    { rw generate_from_le_iff_subset_is_open,
-      rintros U ⟨s, T, hT, hT', H⟩,
-      subst H,
-      haveI := hT,
-      exact rational_open.is_open s T,
-    } }
-end #check id
--/
-
 section
 open topological_space
 
-def rational_open_data_subsets (U : opens (Spa A)) :=
+def rational_open_data_subsets (U : opens (spa A)) :=
 { r : rational_open_data A // r.rational_open ⊆ U}
-def rational_open_data_subsets.map {U V : opens (Spa A)} (hUV : U ≤ V)
+def rational_open_data_subsets.map {U V : opens (spa A)} (hUV : U ≤ V)
   (rd : rational_open_data_subsets U) :
   rational_open_data_subsets V :=
 ⟨rd.val, set.subset.trans rd.property hUV⟩
 
-noncomputable def rational_open_data_subsets_inter {U :  opens (Spa A)}
+noncomputable def rational_open_data_subsets_inter {U :  opens (spa A)}
   (r1 r2 : rational_open_data_subsets U) :
 rational_open_data_subsets U :=
 ⟨rational_open_data.inter r1.1 r2.1, begin
@@ -729,7 +591,7 @@ rational_open_data_subsets U :=
   exact r1.2
 end⟩
 
-lemma rational_open_data_subsets_symm {U :  opens (Spa A)}
+lemma rational_open_data_subsets_symm {U :  opens (spa A)}
   (r1 r2 : rational_open_data_subsets U) :
 rational_open_data_subsets_inter r1 r2 = rational_open_data_subsets_inter r2 r1 :=
 begin
@@ -787,12 +649,12 @@ end r_o_d_completion -- namespace
 open topological_space
 
 /-- The underlying type of 𝒪_X(U), the structure presheaf on Spa(A) -/
-def presheaf_value (U : opens (Spa A)) :=
+def presheaf_value (U : opens (spa A)) :=
 {f : Π (rd : rational_open_data_subsets U), r_o_d_completion rd.1 //
    ∀ (rd1 rd2 : rational_open_data_subsets U) (h : rd1.1 ≤ rd2.1),
      r_o_d_completion.restriction h (f rd1) = (f rd2)} -- agrees on overlaps
 
-def presheaf_value_set (U : opens (Spa A)) :=
+def presheaf_value_set (U : opens (spa A)) :=
 {f : Π (rd : rational_open_data_subsets U), r_o_d_completion rd.1 |
    ∀ (rd1 rd2 : rational_open_data_subsets U) (h : rd1.1 ≤ rd2.1),
      r_o_d_completion.restriction h (f rd1) = (f rd2)}
@@ -800,7 +662,7 @@ def presheaf_value_set (U : opens (Spa A)) :=
 -- We need to check it's a ring
 
 
-instance presheaf_subring (U : opens (Spa A)) : is_subring (presheaf_value_set U) :=
+instance presheaf_subring (U : opens (spa A)) : is_subring (presheaf_value_set U) :=
 begin
 refine {..},
   { -- zero_mem
@@ -826,37 +688,37 @@ refine {..},
     rw [ha _ _ h, hb _ _ h] }
 end
 
-noncomputable instance presheaf_comm_ring (U : opens (Spa A)) : comm_ring (presheaf_value U) :=
+noncomputable instance presheaf_comm_ring (U : opens (spa A)) : comm_ring (presheaf_value U) :=
 begin
   apply @subset.comm_ring _ pi.comm_ring _ _, apply_instance,
-  exact Spa.presheaf_subring U
+  exact spa.presheaf_subring U
 end
 
-instance presheaf_top_space (U : opens (Spa A)) : topological_space (presheaf_value U) :=
+instance presheaf_top_space (U : opens (spa A)) : topological_space (presheaf_value U) :=
 by unfold presheaf_value; apply_instance
 
-example (U : opens (Spa A)) :
+example (U : opens (spa A)) :
   topological_ring (Π (rd : rational_open_data_subsets U), r_o_d_completion (rd.1)) :=
 by apply_instance
 
 -- tactic mode because I can't get Lean to behave. Note: switching to tactic
 -- mode indicated the problem was that Lean was not finding the two instances I flag
 -- with haveI and letI; probably now I know this one could try to go back into term mode.
-instance presheaf_top_ring (U : opens (Spa A)) : topological_ring (presheaf_value U) :=
+instance presheaf_top_ring (U : opens (spa A)) : topological_ring (presheaf_value U) :=
 begin
-  haveI := Spa.presheaf_subring U,
+  haveI := spa.presheaf_subring U,
   letI : topological_ring (Π (rd : rational_open_data_subsets U), r_o_d_completion (rd.1)) :=
     by apply_instance,
   apply topological_subring (presheaf_value_set U),
 end
 
-instance (U : opens (Spa A)) (r : rational_open_data_subsets U) :
+instance (U : opens (spa A)) (r : rational_open_data_subsets U) :
   is_ring_hom (λ (f : presheaf_value U), f.val r) :=
 { map_one := rfl,
   map_mul := λ _ _, rfl,
   map_add := λ _ _, rfl }
 
-def presheaf_map {U V : opens (Spa A)} (hUV : U ≤ V) :
+def presheaf_map {U V : opens (spa A)} (hUV : U ≤ V) :
   presheaf_value V → presheaf_value U :=
 λ f, ⟨λ rd, f.val ⟨rd.val, set.subset.trans rd.2 hUV⟩,
 begin
@@ -866,39 +728,39 @@ begin
   exact X,
 end⟩
 
-lemma presheaf_map_id (U : opens (Spa A)) :
+lemma presheaf_map_id (U : opens (spa A)) :
   presheaf_map (le_refl U) = id :=
 by { delta presheaf_map, tidy }
 
-lemma presheaf_map_comp {U V W : opens (Spa A)} (hUV : U ≤ V) (hVW : V ≤ W) :
+lemma presheaf_map_comp {U V W : opens (spa A)} (hUV : U ≤ V) (hVW : V ≤ W) :
   presheaf_map hUV ∘ presheaf_map hVW = presheaf_map (le_trans hUV hVW) :=
 by { delta presheaf_map, tidy }
 
-instance presheaf_map_is_ring_hom {U V : opens (Spa A)} (hUV : U ≤ V) :
+instance presheaf_map_is_ring_hom {U V : opens (spa A)} (hUV : U ≤ V) :
 is_ring_hom (presheaf_map hUV) :=
 { map_one := rfl,
   map_mul := λ _ _, rfl,
   map_add := λ _ _, rfl }
 
-def presheaf_map_cts {U V : opens (Spa A)} (hUV : U ≤ V) :
+def presheaf_map_cts {U V : opens (spa A)} (hUV : U ≤ V) :
   continuous (presheaf_map hUV) :=
 continuous_subtype_mk _ (continuous_pi (λ i, (continuous.comp (continuous_subtype_val) (continuous_apply _))))
 
 variable (A)
-noncomputable def presheaf_of_topological_rings : presheaf_of_topological_rings (Spa A) :=
+noncomputable def presheaf_of_topological_rings : presheaf_of_topological_rings (spa A) :=
 { F := presheaf_value,
   res := λ U V, presheaf_map,
   Hid := presheaf_map_id,
   Hcomp := λ U V W, presheaf_map_comp,
-  Fring := Spa.presheaf_comm_ring,
-  res_is_ring_hom := λ U V, Spa.presheaf_map_is_ring_hom,
-  Ftop := Spa.presheaf_top_space,
-  Ftop_ring := Spa.presheaf_top_ring,
+  Fring := spa.presheaf_comm_ring,
+  res_is_ring_hom := λ U V, spa.presheaf_map_is_ring_hom,
+  Ftop := spa.presheaf_top_space,
+  Ftop_ring := spa.presheaf_top_ring,
   res_continuous := λ U V, presheaf_map_cts
 }
 
 
-end Spa -- namespace I think
+end spa -- namespace I think
 
 -- old notes
 

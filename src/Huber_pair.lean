@@ -31,14 +31,14 @@ structure is_ring_of_integral_elements {R : Type u} [Huber_ring R] [decidable_eq
 -- a Huber Ring is an f-adic ring.
 -- a Huber Pair is what Huber called an Affinoid Ring.
 structure Huber_pair :=
-(R : Type u)
+(R : Type) -- change this to (Type u) to enable universes
 [RHuber : Huber_ring R]
 [dec : decidable_eq R]
 (Rplus : set R)
 [intel : is_ring_of_integral_elements Rplus]
 
 instance : has_coe_to_sort Huber_pair :=
-{ S := Type u, coe := Huber_pair.R }
+{ S := Type, coe := Huber_pair.R }
 
 instance Huber_pair.Huber_ring (A : Huber_pair) : Huber_ring A := A.RHuber
 

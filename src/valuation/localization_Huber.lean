@@ -13,12 +13,12 @@ noncomputable theory
 
 variables {A : Huber_pair}
 {Γ : Type*} [linear_ordered_comm_group Γ] {v : valuation A Γ}
-{rd : Spa.rational_open_data A} (hv : valuation.is_continuous v)
+{rd : spa.rational_open_data A} (hv : valuation.is_continuous v)
 
 namespace Huber_pair
 open valuation
 
-local notation `ATs` := Spa.rational_open_data.localization rd
+local notation `ATs` := spa.rational_open_data.localization rd
 local notation `s` := rd.s
 local notation `T` := rd.T
 
@@ -133,18 +133,18 @@ Huber_ring.away.lift_continuous T s (is_subgroups_basis.nonarchimedean _)
 
 -- now we need that the triangles commute when we fix v but change s.
 
-theorem to_valuation_field_commutes (r1 r2 : Spa.rational_open_data A) (h : r1 ≤ r2)
+theorem to_valuation_field_commutes (r1 r2 : spa.rational_open_data A) (h : r1 ≤ r2)
   (hs1 : v r1.s ≠ 0) (hs2 : v r2.s ≠ 0) :
-to_valuation_field hs1 = (to_valuation_field hs2) ∘ (Spa.rational_open_data.localization_map h) :=
+to_valuation_field hs1 = (to_valuation_field hs2) ∘ (spa.rational_open_data.localization_map h) :=
 begin
   refine localization.funext
     (to_valuation_field hs1 : localization A.R (powers r1.s) → valuation_field v)
-    ((to_valuation_field hs2) ∘ (Spa.rational_open_data.localization_map h) :
+    ((to_valuation_field hs2) ∘ (spa.rational_open_data.localization_map h) :
       localization A.R (powers r1.s) → valuation_field v) _,
   intro r,
   change Huber_ring.away.lift (r1.T) (r1.s) _ (localization.of r) =
-    Huber_ring.away.lift (r2.T) (r2.s) _ (Spa.rational_open_data.localization_map h (localization.of r)),
-  dunfold Spa.rational_open_data.localization_map,
+    Huber_ring.away.lift (r2.T) (r2.s) _ (spa.rational_open_data.localization_map h (localization.of r)),
+  dunfold spa.rational_open_data.localization_map,
   rw Huber_ring.away.lift_of,
   rw Huber_ring.away.lift_of,
   change _ = Huber_ring.away.lift (r2.T) (r2.s) _ (localization.of r),
@@ -153,27 +153,27 @@ end
 
 namespace rational_open_data
 
-lemma to_valuation_field_cts_aux {r : Spa.rational_open_data A} {v : Spa A}
+lemma to_valuation_field_cts_aux {r : spa.rational_open_data A} {v : spa A}
 (hv : v ∈ r.rational_open) : (Spv.out v.1) (r.s) ≠ 0 := hv.2
 
-def to_valuation_field {r : Spa.rational_open_data A} {v : Spa A} (hv : v ∈ r.rational_open) :
-  Spa.rational_open_data.localization r → valuation_field (Spv.out (v.val)) :=
+def to_valuation_field {r : spa.rational_open_data A} {v : spa A} (hv : v ∈ r.rational_open) :
+  spa.rational_open_data.localization r → valuation_field (Spv.out (v.val)) :=
 (to_valuation_field $ to_valuation_field_cts_aux hv)
 
-instance {r : Spa.rational_open_data A} {v : Spa A} (hv : v ∈ r.rational_open) :
+instance {r : spa.rational_open_data A} {v : spa A} (hv : v ∈ r.rational_open) :
   is_ring_hom (to_valuation_field hv) := by {delta to_valuation_field, apply_instance}
 
-/-- If v : Spa A is in D(T,s) then the map A(T/s) -> K_v is continuous -/
-theorem to_valuation_field_cts {r : Spa.rational_open_data A} {v : Spa A}
+/-- If v : spa A is in D(T,s) then the map A(T/s) -> K_v is continuous -/
+theorem to_valuation_field_cts {r : spa.rational_open_data A} {v : spa A}
   (hv : v ∈ r.rational_open) : continuous (to_valuation_field hv) :=
 Huber_pair.to_valuation_field_cts' hv.2 hv.1 v.2.1
 
 -- Now we need to show that if r1 <= r2 then these to_valuation_field maps
 -- are compatible.
 
-theorem to_valuation_field_commutes {r1 r2 : Spa.rational_open_data A} {v : Spa A}
+theorem to_valuation_field_commutes {r1 r2 : spa.rational_open_data A} {v : spa A}
   (hv1 : v ∈ r1.rational_open) (hv2 : v ∈ r2.rational_open) (h : r1 ≤ r2) :
-(to_valuation_field hv1) = (to_valuation_field hv2) ∘ (Spa.rational_open_data.localization_map h) :=
+(to_valuation_field hv1) = (to_valuation_field hv2) ∘ (spa.rational_open_data.localization_map h) :=
 to_valuation_field_commutes r1 r2 h hv1.2 hv2.2
 
 end rational_open_data
