@@ -143,8 +143,6 @@ def presheaf_of_types_equiv.symm (ℱ : presheaf_of_typesU X) (𝒢 : presheaf_o
   left_inv := h.right_inv,
   right_inv := h.left_inv }
 
---local infix ` ** `:50 := f_map.comp
-
 def presheaf_of_types_equiv.trans (ℱ : presheaf_of_typesU X)
   (𝒢 : presheaf_of_typesU Y)
   (ℋ : presheaf_of_typesU Z)
