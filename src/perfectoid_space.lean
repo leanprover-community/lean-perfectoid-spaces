@@ -1,9 +1,7 @@
 -- definitions of adic_space, preadic_space, Huber_pair etc
-import topology.algebra.group
 import adic_space
 import Tate_ring
 import power_bounded
-import for_mathlib.topological_groups -- for the predicate is_complete_hausdorff
 
 -- notation for the power bounded subring
 local postfix `ᵒ` : 66 := power_bounded_subring
