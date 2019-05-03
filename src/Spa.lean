@@ -55,15 +55,6 @@ begin
   { apply (out_mk v).ne_zero, },
 end
 
--- instance (A : Huber_pair) : topological_space (spa A) :=
--- topological_space.generate_from {U : set (spa A) | ∃ r s : A, U = basic_open r s}
-
--- lemma basic_open.is_open (r s : A) : is_open (basic_open r s) :=
--- topological_space.generate_open.basic (basic_open r s) ⟨r, s, rfl⟩
-
--- lemma basic_open.compact (r s : A) : compact (basic_open r s) :=
--- sorry
-
 lemma basic_open_eq (s : A) : basic_open s s = {v | v s ≠ 0} :=
 set.ext $ λ v, ⟨λ h, h.right, λ h, ⟨le_refl _, h⟩⟩
 
@@ -189,7 +180,6 @@ noncomputable def s_inv_aux (r1 r2 : rational_open_data A) (h : r1 ≤ r2) : uni
     refl,
 end)
 
--- spa.rational_open_data.localization_map : the map between the uncompleted rings A(T1/s1)->A(T2/s2)
 /-- The map A(T1/s1) -> A(T2/s2) coming from the inequality r1 ≤ r2 -/
 noncomputable def localization_map {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
   localization r1 → localization r2 :=
@@ -358,18 +348,6 @@ end rational_open_data
 instance (A : Huber_pair) : topological_space (spa A) :=
 topological_space.generate_from {U : set (spa A) | ∃ r : rational_open_data A, U = r.rational_open}
 
--- lemma rational_open.is_open (s : A) (T : set A) [h : fintype T] :
---   is_open (rational_open s T) :=
--- begin
---   rw rational_open_bInter,
---   apply is_open_inter,
---   { apply is_open_bInter ⟨h⟩,
---     intros,
---     apply basic_open.is_open },
---   { rw ← basic_open_eq s,
---     apply basic_open.is_open },
--- end
-
 lemma rational_open_inter.aux₁ {s₁ s₂ : A} {T₁ T₂ : set A}
   (h₁ : s₁ ∈ T₁) (h₂ : s₂ ∈ T₂) :
   rational_open s₁ T₁ ∩ rational_open s₂ T₂ ⊆
@@ -443,10 +421,6 @@ by simp
 
 def rational_basis (A : Huber_pair) : set (set (spa A)) :=
 {U : set (spa A) | ∃ r : rational_open_data A, U = r.rational_open }
-
--- def rational_basis (A : Huber_pair) : set (set (spa A)) :=
--- {U : set (spa A) | ∃ {s : A} {T : set A} {hfin : fintype T} {hopen : is_open (↑(ideal.span T) : set A)},
---                    U = rational_open s T }
 
 section
 open algebra lattice
@@ -556,66 +530,6 @@ begin
   { rw pow_succ, exact rational_basis.is_basis.mul _ _ hT ih }
 end
 
--- Rational opens form a basis of Spa(A). Current status: proof has some sorries.
--- Filling them may or may not be hard. We don't need it for the defition of an adic space.
-/-
-lemma exists_rational_open (X : set (spa A)) (hX : compact X)
-  (s : A) (hs : ∀ v ∈ X, (v : Spv A) s ≠ 0) :
-  ∃ (T : set A) (fin : fintype T) (hT : is_open (↑(ideal.span T) : set A)),
-    X ⊆ rational_open s T :=
-begin
-  rcases Huber_ring.exists_pod_subset (univ : set A) (filter.univ_mem_sets)
-    with ⟨A₀, _, _, _, ⟨_, emb, hf, I, fg, top⟩, hI⟩,
-  rcases fg with ⟨T', hT'⟩,
-  resetI,
-  let T : set A := algebra_map A '' ↑T',
-  haveI : fintype T := @set.fintype_image _ _ (by apply_instance) _ _ (finset_coe.fintype _),
-  have hT : is_open (↑(ideal.span T) : set A) :=
-  begin
-    rw is_ideal_adic_iff at top,
-    apply submodule.is_open_of_open_submodule,
-    refine ⟨_, is_open_ideal_map_open_embedding emb hf I (pow_one I ▸ top.1 1), _⟩,
-    change ideal.span _ = _ at hT',
-    rw [← hT', ← ideal.span_image],
-    exact le_refl _,
-  end,
-  have HT : is_topologically_nilpotent_subset T :=
-  begin
-    sorry
-  end,
-  have key : X ⊆ ⋃ (n ∈ (univ : set ℕ)), rational_open s (T^n) :=
-  begin
-    intros v hv,
-    rw set.mem_Union,
-    let U := (v : Spv A) ⁻¹' {γ | γ ≤ v s},
-    cases HT U _ with n hn,
-    refine ⟨n, _, _, _⟩,
-    work_on_goal 1 { simp },
-    work_on_goal 0 {
-      split,
-      { intros t ht,
-        apply hn,
-        exact ht },
-      { exact hs v hv } },
-    { apply mem_nhds_sets,
-      have H := v.property.1,
-      sorry,
-      sorry }
-  end,
-  work_on_goal 0 {
-    rcases compact_elim_finite_subcover_image hX _ key with ⟨c, csub, cfin, hc⟩,
-    work_on_goal 1 { rintros _ ⟨n, rfl⟩, apply rational_open.is_open },
-    refine ⟨T^(Sup c), by apply_instance, rational_basis.is_basis.pow T hT _, _⟩,
-    refine set.subset.trans hc _,
-    apply set.bUnion_subset,
-    intros n hn v hv,
-    refine ⟨_, hv.2⟩,
-    intros t ht,
-    sorry
-  },
-end
--/
-
 variable (A)
 
 def rational_open_data.univ : rational_open_data A :=
@@ -657,58 +571,6 @@ begin
 end
 
 variable {A}
-
-/-
--- Current status: proof is broken with 2 sorries.
--- We need this :-\
-lemma rational_basis.is_basis : topological_space.is_topological_basis (rational_basis A) :=
-begin
-  split,
-  { rintros U₁ ⟨s₁, T₁, hfin₁, hopen₁, H₁⟩ U₂ ⟨s₂, T₂, hfin₂, hopen₂, H₂⟩ v hv,
-    refine ⟨U₁ ∩ U₂, _, hv, subset.refl _⟩,
-    rw rational_open_add_s at H₁ H₂,
-    simp only [H₁, H₂, rational_open_inter, set.mem_insert_iff, true_or, eq_self_iff_true],
-    resetI,
-    refine ⟨_, _, infer_instance, _, rfl⟩,
-    apply rational_basis.is_basis.mul,
-    all_goals {
-      apply submodule.is_open_of_open_submodule,
-      refine ⟨_, _, ideal.span_mono (subset_insert _ _)⟩,
-      assumption } },
-  split,
-  { apply le_antisymm,
-    { exact subset_univ _ },
-    { apply subset_sUnion_of_mem,
-      refine ⟨(1 : A), {(1 : A)}, infer_instance, _, by simp⟩,
-      rw ideal.span_singleton_one,
-      exact is_open_univ, } },
-  { apply le_antisymm,
-    { delta spa.topological_space,
-      rw generate_from_le_iff_subset_is_open,
-      rintros _ ⟨r, s, rfl⟩,
-      rcases exists_rational_open _ (basic_open.compact r s) s (λ v hv, hv.2) with ⟨T, Tfin, hT, H⟩,
-      resetI,
-      have key : basic_open r s = rational_open s (insert r T) :=
-      begin
-        apply set.subset.antisymm,
-        all_goals { intros v hv, refine ⟨_, hv.2⟩ },
-        { intros t ht, rw mem_insert_iff at ht, rcases ht with rfl | ht,
-          { exact hv.1 },
-          { exact (H hv).1 t ht } },
-        { exact hv.1 r (mem_insert _ _) }
-      end,
-      rw key,
-      refine topological_space.generate_open.basic _ ⟨s, _, infer_instance, _, rfl⟩,
-      apply submodule.is_open_of_open_submodule,
-      exact ⟨_, hT, ideal.span_mono (subset_insert _ _)⟩ },
-    { rw generate_from_le_iff_subset_is_open,
-      rintros U ⟨s, T, hT, hT', H⟩,
-      subst H,
-      haveI := hT,
-      exact rational_open.is_open s T,
-    } }
-end #check id
--/
 
 section
 open topological_space
