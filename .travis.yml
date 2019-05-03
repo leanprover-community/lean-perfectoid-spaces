@@ -6,6 +6,7 @@ dist:
   - xenial
 before_install:
   - sudo apt-get update
+  - sudo apt-get install -y python3 python3-pip
 install:
   - |
     if [ ! -d "$HOME/.elan/toolchains/" ]; then
