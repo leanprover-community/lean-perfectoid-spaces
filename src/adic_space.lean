@@ -61,22 +61,14 @@ instance : topological_space X := X.top
 
 end PreValuedRingedSpace
 
-/-- An auxiliary category 𝒞.  -/
-structure 𝒞 (X : Type u) [topological_space X] :=
-(F : presheaf_of_topological_rings X)
-(valuation: ∀ x : X, Spv (stalk_of_rings F.to_presheaf_of_rings x))
-
-noncomputable def 𝒞.Spa (A : Huber_pair) : 𝒞 (spa A) :=
-{ F := spa.presheaf_of_topological_rings A,
-  valuation := λ x, Spv.mk (spa.presheaf.stalk_valuation x) }
-
 /- Remainder of this file:
 
-morphisms and isomorphisms in 𝒞.
-Open set in X -> induced 𝒞 structure
+morphisms and isomorphisms in PreValuedRingedSpace.
+Open set in X -> restrict structure to obtain object of PreValuedRingedSpace
 definition of adic space
 
-A morphism in 𝒞 is a map of top spaces, an f-map of presheaves, such that the induced
+A morphism in PreValuedRingedSpace is a map of top spaces,
+an f-map of presheaves, such that the induced
 map on the stalks pulls one valuation back to the other.
 -/
 
@@ -275,12 +267,6 @@ lemma stalk_map_comp' {X : Type u} [topological_space X]
   stalk_map (presheaf_of_rings.f_map_comp a b) x =
   (stalk_map a x) ∘ (stalk_map b (a.f x)) := by ext; apply stalk_map_comp
 
-structure 𝒞.map {X : Type u} [topological_space X] {Y : Type u} [topological_space Y]
-  (F : 𝒞 X) (G : 𝒞 Y) :=
-(fmap : presheaf_of_topological_rings.f_map F.F G.F)
-(stalk : ∀ x : X, ((F.valuation x).out.comap (stalk_map fmap.to_presheaf_of_rings_f_map x)).is_equiv
-  (G.valuation (fmap.f x)).out)
-
 namespace PreValuedRingedSpace
 open category_theory
 
@@ -372,85 +358,6 @@ instance large_category : large_category (PreValuedRingedSpace.{u}) :=
 
 end PreValuedRingedSpace
 
-/- this is to check that equality of maps is what you think it is; we don't need this though.
-def 𝒞.map_ext_aux {X : Type u} [topological_space X] {Y : Type u} [topological_space Y]
-  {F : 𝒞 X} {G : 𝒞 Y} {a b : 𝒞.map F G} (hf : a.fmap.f = b.fmap.f) (V : opens Y) : a.fmap.hf.comap V ⊆ b.fmap.hf.comap V :=
-begin
-  show a.fmap.f ⁻¹' V ⊆ b.fmap.f ⁻¹' V,
-  rw hf
-end
-
-def 𝒞.map_ext {X : Type u} [topological_space X] {Y : Type u} [topological_space Y]
-  {F : 𝒞 X} {G : 𝒞 Y} (a b : 𝒞.map F G) (hf : a.fmap.f = b.fmap.f)
-  (hflat : ∀ V : opens Y, ∀ s : G.F V,
-    a.fmap.f_flat V s = F.F.res _ _ (𝒞.map_ext_aux hf V) (b.fmap.f_flat V s)) : a = b :=
-begin
-  cases a with amap ast, cases b with bmap bst,
-  congr,
-  cases amap, cases bmap,
-  dsimp at hf,
-  cases hf,
-  congr,
-  funext V s,
-  dsimp at hflat,
-  convert hflat V s,
-  have Hid' : bmap_f_flat V s =
-      (((F.F).to_presheaf_of_rings).to_presheaf).res (continuous.comap bmap_hf V) (continuous.comap bmap_hf V) _
-        (bmap_f_flat V s),
-    rw F.F.Hid, refl,
-  convert Hid'
-end
--/
-
--- getting sick of these crappy proofs
-def 𝒞.map_id {X : Type u} [topological_space X] (F : 𝒞 X) : 𝒞.map F F :=
-{ fmap := presheaf_of_topological_rings.f_map_id,
-  stalk := λ x, begin
-    show valuation.is_equiv
-    (valuation.comap (Spv.out (F.valuation x))
-       (stalk_map
-          (presheaf_of_rings.f_map_id F.F.to_presheaf_of_rings)
-          x))
-    (Spv.out (F.valuation ((λ (x : X), x) x))),
-    simp only [stalk_map_id' F.F.to_presheaf_of_rings x],
-    convert valuation.is_equiv.refl,
-    unfold valuation.comap,
-    dsimp,
-    unfold_coes,
-    rw subtype.ext,
-  end }
-
-def 𝒞.map_comp {X : Type u} [topological_space X] {Y : Type u} [topological_space Y]
-  {Z : Type u} [topological_space Z] {F : 𝒞 X} {G : 𝒞 Y} {H : 𝒞 Z}
-  (a : 𝒞.map F G) (b : 𝒞.map G H) : 𝒞.map F H :=
-{ fmap := presheaf_of_topological_rings.f_map_comp a.fmap b.fmap,
-  stalk := λ x, begin refine valuation.is_equiv.trans _ (b.stalk (a.fmap.f x)),
-    let XXX := a.stalk x,
-    let YYY := valuation.is_equiv.comap (stalk_map (presheaf_of_topological_rings.f_map.to_presheaf_of_rings_f_map (b.fmap))
-          ((presheaf_of_topological_rings.f_map.to_presheaf_of_rings_f_map (a.fmap)).f x)) XXX,
-    show valuation.is_equiv _ (valuation.comap (Spv.out (G.valuation ((a.fmap).f x))) _),
-    refine valuation.is_equiv.trans _ YYY,
-    rw ←valuation.comap_comp,
-    suffices : (stalk_map
-          (presheaf_of_topological_rings.f_map.to_presheaf_of_rings_f_map
-             (presheaf_of_topological_rings.f_map_comp (a.fmap) (b.fmap)))
-          x) = (stalk_map (presheaf_of_topological_rings.f_map.to_presheaf_of_rings_f_map (a.fmap)) x ∘
-          stalk_map (presheaf_of_topological_rings.f_map.to_presheaf_of_rings_f_map (b.fmap))
-            ((presheaf_of_topological_rings.f_map.to_presheaf_of_rings_f_map (a.fmap)).f x)),
-      simp [this],
-    rw ←stalk_map_comp',
-    refl,
-  end }
-
-structure 𝒞.equiv {X : Type u} [topological_space X] {Y : Type u} [topological_space Y]
-  (F : 𝒞 X) (G : 𝒞 Y) :=
-(to_fun : 𝒞.map F G)
-(inv_fun : 𝒞.map G F)
-(left_inv : 𝒞.map_comp to_fun inv_fun = 𝒞.map_id F)
-(right_inv : 𝒞.map_comp inv_fun to_fun = 𝒞.map_id G)
-
-notation A ` ≅_𝒞 `:50 B := nonempty (𝒞.equiv A B)
-
 def presheaf_of_rings.restrict {X : Type u} [topological_space X] (U : opens X)
   (G : presheaf_of_rings X) : presheaf_of_rings U :=
   { F := λ V, G.F (topological_space.opens.map U V),
@@ -487,11 +394,6 @@ def presheaf_of_topological_rings.restrict {X : Type u} [topological_space X] (U
       (topological_space.opens.map U W) (topological_space.opens.map_mono HWV),
   ..presheaf_of_rings.restrict U G.to_presheaf_of_rings }
 
-noncomputable def 𝒞.restrict {X : Type u} [topological_space X] (U : opens X) (G : 𝒞 X) : 𝒞 U :=
-{ F := presheaf_of_topological_rings.restrict U G.F,
-  valuation :=
-    λ u, Spv.mk (valuation.comap (G.valuation u).out (presheaf_of_rings.restrict_stalk_map _ _)) }
-
 noncomputable instance PreValuedRingedSpace.restrict {X : PreValuedRingedSpace.{u}} :
   has_coe (opens X) PreValuedRingedSpace :=
 { coe := λ U,
@@ -500,29 +402,6 @@ noncomputable instance PreValuedRingedSpace.restrict {X : PreValuedRingedSpace.{
     presheaf := presheaf_of_topological_rings.restrict U X.presheaf,
     valuation :=
       λ u, Spv.mk (valuation.comap (X.valuation u).out (presheaf_of_rings.restrict_stalk_map _ _)) } }
-
-section 𝒱
-local attribute [instance] sheaf_of_topological_rings.uniform_space
-
-/-- Wedhorn's category 𝒱 -/
-structure 𝒱 (X : Type u) [topological_space X] :=
-(ℱ : sheaf_of_topological_rings X)
-(complete : ∀ U : opens X, complete_space (ℱ.F.F U))
-(valuation : ∀ x : X, Spv (stalk_of_rings ℱ.to_presheaf_of_topological_rings.to_presheaf_of_rings x))
-(local_stalks : ∀ x : X, is_local_ring (stalk_of_rings ℱ.to_presheaf_of_rings x))
-(supp_maximal : ∀ x : X, ideal.is_maximal (_root_.valuation.supp (valuation x).out))
-
-end 𝒱
-
-def 𝒱.to_𝒞 {X : Type u} [topological_space X] (ℱ : 𝒱 X) : 𝒞 X :=
-{ F := ℱ.ℱ.to_presheaf_of_topological_rings,
-  valuation := ℱ.valuation}
-
-structure adic_space (X : Type) [topological_space X] :=
-(locally_ringed_valued_space : 𝒱 X)
-(Hlocally_affinoid : ∃ (I : Type u) (U : I → opens X) (Hcover : set.Union (λ i, (U i).1) = set.univ)
-  (R : I → Huber_pair),
-  ∀ i : I, nonempty (𝒞.equiv (𝒞.Spa (R i)) (𝒞.restrict (U i) locally_ringed_valued_space.to_𝒞)))
 
 section
 local attribute [instance] sheaf_of_topological_rings.uniform_space
@@ -551,16 +430,6 @@ instance : has_coe CLVRS PreValuedRingedSpace.{0} :=
 ⟨to_PreValuedRingedSpace⟩
 
 instance : large_category CLVRS := induced_category.category to_PreValuedRingedSpace
-
--- noncomputable instance restrict (X : CLVRS.{u}) : has_coe (opens X) CLVRS.{u} :=
--- { coe := λ U,
---   { space := U,
---     top := by apply_instance,
---     sheaf := _,
---     complete := _,
---     valuation := _,
---     local_stalks := _,
---     suppp_maximal := _ } }
 
 end CLVRS
 
@@ -591,8 +460,3 @@ open category_theory
 instance : large_category AdicSpace := category_theory.full_subcategory _
 
 end AdicSpace
-
--- note that currently we can't even prove that Spa(A) is a pre-adic space,
--- because we don't know that the rational opens are a basis. I didn't
--- even bother defining a pre-adic space -- one would have to define 𝒱^{pre}
--- which is 𝒱 with the sheaf axiom dropped.
