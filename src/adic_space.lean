@@ -529,7 +529,7 @@ local attribute [instance] sheaf_of_topological_rings.uniform_space
 
 /--Category of topological spaces endowed with a sheaf of complete topological rings
 and (an equivalence class of) valuations on the stalks (which are required to be local rings).-/
-structure CVLRS :=
+structure CLVRS :=
 (space : Type) -- change this to (Type u) to enable universes
 (top   : topological_space space)
 (sheaf : sheaf_of_topological_rings.{0 0} space)
@@ -540,18 +540,18 @@ structure CVLRS :=
 
 end
 
-namespace CVLRS
+namespace CLVRS
 open category_theory
 
-def to_PreValuedRingedSpace (X : CVLRS) : PreValuedRingedSpace.{0} :=
+def to_PreValuedRingedSpace (X : CLVRS) : PreValuedRingedSpace.{0} :=
 { presheaf := _, ..X }
 
-instance : has_coe CVLRS PreValuedRingedSpace.{0} :=
+instance : has_coe CLVRS PreValuedRingedSpace.{0} :=
 ⟨to_PreValuedRingedSpace⟩
 
-instance : large_category CVLRS := induced_category.category to_PreValuedRingedSpace
+instance : large_category CLVRS := induced_category.category to_PreValuedRingedSpace
 
--- noncomputable instance restrict (X : CVLRS.{u}) : has_coe (opens X) CVLRS.{u} :=
+-- noncomputable instance restrict (X : CLVRS.{u}) : has_coe (opens X) CLVRS.{u} :=
 -- { coe := λ U,
 --   { space := U,
 --     top := by apply_instance,
@@ -561,7 +561,7 @@ instance : large_category CVLRS := induced_category.category to_PreValuedRingedS
 --     local_stalks := _,
 --     suppp_maximal := _ } }
 
-end CVLRS
+end CLVRS
 
 noncomputable def Spa' (A : Huber_pair) : PreValuedRingedSpace :=
 { space     := Spa A,
@@ -574,14 +574,14 @@ open lattice
 -- Notation for the proposition that an isomorphism exists between A and B
 notation A `≊` B := nonempty (A ≅ B)
 
-namespace CVLRS
+namespace CLVRS
 
-def is_adic_space (X : CVLRS) : Prop :=
+def is_adic_space (X : CLVRS) : Prop :=
 ∀ x : X, ∃ (U : opens X) (R : Huber_pair), x ∈ U ∧ (Spa' R ≊ U)
 
-end CVLRS
+end CLVRS
 
-def AdicSpace := {X : CVLRS // X.is_adic_space}
+def AdicSpace := {X : CLVRS // X.is_adic_space}
 
 namespace AdicSpace
 open category_theory

@@ -18,16 +18,16 @@ structure perfectoid_ring (R : Type) [Huber_ring R] extends Tate_ring R : Prop :
 (ramified : ∃ ϖ : pseudo_uniformizer R, (ϖ^p : Rᵒ) ∣ p)
 (Frob     : ∀ a : Rᵒ, ∃ b : Rᵒ, (p : Rᵒ) ∣ (b^p - a : Rᵒ))
 
--- CVLRS ("complete valued locally ringed space")
--- is a category whose objects are topological spaces with a presheaf of topological rings
+-- CLVRS ("complete locally valued ringed space") is a category
+-- whose objects are topological spaces with a presheaf of topological rings
 -- and an equivalence class of valuation on each stalk; a perfectoid space is locally
--- isomorphic to Spa(A) with A a perfectoid ring, and the isomorphism can be checked in CVLRS.
+-- isomorphic to Spa(A) with A a perfectoid ring, and the isomorphism can be checked in CLVRS.
 
-/-- Condition for an object of CVLRS to be perfectoid: every point should have an open
+/-- Condition for an object of CLVRS to be perfectoid: every point should have an open
 neighbourhood isomorphic to Spa(A) for some perfectoid ring A.-/
-def CVLRS.is_perfectoid (X : CVLRS) : Prop :=
+def CLVRS.is_perfectoid (X : CLVRS) : Prop :=
 ∀ x : X, ∃ (U : opens X) (A : Huber_pair) [perfectoid_ring A],
   (x ∈ U) ∧ (Spa' A ≊ U)
 
 /-- The category of perfectoid spaces.-/
-def PerfectoidSpace := {X : CVLRS // X.is_perfectoid}
+def PerfectoidSpace := {X : CLVRS // X.is_perfectoid}
