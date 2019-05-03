@@ -23,30 +23,11 @@ structure perfectoid_ring (R : Type) [Huber_ring R] extends Tate_ring R : Prop :
 -- and an equivalence class of valuation on each stalk; a perfectoid space is locally
 -- isomorphic to Spa(A) with A a perfectoid ring, and the isomorphism can be checked in CVLRS.
 
-namespace CVLRS
-
 /-- Condition for an object of CVLRS to be perfectoid: every point should have an open
 neighbourhood isomorphic to Spa(A) for some perfectoid ring A.-/
-def is_perfectoid (X : CVLRS) : Prop :=
+def CVLRS.is_perfectoid (X : CVLRS) : Prop :=
 ∀ x : X, ∃ (U : opens X) (A : Huber_pair) [perfectoid_ring A],
   (x ∈ U) ∧ nonempty (Spa' A ≅ U)
 
-end CVLRS
-
+/-- The category of perfectoid spaces.-/
 def PerfectoidSpace := {X : CVLRS // X.is_perfectoid}
-
-namespace PerfectoidSpace
-open category_theory
-
-instance : large_category PerfectoidSpace := category_theory.full_subcategory _
-
-def to_AdicSpace (X : PerfectoidSpace) : AdicSpace :=
-{ property :=
-  begin
-    intro x,
-    rcases X.property x with ⟨U, A, hA, hx, hU⟩,
-    use [U, A, hx, hU]
-  end,
-  ..X }
-
-end PerfectoidSpace
