@@ -571,10 +571,13 @@ noncomputable def Spa' (A : Huber_pair) : PreValuedRingedSpace :=
 
 open lattice
 
+-- Notation for the proposition that an isomorphism exists between A and B
+notation A `≊` B := nonempty (A ≅ B)
+
 namespace CVLRS
 
 def is_adic_space (X : CVLRS) : Prop :=
-∀ x : X, ∃ (U : opens X) (R : Huber_pair), x ∈ U ∧ nonempty (Spa' R ≅ U)
+∀ x : X, ∃ (U : opens X) (R : Huber_pair), x ∈ U ∧ (Spa' R ≊ U)
 
 end CVLRS
 
