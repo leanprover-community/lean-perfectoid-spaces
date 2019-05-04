@@ -143,14 +143,14 @@ local attribute [instance] to_uniform_space
 -- Patrick is not sure f ≠ ⊥ cannot be deduced from the other condition. Too tired
 lemma cauchy_iff (f : filter A) : cauchy f ↔ f ≠ ⊥ ∧ ∀ i, ∃ M ∈ f, ∀ x y ∈ M,  y - x ∈  G i :=
 begin
-  suffices : filter.prod f f ≤ uniformity A ↔ ∀ (i : ι), ∃ (M : set A) (H : M ∈ f), ∀ (x y : A), x ∈ M → y ∈ M → y - x ∈ G i,
+  suffices : filter.prod f f ≤ uniformity A ↔ ∀ (i : ι), ∃ (M : set A) (H : M ∈ f), ∀ x y ∈ M, y - x ∈ G i,
     by split; rintro ⟨nebot, H⟩; [ rw this at H, rw ← this at H] ; exact ⟨nebot, H⟩,
   rw uniformity_eq_comap_nhds_zero',
   rw ← map_le_iff_le_comap,
   rw le_nhds_zero,
   simp only [mem_map, mem_prod_same_iff],
   split ; intros h i ; rcases h i with ⟨M, M_in, hM⟩ ; use [M, M_in] ;
-  [rw set.prod_subset_iff at hM, rw set.prod_subset_iff] ; exact hM,
+  [rw set.prod_subset_iff at hM, rw set.prod_subset_iff] ; exact λ x y xin yin, hM x xin y yin,
 end
 
 section continuity
