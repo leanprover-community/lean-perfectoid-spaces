@@ -5,7 +5,6 @@ import Huber_pair
 import Huber_ring.localization
 
 import for_mathlib.nonarchimedean.basic
-import for_mathlib.data.set.finite
 import for_mathlib.uniform_space.ring -- need completions of rings plus UMP
 import for_mathlib.group -- some stupid lemma about units
 import for_mathlib.sheaves.presheaf_of_topological_rings
