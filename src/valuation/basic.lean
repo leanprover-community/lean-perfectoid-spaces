@@ -257,11 +257,11 @@ end
 -- Restriction of a Γ₂-valued valuation to a subgroup Γ₁ is still a valuation
 theorem valuation_of_valuation [is_group_hom ψ] (Hiψ : function.injective ψ) (H : is_valuation v₂) :
 is_valuation v₁ :=
-{ map_zero := with_zero.map_inj Hiψ $
+{ map_zero := with_zero.injective_map Hiψ $
     by erw [H12, H.map_zero, ← with_zero.map_zero],
-  map_one := with_zero.map_inj Hiψ $
+  map_one := with_zero.injective_map Hiψ $
     by erw [H12, H.map_one, with_zero.map_some, is_group_hom.map_one ψ]; refl,
-  map_mul := λ r s, with_zero.map_inj Hiψ $
+  map_mul := λ r s, with_zero.injective_map Hiψ $
     by rw [H12, H.map_mul, ←H12 r, ←H12 s]; exact (with_zero.map_mul _ _ _).symm,
   map_add := λ r s,
   begin
@@ -338,8 +338,8 @@ lemma map {v' : valuation R Γ} (f : Γ → Γ₁) [is_group_hom f] (inf : injec
   (h : v.is_equiv v') : (map v f hf).is_equiv (map v' f hf) := λ r s, begin
   show (with_zero.map f) (v r) ≤ (with_zero.map f) (v s) ↔
     (with_zero.map f) (v' r) ≤ (with_zero.map f) (v' s),
-  rw ←linear_order_le_iff_of_monotone_injective (with_zero.map_inj inf) (with_zero.map_monotone hf),
-  rw ←linear_order_le_iff_of_monotone_injective (with_zero.map_inj inf) (with_zero.map_monotone hf),
+  rw ←linear_order_le_iff_of_monotone_injective (with_zero.injective_map inf) (with_zero.map_monotone hf),
+  rw ←linear_order_le_iff_of_monotone_injective (with_zero.injective_map inf) (with_zero.map_monotone hf),
   apply h,
 end
 
