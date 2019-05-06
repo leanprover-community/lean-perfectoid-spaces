@@ -14,21 +14,18 @@ Our definition of Spv is currently the predicates which come from a
 valuation. There is another approach though: Prop 2.20 (p16) of
 https://homepages.uni-regensburg.de/~maf55605/contin_valuation.pdf
 classifies the relations which come from valuations as those satisfying
-some axioms. See also Wedhorn 4.7. Here's why such a theorem must exist: given
-a relation coming from a valuation, we can reconstruct the support of the
-valuation (v r ≤ v 0), the relation on R / support coming from `on_quot v`, the relation on
-Frac(R/supp) coming from `on_frac v`, the things of valuation 1 in this
-field, and hence the value group of the valuation. The induced canonical
-valuation is a valuation we seek. This argument only uses a finite number of
-facts about the inequality, and so the theorem is that an inequality comes
-from a valuation if and only if these facts are satisfied. I'll refer to
-this argument (which currently is not in the repo) as "the 2.20 trick".
-Because it's not in the repo, some of our constructions are noncomputable
-(and could be made computable).
+some axioms. See also Wedhorn 4.7.
+TODO(jmc): This observation is also somewhere in Huber. But I currently don't
+have the paper at hand.
 
-The dead code after #exit is results which would be useful if we were
-to try and make things computable. Note that `out` is basically never
-computable, but `lift` often is.
+Here's why such a theorem must exist: given a relation coming from a valuation,
+we can reconstruct the support of the valuation (v r ≤ v 0), the relation on
+R / support coming from `on_quot v`, the relation on Frac(R/supp) coming from
+`on_frac v`, the things of valuation 1 in this field, and hence the value group
+of the valuation. The induced canonical valuation is a valuation we seek. This
+argument only uses a finite number of facts about the inequality, and so the
+theorem is that an inequality comes from a valuation if and only if these facts
+are satisfied.
 
 -/
 
@@ -62,16 +59,12 @@ definition mk (v : valuation R Γ) : Spv R :=
 
 @[simp] lemma mk_val (v : valuation R Γ) : (mk v).val = λ r s, v r ≤ v s := rfl
 
--- This definition uses choice. We could avoid it if we used the 2.20 trick.
 /-- The value group attached to a term of type Spv R -/
 definition out_Γ (v : Spv R) : Type u₀ := classical.some v.2
 
--- This instance could be made computable following the 2.20 trick.
 noncomputable instance (v : Spv R) : linear_ordered_comm_group (out_Γ v) :=
 classical.some $ classical.some_spec v.2
 
--- This instance could be made computable following the 2.20 trick.
--- Mario Carneiro points out that `out` is often noncomputable though.
 /-- An explicit valuation attached to a term of type Spv R -/
 noncomputable definition out (v : Spv R) : valuation R (out_Γ v) :=
 classical.some $ classical.some_spec $ classical.some_spec v.2
@@ -87,7 +80,6 @@ end
 lemma out_mk (v : valuation R Γ) : (out (mk v)).is_equiv v :=
 classical.some_spec (classical.some_spec (classical.some_spec (mk v).2))
 
--- This definition could be made computable if we used the 2.20 trick
 noncomputable def lift {X}
   (f : Π ⦃Γ₀ : Type u₀⦄ [linear_ordered_comm_group Γ₀], valuation R Γ₀ → X) (v : Spv R) : X :=
 f (out v)
