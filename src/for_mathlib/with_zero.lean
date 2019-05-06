@@ -1,6 +1,5 @@
 import data.equiv.basic
 import group_theory.subgroup
-import for_mathlib.option_inj
 
 universes u v
 
@@ -88,8 +87,8 @@ begin
   { rw h, exact map_zero }
 end
 
-theorem map_inj {f : α → β} (H : function.injective f) :
-function.injective (map f) := option.map_inj H
+theorem injective_map {f : α → β} (H : function.injective f) :
+function.injective (map f) := option.injective_map H
 
 theorem map_monotone [preorder α] [preorder β] {f : α → β} (H : monotone f) :
   monotone (map f) :=

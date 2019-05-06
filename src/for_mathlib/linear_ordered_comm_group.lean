@@ -2,7 +2,6 @@ import data.equiv.basic
 import group_theory.subgroup
 import set_theory.cardinal
 import for_mathlib.subrel
-import for_mathlib.option_inj
 import tactic.abel
 
 import for_mathlib.with_zero

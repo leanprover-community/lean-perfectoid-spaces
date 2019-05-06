@@ -2,7 +2,6 @@ import topology.algebra.ring
 import valuation_spectrum
 import valuation.topology -- for valuation top on K_v
 
-import for_mathlib.logic
 import for_mathlib.nonarchimedean.basic -- continuous_of_continuous_at_zero
 
 universes u u₀ u₁ u₂ u₃

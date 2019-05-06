@@ -1,6 +1,5 @@
 import for_mathlib.nonarchimedean.basic
 import for_mathlib.topological_rings
-import for_mathlib.data.set.basic
 
 open set filter function lattice add_group_with_zero_nhd
 
