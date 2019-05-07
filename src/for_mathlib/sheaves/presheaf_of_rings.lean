@@ -24,6 +24,10 @@ instance {α : Type u} [topological_space α]
 attribute [instance] presheaf_of_rings.Fring
 attribute [instance] presheaf_of_rings.res_is_ring_hom
 
+instance presheaf_of_rings.comm_ring {α : Type u} [topological_space α]
+  (F : presheaf_of_rings α) (U : topological_space.opens α) : comm_ring (F U) :=
+F.Fring U
+
 namespace presheaf_of_rings
 
 variables {α : Type u} {β : Type v} [topological_space α] [topological_space β]

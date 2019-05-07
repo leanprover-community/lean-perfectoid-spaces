@@ -17,6 +17,12 @@ import continuous_valuations
 import r_o_d_completion stalk_valuation
 import Huber_pair
 
+/- adic_space
+
+TODO (kmb) : write overview of file (once the instances are in the right place)
+
+-/
+
 universe u
 
 open nat function
@@ -25,25 +31,19 @@ open spa
 
 namespace sheaf_of_topological_rings
 
-instance topological_space {X : Type u} [topological_space X] (𝒪X : sheaf_of_topological_rings X)
-  (U : opens X) :
-  topological_space (𝒪X.F.F U) := presheaf_of_topological_rings.topological_space_sections 𝒪X.F U
-
-instance topological_ring {X : Type u} [topological_space X] (𝒪X : sheaf_of_topological_rings X)
-  (U : opens X) :
-  topological_ring (𝒪X.F.F U) := presheaf_of_topological_rings.Ftop_ring 𝒪X.F U
-
-instance topological_add_group {X : Type u} [topological_space X] (𝒪X : sheaf_of_topological_rings X)
-  (U : opens X) :
-  topological_add_group (𝒪X.F.F U) :=
-topological_ring.to_topological_add_group (𝒪X.F.F U)
-
+-- TODO -- KMB just deleted three instances (and the project still compiles)
+-- but here's a def which isn't an instance and I have no idea why not.
 def uniform_space {X : Type u} [topological_space X] (𝒪X : sheaf_of_topological_rings X)
   (U : opens X) : uniform_space (𝒪X.F.F U) :=
 topological_add_group.to_uniform_space (𝒪X.F.F U)
 
 end sheaf_of_topological_rings
 
+/-- A convenient auxiliary category whose objects are topological spaces equipped with
+a presheaf of topological rings and on each stalk (considered as abstract ring) an
+equivalence class of valuations. The point of this category is that the local isomorphism
+between a general adic space and an affinoid model Spa(A) can be checked in this category.
+-/
 structure PreValuedRingedSpace :=
 (space : Type u)
 (top   : topological_space space)
@@ -54,10 +54,13 @@ namespace PreValuedRingedSpace
 
 variables (X : PreValuedRingedSpace.{u})
 
+/-- coercion from a PreValuedRingedSpace to the underlying topological space-/
 instance : has_coe_to_sort PreValuedRingedSpace.{u} :=
 { S := Type u,
   coe := λ X, X.space }
 
+/-- Adding the fact that the underlying space of a PreValuedRingedSpace is a topological
+space, to the type class inference system -/
 instance : topological_space X := X.top
 
 end PreValuedRingedSpace
@@ -72,14 +75,6 @@ A morphism in PreValuedRingedSpace is a map of top spaces,
 an f-map of presheaves, such that the induced
 map on the stalks pulls one valuation back to the other.
 -/
-
-instance presheaf_of_rings.comm_ring {X : Type u} [topological_space X]
-  (F : presheaf_of_rings X) (U : opens X) : comm_ring (F U) :=
-F.Fring U
-
-instance presheaf_of_topological_rings.comm_ring {X : Type u} [topological_space X]
-  (F : presheaf_of_topological_rings X) (U : opens X) : comm_ring (F U) :=
-F.Fring U
 
 structure presheaf_of_rings.f_map
   {X : Type u} [topological_space X] {Y : Type u} [topological_space Y]

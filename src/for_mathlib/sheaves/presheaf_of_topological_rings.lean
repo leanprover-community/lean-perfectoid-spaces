@@ -29,6 +29,10 @@ F.Ftop U
 attribute [instance] presheaf_of_topological_rings.Ftop
 attribute [instance] presheaf_of_topological_rings.Ftop_ring
 
+instance presheaf_of_topological_rings.comm_ring {X : Type u} [topological_space X]
+  (F : presheaf_of_topological_rings X) (U : opens X) : comm_ring (F U) :=
+F.Fring U
+
 namespace presheaf_of_topological_rings
 
 variables {α : Type u} {β : Type v} [topological_space α] [topological_space β]
