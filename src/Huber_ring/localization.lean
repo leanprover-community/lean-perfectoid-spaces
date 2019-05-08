@@ -118,7 +118,7 @@ lemma K.aux (L : finset A) (h : (↑L : set A) ⊆ ideal.span T) :
 begin
   delta ideal.span at h,
   erw span_eq_map_lc at h,
-  choose s hs using finset.subset_image_iff.mp L _ _ h,
+  choose s hs using finset.subset_image_iff.mp h,
   use s.bind (λ f, f.frange),
   rcases hs with ⟨hs, rfl⟩,
   intros l hl,
