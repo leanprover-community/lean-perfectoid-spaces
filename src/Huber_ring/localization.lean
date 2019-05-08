@@ -4,7 +4,6 @@ import tactic.ring
 
 import Huber_ring.basic
 
-import for_mathlib.finset
 import for_mathlib.topological_rings
 import for_mathlib.algebra
 import for_mathlib.submodule
@@ -118,9 +117,9 @@ lemma K.aux (L : finset A) (h : (↑L : set A) ⊆ ideal.span T) :
 begin
   delta ideal.span at h,
   erw span_eq_map_lc at h,
-  choose s hs using finset.exists_finset_of_subset_image L _ _ h,
+  choose s hs using finset.subset_image_iff.mp h,
   use s.bind (λ f, f.frange),
-  rcases hs with ⟨rfl, hs⟩,
+  rcases hs with ⟨hs, rfl⟩,
   intros l hl,
   rcases finset.mem_image.mp hl with ⟨f, hf, rfl⟩,
   apply submodule.sum_mem_span,
