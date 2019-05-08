@@ -6,6 +6,7 @@ import for_mathlib.submonoid
 section
 variables {α : Type*} [group α] {β : Type*} [group β]
 
+-- The next lemma is PR'd to mathlib in #994
 @[to_additive is_add_subgroup.inter]
 instance is_subgroup.inter (s₁ s₂ : set α) [is_subgroup s₁] [is_subgroup s₂] :
   is_subgroup (s₁ ∩ s₂) :=

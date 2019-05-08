@@ -1,3 +1,7 @@
+
+
+-- The contents of this file are PR'd to mathlib in #994
+
 import group_theory.submonoid
 
 section
