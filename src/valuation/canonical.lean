@@ -3,9 +3,8 @@ import valuation.basic
 import for_mathlib.quotient_group
 import for_mathlib.subgroup
 import for_mathlib.group -- group_equiv
-import for_mathlib.order -- preorder.lift'
-/-
 
+/-
 The purpose of this file is to define a "canonical" valuation equivalent to
 a given valuation. The whole raison d'etre for this is that there are set-theoretic
 issues with the equivalence "relation" on valuations, because the target group
