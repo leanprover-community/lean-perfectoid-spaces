@@ -460,7 +460,7 @@ lemma comap_on_frac {R : Type u₀} [integral_domain R]
       simp at H,
       replace H := fraction_ring.eq_zero_of _ H,
       refine fraction_ring.mem_non_zero_divisors_iff_ne_zero.mp _ H,
-      apply val_prop _,
+      apply subtype.val_prop _,
       apply_instance },
   end,
   mpr := λ h, comap _ h }
