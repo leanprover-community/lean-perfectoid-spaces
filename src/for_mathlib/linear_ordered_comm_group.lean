@@ -1,7 +1,7 @@
 import data.equiv.basic
 import group_theory.subgroup
 import set_theory.cardinal
-import for_mathlib.subrel
+import order.basic
 import tactic.abel
 
 import for_mathlib.with_zero
@@ -128,7 +128,7 @@ definition convex_linear_order : linear_order {S : set α // is_convex S} :=
             { exact hnnx (@@is_convex.mem_of_between _ hx hmim hn1 $ @@is_convex.inv_mem _ hx hmx) },
             { exact hnnx (inv_inv n ▸ (@@is_convex.inv_mem _ hx $ @@is_convex.mem_of_between _ hx (inv_le_inv_of_le hnm) hni1 $ @@is_convex.inv_mem _ hx hmx)) } } } }
     end,
-  .. subrel.partial_order }
+  .. subtype.partial_order is_convex }
 
 def ker (f : α → β) (hf : is_hom f) : set α :=
 { x | f x = 1 }
