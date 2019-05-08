@@ -1,5 +1,4 @@
 import ring_theory.ideal_operations data.equiv.algebra
-import for_mathlib.subtype
 
 universes u u₁ u₂ v v₁ w
 
