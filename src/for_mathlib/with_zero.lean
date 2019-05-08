@@ -3,7 +3,7 @@ import group_theory.subgroup
 
 universes u v
 
--- this should be in order.bounded_lattice with with_bot.partial_order
+-- This instance has been PR'd to mathlib in #996
 instance {α : Type*} [preorder α] : preorder (with_bot α) :=
 { le          := λ o₁ o₂ : option α, ∀ a ∈ o₁, ∃ b ∈ o₂, a ≤ b,
   lt          := (<),
@@ -18,6 +18,7 @@ instance {α : Type*} [preorder α] : preorder (with_bot α) :=
 
 namespace with_zero
 
+-- This instance has been PR'd to mathlib in #996
 instance {α : Type*} [preorder α] : preorder (with_zero α) :=
 show preorder (with_bot α), by apply_instance
 
