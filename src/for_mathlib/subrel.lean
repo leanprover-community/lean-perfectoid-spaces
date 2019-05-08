@@ -1,3 +1,6 @@
+
+-- I think this is `subtype.partial_order` from `order/basic` in mathlib.
+
 import order.complete_lattice order.order_iso
 
 namespace subrel
