@@ -4,7 +4,6 @@ import tactic.ring
 
 import Huber_ring.basic
 
-import for_mathlib.finset
 import for_mathlib.topological_rings
 import for_mathlib.algebra
 import for_mathlib.submodule
