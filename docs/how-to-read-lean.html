@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8">
+
+<title>Lean perfectoid spaces</title>
+<link rel="canonical" href="https://leanprover-community.github.io/lean-perfectoid-spaces/" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#157878">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="pygments.css">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">Lean perfectoid spaces</h1>
+      <h2 class="project-tagline">by Kevin Buzzard, Johan Commelin, and Patrick Massot</h2>
+      
+        <a href="https://github.com/leanprover-community/lean-perfectoid-spaces" class="btn">View on GitHub</a>
+    </section>
+
+    <section class="main-content">
+
+			<h1 id="how-to-read-lean">How to read Lean</h1>
+<p>On this page we explain how to read the file <a href="https://github.com/leanprover-community/lean-perfectoid-spaces/blob/master/src/perfectoid_space.lean"><code>perfectoid_space.lean</code></a> step by step.</p>
+<p>We start with the first 4 lines</p>
+<div class="highlight"><pre><span class="c1">-- We import definitions of adic_space, preadic_space, Huber_pair, etc</span>
+<span class="kn">import</span> <span class="n">adic_space</span>
+<span class="kn">import</span> <span class="n">Tate_ring</span>
+<span class="kn">import</span> <span class="n">power_bounded</span>
+</pre></div>
+
+<p>These lines import other definitions, theorems, notation, etc… from other files in the library. This import is transitive, so this will automatically import a large part of the library (on algebra, topology, etc, and ultimately basic logic).</p>
+<div class="highlight"><pre><span class="kn">section</span>
+<span class="c1">-- notation for the power bounded subring</span>
+<span class="kn">local</span> <span class="kd">postfix</span> <span class="bp">`ᵒ`</span> <span class="o">:</span> <span class="mi">66</span> <span class="o">:=</span> <span class="n">power_bounded_subring</span>
+</pre></div>
+
+<p>We start a section, and then setup notation for the power bounded subring. Because a postfix <code>ᵒ</code> is also useful as notation for other concepts (for example, the identity component of a topological group…) we choose to make this notation local to this file, instead of global notation for every file that imports this file.</p>
+<div class="highlight"><pre><span class="kn">open</span> <span class="n">power_bounded_subring</span> <span class="n">topological_space</span>
+</pre></div>
+
+<p>This line of this block opens two namespaces. Namespaces exist to avoid naming conflicts. As an example, there are functions <code>nat.add</code> and <code>int.add</code>, that define the addition on natural numbers and integers respectively. Thus we have two functions <code>add</code>, one in the namespace <code>nat</code>, and the other in the namespace <code>int</code>.</p>
+<p>By opening a namespace, we don't have to write down the namespace prefix when referring to a definition or lemma in the namespace. For example, <code>topological_space.opens X</code> is the type of all open subsets of <code>X</code>. But because we open the namespace <code>topological_space</code>, we can simply write <code>opens X</code> later on in the file.</p>
+<div class="highlight"><pre><span class="kd">parameter</span> <span class="o">(</span><span class="n">p</span> <span class="o">:</span> <span class="n">ℕ</span><span class="o">)</span>
+<span class="kd">variable</span> <span class="o">[</span><span class="n">is_prime</span> <span class="n">p</span><span class="o">]</span>
+</pre></div>
+
+<p>Once and for all (in this file) we fix a natural number <code>p</code>. We also assume that this number is prime.</p>
+<div class="highlight"><pre><span class="sd">/-- A perfectoid ring, following Fontaine Sem. Bourbaki-/</span>
+<span class="kd">structure</span> <span class="n">perfectoid_ring</span> <span class="o">(</span><span class="n">R</span> <span class="o">:</span> <span class="kt">Type</span><span class="o">)</span> <span class="o">[</span><span class="n">Huber_ring</span> <span class="n">R</span><span class="o">]</span> <span class="kd">extends</span> <span class="n">Tate_ring</span> <span class="n">R</span> <span class="o">:</span> <span class="kt">Prop</span> <span class="o">:=</span>
+<span class="o">(</span><span class="n">complete</span> <span class="o">:</span> <span class="n">is_complete_hausdorff</span> <span class="n">R</span><span class="o">)</span>
+<span class="o">(</span><span class="n">uniform</span>  <span class="o">:</span> <span class="n">is_uniform</span> <span class="n">R</span><span class="o">)</span>
+<span class="o">(</span><span class="n">ramified</span> <span class="o">:</span> <span class="bp">∃</span> <span class="n">ϖ</span> <span class="o">:</span> <span class="n">pseudo_uniformizer</span> <span class="n">R</span><span class="o">,</span> <span class="o">(</span><span class="n">ϖ</span><span class="bp">^</span><span class="n">p</span> <span class="o">:</span> <span class="n">R</span><span class="bp">ᵒ</span><span class="o">)</span> <span class="bp">∣</span> <span class="n">p</span><span class="o">)</span>
+<span class="o">(</span><span class="n">Frob</span> <span class="o">:</span> <span class="bp">∀</span> <span class="n">a</span> <span class="o">:</span> <span class="n">R</span><span class="bp">ᵒ</span><span class="o">,</span> <span class="bp">∃</span> <span class="n">b</span> <span class="o">:</span> <span class="n">R</span><span class="bp">ᵒ</span><span class="o">,</span> <span class="o">(</span><span class="n">p</span> <span class="o">:</span> <span class="n">R</span><span class="bp">ᵒ</span><span class="o">)</span> <span class="bp">∣</span> <span class="o">(</span><span class="n">b</span><span class="bp">^</span><span class="n">p</span> <span class="bp">-</span> <span class="n">a</span> <span class="o">:</span> <span class="n">R</span><span class="bp">ᵒ</span><span class="o">))</span>
+</pre></div>
+
+<p>In this block there are a lot of things going on. First of all, this block defines a predicate, because it is of the form <code>structure something : Prop := something</code>. Indeed, <code>Prop</code> is the type of propositions: theorems, lemmas, properties, predicates… The predicate in question is <code>perfectoid_ring</code>, and it is a predicate for Huber rings. (Technically, it defines the predicate for types <code>R</code> endowed with the structure of a Huber ring.) The predicate extends another predicate, namely <code>Tate_ring R</code>, which is defined in one of the files that were imported at the top of this file. In addition to the conditions put forth in the predicate <code>Tate_ring</code>, this predicate imposes four new conditions: * it requires <code>R</code> to be complete and Hausdorff * <code>R</code> should be uniform * it asks for the existence of a pseudo-uniformizer, whose <code>p</code>-th power divides <code>p</code> * and finally it requires the quotient of the power-bounded subring modulo <code>p</code> to be a perfect ring.</p>
+<p>Note the (for mathematicians) funny notation in the last two conditions. Because Lean is based on type theory, it uses <code>:</code> in places where a mathematician would usually write <code>∈</code>. In condition <code>ramified</code>, we ask for the existence of a term <code>ϖ</code> of type <code>pseudo_uniformizer R</code>. Similarly the expressions <code>(ϖ^p : Rᵒ)</code> and on the next line <code>(p : Rᵒ)</code> instruct Lean to view <code>ϖ^p</code> and <code>p</code> as terms of type <code>Rᵒ</code>. By explicitly adding this instruction, Lean also understands that <code>Rᵒ</code> is the ring where the divisibility conditions take place.</p>
+<p>Another funny thing with the notation is that the universal and existential quantifier use a <code>,</code> where mathematicians would usually write a <code>:</code>. Because the <code>:</code> already has a very fundamental meaning, we don't write <code>∃ (x : X) : condition_on_x</code> to mean “there exists an <code>x</code> such that condition-on-<code>x</code>” but instead we write <code>∃ (x : X), condition_on_x</code>.</p>
+<div class="highlight"><pre><span class="c1">-- CLVRS (&quot;complete locally valued ringed space&quot;) is a category</span>
+<span class="c1">-- whose objects are topological spaces with a presheaf of topological rings</span>
+<span class="c1">-- and an equivalence class of valuation on each stalk; a perfectoid space is locally</span>
+<span class="c1">-- isomorphic to Spa(A) with A a perfectoid ring, and the isomorphism can be checked in CLVRS.</span>
+</pre></div>
+
+<p>This comment explains the symbol <code>CLVRS</code> that is used in the rest of the file. It is a category that is defined in one of the imported files.</p>
+<div class="highlight"><pre><span class="sd">/-- Condition for an object of CLVRS to be perfectoid: every point should have an open</span>
+<span class="sd">neighbourhood isomorphic to Spa(A) for some perfectoid ring A.-/</span>
+<span class="kd">def</span> <span class="n">is_perfectoid</span> <span class="o">(</span><span class="n">X</span> <span class="o">:</span> <span class="n">CLVRS</span><span class="o">)</span> <span class="o">:</span> <span class="kt">Prop</span> <span class="o">:=</span>
+<span class="bp">∀</span> <span class="n">x</span> <span class="o">:</span> <span class="n">X</span><span class="o">,</span> <span class="bp">∃</span> <span class="o">(</span><span class="n">U</span> <span class="o">:</span> <span class="n">opens</span> <span class="n">X</span><span class="o">)</span> <span class="o">(</span><span class="n">A</span> <span class="o">:</span> <span class="n">Huber_pair</span><span class="o">)</span> <span class="o">[</span><span class="n">perfectoid_ring</span> <span class="n">A</span><span class="o">],</span>
+<span class="o">(</span><span class="n">x</span> <span class="bp">∈</span> <span class="n">U</span><span class="o">)</span> <span class="bp">∧</span> <span class="o">(</span><span class="n">Spa</span> <span class="n">A</span> <span class="bp">≊</span> <span class="n">U</span><span class="o">)</span>
+</pre></div>
+
+<p>We now define a predicate on objects of the category <code>CVLRS</code>. Such an object is perfectoid if every point has an open neighbourhood that is isomorphic to the adic spectrum of a perfectoid ring.</p>
+<p>Finally we define the type of perfectoid spaces. It is the type of all objects of <code>CLVRS</code> that satisfy the predicate <code>is_perfectoid</code>.</p>
+<div class="highlight"><pre><span class="sd">/-- The category of perfectoid spaces.-/</span>
+<span class="kd">def</span> <span class="n">PerfectoidSpace</span> <span class="o">:=</span> <span class="o">{</span><span class="n">X</span> <span class="o">:</span> <span class="n">CLVRS</span> <span class="bp">//</span> <span class="n">is_perfectoid</span> <span class="n">X</span><span class="o">}</span>
+
+<span class="kd">end</span>
+</pre></div>
+
+      <footer class="site-footer">
+          <span class="site-footer-owner"><a href="https://github.com/leanprover-community/lean-perfectoid-spaces">lean-perfectoid-spaces</a> is maintained by <a href="https://github.com/leanprover-community">leanprover-community</a>.</span>
+        
+      </footer>
+    </section>
+  </body>
+</html>
+
