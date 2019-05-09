@@ -4,9 +4,10 @@ On this page we explain how to read the file
 [`perfectoid_space.lean`](https://github.com/leanprover-community/lean-perfectoid-spaces/blob/master/src/perfectoid_space.lean)
 step by step.
 
-We start with the first 4 lines
+We start with the first 5 lines
 ```lean
 -- We import definitions of adic_space, preadic_space, Huber_pair, etc
+import prime
 import adic_space
 import Tate_ring
 import power_bounded
@@ -21,14 +22,13 @@ section
 local postfix `ᵒ` : 66 := power_bounded_subring
 ```
 We start a section, and then setup notation for the power bounded subring.
-Because a postfix `ᵒ` is also useful as notation for other concepts
-(for example, the identity component of a topological group…)
+Because a postfix `ᵒ` is also useful as notation for other concepts,
 we choose to make this notation local to this file, instead of global notation for every file that imports this file.
 
 ```lean
-open power_bounded_subring topological_space
+open power_bounded_subring topological_space function
 ```
-This line of this block opens two namespaces.
+This line of this block opens three namespaces.
 Namespaces exist to avoid naming conflicts.
 As an example, there are functions `nat.add` and `int.add`,
 that define the addition on natural numbers and integers respectively.
@@ -39,18 +39,16 @@ For example, `topological_space.opens X` is the type of all open subsets of `X`.
 But because we open the namespace `topological_space`, we can simply write `opens X` later on in the file.
 
 ```lean
-parameter (p : ℕ)
-variable [is_prime p]
+parameter (p : Prime)
 ```
 Once and for all (in this file) we fix a natural number `p`. We also assume that this number is prime.
 
 ```lean
-/-- A perfectoid ring, following Fontaine Sem. Bourbaki-/
 structure perfectoid_ring (R : Type) [Huber_ring R] extends Tate_ring R : Prop :=
 (complete : is_complete_hausdorff R)
 (uniform  : is_uniform R)
-(ramified : ∃ ϖ : pseudo_uniformizer R, (ϖ^p : Rᵒ) ∣ p)
-(Frob : ∀ a : Rᵒ, ∃ b : Rᵒ, (p : Rᵒ) ∣ (b^p - a : Rᵒ))
+(ramified  : ∃ ϖ : pseudo_uniformizer R, ϖ^p ∣ p in Rᵒ)
+(Frobenius : bijective (Frob Rᵒ∕p))
 ```
 In this block there are a lot of things going on.
 First of all, this block defines a predicate, because it is of the form `structure something : Prop := something`.
@@ -63,16 +61,14 @@ In addition to the conditions put forth in the predicate `Tate_ring`,
 this predicate imposes four new conditions:
  * it requires `R` to be complete and Hausdorff
  * `R` should be uniform
- * it asks for the existence of a pseudo-uniformizer, whose `p`-th power divides `p`
+ * it asks for the existence of a pseudo-uniformizer, whose `p`-th power divides `p` in the subring `Rᵒ`
  * and finally it requires the quotient of the power-bounded subring modulo `p` to be a perfect ring.
 
 Note the (for mathematicians) funny notation in the last two conditions.
 Because Lean is based on type theory, it uses `:` in places where a mathematician would usually write `∈`.
 In condition `ramified`, we ask for the existence of a term `ϖ` of type `pseudo_uniformizer R`.
-Similarly the expressions `(ϖ^p : Rᵒ)` and on the next line `(p : Rᵒ)` instruct Lean to view `ϖ^p` and `p` as terms of type `Rᵒ`.
-By explicitly adding this instruction, Lean also understands that `Rᵒ` is the ring where the divisibility conditions take place.
 
-Another funny thing with the notation is that the universal and existential quantifier use a `,` where mathematicians would usually write a `:`.
+Note also that the notation of the universal and existential quantifier use a `,` where some mathematicians would write a `:`.
 Because the `:` already has a very fundamental meaning, we don't write
 `∃ (x : X) : condition_on_x` to mean “there exists an `x` such that condition-on-`x`”
 but instead we write `∃ (x : X), condition_on_x`.
