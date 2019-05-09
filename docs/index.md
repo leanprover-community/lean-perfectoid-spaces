@@ -1,8 +1,10 @@
 # What is it about?
 
 We explained Peter Scholze's definition of perfectoid spaces to
-computers. Building on earlier work by many people, starting from first
-principles, we arrive at
+computers, using the [Lean theorem prover](https://leanprover.github.io/), mainly developped by
+[Leonardo de Moura](https://leodemoura.github.io/).
+Building on earlier work by many people, starting from first
+principles, we arrived at
 ```lean
 parameter (p : ℕ)
 variable [is_prime p]
@@ -38,7 +40,14 @@ proofs of the required lemmas. Each edge is a use. There are more than
 computed by [Gephi](https://gephi.org/).
 ![Perfectoid definition graph](images/perfectoid_graph.png)
 Labels were added by hand. The big star is the definition of perfectoid
-spaces.
+spaces. All other nodes have a size depending on how many nodes use
+them. You can play with the [gephi source](perfectoid.gephi). 
+Note that, although the definition of perfectoid spaces is
+there, we are still working on making the project more beautiful, so
+the graph maybe be not perfectly faithful to its current state.
+
+If you want to explore the project interactively, you can read our
+[installation instruction](install.md)
 
 ### Chat
 

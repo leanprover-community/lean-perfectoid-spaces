@@ -1,6 +1,7 @@
 # How to get it?
 
-### Getting it working: brief version
+If you already have lean and its standard tools:
+
 ```bash
 $ git clone git@github.com:leanprover-community/lean-perfectoid-spaces.git
 $ cd lean-perfectoid-spaces
@@ -17,22 +18,6 @@ update-mathlib
 leanpkg build
 ```
 
-### Getting it working: longer version
+If you don't already have Lean then you can follow instructions on 
+[this guide](https://github.com/leanprover-community/mathlib/blob/master/docs/elan.md)
 
-A brief guide to compiling the library on your machine:
-
-1) Install Lean and Visual Studio Code following, for example, [this guide](https://github.com/leanprover-community/mathlib/blob/master/docs/elan.md)
-
-2) Clone the project:
-
-```
-git clone git@github.com:leanprover-community/lean-perfectoid-spaces.git
-```
-
-This will create a new directory `lean-perfectoid-spaces`.
-
-3) Build the project by typing `leanpkg build` in the `lean-perfectoid-spaces` directory.
-
-4) Open the `lean-perfectoid-spaces` directory in Visual Studio Code.
-
-5) That's it.
