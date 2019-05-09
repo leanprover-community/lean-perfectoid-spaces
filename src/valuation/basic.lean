@@ -3,10 +3,8 @@ import ring_theory.ideal_operations
 import ring_theory.localization
 import ring_theory.subring
 
-import for_mathlib.monotone
 import for_mathlib.rings
 import for_mathlib.linear_ordered_comm_group
-import for_mathlib.order -- preorder.comap
 import for_mathlib.equiv
 
 /- valuations.basic
@@ -361,23 +359,10 @@ end
 
 end is_equiv
 
-section
-variables [ring R]
-variables {v : valuation R Γ}
-lemma is_equiv_of_map_of_strict_mono
+lemma is_equiv_of_map_of_strict_mono [ring R] {v : valuation R Γ}
 (f : Γ → Γ₁) [is_group_hom f] (H : strict_mono f) :
   is_equiv (v.map f (H.monotone)) v :=
-begin
-  intros x y,
-  split,
-  swap,
-  intro h,
-  exact with_zero.map_monotone (H.monotone) h,
-  change with_zero.map f _ ≤ with_zero.map f _ → _,
-  refine (le_iff_le_of_strict_mono _ _).mp,
-  exact with_zero.map_strict_mono H
-end
-end
+λ x y, ⟨(with_zero.map_strict_mono H).le_iff_le.mp, λ h, with_zero.map_monotone H.monotone h⟩
 
 section trivial
 variable [comm_ring R]
