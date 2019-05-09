@@ -4,7 +4,6 @@ import algebra.group_power
 import ring_theory.subring
 import tactic.ring
 
-import for_mathlib.submonoid
 import for_mathlib.topological_rings
 import for_mathlib.nonarchimedean.adic_topology
 

@@ -3,9 +3,8 @@ import valuation.basic
 import for_mathlib.quotient_group
 import for_mathlib.subgroup
 import for_mathlib.group -- group_equiv
-import for_mathlib.order -- preorder.lift'
-/-
 
+/-
 The purpose of this file is to define a "canonical" valuation equivalent to
 a given valuation. The whole raison d'etre for this is that there are set-theoretic
 issues with the equivalence "relation" on valuations, because the target group
@@ -460,7 +459,7 @@ lemma comap_on_frac {R : Type u₀} [integral_domain R]
       simp at H,
       replace H := fraction_ring.eq_zero_of _ H,
       refine fraction_ring.mem_non_zero_divisors_iff_ne_zero.mp _ H,
-      apply val_prop _,
+      apply subtype.val_prop _,
       apply_instance },
   end,
   mpr := λ h, comap _ h }

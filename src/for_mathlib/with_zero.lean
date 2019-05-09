@@ -3,23 +3,7 @@ import group_theory.subgroup
 
 universes u v
 
--- this should be in order.bounded_lattice with with_bot.partial_order
-instance {α : Type*} [preorder α] : preorder (with_bot α) :=
-{ le          := λ o₁ o₂ : option α, ∀ a ∈ o₁, ∃ b ∈ o₂, a ≤ b,
-  lt          := (<),
-  lt_iff_le_not_le := by intros; cases a; cases b;
-                         simp [lt_iff_le_not_le];
-                         split; try {exact id}; refl,
-  le_refl     := λ o a ha, ⟨a, ha, le_refl _⟩,
-  le_trans    := λ o₁ o₂ o₃ h₁ h₂ a ha,
-    let ⟨b, hb, ab⟩ := h₁ a ha, ⟨c, hc, bc⟩ := h₂ b hb in
-    ⟨c, hc, le_trans ab bc⟩,
-}
-
 namespace with_zero
-
-instance {α : Type*} [preorder α] : preorder (with_zero α) :=
-show preorder (with_bot α), by apply_instance
 
 variables {α : Type u} {β : Type v}
 
@@ -103,7 +87,7 @@ end
 
 theorem map_strict_mono [linear_order α] [partial_order β] {f : α → β}
   (H : ∀ a b, a < b → f a < f b) :
-  ∀ a b, a < b → (map f) a < (map f) b :=
+  strict_mono (map f) :=
 begin
   intros x y,
   cases x; cases y,

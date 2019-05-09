@@ -1,3 +1,6 @@
+
+-- This file is PR'd to mathlib in #993
+
 variables {α : Type*} {β : Type*} {γ : Type*} {δ : Type*}
 
 def function.comp₂ (f : α → β → γ) (g : γ → δ) : α → β → δ := λ x y, g (f x y)

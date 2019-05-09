@@ -1,16 +1,8 @@
 import group_theory.subgroup
 import algebra.pi_instances
 
-import for_mathlib.submonoid
-
 section
 variables {α : Type*} [group α] {β : Type*} [group β]
-
-@[to_additive is_add_subgroup.inter]
-instance is_subgroup.inter (s₁ s₂ : set α) [is_subgroup s₁] [is_subgroup s₂] :
-  is_subgroup (s₁ ∩ s₂) :=
-{ inv_mem := λ x hx, ⟨is_subgroup.inv_mem hx.1, is_subgroup.inv_mem hx.2⟩,
-  ..is_submonoid.inter s₁ s₂ }
 
 @[to_additive is_add_subgroup.prod]
 instance is_subgroup.prod (s : set α) (t :  set β) [is_subgroup s] [is_subgroup t] :

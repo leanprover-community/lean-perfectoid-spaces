@@ -1,3 +1,9 @@
+
+-- The contents of this file have been PR'd to mathlib #997.
+-- !!! WARNING !!!
+-- All the instances have been turned into defs; reenable them locally, when needed
+-- The lemma mul_le_mul is renamed to mul_subset_mul
+
 import algebra.pointwise
 import group_theory.group_action
 

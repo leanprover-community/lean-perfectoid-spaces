@@ -3,10 +3,8 @@ import ring_theory.ideal_operations
 import ring_theory.localization
 import ring_theory.subring
 
-import for_mathlib.monotone
 import for_mathlib.rings
 import for_mathlib.linear_ordered_comm_group
-import for_mathlib.order -- preorder.comap
 import for_mathlib.equiv
 
 /- valuations.basic
@@ -107,7 +105,7 @@ end
 
 -- not an instance, because more than one v on a given R
 /-- a valuation gives a preorder on the underlying ring-/
-def to_preorder : preorder R := preorder.lift v
+def to_preorder : preorder R := preorder.lift v (by apply_instance)
 
 -- If x ∈ R is a unit then v x is non-zero
 theorem map_unit (h : x * y = 1) : (v x).is_some :=
@@ -361,23 +359,10 @@ end
 
 end is_equiv
 
-section
-variables [ring R]
-variables {v : valuation R Γ}
-lemma is_equiv_of_map_of_strict_mono
+lemma is_equiv_of_map_of_strict_mono [ring R] {v : valuation R Γ}
 (f : Γ → Γ₁) [is_group_hom f] (H : strict_mono f) :
   is_equiv (v.map f (H.monotone)) v :=
-begin
-  intros x y,
-  split,
-  swap,
-  intro h,
-  exact with_zero.map_monotone (H.monotone) h,
-  change with_zero.map f _ ≤ with_zero.map f _ → _,
-  refine (le_iff_le_of_strict_mono _ _).mp,
-  exact with_zero.map_strict_mono H
-end
-end
+λ x y, ⟨(with_zero.map_strict_mono H).le_iff_le.mp, λ h, with_zero.map_monotone H.monotone h⟩
 
 section trivial
 variable [comm_ring R]
@@ -563,7 +548,7 @@ lemma quot_supp_zero : supp (v.on_quot (le_refl _)) = 0 :=
 by rw supp_quot_supp; exact ideal.map_quotient_self _
 
 lemma quot_preorder_comap {J : ideal R} (hJ : J ≤ supp v) :
-preorder.lift' (v.on_quot hJ).to_preorder (ideal.quotient.mk J) = v.to_preorder :=
+preorder.lift (ideal.quotient.mk J) (v.on_quot hJ).to_preorder = v.to_preorder :=
 preorder.ext $ λ x y, iff.rfl
 
 end supp_comm
@@ -678,7 +663,7 @@ begin
 end
 
 lemma frac_preorder_comap (hv : supp v = 0) :
-  preorder.lift' (v.on_frac hv).to_preorder (localization.of) = v.to_preorder :=
+  preorder.lift (localization.of) (v.on_frac hv).to_preorder = v.to_preorder :=
 preorder.ext $ λ x y, begin show (v.on_frac hv) x ≤ (v.on_frac hv) y ↔ v x ≤ v y,
 rw [←on_frac_comap_eq' v hv, ←on_frac_comap_eq' v hv], exact iff.rfl end
 
@@ -733,7 +718,7 @@ def units_valfield_mk (r : R) (h : r ∉ supp v) : units (valuation_field v) :=
    localization.fraction_ring.eq_zero_of _ h2)⟩
 
 instance valuation.units_valfield_preorder :
-  preorder (units (valuation_field v)) := preorder.lift (λ u, u.val)
+  preorder (units (valuation_field v)) := preorder.lift (λ u, u.val) (by apply_instance)
 
 -- on_frac_quot_comap_eq needs more class.instance_max_depth to compile if
 -- this instance is not explicitly given as a hint
