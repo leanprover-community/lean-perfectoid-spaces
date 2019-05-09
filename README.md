@@ -20,6 +20,9 @@ basic results about perfectoid spaces within Lean. Is this sort of thing
 feasible? We don't know. We think so though, and we're not really sure if
 anyone has tried this sort of thing before. Let's find out!
 
+For a step-by-step explanation of the file `src/perfectoid_space.lean`,
+please read [this page](docs/how-to-read-lean.md).
+
 ### Getting it working
 
 ## Getting it working: brief version
