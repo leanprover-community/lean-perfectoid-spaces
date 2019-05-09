@@ -117,7 +117,7 @@ def prod (U : open_subgroup G) (V : open_subgroup H) : open_subgroup (G × H) :=
 
 end
 
-instance : partial_order (open_subgroup G) := partial_order.lift _ coe_injective
+instance : partial_order (open_subgroup G) := partial_order.lift _ coe_injective (by apply_instance)
 
 instance : semilattice_inf_top (open_subgroup G) :=
 { inf := λ U V, ⟨(U : set G) ∩ V, is_open_inter U.is_open V.is_open, by apply_instance⟩,
@@ -193,7 +193,7 @@ instance : inhabited (open_add_subgroup G) :=
 { default := ⟨set.univ, ⟨is_open_univ, by apply_instance⟩⟩ }
 attribute [to_additive open_add_subgroup.inhabited] open_subgroup.inhabited
 
-instance : partial_order (open_add_subgroup G) := partial_order.lift _ coe_injective
+instance : partial_order (open_add_subgroup G) := partial_order.lift _ coe_injective (by apply_instance)
 attribute [to_additive open_add_subgroup.partial_order] open_subgroup.partial_order
 attribute [to_additive open_add_subgroup.partial_order.equations._eqn_1] open_subgroup.partial_order.equations._eqn_1
 
