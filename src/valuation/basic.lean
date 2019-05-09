@@ -107,7 +107,7 @@ end
 
 -- not an instance, because more than one v on a given R
 /-- a valuation gives a preorder on the underlying ring-/
-def to_preorder : preorder R := preorder.lift v
+def to_preorder : preorder R := preorder.lift v (by apply_instance)
 
 -- If x ∈ R is a unit then v x is non-zero
 theorem map_unit (h : x * y = 1) : (v x).is_some :=
@@ -563,7 +563,7 @@ lemma quot_supp_zero : supp (v.on_quot (le_refl _)) = 0 :=
 by rw supp_quot_supp; exact ideal.map_quotient_self _
 
 lemma quot_preorder_comap {J : ideal R} (hJ : J ≤ supp v) :
-preorder.lift' (v.on_quot hJ).to_preorder (ideal.quotient.mk J) = v.to_preorder :=
+preorder.lift (ideal.quotient.mk J) (v.on_quot hJ).to_preorder = v.to_preorder :=
 preorder.ext $ λ x y, iff.rfl
 
 end supp_comm
@@ -678,7 +678,7 @@ begin
 end
 
 lemma frac_preorder_comap (hv : supp v = 0) :
-  preorder.lift' (v.on_frac hv).to_preorder (localization.of) = v.to_preorder :=
+  preorder.lift (localization.of) (v.on_frac hv).to_preorder = v.to_preorder :=
 preorder.ext $ λ x y, begin show (v.on_frac hv) x ≤ (v.on_frac hv) y ↔ v x ≤ v y,
 rw [←on_frac_comap_eq' v hv, ←on_frac_comap_eq' v hv], exact iff.rfl end
 
@@ -733,7 +733,7 @@ def units_valfield_mk (r : R) (h : r ∉ supp v) : units (valuation_field v) :=
    localization.fraction_ring.eq_zero_of _ h2)⟩
 
 instance valuation.units_valfield_preorder :
-  preorder (units (valuation_field v)) := preorder.lift (λ u, u.val)
+  preorder (units (valuation_field v)) := preorder.lift (λ u, u.val) (by apply_instance)
 
 -- on_frac_quot_comap_eq needs more class.instance_max_depth to compile if
 -- this instance is not explicitly given as a hint
