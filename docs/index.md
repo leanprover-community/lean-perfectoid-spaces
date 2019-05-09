@@ -24,7 +24,6 @@ neighbourhood isomorphic to Spa(A) for some perfectoid ring A.-/
 def is_perfectoid (X : CLVRS) : Prop :=
 ∀ x : X, ∃ (U : opens X) (A : Huber_pair) [perfectoid_ring A],
   (x ∈ U) ∧ (Spa A ≊ U)
-
 ```
 You can read more explanations about [how to read this code](how-to-read-lean.md)
 
