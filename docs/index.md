@@ -38,7 +38,7 @@ proofs of the required lemmas. Each edge is a use. There are more than
 3000 nodes and 30000 edges. The spatial layout and cluster coloring was
 computed by [Gephi](https://gephi.org/).
 ![Perfectoid definition graph](images/perfectoid_graph.png)
-labels were added by hand. The big star is the definition of perfectoid
+Labels were added by hand. The big star is the definition of perfectoid
 spaces.
 
 ### Chat
