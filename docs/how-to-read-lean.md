@@ -6,7 +6,7 @@ step by step.
 
 We start with the first 4 lines
 ```lean
--- definitions of adic_space, preadic_space, Huber_pair etc
+-- We import definitions of adic_space, preadic_space, Huber_pair, etc
 import adic_space
 import Tate_ring
 import power_bounded
@@ -16,18 +16,19 @@ This import is transitive, so this will automatically import a large part of the
 (on algebra, topology, etc, and ultimately basic logic).
 
 ```lean
+section
 -- notation for the power bounded subring
 local postfix `ᵒ` : 66 := power_bounded_subring
 ```
-We setup notation for the power bounded subring.
+We start a section, and then setup notation for the power bounded subring.
 Because a postfix `ᵒ` is also useful as notation for other concepts
 (for example, the identity component of a topological group…)
 we choose to make this notation local to this file, instead of global notation for every file that imports this file.
 
 ```lean
-open nat.Prime power_bounded_subring topological_space
+open power_bounded_subring topological_space
 ```
-This line of this block opens three namespaces.
+This line of this block opens two namespaces.
 Namespaces exist to avoid naming conflicts.
 As an example, there are functions `nat.add` and `int.add`,
 that define the addition on natural numbers and integers respectively.
@@ -38,9 +39,10 @@ For example, `topological_space.opens X` is the type of all open subsets of `X`.
 But because we open the namespace `topological_space`, we can simply write `opens X` later on in the file.
 
 ```lean
-variable [nat.Prime] -- fix a prime p
+parameter (p : ℕ)
+variable [is_prime p]
 ```
-This line does exactly what the comment says: we fix a prime number `p`.
+Once and for all (in this file) we fix a natural number `p`. We also assume that this number is prime.
 
 ```lean
 /-- A perfectoid ring, following Fontaine Sem. Bourbaki-/
@@ -87,7 +89,7 @@ It is a category that is defined in one of the imported files.
 ```lean
 /-- Condition for an object of CLVRS to be perfectoid: every point should have an open
 neighbourhood isomorphic to Spa(A) for some perfectoid ring A.-/
-def CLVRS.is_perfectoid (X : CLVRS) : Prop :=
+def is_perfectoid (X : CLVRS) : Prop :=
 ∀ x : X, ∃ (U : opens X) (A : Huber_pair) [perfectoid_ring A],
 (x ∈ U) ∧ (Spa A ≊ U)
 ```
@@ -98,5 +100,7 @@ Finally we define the type of perfectoid spaces.
 It is the type of all objects of `CLVRS` that satisfy the predicate `is_perfectoid`.
 ```lean
 /-- The category of perfectoid spaces.-/
-def PerfectoidSpace := {X : CLVRS // X.is_perfectoid}
+def PerfectoidSpace := {X : CLVRS // is_perfectoid X}
+
+end
 ```
