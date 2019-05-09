@@ -19,10 +19,11 @@ structure perfectoid_ring (R : Type) [Huber_ring R] extends Tate_ring R : Prop :
 -- CLVRS ("complete locally valued ringed space") is a category
 -- whose objects are topological spaces with a presheaf of topological rings
 -- and an equivalence class of valuation on each stalk; a perfectoid space is locally
--- isomorphic to Spa(A) with A a perfectoid ring, and the isomorphism can be checked in CLVRS.
+-- isomorphic to Spa(A) with A a perfectoid ring, and the isomorphism can be checked 
+-- in CLVRS.
 
-/-- Condition for an object of CLVRS to be perfectoid: every point should have an open
-neighbourhood isomorphic to Spa(A) for some perfectoid ring A.-/
+/-- Condition for an object of CLVRS to be perfectoid: every point should have an
+open neighbourhood isomorphic to Spa(A) for some perfectoid ring A. -/
 def is_perfectoid (X : CLVRS) : Prop :=
 ∀ x : X, ∃ (U : opens X) (A : Huber_pair) [perfectoid_ring A],
   (x ∈ U) ∧ (Spa A ≊ U)
@@ -55,7 +56,7 @@ You're welcome to ask questions at the [Zulip chat](https://leanprover.zulipchat
 
 ## I am a mathematician. How do I learn Lean?
 
-You can read [theorem proving in Lean](https://leanprover.github.io/theorem_proving_in_lean/). Do note however that this whole thing is all very beta at the minute. I think [Tom Hales describes it best](https://jiggerwit.wordpress.com/2018/04/14/the-architecture-of-proof-assistants/).
+You can read [theorem proving in Lean](https://leanprover.github.io/theorem_proving_in_lean/). Do note however that this whole thing is all very beta at the minute. We think [Tom Hales describes it best](https://jiggerwit.wordpress.com/2018/04/14/the-architecture-of-proof-assistants/).
 
 
 ## Useful references

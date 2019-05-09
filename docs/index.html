@@ -36,10 +36,11 @@
 <span class="c1">-- CLVRS (&quot;complete locally valued ringed space&quot;) is a category</span>
 <span class="c1">-- whose objects are topological spaces with a presheaf of topological rings</span>
 <span class="c1">-- and an equivalence class of valuation on each stalk; a perfectoid space is locally</span>
-<span class="c1">-- isomorphic to Spa(A) with A a perfectoid ring, and the isomorphism can be checked in CLVRS.</span>
+<span class="c1">-- isomorphic to Spa(A) with A a perfectoid ring, and the isomorphism can be checked </span>
+<span class="c1">-- in CLVRS.</span>
 
-<span class="sd">/-- Condition for an object of CLVRS to be perfectoid: every point should have an open</span>
-<span class="sd">neighbourhood isomorphic to Spa(A) for some perfectoid ring A.-/</span>
+<span class="sd">/-- Condition for an object of CLVRS to be perfectoid: every point should have an</span>
+<span class="sd">open neighbourhood isomorphic to Spa(A) for some perfectoid ring A. -/</span>
 <span class="kd">def</span> <span class="n">is_perfectoid</span> <span class="o">(</span><span class="n">X</span> <span class="o">:</span> <span class="n">CLVRS</span><span class="o">)</span> <span class="o">:</span> <span class="kt">Prop</span> <span class="o">:=</span>
 <span class="bp">∀</span> <span class="n">x</span> <span class="o">:</span> <span class="n">X</span><span class="o">,</span> <span class="bp">∃</span> <span class="o">(</span><span class="n">U</span> <span class="o">:</span> <span class="n">opens</span> <span class="n">X</span><span class="o">)</span> <span class="o">(</span><span class="n">A</span> <span class="o">:</span> <span class="n">Huber_pair</span><span class="o">)</span> <span class="o">[</span><span class="n">perfectoid_ring</span> <span class="n">A</span><span class="o">],</span>
   <span class="o">(</span><span class="n">x</span> <span class="bp">∈</span> <span class="n">U</span><span class="o">)</span> <span class="bp">∧</span> <span class="o">(</span><span class="n">Spa</span> <span class="n">A</span> <span class="bp">≊</span> <span class="n">U</span><span class="o">)</span>
@@ -52,7 +53,7 @@
 <h3 id="chat">Chat</h3>
 <p>You're welcome to ask questions at the <a href="https://leanprover.zulipchat.com/#narrow/stream/116395-maths/topic/Perfectoid.20spaces">Zulip chat</a></p>
 <h2 id="i-am-a-mathematician.-how-do-i-learn-lean">I am a mathematician. How do I learn Lean?</h2>
-<p>You can read <a href="https://leanprover.github.io/theorem_proving_in_lean/">theorem proving in Lean</a>. Do note however that this whole thing is all very beta at the minute. I think <a href="https://jiggerwit.wordpress.com/2018/04/14/the-architecture-of-proof-assistants/">Tom Hales describes it best</a>.</p>
+<p>You can read <a href="https://leanprover.github.io/theorem_proving_in_lean/">theorem proving in Lean</a>. Do note however that this whole thing is all very beta at the minute. We think <a href="https://jiggerwit.wordpress.com/2018/04/14/the-architecture-of-proof-assistants/">Tom Hales describes it best</a>.</p>
 <h2 id="useful-references">Useful references</h2>
 <p><a href="http://math.stanford.edu/~conrad/Perfseminar/">Brian Conrad's learning seminar</a>.</p>
 <p><a href="https://arxiv.org/abs/1709.07343">Scholze etale cohomology of diamonds (ArXiv)</a>.</p>
