@@ -23,21 +23,23 @@
 
 			<h1 id="what-is-it-about">What is it about?</h1>
 <p>We explained Peter Scholze's definition of perfectoid spaces to computers, using the <a href="https://leanprover.github.io/">Lean theorem prover</a>, mainly developped by <a href="https://leodemoura.github.io/">Leonardo de Moura</a>. Building on earlier work by many people, starting from first principles, we arrived at</p>
-<div class="highlight"><pre><span class="kd">parameter</span> <span class="o">(</span><span class="n">p</span> <span class="o">:</span> <span class="n">ℕ</span><span class="o">)</span>
-<span class="kd">variable</span> <span class="o">[</span><span class="n">is_prime</span> <span class="n">p</span><span class="o">]</span>
+<div class="highlight"><pre><span class="c1">-- We fix a prime number p</span>
+<span class="kd">parameter</span> <span class="o">(</span><span class="n">p</span> <span class="o">:</span> <span class="n">Prime</span><span class="o">)</span>
 
 <span class="sd">/-- A perfectoid ring, following Fontaine Sem. Bourbaki-/</span>
 <span class="kd">structure</span> <span class="n">perfectoid_ring</span> <span class="o">(</span><span class="n">R</span> <span class="o">:</span> <span class="kt">Type</span><span class="o">)</span> <span class="o">[</span><span class="n">Huber_ring</span> <span class="n">R</span><span class="o">]</span> <span class="kd">extends</span> <span class="n">Tate_ring</span> <span class="n">R</span> <span class="o">:</span> <span class="kt">Prop</span> <span class="o">:=</span>
 <span class="o">(</span><span class="n">complete</span> <span class="o">:</span> <span class="n">is_complete_hausdorff</span> <span class="n">R</span><span class="o">)</span>
 <span class="o">(</span><span class="n">uniform</span>  <span class="o">:</span> <span class="n">is_uniform</span> <span class="n">R</span><span class="o">)</span>
-<span class="o">(</span><span class="n">ramified</span> <span class="o">:</span> <span class="bp">∃</span> <span class="n">ϖ</span> <span class="o">:</span> <span class="n">pseudo_uniformizer</span> <span class="n">R</span><span class="o">,</span> <span class="o">(</span><span class="n">ϖ</span><span class="bp">^</span><span class="n">p</span> <span class="o">:</span> <span class="n">R</span><span class="bp">ᵒ</span><span class="o">)</span> <span class="bp">∣</span> <span class="n">p</span><span class="o">)</span>
-<span class="o">(</span><span class="n">Frob</span>     <span class="o">:</span> <span class="bp">∀</span> <span class="n">a</span> <span class="o">:</span> <span class="n">R</span><span class="bp">ᵒ</span><span class="o">,</span> <span class="bp">∃</span> <span class="n">b</span> <span class="o">:</span> <span class="n">R</span><span class="bp">ᵒ</span><span class="o">,</span> <span class="o">(</span><span class="n">p</span> <span class="o">:</span> <span class="n">R</span><span class="bp">ᵒ</span><span class="o">)</span> <span class="bp">∣</span> <span class="o">(</span><span class="n">b</span><span class="bp">^</span><span class="n">p</span> <span class="bp">-</span> <span class="n">a</span> <span class="o">:</span> <span class="n">R</span><span class="bp">ᵒ</span><span class="o">))</span>
+<span class="o">(</span><span class="n">ramified</span>  <span class="o">:</span> <span class="bp">∃</span> <span class="n">ϖ</span> <span class="o">:</span> <span class="n">pseudo_uniformizer</span> <span class="n">R</span><span class="o">,</span> <span class="n">ϖ</span><span class="bp">^</span><span class="n">p</span> <span class="bp">∣</span> <span class="n">p</span> <span class="k">in</span> <span class="n">R</span><span class="bp">ᵒ</span><span class="o">)</span>
+<span class="o">(</span><span class="n">Frobenius</span> <span class="o">:</span> <span class="n">bijective</span> <span class="o">(</span><span class="n">Frob</span> <span class="n">R</span><span class="bp">ᵒ∕</span><span class="n">p</span><span class="o">))</span>
 
-<span class="c1">-- CLVRS (&quot;complete locally valued ringed space&quot;) is a category</span>
-<span class="c1">-- whose objects are topological spaces with a presheaf of topological rings</span>
-<span class="c1">-- and an equivalence class of valuation on each stalk; a perfectoid space is locally</span>
-<span class="c1">-- isomorphic to Spa(A) with A a perfectoid ring, and the isomorphism can be checked </span>
-<span class="c1">-- in CLVRS.</span>
+<span class="c">/-</span><span class="cm"></span>
+<span class="cm">CLVRS (&quot;complete locally valued ringed space&quot;) is a category</span>
+<span class="cm">whose objects are topological spaces with a presheaf of topological rings</span>
+<span class="cm">and an equivalence class of valuation on each stalk; a perfectoid space is locally</span>
+<span class="cm">isomorphic to Spa(A) with A a perfectoid ring, and the isomorphism can be checked</span>
+<span class="cm">in CLVRS.</span>
+<span class="cm">-/</span>
 
 <span class="sd">/-- Condition for an object of CLVRS to be perfectoid: every point should have an</span>
 <span class="sd">open neighbourhood isomorphic to Spa(A) for some perfectoid ring A. -/</span>

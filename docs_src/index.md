@@ -6,21 +6,23 @@ computers, using the [Lean theorem prover](https://leanprover.github.io/), mainl
 Building on earlier work by many people, starting from first
 principles, we arrived at
 ```lean
-parameter (p : ℕ)
-variable [is_prime p]
+-- We fix a prime number p
+parameter (p : Prime)
 
 /-- A perfectoid ring, following Fontaine Sem. Bourbaki-/
 structure perfectoid_ring (R : Type) [Huber_ring R] extends Tate_ring R : Prop :=
 (complete : is_complete_hausdorff R)
 (uniform  : is_uniform R)
-(ramified : ∃ ϖ : pseudo_uniformizer R, (ϖ^p : Rᵒ) ∣ p)
-(Frob     : ∀ a : Rᵒ, ∃ b : Rᵒ, (p : Rᵒ) ∣ (b^p - a : Rᵒ))
+(ramified  : ∃ ϖ : pseudo_uniformizer R, ϖ^p ∣ p in Rᵒ)
+(Frobenius : bijective (Frob Rᵒ∕p))
 
--- CLVRS ("complete locally valued ringed space") is a category
--- whose objects are topological spaces with a presheaf of topological rings
--- and an equivalence class of valuation on each stalk; a perfectoid space is locally
--- isomorphic to Spa(A) with A a perfectoid ring, and the isomorphism can be checked 
--- in CLVRS.
+/-
+CLVRS ("complete locally valued ringed space") is a category
+whose objects are topological spaces with a presheaf of topological rings
+and an equivalence class of valuation on each stalk; a perfectoid space is locally
+isomorphic to Spa(A) with A a perfectoid ring, and the isomorphism can be checked
+in CLVRS.
+-/
 
 /-- Condition for an object of CLVRS to be perfectoid: every point should have an
 open neighbourhood isomorphic to Spa(A) for some perfectoid ring A. -/
