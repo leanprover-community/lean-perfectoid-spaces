@@ -41,12 +41,12 @@
 <div class="highlight"><pre><span class="kn">open</span> <span class="n">power_bounded_subring</span> <span class="n">topological_space</span> <span class="n">function</span>
 </pre></div>
 
-<p>This line of this block opens three namespaces. Namespaces exist to avoid naming conflicts. As an example, there are functions <code>nat.add</code> and <code>int.add</code>, that define the addition on natural numbers and integers respectively. Thus we have two functions <code>add</code>, one in the namespace <code>nat</code>, and the other in the namespace <code>int</code>.</p>
+<p>This block opens three namespaces. Namespaces exist to avoid naming conflicts. As an example, there are functions <code>nat.add</code> and <code>int.add</code>, that define the addition on natural numbers and integers respectively. Thus we have two functions <code>add</code>, one in the namespace <code>nat</code>, and the other in the namespace <code>int</code>.</p>
 <p>By opening a namespace, we don't have to write down the namespace prefix when referring to a definition or lemma in the namespace. For example, <code>topological_space.opens X</code> is the type of all open subsets of <code>X</code>. But because we open the namespace <code>topological_space</code>, we can simply write <code>opens X</code> later on in the file.</p>
 <div class="highlight"><pre><span class="kd">parameter</span> <span class="o">(</span><span class="n">p</span> <span class="o">:</span> <span class="n">Prime</span><span class="o">)</span>
 </pre></div>
 
-<p>Once and for all (in this file) we fix a natural number <code>p</code>. We also assume that this number is prime.</p>
+<p>Once and for all (in this file) we fix a prime number <code>p</code>.</p>
 <div class="highlight"><pre><span class="kd">structure</span> <span class="n">perfectoid_ring</span> <span class="o">(</span><span class="n">R</span> <span class="o">:</span> <span class="kt">Type</span><span class="o">)</span> <span class="o">[</span><span class="n">Huber_ring</span> <span class="n">R</span><span class="o">]</span> <span class="kd">extends</span> <span class="n">Tate_ring</span> <span class="n">R</span> <span class="o">:</span> <span class="kt">Prop</span> <span class="o">:=</span>
 <span class="o">(</span><span class="n">complete</span> <span class="o">:</span> <span class="n">is_complete_hausdorff</span> <span class="n">R</span><span class="o">)</span>
 <span class="o">(</span><span class="n">uniform</span>  <span class="o">:</span> <span class="n">is_uniform</span> <span class="n">R</span><span class="o">)</span>
