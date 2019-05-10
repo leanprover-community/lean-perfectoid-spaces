@@ -41,7 +41,7 @@ But because we open the namespace `topological_space`, we can simply write `open
 ```lean
 parameter (p : Prime)
 ```
-Once and for all (in this file) we fix a natural number `p`. We also assume that this number is prime.
+Once and for all (in this file) we fix a prime number `p`.
 
 ```lean
 structure perfectoid_ring (R : Type) [Huber_ring R] extends Tate_ring R : Prop :=
