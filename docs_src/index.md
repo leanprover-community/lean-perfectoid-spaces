@@ -1,7 +1,7 @@
 # What is it about?
 
 We explained Peter Scholze's definition of perfectoid spaces to
-computers, using the [Lean theorem prover](https://leanprover.github.io/), mainly developped by
+computers, using the [Lean theorem prover](https://leanprover.github.io/), mainly developed by
 [Leonardo de Moura](https://leodemoura.github.io/).
 Building on earlier work by many people, starting from first
 principles, we arrived at
@@ -30,10 +30,10 @@ def is_perfectoid (X : CLVRS) : Prop :=
 ∀ x : X, ∃ (U : opens X) (A : Huber_pair) [perfectoid_ring A],
   (x ∈ U) ∧ (Spa A ≊ U)
 ```
-You can read more explanations about [how to read this code](how-to-read-lean.html)
+You can read more explanations about [how to read this code](how-to-read-lean.html).
 
 Starting from first principles means every definition and every lemma
-needed to make sense of the above lines have been explained to
+needed to make sense of the above lines has been explained to
 computers, by us or [other people](https://github.com/leanprover-community/mathlib/graphs/contributors), and checked by computers.
 
 Each node in the following graph is a definition or statement used
@@ -50,7 +50,7 @@ there, we are still working on making the project more beautiful, so
 the graph maybe be not perfectly faithful to its current state.
 
 If you want to explore the project interactively, you can read our
-[installation instruction](install.html)
+[installation instructions](install.html).
 
 ### Chat
 
