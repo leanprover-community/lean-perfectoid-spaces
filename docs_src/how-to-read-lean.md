@@ -45,8 +45,8 @@ Once and for all (in this file) we fix a prime number `p`.
 
 ```lean
 structure perfectoid_ring (R : Type) [Huber_ring R] extends Tate_ring R : Prop :=
-(complete : is_complete_hausdorff R)
-(uniform  : is_uniform R)
+(complete  : is_complete_hausdorff R)
+(uniform   : is_uniform R)
 (ramified  : ∃ ϖ : pseudo_uniformizer R, ϖ^p ∣ p in Rᵒ)
 (Frobenius : bijective (Frob Rᵒ∕p))
 ```
