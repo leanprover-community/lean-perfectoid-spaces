@@ -28,7 +28,7 @@ we choose to make this notation local to this file, instead of global notation f
 ```lean
 open power_bounded_subring topological_space function
 ```
-This line of this block opens three namespaces.
+This block opens three namespaces.
 Namespaces exist to avoid naming conflicts.
 As an example, there are functions `nat.add` and `int.add`,
 that define the addition on natural numbers and integers respectively.
