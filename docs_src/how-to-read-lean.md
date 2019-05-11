@@ -62,7 +62,7 @@ this predicate imposes four new conditions:
  * it requires `R` to be complete and Hausdorff
  * `R` should be uniform
  * it asks for the existence of a pseudo-uniformizer, whose `p`-th power divides `p` in the subring `Rᵒ`
- * and finally it requires the quotient of the power-bounded subring modulo `p` to be a perfect ring.
+ * and finally it requires that the p'th power map on the power-bounded subring modulo `p` is surjective.
 
 Note the (for mathematicians) funny notation in the last two conditions.
 Because Lean is based on type theory, it uses `:` in places where a mathematician would usually write `∈`.
@@ -74,10 +74,15 @@ Because the `:` already has a very fundamental meaning, we don't write
 but instead we write `∃ (x : X), condition_on_x`.
 
 ```lean
--- CLVRS ("complete locally valued ringed space") is a category
--- whose objects are topological spaces with a presheaf of topological rings
--- and an equivalence class of valuation on each stalk; a perfectoid space is locally
--- isomorphic to Spa(A) with A a perfectoid ring, and the isomorphism can be checked in CLVRS.
+CLVRS ("complete locally valued ringed space") is a category
+whose objects are topological spaces with a sheaf of complete topological rings
+and an equivalence class of valuation on each stalk, whose support is the unique
+maximal ideal of the stalk; in Wedhorn's notes this category is called 𝒱.
+A perfectoid space is an object of CLVRS which is locally isomorphic to Spa(A) with
+A a perfectoid ring. Note however that CLVRS is a full subcategory of the category
+`PreValuedRingedSpace` of topological spaces equipped with a presheaf of topological
+rings and a valuation on each stalk, so the isomorphism can be checked in
+PreValuedRingedSpace instead, which is what we do.
 ```
 This comment explains the symbol `CLVRS` that is used in the rest of the file.
 It is a category that is defined in one of the imported files.
