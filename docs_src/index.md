@@ -14,7 +14,7 @@ structure perfectoid_ring (R : Type) [Huber_ring R] extends Tate_ring R : Prop :
 (complete : is_complete_hausdorff R)
 (uniform  : is_uniform R)
 (ramified  : ∃ ϖ : pseudo_uniformizer R, ϖ^p ∣ p in Rᵒ)
-(Frobenius : bijective (Frob Rᵒ∕p))
+(Frobenius : surjective (Frob Rᵒ∕p))
 
 /-
 CLVRS ("complete locally valued ringed space") is a category
