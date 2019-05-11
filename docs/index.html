@@ -24,13 +24,13 @@
 			<h1 id="what-is-it-about">What is it about?</h1>
 <p>We explained Peter Scholze's definition of perfectoid spaces to computers, using the <a href="https://leanprover.github.io/">Lean theorem prover</a>, mainly developed by <a href="https://leodemoura.github.io/">Leonardo de Moura</a>. Building on earlier work by many people, starting from first principles, we arrived at</p>
 <div class="highlight"><pre><span class="c1">-- We fix a prime number p</span>
-<span class="kn">parameter</span> <span class="o">(</span><span class="n">p</span> <span class="o">:</span> <span class="n">Prime</span><span class="o">)</span>
+<span class="kd">parameter</span> <span class="o">(</span><span class="n">p</span> <span class="o">:</span> <span class="n">Prime</span><span class="o">)</span>
 
-<span class="kn">structure</span> <span class="n">perfectoid_ring</span> <span class="o">(</span><span class="n">R</span> <span class="o">:</span> <span class="kt">Type</span><span class="o">)</span> <span class="o">[</span><span class="n">Huber_ring</span> <span class="n">R</span><span class="o">]</span> <span class="kn">extends</span> <span class="n">Tate_ring</span> <span class="n">R</span> <span class="o">:</span> <span class="kt">Prop</span> <span class="o">:=</span>
+<span class="kd">structure</span> <span class="n">perfectoid_ring</span> <span class="o">(</span><span class="n">R</span> <span class="o">:</span> <span class="kt">Type</span><span class="o">)</span> <span class="o">[</span><span class="n">Huber_ring</span> <span class="n">R</span><span class="o">]</span> <span class="kd">extends</span> <span class="n">Tate_ring</span> <span class="n">R</span> <span class="o">:</span> <span class="kt">Prop</span> <span class="o">:=</span>
 <span class="o">(</span><span class="n">complete</span>  <span class="o">:</span> <span class="n">is_complete_hausdorff</span> <span class="n">R</span><span class="o">)</span>
 <span class="o">(</span><span class="n">uniform</span>   <span class="o">:</span> <span class="n">is_uniform</span> <span class="n">R</span><span class="o">)</span>
-<span class="o">(</span><span class="n">ramified</span>  <span class="o">:</span> <span class="bp">∃</span> <span class="n">ϖ</span> <span class="o">:</span> <span class="n">pseudo_uniformizer</span> <span class="n">R</span><span class="o">,</span> <span class="n">ϖ</span><span class="err">^</span><span class="n">p</span> <span class="err">∣</span> <span class="n">p</span> <span class="k">in</span> <span class="n">R</span><span class="err">ᵒ</span><span class="o">)</span>
-<span class="o">(</span><span class="n">Frobenius</span> <span class="o">:</span> <span class="n">surjective</span> <span class="o">(</span><span class="n">Frob</span> <span class="n">R</span><span class="err">ᵒ∕</span><span class="n">p</span><span class="o">))</span>
+<span class="o">(</span><span class="n">ramified</span>  <span class="o">:</span> <span class="bp">∃</span> <span class="n">ϖ</span> <span class="o">:</span> <span class="n">pseudo_uniformizer</span> <span class="n">R</span><span class="o">,</span> <span class="n">ϖ</span><span class="bp">^</span><span class="n">p</span> <span class="bp">∣</span> <span class="n">p</span> <span class="k">in</span> <span class="n">R</span><span class="bp">ᵒ</span><span class="o">)</span>
+<span class="o">(</span><span class="n">Frobenius</span> <span class="o">:</span> <span class="n">surjective</span> <span class="o">(</span><span class="n">Frob</span> <span class="n">R</span><span class="bp">ᵒ∕</span><span class="n">p</span><span class="o">))</span>
 
 <span class="c">/-</span><span class="cm"></span>
 <span class="cm">CLVRS (&quot;complete locally valued ringed space&quot;) is a category</span>
@@ -44,16 +44,16 @@
 <span class="cm">PreValuedRingedSpace instead, which is what we do.</span>
 <span class="cm">-/</span>
 
-<span class="c">/-</span><span class="cm">- Condition for an object of CLVRS to be perfectoid: every point should have an open</span>
-<span class="cm">neighbourhood isomorphic to Spa(A) for some perfectoid ring A.-/</span>
-<span class="n">def</span> <span class="n">is_perfectoid</span> <span class="o">(</span><span class="n">X</span> <span class="o">:</span> <span class="n">CLVRS</span><span class="o">)</span> <span class="o">:</span> <span class="kt">Prop</span> <span class="o">:=</span>
+<span class="sd">/-- Condition for an object of CLVRS to be perfectoid: every point should have an open</span>
+<span class="sd">neighbourhood isomorphic to Spa(A) for some perfectoid ring A.-/</span>
+<span class="kd">def</span> <span class="n">is_perfectoid</span> <span class="o">(</span><span class="n">X</span> <span class="o">:</span> <span class="n">CLVRS</span><span class="o">)</span> <span class="o">:</span> <span class="kt">Prop</span> <span class="o">:=</span>
 <span class="bp">∀</span> <span class="n">x</span> <span class="o">:</span> <span class="n">X</span><span class="o">,</span> <span class="bp">∃</span> <span class="o">(</span><span class="n">U</span> <span class="o">:</span> <span class="n">opens</span> <span class="n">X</span><span class="o">)</span> <span class="o">(</span><span class="n">A</span> <span class="o">:</span> <span class="n">Huber_pair</span><span class="o">)</span> <span class="o">[</span><span class="n">perfectoid_ring</span> <span class="n">A</span><span class="o">],</span>
-  <span class="o">(</span><span class="n">x</span> <span class="err">∈</span> <span class="n">U</span><span class="o">)</span> <span class="bp">∧</span> <span class="o">(</span><span class="n">Spa</span> <span class="n">A</span> <span class="err">≊</span> <span class="n">U</span><span class="o">)</span>
+  <span class="o">(</span><span class="n">x</span> <span class="bp">∈</span> <span class="n">U</span><span class="o">)</span> <span class="bp">∧</span> <span class="o">(</span><span class="n">Spa</span> <span class="n">A</span> <span class="bp">≊</span> <span class="n">U</span><span class="o">)</span>
 
-<span class="c">/-</span><span class="cm">- The category of perfectoid spaces.-/</span>
-<span class="n">def</span> <span class="n">PerfectoidSpace</span> <span class="o">:=</span> <span class="o">{</span><span class="n">X</span> <span class="o">:</span> <span class="n">CLVRS</span> <span class="bp">//</span> <span class="n">is_perfectoid</span> <span class="n">X</span><span class="o">}</span>
+<span class="sd">/-- The category of perfectoid spaces.-/</span>
+<span class="kd">def</span> <span class="n">PerfectoidSpace</span> <span class="o">:=</span> <span class="o">{</span><span class="n">X</span> <span class="o">:</span> <span class="n">CLVRS</span> <span class="bp">//</span> <span class="n">is_perfectoid</span> <span class="n">X</span><span class="o">}</span>
 
-<span class="kn">end</span>
+<span class="kd">end</span>
 </pre></div>
 
 <p>You can read more explanations about <a href="how-to-read-lean.html">how to read this code</a>.</p>
