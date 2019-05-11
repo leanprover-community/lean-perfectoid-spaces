@@ -74,6 +74,7 @@ Because the `:` already has a very fundamental meaning, we don't write
 but instead we write `∃ (x : X), condition_on_x`.
 
 ```lean
+/-
 CLVRS ("complete locally valued ringed space") is a category
 whose objects are topological spaces with a sheaf of complete topological rings
 and an equivalence class of valuation on each stalk, whose support is the unique
@@ -83,6 +84,7 @@ A a perfectoid ring. Note however that CLVRS is a full subcategory of the catego
 `PreValuedRingedSpace` of topological spaces equipped with a presheaf of topological
 rings and a valuation on each stalk, so the isomorphism can be checked in
 PreValuedRingedSpace instead, which is what we do.
+-/
 ```
 This comment explains the symbol `CLVRS` that is used in the rest of the file.
 It is a category that is defined in one of the imported files.
