@@ -30,10 +30,14 @@ structure perfectoid_ring (R : Type) [Huber_ring R] extends Tate_ring R : Prop :
 
 /-
 CLVRS ("complete locally valued ringed space") is a category
-whose objects are topological spaces with a presheaf of topological rings
-and an equivalence class of valuation on each stalk; a perfectoid space is locally
-isomorphic to Spa(A) with A a perfectoid ring, and the isomorphism can be checked
-in CLVRS.
+whose objects are topological spaces with a sheaf of complete topological rings
+and an equivalence class of valuation on each stalk, whose support is the unique
+maximal ideal of the stalk; in Wedhorn's notes this category is called 𝒱.
+A perfectoid space is an object of CLVRS which is locally isomorphic to Spa(A) with
+A a perfectoid ring. Note however that CLVRS is a full subcategory of the category
+`PreValuedRingedSpace` of topological spaces equipped with a presheaf of topological
+rings and a valuation on each stalk, so the isomorphism can be checked in
+PreValuedRingedSpace instead, which is what we do.
 -/
 
 /-- Condition for an object of CLVRS to be perfectoid: every point should have an open

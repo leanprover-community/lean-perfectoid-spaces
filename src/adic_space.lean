@@ -30,8 +30,7 @@ open spa
 
 namespace sheaf_of_topological_rings
 
--- TODO -- KMB just deleted three instances (and the project still compiles)
--- but here's a def which isn't an instance and I have no idea why not.
+-- Maybe we could make this an instance?
 def uniform_space {X : Type u} [topological_space X] (𝒪X : sheaf_of_topological_rings X)
   (U : opens X) : uniform_space (𝒪X.F.F U) :=
 topological_add_group.to_uniform_space (𝒪X.F.F U)
@@ -402,7 +401,8 @@ section
 local attribute [instance] sheaf_of_topological_rings.uniform_space
 
 /--Category of topological spaces endowed with a sheaf of complete topological rings
-and (an equivalence class of) valuations on the stalks (which are required to be local rings).
+and (an equivalence class of) valuations on the stalks (which are required to be local
+rings; moreover the support of the valuation must be the maximal ideal of the stalk).
 Wedhorn calls this category `𝒱`.-/
 structure CLVRS :=
 (space : Type) -- change this to (Type u) to enable universes
