@@ -4,6 +4,7 @@ import for_mathlib.topological_rings
 open set filter function lattice add_group_with_zero_nhd
 
 local attribute [instance] set.pointwise_mul_semiring
+local attribute [instance] set.pointwise_mul_action
 
 class is_subgroups_basis {A : Type*} [ring A] {ι : Type*} [inhabited ι] (G : ι → set A) : Prop :=
   [sub_groups : ∀ i, is_add_subgroup $ G i]

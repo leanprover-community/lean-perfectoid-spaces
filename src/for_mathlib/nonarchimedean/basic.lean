@@ -9,6 +9,7 @@ import for_mathlib.rings
 import for_mathlib.nonarchimedean.open_subgroup
 
 local attribute [instance] set.pointwise_mul_semiring
+local attribute [instance] set.pointwise_mul_action
 
 /--A topological group is non-archimedean if every neighborhood of 1 contains an open subgroup.-/
 definition topological_group.nonarchimedean (G : Type*)

@@ -1,10 +1,11 @@
 import order.filter.lift
+import algebra.pointwise
 
 import for_mathlib.subgroup
 import for_mathlib.topological_groups
-import for_mathlib.pointwise
 
 local attribute [instance] set.pointwise_mul_semiring
+local attribute [instance] set.pointwise_mul_action
 
 section
 variables (G : Type*) [group G] [topological_space G] [topological_group G]
