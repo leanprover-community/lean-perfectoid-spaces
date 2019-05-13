@@ -19,5 +19,5 @@ leanpkg build
 ```
 
 If you don't already have Lean then you can follow instructions on 
-[this guide](https://github.com/leanprover-community/mathlib/blob/master/docs/elan.md)
+[this guide](https://github.com/leanprover-community/mathlib/#installation)
 
