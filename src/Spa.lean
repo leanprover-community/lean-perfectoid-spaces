@@ -719,12 +719,17 @@ instance (U : opens (spa A)) (r : rational_open_data_subsets U) :
 
 def presheaf_map {U V : opens (spa A)} (hUV : U ≤ V) :
   presheaf_value V → presheaf_value U :=
-λ f, ⟨λ rd, f.val ⟨rd.val, set.subset.trans rd.2 hUV⟩,
+λ f, ⟨λ rd,
+let TEMP := f.val in TEMP ⟨rd.val, set.subset.trans rd.2 hUV⟩,
+--  f.val ⟨rd.val, set.subset.trans rd.2 hUV⟩, -- this times out with lean -T100000
+λ rd1 rd2 h,
+-- I do not particularly want to go into tactic mode right now
 begin
-  intros,
-  let X := f.2 (rational_open_data_subsets.map hUV rd1)
+  let TEMP2 := f.2 (rational_open_data_subsets.map hUV rd1)
     (rational_open_data_subsets.map hUV rd2) h,
-  exact X,
+  exact TEMP2,
+  -- exact f.2 (rational_open_data... times out
+  -- convert f.2 (rational_open_data... works
 end⟩
 
 lemma presheaf_map_id (U : opens (spa A)) :
