@@ -1,8 +1,0 @@
-Metric spaces can be complete. Completeness is not a topological property --
-(0,1) [not complete] is homeomorphic to R [complete].
-
-A *uniform space* is somewhere in between. Every metric space (and every topological group) is a uniform space, and every uniform space is a topological space. It makes sense to talk about uniformly continuous functions either to or from a uniform space -- I haven't got to the bottom of this yet. It makes sense to say that a uniform space is complete. Hmm. A compact Hausdorff space is another example of a uniformizable space.
-
-Oh got it -- a function f : X → Y between uniform space is called uniformly continuous if for every entourage V in Y there exists an entourage U in X such that for every (x1, x2) in U we have (f(x1), f(x2)) in V. 
-
-Each compact Hausdorff space possesses exactly one uniform structure compatible with the topology. A consequence is a generalisation of the Heine-Cantor theorem: each continuous function from a compact Hausdorff space to a uniform space is uniformly continuous. 

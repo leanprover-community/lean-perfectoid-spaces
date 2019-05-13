@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8">
+
+<title>Lean perfectoid spaces</title>
+<link rel="canonical" href="https://leanprover-community.github.io/lean-perfectoid-spaces/" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#157878">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="pygments.css">
+  </head>
+  <body>
+    <section class="page-header">
+	    <a href="https://leanprover-community.github.io/lean-perfectoid-spaces/"><h1 class="project-name">Lean perfectoid spaces</h1></a> <h2 class="project-tagline">by Kevin Buzzard, Johan Commelin, and Patrick Massot</h2>
+      
+        <a href="https://github.com/leanprover-community/lean-perfectoid-spaces" class="btn">View on GitHub</a>
+    </section>
+
+    <section class="main-content">
+
+			<h1 id="what-is-it-about">What is it about?</h1>
+<p>We explained Peter Scholze's definition of perfectoid spaces to computers, using the <a href="https://leanprover.github.io/">Lean theorem prover</a>, mainly developed by <a href="https://leodemoura.github.io/">Leonardo de Moura</a>. Building on earlier work by many people, starting from first principles, we arrived at</p>
+<div class="highlight"><pre><span class="c1">-- We fix a prime number p</span>
+<span class="kd">parameter</span> <span class="o">(</span><span class="n">p</span> <span class="o">:</span> <span class="n">Prime</span><span class="o">)</span>
+
+<span class="kd">structure</span> <span class="n">perfectoid_ring</span> <span class="o">(</span><span class="n">R</span> <span class="o">:</span> <span class="kt">Type</span><span class="o">)</span> <span class="o">[</span><span class="n">Huber_ring</span> <span class="n">R</span><span class="o">]</span> <span class="kd">extends</span> <span class="n">Tate_ring</span> <span class="n">R</span> <span class="o">:</span> <span class="kt">Prop</span> <span class="o">:=</span>
+<span class="o">(</span><span class="n">complete</span>  <span class="o">:</span> <span class="n">is_complete_hausdorff</span> <span class="n">R</span><span class="o">)</span>
+<span class="o">(</span><span class="n">uniform</span>   <span class="o">:</span> <span class="n">is_uniform</span> <span class="n">R</span><span class="o">)</span>
+<span class="o">(</span><span class="n">ramified</span>  <span class="o">:</span> <span class="bp">∃</span> <span class="n">ϖ</span> <span class="o">:</span> <span class="n">pseudo_uniformizer</span> <span class="n">R</span><span class="o">,</span> <span class="n">ϖ</span><span class="bp">^</span><span class="n">p</span> <span class="bp">∣</span> <span class="n">p</span> <span class="k">in</span> <span class="n">R</span><span class="bp">ᵒ</span><span class="o">)</span>
+<span class="o">(</span><span class="n">Frobenius</span> <span class="o">:</span> <span class="n">surjective</span> <span class="o">(</span><span class="n">Frob</span> <span class="n">R</span><span class="bp">ᵒ∕</span><span class="n">p</span><span class="o">))</span>
+
+<span class="c">/-</span><span class="cm"></span>
+<span class="cm">CLVRS (&quot;complete locally valued ringed space&quot;) is a category</span>
+<span class="cm">whose objects are topological spaces with a sheaf of complete topological rings</span>
+<span class="cm">and an equivalence class of valuation on each stalk, whose support is the unique</span>
+<span class="cm">maximal ideal of the stalk; in Wedhorn&#39;s notes this category is called 𝒱.</span>
+<span class="cm">A perfectoid space is an object of CLVRS which is locally isomorphic to Spa(A) with</span>
+<span class="cm">A a perfectoid ring. Note however that CLVRS is a full subcategory of the category</span>
+<span class="cm">`PreValuedRingedSpace` of topological spaces equipped with a presheaf of topological</span>
+<span class="cm">rings and a valuation on each stalk, so the isomorphism can be checked in</span>
+<span class="cm">PreValuedRingedSpace instead, which is what we do.</span>
+<span class="cm">-/</span>
+
+<span class="sd">/-- Condition for an object of CLVRS to be perfectoid: every point should have an open</span>
+<span class="sd">neighbourhood isomorphic to Spa(A) for some perfectoid ring A.-/</span>
+<span class="kd">def</span> <span class="n">is_perfectoid</span> <span class="o">(</span><span class="n">X</span> <span class="o">:</span> <span class="n">CLVRS</span><span class="o">)</span> <span class="o">:</span> <span class="kt">Prop</span> <span class="o">:=</span>
+<span class="bp">∀</span> <span class="n">x</span> <span class="o">:</span> <span class="n">X</span><span class="o">,</span> <span class="bp">∃</span> <span class="o">(</span><span class="n">U</span> <span class="o">:</span> <span class="n">opens</span> <span class="n">X</span><span class="o">)</span> <span class="o">(</span><span class="n">A</span> <span class="o">:</span> <span class="n">Huber_pair</span><span class="o">)</span> <span class="o">[</span><span class="n">perfectoid_ring</span> <span class="n">A</span><span class="o">],</span>
+  <span class="o">(</span><span class="n">x</span> <span class="bp">∈</span> <span class="n">U</span><span class="o">)</span> <span class="bp">∧</span> <span class="o">(</span><span class="n">Spa</span> <span class="n">A</span> <span class="bp">≊</span> <span class="n">U</span><span class="o">)</span>
+
+<span class="sd">/-- The category of perfectoid spaces.-/</span>
+<span class="kd">def</span> <span class="n">PerfectoidSpace</span> <span class="o">:=</span> <span class="o">{</span><span class="n">X</span> <span class="o">:</span> <span class="n">CLVRS</span> <span class="bp">//</span> <span class="n">is_perfectoid</span> <span class="n">X</span><span class="o">}</span>
+
+<span class="kd">end</span>
+</pre></div>
+
+<p>You can read more explanations about <a href="how-to-read-lean.html">how to read this code</a>.</p>
+<p>Starting from first principles means every definition and every lemma needed to make sense of the above lines has been explained to computers, by us or <a href="https://github.com/leanprover-community/mathlib/graphs/contributors">other people</a>, and checked by computers.</p>
+<p>Each node in the following graph is a definition or statement used directly or indirectly in the definition of perfectoid spaces, or in the proofs of the required lemmas. Each edge is a use. There are more than 3000 nodes and 30000 edges. The spatial layout and cluster coloring was computed by <a href="https://gephi.org/">Gephi</a>. <img src="images/perfectoid_graph.png" alt="Perfectoid definition graph" /> Labels were added by hand. The big star is the definition of perfectoid spaces. All other nodes have a size depending on how many nodes use them. You can play with the <a href="perfectoid.gephi">gephi source</a>. Note that, although the definition of perfectoid spaces is there, we are still working on making the project more beautiful, so the graph maybe be not perfectly faithful to its current state.</p>
+<p>If you want to explore the project interactively, you can read our <a href="install.html">installation instructions</a>.</p>
+<h3 id="chat">Chat</h3>
+<p>You're welcome to ask questions at the <a href="https://leanprover.zulipchat.com/#narrow/stream/116395-maths/topic/Perfectoid.20spaces">Zulip chat</a></p>
+<h2 id="i-am-a-mathematician.-how-do-i-learn-lean">I am a mathematician. How do I learn Lean?</h2>
+<p>You can read <a href="https://leanprover.github.io/theorem_proving_in_lean/">theorem proving in Lean</a>. Do note however that this whole thing is all very beta at the minute. We think <a href="https://jiggerwit.wordpress.com/2018/04/14/the-architecture-of-proof-assistants/">Tom Hales describes it best</a>.</p>
+<h2 id="useful-references">Useful references</h2>
+<p><a href="http://math.stanford.edu/~conrad/Perfseminar/">Brian Conrad's learning seminar</a>.</p>
+<p><a href="https://arxiv.org/abs/1709.07343">Scholze etale cohomology of diamonds (ArXiv)</a>.</p>
+<p><a href="http://www.bourbaki.ens.fr/TEXTES/1057.pdf">Fontaine's text for Seminaire Bourbaki</a>.</p>
+<p><a href="http://wwwf.imperial.ac.uk/~buzzard/docs/AdicSpaces.pdf">Torsten Wedhorn's notes on adic spaces</a>.</p>
+
+      <footer class="site-footer">
+          <span class="site-footer-owner"><a href="https://github.com/leanprover-community/lean-perfectoid-spaces">lean-perfectoid-spaces</a> is maintained by <a href="https://github.com/leanprover-community">leanprover-community</a>.</span>
+        
+      </footer>
+    </section>
+  </body>
+</html>
+

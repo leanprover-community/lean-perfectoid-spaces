@@ -22,7 +22,8 @@ def is_integrally_closed (S : set R) [is_subring S] : Prop :=
 end integral
 
 -- Wedhorn Def 7.14
-structure is_ring_of_integral_elements {R : Type u} [Huber_ring R] [decidable_eq R] (Rplus : set R) : Prop :=
+structure is_ring_of_integral_elements {R : Type u}
+  [Huber_ring R] [decidable_eq R] (Rplus : set R) : Prop :=
 [is_subring : is_subring Rplus]
 (is_open : is_open Rplus)
 (is_int_closed : is_integrally_closed Rplus)
