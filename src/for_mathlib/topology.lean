@@ -2,10 +2,11 @@ import topology.opens
 import topology.uniform_space.cauchy
 import topology.algebra.group
 
-import for_mathlib.function
 import for_mathlib.filter
 
 open topological_space
+
+local notation f `∘₂` g := function.bicompr f g
 
 -- predicates we need for topological rings
 
@@ -38,7 +39,7 @@ lemma continuous₂.comp {f : α → β → γ} {g : γ → δ}
 continuous₂ (g ∘₂ f) :=
 begin
   unfold continuous₂,
-  rw function.uncurry_comp₂,
+  rw function.uncurry_bicompr,
   exact hf.comp hg
 end
 

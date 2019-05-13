@@ -1,6 +1,5 @@
 import topology.uniform_space.separation
 
-import for_mathlib.function
 import for_mathlib.quotient
 import for_mathlib.topology
 import for_mathlib.uniform_space.basic
@@ -11,6 +10,8 @@ local attribute [instance, priority 0] classical.prop_decidable
 open filter
 
 universes u v w
+
+local notation f `∘₂` g := function.bicompr f g
 
 section
 variables {α : Type u} {β : Type v} {γ : Type w}
@@ -32,8 +33,6 @@ open uniform_space
 variables {α : Type u} {β : Type v} {γ : Type w} {δ : Type*}
 variables [uniform_space α] [uniform_space β] [uniform_space γ] [uniform_space δ]
 
-
-
 lemma uniform_space.separated_map.comp {f : α → β} {g : β → γ} (hf : separated_map f) (hg : separated_map g) :
 separated_map (g ∘ f) := assume x y h, hg _ _ (hf x y h)
 
@@ -41,7 +40,7 @@ lemma uniform_space.separated_map.comp₂ {f : α → β → γ} {g : γ → δ}
 separated_map₂ (g ∘₂ f) :=
 begin
   unfold separated_map₂,
-  rw function.uncurry_comp₂,
+  rw function.uncurry_bicompr,
   exact hf.comp hg
 end
 
@@ -191,10 +190,10 @@ variables {δ : Type*} {δ' : Type*} {δ'' : Type*} {ε : Type*}
 lemma continuous_map₂ {f : α → β → γ} (h : continuous₂ f) : continuous₂ (map₂ f) :=
 begin
   unfold continuous₂ map₂ lift₂,
-  rw function.uncurry_comp₂,
+  rw function.uncurry_bicompr,
   apply continuous.comp uniform_continuous_prod.continuous,
   apply continuous_lift,
-  rw function.uncurry_comp₂,
+  rw function.uncurry_bicompr,
   apply continuous.comp h continuous_quotient_mk
 end
 
