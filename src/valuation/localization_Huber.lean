@@ -18,6 +18,8 @@ variables {A : Huber_pair}
 namespace Huber_pair
 open valuation
 
+local attribute [instance] set.pointwise_mul_action
+
 local notation `ATs` := spa.rational_open_data.localization rd
 local notation `s` := rd.s
 local notation `T` := rd.T

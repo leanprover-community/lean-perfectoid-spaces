@@ -14,6 +14,7 @@ universes u₁ u₂ u₃
 
 local attribute [instance, priority 0] classical.prop_decidable
 local attribute [instance] set.pointwise_mul_comm_semiring
+local attribute [instance] set.pointwise_mul_action
 
 open set function Spv valuation
 
@@ -194,8 +195,6 @@ lemma localization.nonarchimedean (r : rational_open_data A) :
 
 section
 open localization submodule Huber_ring.away
-local attribute [instance] set.pointwise_mul_comm_semiring
-local attribute [instance] set.mul_action
 
 def localization.power_bounded_data (r : rational_open_data A) : set (localization r) :=
 let s_inv : localization r := ((to_units ⟨r.s, ⟨1, by simp⟩⟩)⁻¹ : units (localization r)) in
@@ -456,7 +455,7 @@ namespace rational_open_data
 noncomputable def inter_aux (r1 r2 : rational_open_data A) : rational_open_data A :=
 { s := r1.s * r2.s,
   T := r1.T * r2.T,
-  Tfin := by apply_instance,
+  Tfin := set.pointwise_mul_fintype _ _,
   Hopen := rational_basis.is_basis.mul r1.T r2.T r1.Hopen r2.Hopen
 }
 
