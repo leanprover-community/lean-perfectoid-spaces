@@ -716,6 +716,11 @@ instance (U : opens (spa A)) (r : rational_open_data_subsets U) :
   map_mul := λ _ _, rfl,
   map_add := λ _ _, rfl }
 
+-- note the (X : _) trick, which tells Lean "don't try and
+-- elaborate X assuming it has the type you know it has,
+-- elaborate it independently, figure out the type, and
+-- then unify". Thanks to Mario Carneiro for this trick which
+-- hugely speeds up elaboration time of this definition.
 def presheaf_map {U V : opens (spa A)} (hUV : U ≤ V) :
   presheaf_value V → presheaf_value U :=
 λ f, ⟨_, λ rd1 rd2 h,
