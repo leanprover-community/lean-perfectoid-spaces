@@ -65,7 +65,7 @@ begin
     refine set.subset.trans _ hW,
     change ↑(span _ _ * span _ _) ⊆ _,
     rw [span_mul_span, ← add_group_closure_eq_spanℤ, add_group.closure_subset_iff],
-    exact set.subset.trans (set.mul_le_mul hV (set.subset.refl B)) H' },
+    exact set.subset.trans (set.mul_subset_mul hV (set.subset.refl B)) H' },
   { intros H,
     rw is_bounded_iff,
     intros U hU,
@@ -93,18 +93,6 @@ open topological_add_group
 
 lemma subset {B C : set R} (h : B ⊆ C) (hC : is_bounded C) : is_bounded B :=
 λ U hU, exists.elim (hC U hU) $ λ V ⟨hV, hC⟩, ⟨V, hV, λ v hv b hb, hC v hv b $ h hb⟩
-
--- TODO : this is PR 809 to mathlib, remove when it hits
-lemma is_add_submonoid.mem_nhds_zero {G : Type*} [topological_space G] [add_monoid G]
-  [topological_add_monoid G] (H : set G) [is_add_submonoid H] (hH : is_open H) :
-  H ∈ nhds (0 : G) :=
-begin
-  rw mem_nhds_sets_iff,
-  use H,
-  use (by refl),
-  split, use hH,
-  exact is_add_submonoid.zero_mem _,
-end
 
 lemma add_group.closure (hR : nonarchimedean R) (T : set R)
   (hT : is_bounded T) : is_bounded (add_group.closure T) :=

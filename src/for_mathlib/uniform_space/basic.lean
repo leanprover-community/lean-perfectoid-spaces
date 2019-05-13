@@ -1,13 +1,12 @@
 import topology.uniform_space.basic
 import topology.uniform_space.uniform_embedding
 
-import for_mathlib.function
-
 section
 open uniform_space
 variables {α : Type*} {β : Type*} {γ : Type*} {δ : Type*}
-
 variables [uniform_space α] [uniform_space β] [uniform_space γ] [uniform_space δ]
+
+local notation f `∘₂` g := function.bicompr f g
 
 def uniform_continuous₂ (f : α → β → γ) := uniform_continuous (function.uncurry f)
 
@@ -21,7 +20,7 @@ lemma uniform_continuous₂.comp {f : α → β → γ} {g : γ → δ}
 uniform_continuous₂ (g ∘₂ f) :=
 begin
   unfold uniform_continuous₂,
-  rw function.uncurry_comp₂,
+  rw function.uncurry_bicompr,
   exact hf.comp hg
 end
 

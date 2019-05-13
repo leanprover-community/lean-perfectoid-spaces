@@ -16,10 +16,12 @@ universes u v
 local attribute [instance, priority 0] classical.prop_decidable
 
 local attribute [instance] set.pointwise_mul_comm_semiring
+local attribute [instance] set.pointwise_mul_action
+local attribute [instance] set.pointwise_mul_image_is_semiring_hom
 
 namespace Huber_ring
 open localization algebra topological_ring submodule set topological_add_group
-variables {A  : Type u} [comm_ring A] [topological_space A ] [topological_ring A]
+variables {A  : Type u} [comm_ring A] [topological_space A] [topological_ring A]
 variables (T : set A) (s : A)
 
 /-
