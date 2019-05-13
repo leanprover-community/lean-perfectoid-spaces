@@ -15,7 +15,7 @@ install:
   - source ~/.elan/env
   - if [ "$GITHUB_CRED" != "" ]; then git config --add github.oauthtoken $GITHUB_CRED; echo setting up GitHub credentials; else echo no GitHub credentials available; fi
   - leanpkg configure
-  - curl -O https://raw.githubusercontent.com/leanprover-community/mathlib/master/scripts/remote-install-update-mathlib.sh -sSf
+  - curl -O https://raw.githubusercontent.com/leanprover-community/mathlib-tools/master/scripts/remote-install-update-mathlib.sh -sSf
   - chmod +x remote-install-update-mathlib.sh
   - yes | bash remote-install-update-mathlib.sh
   - source $HOME/.profile
