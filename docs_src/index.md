@@ -48,9 +48,11 @@ computers, by us or [other people](https://github.com/leanprover-community/mathl
 Each node in the following graph is a definition or statement used
 directly or indirectly in the definition of perfectoid spaces, or in the
 proofs of the required lemmas. Each edge is a use. There are more than
-3000 nodes and 30000 edges. The spatial layout and cluster coloring was
-computed by [Gephi](https://gephi.org/).
-![Perfectoid definition graph](images/perfectoid_graph.png)
+3000 nodes and 30000 edges. The spatial layout and cluster coloring were
+computed independently by [Gephi](https://gephi.org/), using tools
+[Force atlas 2](https://github.com/gephi/gephi/wiki/Force-Atlas-2) and
+[modularity](https://github.com/gephi/gephi/wiki/Modularity).
+[![Perfectoid definition graph](images/perfectoid_graph_small.png)](images/perfectoid_graph.png)
 Labels were added by hand. The big star is the definition of perfectoid
 spaces. All other nodes have a size depending on how many nodes use
 them. You can play with the [gephi source](perfectoid.gephi). 
@@ -58,7 +60,22 @@ Note that, although the definition of perfectoid spaces is
 there, we are still working on making the project more beautiful, so
 the graph maybe be not perfectly faithful to its current state.
 
-If you want to explore the project interactively, you can read our
+In order to get a legible graph, we had to remove some foundational nodes
+like the definition of equality, existential quantifier, or powerset
+(none of which is a primitive concept in dependent type theory with
+inductive constructions, the mathematical foundations used by Lean).
+These nodes were related to too many others, and prevented computation
+of meaningful spatial layout or modularity classes. We lost of bit of
+mathematics unity display, but the middle of the graph still features
+many different colors in the same zone, corresponding to topological
+algebra (groups or rings equipped with a topology or uniform structure
+compatible with their algebraic operations). The red class at the bottom
+is labelled "Filters", but it also includes quite a bit of naive set
+theory (somewhat orphaned by the removal of the powerset node). The word
+lattice should be understood in the order relation theoretic sense, not
+its group theoretic sense.
+
+If you want to explore the project code interactively, you can read our
 [installation instructions](install.html).
 
 ### Chat
