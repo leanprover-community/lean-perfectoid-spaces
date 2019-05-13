@@ -718,13 +718,9 @@ instance (U : opens (spa A)) (r : rational_open_data_subsets U) :
 
 def presheaf_map {U V : opens (spa A)} (hUV : U ≤ V) :
   presheaf_value V → presheaf_value U :=
-λ f, ⟨λ rd, f.val ⟨rd.val, set.subset.trans rd.2 hUV⟩,
-begin
-  intros,
-  let X := f.2 (rational_open_data_subsets.map hUV rd1)
-    (rational_open_data_subsets.map hUV rd2) h,
-  exact X,
-end⟩
+λ f, ⟨_, λ rd1 rd2 h,
+  (f.2 (rational_open_data_subsets.map hUV rd1)
+    (rational_open_data_subsets.map hUV rd2) h : _)⟩
 
 lemma presheaf_map_id (U : opens (spa A)) :
   presheaf_map (le_refl U) = id :=
