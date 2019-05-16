@@ -30,9 +30,10 @@ variables {G₀ : Type*} [group G₀] [topological_space G₀] [topological_grou
 variables {G : Type*} [group G] [topological_space G] [topological_group G]
 variables (f : G₀ → G) [is_group_hom f]
 
+-- changing _root_.embedding f to embedding f causes elaboration times to go way up
 @[to_additive topological_add_group.nonarchimedean_of_nonarchimedean_open_embedding]
 lemma nonarchimedean_of_nonarchimedean_open_embedding
-  (emb : embedding f) (hf : is_open (range f)) (h : nonarchimedean G₀) :
+  (emb : _root_.embedding f) (hf : is_open (range f)) (h : nonarchimedean G₀) :
   nonarchimedean G :=
 begin
   intros U hU,
