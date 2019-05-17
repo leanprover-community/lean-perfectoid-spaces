@@ -99,6 +99,8 @@ end
 lemma with_zero.nhds_zero (γ : Γ) : {x : with_zero Γ | x < γ} ∈ nhds (0 : with_zero Γ) :=
 by { rw with_zero.nhds_zero_mem, use γ }
 
+variable (Γ)
+
 def with_zero.ordered_topology : ordered_topology (with_zero Γ) :=
 { is_closed_le' :=
   begin
@@ -650,20 +652,17 @@ end
 
 end continuity_of_vhat
 
--- Kevin pulled this lemma out because it takes forever to compile and takes Lean's
--- deterministic timeout meter right to the edge
+-- The `let cadd := ...` trick hugely speeds up elaboration here
 lemma valuation_on_completion_extend_add_aux :
   is_closed {p : (hat K) × (hat K) | vhat (p.1 + p.2) ≤ vhat p.1 ∨ vhat (p.1 + p.2) ≤ vhat p.2} :=
 begin
-  letI := @with_zero.topological_space Γ,
-  letI := @with_zero.ordered_topology Γ, -- Γ should be explicit in these functions
-  convert @is_closed_union _ {p : (hat K) × (hat K) | vhat (p.1 + p.2) ≤ vhat p.1}
-    {p : (hat K) × (hat K) | vhat (p.1 + p.2) ≤ vhat p.2 } _ _ _,
-  { exact is_closed_le ((continuous_add').comp (continuous_vhat v)) (continuous_fst.comp (continuous_vhat v)) },
-  { apply is_closed_le _ _, apply_instance, apply_instance,
-    { apply (continuous_add').comp, exact (continuous_vhat v), apply_instance},
-    { apply continuous_snd.comp, exact (continuous_vhat v)},
-  }
+  letI := with_zero.topological_space Γ,
+  letI := with_zero.ordered_topology Γ,
+  let cadd := continuous_add',
+  exact is_closed_union
+    (is_closed_le (cadd.comp (continuous_vhat v)) (continuous_fst.comp (continuous_vhat v)))
+    (is_closed_le (cadd.comp (continuous_vhat v)) (continuous_snd.comp (continuous_vhat v))),
+  apply_instance,
 end
 .
 
