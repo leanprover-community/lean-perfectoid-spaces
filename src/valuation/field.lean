@@ -740,6 +740,7 @@ noncomputable example (v : valuation R Γ) : comm_ring (ring_completion (valuati
 
 universe u
 
+-- changing `Type u` to `Type*` hugely increases elaboration time
 noncomputable def valuation_on_completion {R : Type u} [comm_ring R] (v : valuation R Γ) :
   valuation
     (ring_completion
