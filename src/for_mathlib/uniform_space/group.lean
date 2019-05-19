@@ -75,7 +75,7 @@ instance sep_quot.is_add_group_hom_lift [separated β]  [hom : is_add_group_hom 
 end⟩
 
 instance sep_quot.is_add_group_hom_map [hom : is_add_group_hom f](hf : continuous f) : is_add_group_hom (sep_quot.map f) :=
-sep_quot.is_add_group_hom_lift (hf.comp continuous_quotient_mk)
+sep_quot.is_add_group_hom_lift (continuous_quotient_mk.comp hf)
 end uniform_add_group_sep_quot
 
 section uniform_add_comm_group_sep_quot

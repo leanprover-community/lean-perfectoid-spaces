@@ -40,7 +40,7 @@ continuous₂ (g ∘₂ f) :=
 begin
   unfold continuous₂,
   rw function.uncurry_bicompr,
-  exact hf.comp hg
+  exact hg.comp hf
 end
 
 section
@@ -191,15 +191,15 @@ def continuous_pi₁ {I : Type*} {R : I → Type*} {S : I → Type*}
   [∀ i, topological_space (R i)] [∀ i, topological_space (S i)]
   {f : Π (i : I), (R i) → (S i)} (Hfi : ∀ i, continuous (f i)) :
   continuous (λ rs i, f i (rs i) : (Π (i : I), R i) → Π (i : I), S i) :=
-continuous_pi (λ i, continuous.comp (continuous_apply i) (Hfi i))
+continuous_pi (λ i,  (Hfi i).comp (continuous_apply i))
 
 def continuous_pi₂ {I : Type*} {R : I → Type*} {S : I → Type*} {T : I → Type*}
   [∀ i, topological_space (R i)] [∀ i, topological_space (S i)] [∀ i, topological_space (T i)]
   {f : Π (i : I), (R i) × (S i) → (T i)} (Hfi : ∀ i, continuous (f i)) :
 continuous (λ rs i, f i ⟨rs.1 i, rs.2 i⟩ : (Π (i : I), R i) × (Π (i : I), S i) → Π (i : I), T i) :=
-continuous_pi (λ i, continuous.comp
-  (continuous.prod_mk (continuous.comp (continuous_fst) (continuous_apply i))
-    (continuous.comp (continuous_snd) (continuous_apply i))) (Hfi i))
+continuous_pi (λ i, (Hfi i).comp
+  (continuous.prod_mk ((continuous_apply i).comp continuous_fst) $
+                      (continuous_apply i).comp continuous_snd))
 
 
 section bases

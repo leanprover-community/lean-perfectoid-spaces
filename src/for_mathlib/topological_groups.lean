@@ -252,8 +252,8 @@ variables (K : Type*) [group K] [topological_space K] [topological_group K]
 
 @[trans] def trans (h1 : G ≃*ₜ H) (h2 : H ≃*ₜ K) : (G ≃*ₜ K) :=
 { hom := is_group_hom.comp h1.to_homeomorph.to_equiv.to_fun h2.to_homeomorph.to_equiv.to_fun,
-  continuous_to_fun := continuous.comp h1.continuous_to_fun h2.continuous_to_fun,
-  continuous_inv_fun := continuous.comp h2.continuous_inv_fun h1.continuous_inv_fun,
+  continuous_to_fun := h2.continuous_to_fun.comp h1.continuous_to_fun,
+  continuous_inv_fun := h1.continuous_inv_fun.comp h2.continuous_inv_fun,
   ..equiv.trans h1.to_equiv h2.to_equiv }
 
 end top_group_equiv

@@ -117,7 +117,7 @@ end sep_quot_lift
 def map (f : α → β) : sep_quot α → sep_quot β := lift (quotient.mk ∘ f)
 
 lemma continuous_map {f : α → β} (h : continuous f) : continuous (map f) :=
-continuous_lift $ h.comp continuous_quotient_mk
+continuous_lift $ continuous_quotient_mk.comp h
 
 lemma uniform_continuous_map {f : α → β} (hf : uniform_continuous f): uniform_continuous (map f) :=
 uniform_continuous_lift (hf.comp uniform_continuous_mk)
@@ -191,10 +191,9 @@ lemma continuous_map₂ {f : α → β → γ} (h : continuous₂ f) : continuou
 begin
   unfold continuous₂ map₂ lift₂,
   rw function.uncurry_bicompr,
-  apply continuous.comp uniform_continuous_prod.continuous,
-  apply continuous_lift,
+  apply (continuous_lift _).comp uniform_continuous_prod.continuous,
   rw function.uncurry_bicompr,
-  apply continuous.comp h continuous_quotient_mk
+  exact continuous_quotient_mk.comp h
 end
 
 -- Now begins a long series of lemmas for which we use an ad hoc killing tactic.

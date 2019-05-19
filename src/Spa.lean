@@ -743,7 +743,7 @@ is_ring_hom (presheaf_map hUV) :=
 
 def presheaf_map_cts {U V : opens (spa A)} (hUV : U ≤ V) :
   continuous (presheaf_map hUV) :=
-continuous_subtype_mk _ (continuous_pi (λ i, (continuous.comp (continuous_subtype_val) (continuous_apply _))))
+continuous_subtype_mk _ (continuous_pi (λ i, ((continuous_apply _).comp continuous_subtype_val)))
 
 variable (A)
 noncomputable def presheaf_of_topological_rings : presheaf_of_topological_rings (spa A) :=

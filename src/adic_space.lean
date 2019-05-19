@@ -115,7 +115,7 @@ def presheaf_of_rings.f_map_comp
   {F : presheaf_of_rings X} {G : presheaf_of_rings Y} {H : presheaf_of_rings Z}
   (a : presheaf_of_rings.f_map F G) (b : presheaf_of_rings.f_map G H) : presheaf_of_rings.f_map F H :=
 { f := λ x, b.f (a.f x),
-  hf := continuous.comp a.hf b.hf,
+  hf := b.hf.comp a.hf,
   f_flat := λ V s, (a.f_flat (b.hf.comap V)) ((b.f_flat V) s),
   f_flat_is_ring_hom := λ V, show (is_ring_hom ((a.f_flat (b.hf.comap V)) ∘ (b.f_flat V))), from is_ring_hom.comp _ _,
   presheaf_f_flat := λ V W hWV s, begin
@@ -170,14 +170,7 @@ def presheaf_of_topological_rings.f_map_comp
   {G : presheaf_of_topological_rings Y} {H : presheaf_of_topological_rings Z}
   (a : presheaf_of_topological_rings.f_map F G) (b : presheaf_of_topological_rings.f_map G H) :
   presheaf_of_topological_rings.f_map F H :=
-{ cont_f_flat := λ V, begin
-    show continuous
-    ((a.f_flat (b.hf.comap V)) ∘
-         (b.f_flat V)),
-    apply continuous.comp,
-      apply b.cont_f_flat,
-    apply a.cont_f_flat
-  end,
+{ cont_f_flat := λ V, (a.cont_f_flat _).comp (b.cont_f_flat _),
   ..presheaf_of_rings.f_map_comp a.to_presheaf_of_rings_f_map b.to_presheaf_of_rings_f_map }
 -- need a construction `stalk_map` attached to an f-map; should follow from UMP
 -- Need this before we embark on 𝒞.map

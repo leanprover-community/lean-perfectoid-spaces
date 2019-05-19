@@ -26,8 +26,8 @@ variables {α : Type*} {β : Type*} {γ : Type*} {δ : Type*}
 lemma id : open_embedding (@id α : α → α) := ⟨is_open_map.id, embedding_id⟩
 
 -- one is .comp, one is _compose. Which is "correct"?
-lemma comp {f : α → β} {g : β → γ} (hf : open_embedding f) (hg : open_embedding g) :
-  open_embedding (g ∘ f) := ⟨is_open_map.comp hf.1 hg.1, embedding_compose hf.2 hg.2⟩
+lemma comp {f : α → β} {g : β → γ} (hg : open_embedding g) (hf : open_embedding f) :
+  open_embedding (g ∘ f) := ⟨is_open_map.comp hf.1 hg.1, embedding_compose hg.2 hf.2⟩
 
 theorem of_open {s : set α} (hs : _root_.is_open s) :
   open_embedding (subtype.val : {x // x ∈ s} → α) :=

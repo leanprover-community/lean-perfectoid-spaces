@@ -76,17 +76,12 @@ variables {g : β → γ} {Hg : continuous g}
 variable {Hf}
 
 def comp {F : presheaf α} {G : presheaf β} {H : presheaf γ}
-(f_ : fmap Hf F G) (g_ : fmap Hg G H) : fmap (continuous.comp Hf Hg) F H :=
+(f_ : fmap Hf F G) (g_ : fmap Hg G H) : fmap (Hg.comp Hf) F H :=
 { map := λ U, (f_.map (opens.comap Hg U)) ∘ (g_.map U),
-  commutes :=
-    begin
-      intros U V HVU,
-      rw function.comp.assoc _ _ (H.res _ _ _),
-      rw g_.commutes,
-      rw ←function.comp.assoc _ _ (g_.map _),
-      rw f_.commutes,
-      refl,
-    end, }
+  commutes := λ U V HVU,
+    by { rw [function.comp.assoc _ _ (H.res _ _ _),  g_.commutes,
+             ←function.comp.assoc _ _ (g_.map _), f_.commutes],
+         refl } }
 
 def id (F : presheaf α) : fmap continuous_id F F :=
 { map := λ U,
@@ -97,12 +92,7 @@ def id (F : presheaf α) : fmap continuous_id F F :=
         exact Hx,
       exact (F.res U (opens.comap continuous_id U) HUU),
     end,
-  commutes :=
-    begin
-      intros U V HUV,
-      iterate 2 { rw ←F.Hcomp, },
-    end, }
-
+  commutes := λ U V HUV, by iterate 2 { rw ←F.Hcomp } }
 end fmap
 
 end presheaf

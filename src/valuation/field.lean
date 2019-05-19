@@ -307,9 +307,9 @@ lemma topological_group.extend_is_group_hom (hφ : continuous φ) (h : continuou
   let Φ := de.extend φ,
   let P := λ x y : H, Φ (x*y) = Φ x*Φ y,
   have closed : is_closed { q : H × H | P q.1 q.2 } :=
-    have c1 : continuous (λ q : H × H, Φ (q.1 * q.2)), from continuous_mul'.comp h,
+    have c1 : continuous (λ q : H × H, Φ (q.1 * q.2)), from h.comp continuous_mul',
     have c2 : continuous (λ q : H × H, Φ q.1 * Φ q.2),
-      from continuous_mul (continuous_fst.comp h) (continuous_snd.comp h),
+      from continuous_mul (h.comp continuous_fst) (h.comp continuous_snd),
   is_closed_eq c1 c2,
 
   apply is_closed_property2 de closed,
@@ -496,8 +496,8 @@ begin
       exact t2_space_discrete
     end
     (by apply_instance) _ _
-      (continuous_mul'.comp ch)
-      (continuous_mul (continuous_fst.comp ch) (continuous_snd.comp ch)) },
+      (ch.comp continuous_mul')
+      (continuous_mul (ch.comp continuous_fst) (ch.comp continuous_snd)) },
   have : ∀ x y : units (valued_ring K v), hatv (ι x * ι y) = (hatv $ ι x)*(hatv $ ι y),
   { intros x y,
     have hx : hatv (ι x) = _:= de.extend_e_eq x,
@@ -660,8 +660,8 @@ begin
   letI := with_zero.ordered_topology Γ,
   let cadd := continuous_add',
   exact is_closed_union
-    (is_closed_le (cadd.comp (continuous_vhat v)) (continuous_fst.comp (continuous_vhat v)))
-    (is_closed_le (cadd.comp (continuous_vhat v)) (continuous_snd.comp (continuous_vhat v))),
+    (is_closed_le ((continuous_vhat v).comp cadd) ((continuous_vhat v).comp continuous_fst))
+    (is_closed_le ((continuous_vhat v).comp cadd) ((continuous_vhat v).comp continuous_snd)),
   apply_instance,
 end
 .

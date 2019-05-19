@@ -348,8 +348,8 @@ instance : topological_division_ring (hat K) :=
 { continuous_inv :=
     begin
       rw invinv K,
-      exact (hat_star_is_units K).continuous_inv_fun.comp (
-        (continuous_inv_hat_star K).comp (hat_star_is_units K).continuous_to_fun)
+      exact ((hat_star_is_units K).continuous_to_fun.comp $ continuous_inv_hat_star K).comp
+        (hat_star_is_units K).continuous_inv_fun
     end,
   ..ring_completion.topological_ring K }
 
