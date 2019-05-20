@@ -17,32 +17,6 @@ end localization
 
 namespace algebra
 
-section span_mul
-open submodule
-variables {R : Type*} {A : Type*} [comm_ring R] [ring A] [algebra R A]
-variables (M : submodule R A)
-
-lemma mul_left_span_singleton_eq_image (a : A) :
-  span R {a} * M = map (lmul_left R A a) M :=
-begin
-  apply le_antisymm,
-  { rw mul_le,
-    intros a' ha' m hm,
-    rw mem_span_singleton at ha',
-    rcases ha' with ⟨r, rfl⟩,
-    use [r • m, M.smul_mem r hm],
-    simp },
-  { rintros _ ⟨m, hm, rfl⟩,
-    apply mul_mem_mul _ hm,
-    apply subset_span,
-    simp }
-end
-
-lemma mul_left_span_singleton_eq_image' (a : A) : ↑(span _ {a} * M) = (*) a '' M :=
-congr_arg submodule.carrier (mul_left_span_singleton_eq_image M a)
-
-end span_mul
-
 section to_linear_map
 variables {R : Type*} {A : Type*} {B : Type*} {C : Type*}
 variables [comm_ring R] [ring A] [ring B] [ring C]

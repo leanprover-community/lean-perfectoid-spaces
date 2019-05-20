@@ -86,7 +86,7 @@ end
 /-For every open subgroup `U` of `A` and every `a : A`,
 there exists an open subgroup `V` of `A`,
 such that `a • (span D V)` is contained in the `D`-span of `U`.-/
-lemma exists_mul_left_subset (h : nonarchimedean A) (U : open_add_subgroup A) (a : A) :
+lemma left_mul_subset (h : nonarchimedean A) (U : open_add_subgroup A) (a : A) :
   ∃ V : open_add_subgroup A, (a : ATs) • (Dspan V) ≤ (Dspan U) :=
 begin
   cases h _ _ with V hV,
@@ -97,8 +97,8 @@ begin
     rw image_subset_iff,
     exact hV },
   apply mem_nhds_sets (continuous_mul_left _ _ U.is_open),
-  { rw [mem_preimage_eq, mul_zero],
-    apply is_add_submonoid.zero_mem }
+  rw [mem_preimage_eq, mul_zero],
+  exact U.zero_mem
 end
 
 /-For every open subgroup `U` of `A`, there exists an open subgroup `V` of `A`,
@@ -272,7 +272,7 @@ begin
   intros a' s',
   clear a,
   cases mul_left.aux₂ _ _ hT s' U with W hW,
-  cases exists_mul_left_subset T s Huber_ring.nonarchimedean W a' with V hV,
+  cases left_mul_subset T s Huber_ring.nonarchimedean W a' with V hV,
   use V,
   erw [localization.mk_eq, mul_comm, mul_smul],
   exact le_trans (smul_le_smul (le_refl _) hV) hW
