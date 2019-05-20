@@ -4,6 +4,7 @@ import algebra.pi_instances
 section
 variables {α : Type*} [group α] {β : Type*} [group β]
 
+-- PR'd to mathlib in #1066
 @[to_additive is_add_subgroup.prod]
 instance is_subgroup.prod (s : set α) (t :  set β) [is_subgroup s] [is_subgroup t] :
   is_subgroup (s.prod t) :=
