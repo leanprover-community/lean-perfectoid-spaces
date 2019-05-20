@@ -1,5 +1,8 @@
 import algebra.field
 
+-- Note(jmc): I think these simp lemmas should use coercions.
+-- In that case the direction of the simp-lemma should probably be reversed.
+
 @[simp]
 lemma division_ring.val_inv {R : Type*} [division_ring R] (x : units R) : (x.val)⁻¹ = x.inv :=
 begin

@@ -22,6 +22,7 @@ variables {R : Type*} {A : Type*} {B : Type*} {C : Type*}
 variables [comm_ring R] [ring A] [ring B] [ring C]
 variables [algebra R A] [algebra R B] [algebra R C]
 
+-- This lemma is PR'd to mathlib in #1062
 @[simp] lemma to_linear_map_comp (f : A →ₐ[R] B) (g : B →ₐ[R] C) :
   (g.comp f).to_linear_map = g.to_linear_map.comp f.to_linear_map := rfl
 
@@ -96,6 +97,7 @@ begin
   { exact ⟨_, h, f.apply_symm_apply x⟩ }
 end
 
+section -- PR'd to mathlib in #1064
 def linear_equiv_of_units {M : Type*} [add_comm_group M] [module R M]
   (f : units (M →ₗ[R] M)) : (M ≃ₗ[R] M) :=
 { inv_fun := f.inv.to_fun,
@@ -123,6 +125,8 @@ def units_equiv {M : Type*} [add_comm_group M] [module R M] :
     cases f,
     tidy
   end }
+
+end -- end of #1064
 
 lemma map_lmul_left_inv (a : units A) :
   map (lmul_left R A ↑a⁻¹) = comap (lmul_left R A a) :=
