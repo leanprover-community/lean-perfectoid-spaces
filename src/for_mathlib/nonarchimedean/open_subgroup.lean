@@ -102,12 +102,9 @@ begin
     convert is_submonoid.mul_mem (is_subgroup.inv_mem hux) hu,
     simp },
   split,
-  { apply continuous_mul continuous_id continuous_const,
-    { exact U.is_open },
-    { apply_instance } },
-  { erw set.mem_preimage_eq,
-    rw mul_inv_self,
-    exact is_submonoid.one_mem _ }
+  { -- TODO(jmc): Use continuous_mul_right once #1065 has landed.
+    exact continuous_mul continuous_id continuous_const _ U.is_open },
+  { simpa using is_submonoid.one_mem (U : set G) }
 end
 
 section
