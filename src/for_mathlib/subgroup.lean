@@ -29,7 +29,7 @@ le_antisymm
 
 end add_group
 
-namespace add_monoid
+namespace add_monoid -- This is PR'd to mathlib in #1070
 -- TODO(jmc): generalise using to_additive
 variables {α : Type*} [add_comm_monoid α] {β : Type*}
 
