@@ -16,12 +16,12 @@ lemma uniform_continuous₂_curry (f : α × β → γ) : uniform_continuous₂ 
 by rw  [←function.uncurry_curry f] {occs := occurrences.pos [2]} ; refl
 
 lemma uniform_continuous₂.comp {f : α → β → γ} {g : γ → δ}
-  (hf : uniform_continuous₂ f)(hg : uniform_continuous g) :
+  (hg : uniform_continuous g) (hf : uniform_continuous₂ f) :
 uniform_continuous₂ (g ∘₂ f) :=
 begin
   unfold uniform_continuous₂,
   rw function.uncurry_bicompr,
-  exact hf.comp hg
+  exact hg.comp hf
 end
 
 lemma uniform_embedding.comp {f : α → β} (hf : uniform_embedding f)
