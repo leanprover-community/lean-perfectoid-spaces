@@ -1,3 +1,7 @@
+-- The important contents of this file have been PR'd to mathlib in #1071
+-- Instead of a class, in the PR `Prime` is a subtype.
+-- This should not cause any problems.
+
 import data.nat.prime 
 
 namespace nat
