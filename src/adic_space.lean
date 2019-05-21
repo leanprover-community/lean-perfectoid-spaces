@@ -1,4 +1,3 @@
-import data.nat.prime
 import algebra.group_power
 import topology.algebra.ring
 import topology.opens
