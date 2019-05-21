@@ -5,7 +5,6 @@ import topology.opens
 import category_theory.category
 import category_theory.full_subcategory
 
-import for_mathlib.prime
 import for_mathlib.sheaves.sheaf_of_topological_rings
 import for_mathlib.opens
 import for_mathlib.open_embeddings

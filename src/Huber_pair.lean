@@ -10,8 +10,8 @@ open power_bounded
 section integral
 variables {R : Type u} [comm_ring R] [decidable_eq R]
 
-instance subtype.val.is_ring_hom (S : set R) [is_subring S] : is_ring_hom (@subtype.val _ S) :=
-by apply_instance
+-- instance subtype.val.is_ring_hom (S : set R) [is_subring S] : is_ring_hom (@subtype.val _ S) :=
+-- by apply_instance
 
 def is_integral (S : set R) [is_subring S] (r : R) : Prop :=
 ∃ f : polynomial ↥S, (f.monic) ∧ f.eval₂ (@subtype.val _ S) r = 0
