@@ -99,14 +99,14 @@ begin
       repeat { rw mul_add <|> rw add_mul },
       abel },
     simp },
-  refine tendsto.comp _ tendsto_map,
-  refine tendsto.comp _ add_Z,
+  refine tendsto.comp tendsto_map _,
+  refine tendsto.comp add_Z _,
   apply tendsto.prod_mk _ ring_with_zero_nhd.mul_Z,
   { change tendsto ((λ p : α × α, p.1 + p.2) ∘ (λ (x : α × α), (x.fst * y₀, x₀ * x.snd))) (filter.prod (Z α) (Z α)) (Z α),
-    refine tendsto.comp _ add_Z,
+    refine tendsto.comp add_Z _,
     apply tendsto.prod_mk,
-    { exact tendsto_fst.comp (ring_with_zero_nhd.right_mul y₀) },
-    { exact tendsto_snd.comp (ring_with_zero_nhd.left_mul  x₀) } },
+    { exact (ring_with_zero_nhd.right_mul y₀).comp  tendsto_fst},
+    { exact (ring_with_zero_nhd.left_mul  x₀).comp  tendsto_snd} },
 end
 
 end ring_with_zero_nhd

@@ -52,7 +52,7 @@ instance uniform_space_sep_quot.add_group : add_group (sep_quot α) :=
 theorem uniform_add_group.mk'' {α} [uniform_space α] [add_group α]
   (h₁ : uniform_continuous₂ ((+) : α → α → α))
   (h₂ : uniform_continuous (λp:α, -p)) : uniform_add_group α :=
-⟨(uniform_continuous_fst.prod_mk (uniform_continuous_snd.comp h₂)).comp h₁⟩
+⟨uniform_continuous.comp h₁ (uniform_continuous.prod_mk uniform_continuous_fst (h₂.comp uniform_continuous_snd))⟩
 
 instance : uniform_add_group (sep_quot α) :=
 uniform_add_group.mk'' (sep_quot.uniform_continuous_map₂ uniform_continuous₂_add) (sep_quot.uniform_continuous_map uniform_continuous_neg')

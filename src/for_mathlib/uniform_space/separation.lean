@@ -120,7 +120,7 @@ lemma continuous_map {f : α → β} (h : continuous f) : continuous (map f) :=
 continuous_lift $ continuous_quotient_mk.comp h
 
 lemma uniform_continuous_map {f : α → β} (hf : uniform_continuous f): uniform_continuous (map f) :=
-uniform_continuous_lift (hf.comp uniform_continuous_mk)
+uniform_continuous_lift (uniform_continuous_mk.comp hf)
 
 lemma map_mk {f : α → β} (h : separated_map f) (a : α) : map f ⟦a⟧ = ⟦f a⟧ :=
 by rw [map, lift_mk (h.comp uniform_continuous_mk.separated_map)]
