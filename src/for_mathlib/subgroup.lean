@@ -14,7 +14,7 @@ instance is_subgroup.prod (s : set α) (t :  set β) [is_subgroup s] [is_subgrou
 
 end
 
-namespace add_group
+namespace add_group -- This is PR'd to mathlib in #1069
 -- TODO(jmc): generalise using to_additive
 variables {α : Type*} {β : Type*} [add_group α] [add_group β] (f : α → β) [is_add_group_hom f]
 
