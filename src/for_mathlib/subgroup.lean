@@ -28,29 +28,3 @@ le_antisymm
   (closure_subset $ set.image_subset _ subset_closure)
 
 end add_group
-
-namespace add_monoid -- This is PR'd to mathlib in #1070
--- TODO(jmc): generalise using to_additive
-variables {α : Type*} [add_comm_monoid α] {β : Type*}
-
-local attribute [instance] classical.prop_decidable
-
-lemma sum_mem_closure (s : set α) (ι : finset β) (f : β → α) (h : ∀ i ∈ ι, f i ∈ s) :
-  ι.sum f ∈ add_monoid.closure s :=
-begin
-  revert h,
-  apply finset.induction_on ι,
-  { intros, rw finset.sum_empty, apply is_add_submonoid.zero_mem },
-  { intros i ι' hi IH h,
-    rw finset.sum_insert hi,
-    apply is_add_submonoid.add_mem,
-    { apply add_monoid.subset_closure,
-      apply h,
-      apply finset.mem_insert_self },
-    { apply IH,
-      intros i' hi',
-      apply h,
-      apply finset.mem_insert_of_mem hi' } }
-end
-
-end add_monoid
