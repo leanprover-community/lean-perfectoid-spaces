@@ -34,11 +34,11 @@ begin
   exact ⟨V₁ ∩ V₂, filter.inter_mem_sets H₁ H₂, assume v w ⟨hv, _⟩ ⟨_, hw⟩, @H (v, w) ⟨hv, hw⟩⟩
 end
 
-lemma continuous_mul_left (a : A) : continuous (λ x, a * x) :=
-continuous_mul continuous_const continuous_id
-
-lemma continuous_mul_right (a : A) : continuous (λ x, x * a) :=
-continuous_mul continuous_id continuous_const
+-- lemma continuous_mul_left (a : A) : continuous (λ x, a * x) :=
+-- continuous_mul continuous_const continuous_id
+-- 
+-- lemma continuous_mul_right (a : A) : continuous (λ x, x * a) :=
+-- continuous_mul continuous_id continuous_const
 
 lemma is_open_ideal_map_open_embedding {f : A → B} [is_ring_hom f]
   (emb : embedding f) (hf : is_open (range f)) (I : ideal A) (hI : is_open (↑I : set A)) :
