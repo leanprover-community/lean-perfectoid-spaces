@@ -1,8 +1,6 @@
 import ring_theory.algebra_operations
 import ring_theory.localization
 
-import tactic.tidy
-
 import for_mathlib.rings
 
 local attribute [instance] set.pointwise_mul_semiring
@@ -48,8 +46,6 @@ variables {A : Type*} [ring A] [algebra R A]
 variables {B : Type*} [ring B] [algebra R B]
 variables (f : A →ₐ[R] B)
 variables (M N : submodule R A)
-
-attribute [simp] comap_id
 
 lemma map_mul : (M * N).map f.to_linear_map = M.map f.to_linear_map * N.map f.to_linear_map :=
 begin
