@@ -6,7 +6,7 @@ import category_theory.category
 import category_theory.full_subcategory
 
 import for_mathlib.sheaves.sheaf_of_topological_rings
-import for_mathlib.opens
+-- import for_mathlib.opens
 import for_mathlib.open_embeddings
 import for_mathlib.topological_groups -- for the predicate is_complete_hausdorff
 
