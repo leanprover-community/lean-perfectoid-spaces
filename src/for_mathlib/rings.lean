@@ -2,21 +2,6 @@ import data.subtype data.equiv.algebra ring_theory.ideal_operations
 
 universes u u₁ u₂ v v₁ w
 
-section
-
-variables {R : Type*} {S : Type*} [monoid R] [monoid S]
-
-lemma mul_left_mul {G : Type*} [semigroup G] (x y : G) :
-  (*) (x * y) = (*) x ∘ (*) y :=
-funext $ λ _, mul_assoc _ _ _
-
--- It seems that semigroup homs don't exist in mathlib...
-lemma is_monoid_hom.map_mul_left (f : R → S) [is_monoid_hom f] (x : R) :
-  f ∘ ((*) x) = ((*) (f x)) ∘ f :=
-funext $ λ _, is_monoid_hom.map_mul f
-
-end
-
 namespace ideal
 
 open function
