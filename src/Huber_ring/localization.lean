@@ -7,7 +7,7 @@ import Huber_ring.basic
 import for_mathlib.topological_rings
 import for_mathlib.algebra
 import for_mathlib.submodule
-import for_mathlib.subgroup
+-- import for_mathlib.subgroup
 import for_mathlib.nonarchimedean.basic
 import for_mathlib.group
 
