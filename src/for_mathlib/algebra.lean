@@ -17,16 +17,16 @@ end localization
 
 namespace algebra
 
-section to_linear_map
-variables {R : Type*} {A : Type*} {B : Type*} {C : Type*}
-variables [comm_ring R] [ring A] [ring B] [ring C]
-variables [algebra R A] [algebra R B] [algebra R C]
-
--- This lemma is PR'd to mathlib in #1062
-@[simp] lemma to_linear_map_comp (f : A →ₐ[R] B) (g : B →ₐ[R] C) :
-  (g.comp f).to_linear_map = g.to_linear_map.comp f.to_linear_map := rfl
-
-end to_linear_map
+-- section to_linear_map
+-- variables {R : Type*} {A : Type*} {B : Type*} {C : Type*}
+-- variables [comm_ring R] [ring A] [ring B] [ring C]
+-- variables [algebra R A] [algebra R B] [algebra R C]
+-- 
+-- -- This lemma is PR'd to mathlib in #1062
+-- @[simp] lemma to_linear_map_comp (f : A →ₐ[R] B) (g : B →ₐ[R] C) :
+--   (g.comp f).to_linear_map = g.to_linear_map.comp f.to_linear_map := rfl
+-- 
+-- end to_linear_map
 
 section
 variables {R : Type*} [comm_ring R]
