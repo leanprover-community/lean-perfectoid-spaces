@@ -1,7 +1,7 @@
 import algebra.char_p
 import ring_theory.ideals
 
--- The next two lines have been PR'd to mathlib in #1071
+-- The next two lines have been PR'd to mathlib in #1073
 def Prime := { p : ℕ // nat.prime p}
 instance : has_coe Prime ℕ := ⟨subtype.val⟩
 instance monoid.prime_pow {α : Type*} [monoid α]: has_pow α Prime := ⟨λ x p, x^p.val⟩
