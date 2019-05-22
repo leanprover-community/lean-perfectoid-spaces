@@ -1,7 +1,6 @@
 import valuation.basic
 
 import for_mathlib.quotient_group
--- import for_mathlib.subgroup
 import for_mathlib.group -- group_equiv
 
 /-

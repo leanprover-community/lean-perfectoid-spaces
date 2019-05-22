@@ -2,7 +2,6 @@
 import order.filter.lift
 import algebra.pointwise
 
--- import for_mathlib.subgroup
 import for_mathlib.topological_groups
 
 local attribute [instance] set.pointwise_mul_semiring
