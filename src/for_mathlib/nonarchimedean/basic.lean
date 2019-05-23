@@ -25,15 +25,14 @@ definition topological_add_group.nonarchimedean (G : Type*)
 attribute [to_additive topological_add_group.nonarchimedean] topological_group.nonarchimedean
 
 namespace topological_group
-open function set
+open function (hiding embedding) set
 variables {G₀ : Type*} [group G₀] [topological_space G₀] [topological_group G₀]
 variables {G : Type*} [group G] [topological_space G] [topological_group G]
 variables (f : G₀ → G) [is_group_hom f]
 
--- changing _root_.embedding f to embedding f causes elaboration times to go way up
 @[to_additive topological_add_group.nonarchimedean_of_nonarchimedean_open_embedding]
 lemma nonarchimedean_of_nonarchimedean_open_embedding
-  (emb : _root_.embedding f) (hf : is_open (range f)) (h : nonarchimedean G₀) :
+  (emb : embedding f) (hf : is_open (range f)) (h : nonarchimedean G₀) :
   nonarchimedean G :=
 begin
   intros U hU,
