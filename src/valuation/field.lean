@@ -42,8 +42,7 @@ end
 lemma with_zero.pure_le_nhds_fun : pure ≤ with_zero.nhds_fun Γ :=
 begin
   intro x,
-  induction x using with_zero.cases_on ; simp [with_zero.nhds_fun],
-  exact λ γ, with_zero.zero_lt_some,
+  induction x using with_zero.cases_on ; simp [with_zero.nhds_fun]
 end
 
 lemma with_zero.nhds_fun_ok : ∀ (x : with_zero Γ) (s ∈ with_zero.nhds_fun Γ x),
@@ -109,7 +108,7 @@ def with_zero.ordered_topology : ordered_topology (with_zero Γ) :=
     rw is_open_iff_mem_nhds,
     rintros ⟨a,b⟩ hab,
     change b < a at hab,
-    cases with_zero.some_of_gt hab with γ H,
+    cases with_zero.coe_of_gt hab with γ H,
     rw [nhds_prod_eq, mem_prod_iff, H],
     induction b using with_zero.cases_on,
     { use [{γ}, with_zero.singleton_nhds γ, {x : with_zero Γ | x < γ}, with_zero.nhds_zero γ],
@@ -630,9 +629,7 @@ begin
     apply mem_sets_of_superset this,
     intros y y_in,
     by_cases h : y = 0,
-    { rw h,
-      rw [mem_set_of_eq, valuation_on_completion_v_zero v],
-      exact with_zero.zero_lt_some },
+    { simp [h, mem_set_of_eq, valuation_on_completion_v_zero v] },
     { let u := units.mk0 y h,
       let γ := (hatv u : Γ),
       rw [mem_set_of_eq, show vhat y  = γ, from valuation_on_completion_v_nonzero v y h],

@@ -82,7 +82,7 @@ begin
       apply is_subgroups_basis.is_op,
     show v' 0 < γ,
     rw v'.map_zero,
-    exact with_zero.zero_lt_some
+    exact with_zero.zero_lt_coe
   },
   intros w Hw b Hb,
   change V ⊆ U at HU,

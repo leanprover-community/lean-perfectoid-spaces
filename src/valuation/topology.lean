@@ -18,13 +18,13 @@ variables {Γ : Type*} [linear_ordered_comm_group Γ]
 variables {R : Type*} [ring R] (v : valuation R Γ)
 
 lemma valuation.lt_is_add_subgroup (γ : Γ): is_add_subgroup {x | v x < γ} :=
-{ zero_mem := by simp only [valuation.map_zero, mem_set_of_eq] ; apply with_zero.zero_lt_some,
+{ zero_mem := by simp only [valuation.map_zero, mem_set_of_eq] ; apply with_zero.zero_lt_coe,
   add_mem := λ x y x_in y_in, lt_of_le_of_lt (map_add_le_max v x y) (max_lt x_in y_in),
   neg_mem := λ x x_in, by rwa [mem_set_of_eq, map_neg] }
 
 -- is this an OK place to put this?
 lemma valuation.le_is_add_subgroup (γ : Γ): is_add_subgroup {x | v x ≤ γ} :=
-{ zero_mem := by simp only [valuation.map_zero, mem_set_of_eq]; apply le_of_lt (with_zero.zero_lt_some),
+{ zero_mem := by simp only [valuation.map_zero, mem_set_of_eq]; apply le_of_lt (with_zero.zero_lt_coe),
   add_mem := λ x y x_in y_in, le_trans (map_add_le_max v x y) (max_le x_in y_in),
   neg_mem := λ x x_in, by rwa [mem_set_of_eq, map_neg] }
 
@@ -56,19 +56,14 @@ lemma valuation.subgroups_basis : is_subgroups_basis (λ γ : Γ, {x | v x < γ}
         use 1,
         intros y y_in,
         rcases (mem_image _ _ _).1 y_in with ⟨t, t_in, xty⟩,
-        rw ← xty,
-        simp [Hx],
-        exact none_lt_some, }
+        simp [xty.symm, Hx] }
     end,
   h_right_mul :=
     begin
       intros x γ,
       simp [image_subset_iff],
       induction v x using with_zero.cases_on,
-      { simp,
-        use 1,
-        intros _ _,
-        exact zero_lt_some },
+      { simp },
       { use a⁻¹*γ,
         intros y vy_lt,
         rw mul_comm,
@@ -81,8 +76,7 @@ lemma valuation.subgroups_basis : is_subgroups_basis (λ γ : Γ, {x | v x < γ}
       intro γ,
       by_cases h : γ < 1,
       { have : (γ*γ : with_zero Γ) < γ,
-        { rw mul_coe,
-          rw some_lt_some,
+        { norm_cast,
           have := linear_ordered_comm_group.mul_lt_right γ h,
           rwa one_mul at this },
         use γ,
@@ -91,7 +85,7 @@ lemma valuation.subgroups_basis : is_subgroups_basis (λ γ : Γ, {x | v x < γ}
         rw valuation.map_mul,
         exact with_zero.mul_lt_mul r_in s_in},
       { rw [not_lt] at h,
-        replace h := some_le_some_of_le h,
+        rw ← coe_le_coe at h,
         use 1,
         rintro x ⟨r, r_in, s, s_in, rfl⟩,
         refine lt_of_lt_of_le _ h,

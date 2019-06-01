@@ -106,7 +106,7 @@ begin
   have H0V : (0 : R) ∈ V,
     show (canonical_valuation v) 0 < γ,
     rw (canonical_valuation v).map_zero,
-    exact with_zero.zero_lt_some,
+    exact with_zero.zero_lt_coe,
   refine filter.mem_sets_of_superset (mem_nhds_sets HV H0V) _,
   intros u Hu,
   apply set.mem_of_mem_of_subset _ Hγ,

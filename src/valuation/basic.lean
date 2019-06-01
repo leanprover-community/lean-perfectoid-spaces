@@ -123,7 +123,7 @@ lemma unit_is_some (x : units R) : ∃ γ : Γ, v x = γ :=
 begin
   have h1 := v.map_mul x.val x.inv,
   rw [x.val_inv, valuation.map_one] at h1,
-  exact with_zero.eq_some_of_mul_eq_some_left h1.symm
+  exact with_zero.eq_coe_of_mul_eq_coe_left h1.symm
 end
 
 lemma unit_is_not_none (x : units R) : v x ≠ 0 :=
@@ -245,12 +245,7 @@ variables (Hle : ∀ g h : Γ₁, g ≤ h ↔ ψ g ≤ ψ h)
 include H12 Hle
 
 theorem le_of_le (r s : R) : v₁ r ≤ v₁ s ↔ v₂ r ≤ v₂ s :=
-begin
-  rw ←H12 r, rw ←H12 s,
-  cases v₁ r; cases v₁ s,
-  swap 3,{ simp [Hle, @with_zero.coe_ne_zero _ (ψ val)], },
-  all_goals { simp [Hle] },
-end
+by { rw ←H12 r, rw ←H12 s, exact with_zero.map_le Hle _ _ }
 
 -- Restriction of a Γ₂-valued valuation to a subgroup Γ₁ is still a valuation
 theorem valuation_of_valuation [is_group_hom ψ] (Hiψ : function.injective ψ) (H : is_valuation v₂) :
@@ -258,7 +253,7 @@ is_valuation v₁ :=
 { map_zero := with_zero.injective_map Hiψ $
     by erw [H12, H.map_zero, ← with_zero.map_zero],
   map_one := with_zero.injective_map Hiψ $
-    by erw [H12, H.map_one, with_zero.map_some, is_group_hom.map_one ψ]; refl,
+    by erw [H12, H.map_one, with_zero.map_coe, is_group_hom.map_one ψ]; refl,
   map_mul := λ r s, with_zero.injective_map Hiψ $
     by rw [H12, H.map_mul, ←H12 r, ←H12 s]; exact (with_zero.map_mul _ _ _).symm,
   map_add := λ r s,
@@ -293,7 +288,7 @@ valuation R Γ₁ :=
     map_one :=
     begin
       show with_zero.map f (_) = 1,
-      erw [v.map_one, with_zero.map_some, is_group_hom.map_one f],
+      erw [v.map_one, with_zero.map_coe, is_group_hom.map_one f],
       refl
     end,
     map_mul := λ x y,

@@ -45,6 +45,15 @@ structure equiv extends equiv α β :=
 lemma mul_le_mul_right (H : x ≤ y) : ∀ z : α, x * z ≤ y * z :=
 λ z, mul_comm z x ▸ mul_comm z y ▸ mul_le_mul_left H z
 
+lemma div_le_div (a b c d : α) : a * b⁻¹ ≤ c * d⁻¹ ↔ a * d ≤ c * b :=
+begin
+  split ; intro h,
+  have := mul_le_mul_right (mul_le_mul_right h b) d,
+  rwa [inv_mul_cancel_right, mul_assoc _ _ b, mul_comm _ b, ← mul_assoc, inv_mul_cancel_right] at this,
+  have := mul_le_mul_right (mul_le_mul_right h d⁻¹) b⁻¹,
+  rwa [mul_inv_cancel_right, mul_assoc, mul_comm d⁻¹ b⁻¹, ← mul_assoc, mul_inv_cancel_right] at this,
+end
+
 lemma one_le_mul_of_one_le_of_one_le (Hx : 1 ≤ x) (Hy : 1 ≤ y) : 1 ≤ x * y :=
 have h1 : x * 1 ≤ x * y, from mul_le_mul_left Hy x,
 have h2 : x ≤ x * y, by rwa mul_one x at h1,
@@ -193,44 +202,17 @@ end
 
 @[simp] lemma div_self (a : with_zero α) : a / a ≤ 1 := mul_inv_self a
 
+@[move_cast] lemma div_coe' (a b : α) : (a*b⁻¹ : with_zero α) = a / b := rfl
+
 lemma div_le_div (a b c d : with_zero α) (hb : b ≠ 0) (hd : d ≠ 0) :
   a / b ≤ c / d ↔ a * d ≤ c * b :=
 begin
-  rw ne_zero_iff_exists at hb hd,
-  rcases hb with ⟨b, rfl⟩,
-  rcases hd with ⟨d, rfl⟩,
-  cases a; cases c; split;
-  try { change none ≤ _ → _ };
-  try { change _ ≤ none → _ };
-  try { change _ → none ≤ _ };
-  try { change _ → _ ≤ none };
-  try { change some _ ≤ _ → _ };
-  try { change _ ≤ some _ → _ };
-  try { change _ → some _ ≤ _ };
-  try { change _ → _ ≤ some _ };
-  simp; intro h,
-  have := linear_ordered_comm_group.mul_le_mul_left
-    (linear_ordered_comm_group.mul_le_mul_left h b) d,
-  refine le_trans (le_of_eq _) (le_trans this (le_of_eq _)),
-  { rw mul_comm,
-    congr' 1,
-    rw mul_left_comm,
-    simp, },
-  { rw [mul_left_comm, mul_comm],
-    congr' 1,
-    rw mul_left_comm,
-    simp, },
-  have := linear_ordered_comm_group.mul_le_mul_left
-    (linear_ordered_comm_group.mul_le_mul_left h b⁻¹) d⁻¹,
-  refine le_trans (le_of_eq _) (le_trans this (le_of_eq _)),
-  { rw [mul_left_comm, mul_comm],
-    congr' 1,
-    rw mul_left_comm,
-    simp, },
-  { rw mul_comm,
-    congr' 1,
-    rw mul_left_comm,
-    simp, },
+  rcases ne_zero_iff_exists.1 hb with ⟨b, rfl⟩,
+  rcases ne_zero_iff_exists.1 hd with ⟨d, rfl⟩,
+  induction a using with_zero.cases_on ;
+  induction c using with_zero.cases_on ; try { norm_cast } ;
+  try { simp, done },
+  exact linear_ordered_comm_group.div_le_div _ _ _ _
 end
 
 end with_zero
@@ -246,7 +228,7 @@ begin
   rw lt_iff_le_and_ne,
   refine ⟨linear_ordered_comm_group.mul_le_mul_right (le_of_lt h) _, _⟩,
   intro h',
-  rw mul_right_cancel  h' at h,
+  rw mul_right_cancel h' at h,
   exact lt_irrefl b h
 end
 
@@ -393,25 +375,16 @@ end actual_ordered_comm_monoid
 variables {Γ : Type*} [linear_ordered_comm_group Γ]
 
 namespace with_zero
-lemma not_lt_zero : ∀ (x : with_zero Γ), x < 0 → false :=
-begin
-  intros x h,
-  induction x using with_zero.cases_on,
-  { exact lt_irrefl 0 h },
-  { exact (with_zero.not_some_le_zero : ¬ (x : with_zero Γ) ≤ 0) (le_of_lt h) },
-end
+open linear_ordered_comm_group
 
-lemma some_lt_some : ∀ (x y : Γ), (x : with_zero Γ) < y ↔ x < y :=
-λ x y, by repeat { rw [lt_iff_le_not_le, with_zero.some_le_some'] }
-
-lemma some_of_gt {x y : with_zero Γ} (h : x < y) : ∃ γ : Γ, y = (γ : with_zero Γ) :=
+lemma coe_of_gt {x y : with_zero Γ} (h : x < y) : ∃ γ : Γ, y = (γ : with_zero Γ) :=
 begin
   induction y using with_zero.cases_on,
   { exact false.elim (with_zero.not_lt_zero _ h) },
   { use y },
 end
 
-lemma eq_some_of_mul_eq_some_right {x y : with_zero Γ} {γ : Γ} (h : x*y = γ) :
+lemma eq_coe_of_mul_eq_coe_right {x y : with_zero Γ} {γ : Γ} (h : x*y = γ) :
   ∃ γ' : Γ, y = γ' :=
 begin
   rw ←with_zero.ne_zero_iff_exists,
@@ -420,41 +393,39 @@ begin
   exact zero_ne_coe h
 end
 
-lemma eq_some_of_mul_eq_some_left {x y : with_zero Γ} {γ : Γ} (h : x*y = γ) :
+lemma eq_coe_of_mul_eq_coe_left {x y : with_zero Γ} {γ : Γ} (h : x*y = γ) :
   ∃ γ' : Γ, x = γ' :=
-by rw mul_comm at h ; exact with_zero.eq_some_of_mul_eq_some_right h
+by rw mul_comm at h ; exact eq_coe_of_mul_eq_coe_right h
 
-lemma eq_some_of_mul_eq_some {x y : with_zero Γ} {γ : Γ} (h : x*y = γ) :
+lemma eq_coe_of_mul_eq_coe {x y : with_zero Γ} {γ : Γ} (h : x*y = γ) :
   (∃ γ' : Γ, x = γ') ∧ ∃ γ'' : Γ, y = γ'' :=
-⟨with_zero.eq_some_of_mul_eq_some_left h, with_zero.eq_some_of_mul_eq_some_right h⟩
+⟨eq_coe_of_mul_eq_coe_left h, eq_coe_of_mul_eq_coe_right h⟩
 
 lemma mul_inv_lt_of_lt_mul {x y z : with_zero Γ} (h : x < y*z) : x*z⁻¹ < y :=
 begin
-  cases some_of_gt h with γ h',
-  rcases with_zero.eq_some_of_mul_eq_some h' with ⟨⟨γ', hy⟩, γ'', hz⟩,
+  cases coe_of_gt h with γ h',
+  rcases eq_coe_of_mul_eq_coe h' with ⟨⟨γ', hy⟩, γ'', hz⟩,
   rw [hy, hz] at *,
   induction x using with_zero.cases_on,
   { rw zero_mul,
-    exact zero_lt_some },
-  { rw inv_coe,
-    rw [mul_coe, some_lt_some] at *,
-    exact linear_ordered_comm_group.mul_inv_lt_of_lt_mul h },
+    exact zero_lt_coe },
+  { norm_cast at *,
+    exact mul_inv_lt_of_lt_mul h },
 end
+
 lemma eq_inv_of_mul_eq_one_right {x y : with_zero Γ} (h : x*y = 1) : y = x⁻¹ :=
 begin
-  rcases with_zero.eq_some_of_mul_eq_some h with ⟨⟨γ', hx⟩, γ'', hy⟩,
+  rcases eq_coe_of_mul_eq_coe h with ⟨⟨γ', hx⟩, γ'', hy⟩,
   rw [hx, hy] at *,
-  rw [mul_coe, ← coe_one, coe_inj, mul_eq_one_iff_inv_eq] at h,
-  rw [inv_coe, h],
+  norm_cast at *,
+  rwa [mul_eq_one_iff_inv_eq, eq_comm] at h,
 end
+
 lemma eq_inv_of_mul_eq_one_left {x y : with_zero Γ} (h : x*y = 1) : x = y⁻¹ :=
 begin
   rw mul_comm at h,
-  exact  with_zero.eq_inv_of_mul_eq_one_right h,
+  exact eq_inv_of_mul_eq_one_right h,
 end
-end with_zero
-
-open with_zero
 
 instance : actual_ordered_comm_monoid (with_zero Γ) :=
 { mul_le_mul_left := λ x y x_le_y z,
@@ -463,12 +434,9 @@ instance : actual_ordered_comm_monoid (with_zero Γ) :=
       { simp },
       { induction x using with_zero.cases_on,
         { simp },
-        { rw mul_coe,
-          induction y using with_zero.cases_on ; simp at x_le_y,
-          { exact false.elim x_le_y },
-          { rw mul_coe,
-            simp,
-            exact linear_ordered_comm_group.mul_le_mul_left x_le_y z } } }
+        { induction y using with_zero.cases_on ; norm_cast at *,
+          { exact false.elim (not_coe_le_zero _ x_le_y) },
+          { exact linear_ordered_comm_group.mul_le_mul_left x_le_y z } } }
     end,
   lt_of_mul_lt_mul_left := λ x y z hlt,
     begin
@@ -476,52 +444,46 @@ instance : actual_ordered_comm_monoid (with_zero Γ) :=
       { rw mul_zero at hlt,
         exact false.elim (with_zero.not_lt_zero _ hlt) },
       { induction x using with_zero.cases_on;
-        induction y using with_zero.cases_on ; simp at hlt ;
+        induction y using with_zero.cases_on ; try { norm_cast at * };
         try { exact false.elim (with_zero.not_lt_zero _ hlt) },
-        { exact zero_lt_some },
-        { rw some_lt_some at hlt ⊢,
-          exact linear_ordered_comm_group.lt_of_mul_lt_mul_left x _ _ hlt } }
+        { exact zero_lt_coe },
+        { exact linear_ordered_comm_group.lt_of_mul_lt_mul_left _ _ _ hlt } }
     end,
   ..(by apply_instance : comm_monoid (with_zero Γ)),
   ..(by apply_instance : partial_order (with_zero Γ)),
 }
 
-lemma with_zero.mul_lt_mul {a b c d : with_zero Γ} : a < b → c < d → a*c < b*d :=
+variables {a b c d : with_zero Γ}
+
+lemma mul_lt_mul : a < b → c < d → a*c < b*d :=
 begin
   intros hab hcd,
-  rcases with_zero.some_of_gt hcd with ⟨γ, rfl⟩,
-  rcases with_zero.some_of_gt hab with ⟨γ', rfl⟩,
-  rw mul_coe,
+  rcases coe_of_gt hcd with ⟨γ, rfl⟩,
+  rcases coe_of_gt hab with ⟨γ', rfl⟩,
+  norm_cast,
   induction a using with_zero.cases_on,
   { rw zero_mul,
-    exact zero_lt_some },
+    exact zero_lt_coe },
   { induction c using with_zero.cases_on,
     { rw mul_zero,
-      exact zero_lt_some },
-    { rw [mul_coe], rw some_lt_some at *,
+      exact zero_lt_coe },
+    { norm_cast at *,
       exact linear_ordered_comm_group.mul_lt_mul hab hcd } }
 end
 
-lemma with_zero.le_of_le_mul_right {a b c : with_zero Γ} (h : c ≠ 0) (hab : a * c ≤ b * c) :
-  a ≤ b :=
+lemma le_of_le_mul_right (h : c ≠ 0) (hab : a * c ≤ b * c) : a ≤ b :=
 begin
   replace hab := linear_ordered_comm_monoid.mul_le_mul_right hab c⁻¹,
-  rwa [mul_assoc, mul_assoc, with_zero.mul_right_inv _ h, mul_one, mul_one] at hab,
+  rwa [mul_assoc, mul_assoc, mul_right_inv _ h, mul_one, mul_one] at hab,
 end
 
-lemma with_zero.le_of_le_mul_left {a b c : with_zero Γ} (h : c ≠ 0) (hab : c * a ≤ c * b) :
+lemma le_of_le_mul_left (h : c ≠ 0) (hab : c * a ≤ c * b) :
   a ≤ b := by {rw [mul_comm, mul_comm c] at hab, exact with_zero.le_of_le_mul_right h hab}
 
-lemma with_zero.le_mul_inv_of_mul_le {a b c : with_zero Γ} (h : c ≠ 0) (hab : a * c ≤ b) :
-  a ≤ b * c⁻¹ :=
-begin
-  apply with_zero.le_of_le_mul_right h,
-  rwa [mul_assoc, with_zero.mul_left_inv _ h, mul_one],
-end
+lemma le_mul_inv_of_mul_le (h : c ≠ 0) (hab : a * c ≤ b) : a ≤ b * c⁻¹ :=
+le_of_le_mul_right h (by rwa [mul_assoc, mul_left_inv _ h, mul_one])
 
-lemma with_zero.mul_inv_le_of_le_mul {a b c : with_zero Γ} (h : c ≠ 0) (hab : a ≤ b * c) :
-  a * c⁻¹ ≤ b :=
-begin
-  apply with_zero.le_of_le_mul_right h,
-  rwa [mul_assoc, with_zero.mul_left_inv _ h, mul_one]
-end
+lemma mul_inv_le_of_le_mul (h : c ≠ 0) (hab : a ≤ b * c) : a * c⁻¹ ≤ b :=
+le_of_le_mul_right h (by rwa [mul_assoc, mul_left_inv _ h, mul_one])
+
+end with_zero
