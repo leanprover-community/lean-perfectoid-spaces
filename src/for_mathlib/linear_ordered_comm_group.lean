@@ -209,9 +209,7 @@ lemma div_le_div (a b c d : with_zero α) (hb : b ≠ 0) (hd : d ≠ 0) :
 begin
   rcases ne_zero_iff_exists.1 hb with ⟨b, rfl⟩,
   rcases ne_zero_iff_exists.1 hd with ⟨d, rfl⟩,
-  induction a using with_zero.cases_on ;
-  induction c using with_zero.cases_on ; try { norm_cast } ;
-  try { simp, done },
+  with_zero_cases a c,
   exact linear_ordered_comm_group.div_le_div _ _ _ _
 end
 
@@ -378,11 +376,7 @@ namespace with_zero
 open linear_ordered_comm_group
 
 lemma coe_of_gt {x y : with_zero Γ} (h : x < y) : ∃ γ : Γ, y = (γ : with_zero Γ) :=
-begin
-  induction y using with_zero.cases_on,
-  { exact false.elim (with_zero.not_lt_zero _ h) },
-  { use y },
-end
+by { with_zero_cases y, use y }
 
 lemma eq_coe_of_mul_eq_coe_right {x y : with_zero Γ} {γ : Γ} (h : x*y = γ) :
   ∃ γ' : Γ, y = γ' :=
@@ -406,11 +400,8 @@ begin
   cases coe_of_gt h with γ h',
   rcases eq_coe_of_mul_eq_coe h' with ⟨⟨γ', hy⟩, γ'', hz⟩,
   rw [hy, hz] at *,
-  induction x using with_zero.cases_on,
-  { rw zero_mul,
-    exact zero_lt_coe },
-  { norm_cast at *,
-    exact mul_inv_lt_of_lt_mul h },
+  with_zero_cases x,
+  exact mul_inv_lt_of_lt_mul h
 end
 
 lemma eq_inv_of_mul_eq_one_right {x y : with_zero Γ} (h : x*y = 1) : y = x⁻¹ :=
@@ -429,26 +420,9 @@ end
 
 instance : actual_ordered_comm_monoid (with_zero Γ) :=
 { mul_le_mul_left := λ x y x_le_y z,
-    begin
-      induction z using with_zero.cases_on,
-      { simp },
-      { induction x using with_zero.cases_on,
-        { simp },
-        { induction y using with_zero.cases_on ; norm_cast at *,
-          { exact false.elim (not_coe_le_zero _ x_le_y) },
-          { exact linear_ordered_comm_group.mul_le_mul_left x_le_y z } } }
-    end,
+    by { with_zero_cases x y z, exact linear_ordered_comm_group.mul_le_mul_left x_le_y z },
   lt_of_mul_lt_mul_left := λ x y z hlt,
-    begin
-      induction z using with_zero.cases_on,
-      { rw mul_zero at hlt,
-        exact false.elim (with_zero.not_lt_zero _ hlt) },
-      { induction x using with_zero.cases_on;
-        induction y using with_zero.cases_on ; try { norm_cast at * };
-        try { exact false.elim (with_zero.not_lt_zero _ hlt) },
-        { exact zero_lt_coe },
-        { exact linear_ordered_comm_group.lt_of_mul_lt_mul_left _ _ _ hlt } }
-    end,
+    by { with_zero_cases x y z, exact linear_ordered_comm_group.lt_of_mul_lt_mul_left _ _ _ hlt },
   ..(by apply_instance : comm_monoid (with_zero Γ)),
   ..(by apply_instance : partial_order (with_zero Γ)),
 }
@@ -460,15 +434,8 @@ begin
   intros hab hcd,
   rcases coe_of_gt hcd with ⟨γ, rfl⟩,
   rcases coe_of_gt hab with ⟨γ', rfl⟩,
-  norm_cast,
-  induction a using with_zero.cases_on,
-  { rw zero_mul,
-    exact zero_lt_coe },
-  { induction c using with_zero.cases_on,
-    { rw mul_zero,
-      exact zero_lt_coe },
-    { norm_cast at *,
-      exact linear_ordered_comm_group.mul_lt_mul hab hcd } }
+  with_zero_cases a c,
+  exact linear_ordered_comm_group.mul_lt_mul hab hcd
 end
 
 lemma le_of_le_mul_right (h : c ≠ 0) (hab : a * c ≤ b * c) : a ≤ b :=
