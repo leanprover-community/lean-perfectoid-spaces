@@ -1,8 +1,9 @@
 # What is it about?
 
 We explained Peter Scholze's definition of perfectoid spaces to
-computers, using the [Lean theorem prover](https://leanprover.github.io/), mainly developed by
-[Leonardo de Moura](https://leodemoura.github.io/).
+computers, using the [Lean theorem prover](https://leanprover.github.io/), 
+mainly developed at [Microsoft Research](https://www.microsoft.com/en-us/research/) 
+by [Leonardo de Moura](https://leodemoura.github.io/).
 Building on earlier work by many people, starting from first
 principles, we arrived at
 ```lean
