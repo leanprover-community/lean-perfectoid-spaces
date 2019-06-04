@@ -6,7 +6,7 @@ import tactic.abel tactic.chain
 
 import for_mathlib.submodule
 import for_mathlib.rings
-import for_mathlib.nonarchimedean.open_subgroup
+import topology.algebra.open_subgroup
 
 local attribute [instance] set.pointwise_mul_semiring
 local attribute [instance] set.pointwise_mul_action

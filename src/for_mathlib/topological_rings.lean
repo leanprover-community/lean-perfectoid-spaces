@@ -1,8 +1,9 @@
 import topology.algebra.ring
-
+import topology.algebra.open_subgroup
 import ring_theory.subring
 import ring_theory.ideal_operations
-import for_mathlib.nonarchimedean.open_subgroup
+
+import for_mathlib.topological_groups
 
 universes u v
 
@@ -36,19 +37,15 @@ end
 
 -- lemma continuous_mul_left (a : A) : continuous (λ x, a * x) :=
 -- continuous_mul continuous_const continuous_id
--- 
+--
 -- lemma continuous_mul_right (a : A) : continuous (λ x, x * a) :=
 -- continuous_mul continuous_id continuous_const
 
 lemma is_open_ideal_map_open_embedding {f : A → B} [is_ring_hom f]
   (emb : embedding f) (hf : is_open (range f)) (I : ideal A) (hI : is_open (↑I : set A)) :
   is_open (↑(I.map f) : set B) :=
-begin
-  apply @open_add_subgroup.is_open_of_open_add_subgroup _ _ _ _ _,
-  { exact submodule.submodule_is_add_subgroup _ },
-  { refine ⟨⟨f '' I, embedding_open emb hf hI, by apply_instance⟩, ideal.subset_span⟩,
-    apply_instance }
-end
+open_add_subgroup.is_open_of_open_add_subgroup
+  ⟨⟨f '' I, embedding_open emb hf hI, by apply_instance⟩, ideal.subset_span⟩
 
 instance pi_topological_ring {I : Type*} {R : I → Type*} [∀ i, comm_ring (R i)] [∀ i, topological_space (R i)]
   [h : ∀ i, topological_ring (R i)] : topological_ring (Π (i : I), R i) :=

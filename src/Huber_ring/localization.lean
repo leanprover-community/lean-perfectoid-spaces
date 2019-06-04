@@ -325,11 +325,11 @@ begin
   intro U,
   apply open_add_subgroup.is_open_of_open_add_subgroup _,
   all_goals {try {apply_instance}},
+  { apply is_add_group_hom.preimage _ _,
+    all_goals {apply_instance} },
   { use U,
     rw ← image_subset_iff,
-    exact subset_span },
-  { apply is_add_group_hom.preimage _ _,
-    all_goals {apply_instance} }
+    exact subset_span }
 end
 
 include hB hf hT hTB
