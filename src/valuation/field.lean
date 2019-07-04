@@ -244,7 +244,7 @@ instance valuation.topological_division_ring : topological_division_ring (valued
 section
 -- until the end of this section, all linearly ordered commutative groups will be endowed with
 -- the discrete topology
-def discrete_ordered_comm_group : topological_space Γ := ⊤
+def discrete_ordered_comm_group : topological_space Γ := ⊥
 local attribute [instance] discrete_ordered_comm_group
 
 def ordered_comm_group_is_discrete : discrete_topology Γ := ⟨rfl⟩

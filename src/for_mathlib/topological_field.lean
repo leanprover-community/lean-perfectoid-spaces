@@ -20,7 +20,7 @@ begin
   conv_lhs {
     rw [induced_compose, induced_compose, key1, key2],
     congr, rw ← induced_compose, skip, rw ← induced_compose, },
-  rw induced_sup
+  rw induced_inf
 end
 end topological_space
 
@@ -43,11 +43,11 @@ instance top_monoid_units [topological_ring R] : topological_monoid (units R) :=
   let mulR := (λ (p : R × R), p.1*p.2),
   let mulRx := (λ (p : units R × units R), p.1*p.2),
   have key : units.val ∘ mulRx = mulR ∘ (λ p, (p.1.val, p.2.val)), from rfl,
-  rw continuous_iff_induced_le,
+  rw continuous_iff_le_induced,
   unfold topological_ring.units_topological_space,
   rw [induced_compose, key, ← induced_compose, prod_induced_induced],
   apply induced_mono,
-  rw ← continuous_iff_induced_le,
+  rw ← continuous_iff_le_induced,
   exact continuous_mul',
 end⟩
 end topological_ring

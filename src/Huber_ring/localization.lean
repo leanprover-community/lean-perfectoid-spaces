@@ -117,7 +117,8 @@ lemma K.aux (L : finset A) (h : (↑L : set A) ⊆ ideal.span T) :
   ∃ (K : finset A), (↑L : set A) ⊆ (↑(span ℤ (T * ↑K)) : set A) :=
 begin
   delta ideal.span at h,
-  erw span_eq_map_lc at h,
+  rw [← set.image_id T] at h,
+  erw finsupp.span_eq_map_total at h,
   choose s hs using finset.subset_image_iff.mp h,
   use s.bind (λ f, f.frange),
   rcases hs with ⟨hs, rfl⟩,
@@ -127,7 +128,7 @@ begin
   intros t ht,
   refine ⟨t, _, _, _, mul_comm _ _⟩,
   { replace hf := hs hf,
-    erw lc.mem_supported at hf,
+    erw finsupp.mem_supported A f at hf,
     exact hf ht },
   { erw [linear_map.id_apply, finset.mem_bind],
     use [f, hf],
@@ -369,9 +370,9 @@ begin
     { rw [submodule.smul_def, span_mul_span],
       intros d a ha,
       rw [(show d • a = ↑d * a, from rfl), is_ring_hom.map_mul (lift T s hs), mul_comm],
-      rcases mem_span_iff_lc.mp ha with ⟨l, hl₁, hl₂⟩,
-      rw lc.mem_supported at hl₁,
-      rw [← hl₂, lc.total_apply] at ha ⊢,
+      rcases (finsupp.mem_span_iff_total ℤ).mp (by rw set.image_id; exact ha) with ⟨l, hl₁, hl₂⟩,
+      rw finsupp.mem_supported at hl₁,
+      rw [← hl₂, finsupp.total_apply] at ha ⊢,
       rw finsupp.sum_mul,
       apply sum_mem_span,
       intros b hb',
@@ -401,7 +402,7 @@ begin
         { intros a b ha hb,
           rw is_ring_hom.map_add (lift T s hs),
           exact is_add_submonoid.add_mem ha hb } },
-      { repeat {rw mul_assoc} } } }
+      { simp [mul_assoc] } } }
 end
 
 end

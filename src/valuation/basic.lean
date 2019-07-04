@@ -42,11 +42,14 @@ of v. See Definition 1.26 of Wedhorn.
 local attribute [instance] classical.prop_decidable
 noncomputable theory
 
+/- Seems to be in mathlib already
 -- Some counter-Kenny trick, no need to read
 def classical.decidable_linear_order {α : Type*} [linear_order α] : decidable_linear_order α :=
 { decidable_le := by apply_instance,
   decidable_eq := by apply_instance,
   decidable_lt := by apply_instance, ..‹linear_order α› }
+-/
+
 local attribute [instance, priority 0] classical.decidable_linear_order
 
 open function with_zero ideal localization
@@ -720,10 +723,11 @@ instance valuation.units_valfield_preorder :
 instance : is_submonoid (localization.non_zero_divisors (ideal.quotient (supp v))) :=
 by apply_instance
 
-@[simp] lemma on_frac_quot_comap_eq :
-  ((v.on_quot (le_refl _)).on_frac $ quot_supp_zero v).comap
-  (localization.of ∘ (ideal.quotient.mk _)) = v :=
-by rw [comap_comp, on_frac_comap_eq, on_quot_comap_eq]
+-- @[simp] lemma on_frac_quot_comap_eq :
+--   ((v.on_quot (le_refl _)).on_frac $ quot_supp_zero v).comap
+--   (@localization.of v.supp.quotient _ _ (by {  }) ∘ (ideal.quotient.mk v.supp))
+--    = v :=
+-- by rw [comap_comp, on_frac_comap_eq, on_quot_comap_eq]
 
 definition on_valuation_field : valuation (valuation_field v) Γ :=
 on_frac (v.on_quot (set.subset.refl _))
