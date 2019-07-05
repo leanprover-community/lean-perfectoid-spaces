@@ -4,25 +4,12 @@ import ring_theory.algebra_operations
 local attribute [instance] classical.prop_decidable
 
 namespace submodule
-variables {R : Type*} {M : Type*} [ring R] [add_comm_group M] [module R M]
-variables {β : Type*}
-
-end submodule
-
-namespace submodule
 variables {R : Type*} [comm_ring R]
 variables (I J : ideal R)
 
 open finset
 
--- jmc: This doesn't work yet, because submodules of an algebra do not yet form a monoid
--- variables {A : Type*} [ring A] [algebra R A]
--- variables (M : submodule R A)
-
--- jmc: Now they are... so maybe it works now?
-
--- lemma fg_pow (h : M.fg) (n : ℕ) : (M^n).fg := _
-
+-- PR being prepared
 lemma fg_pow (h : I.fg) (n : ℕ) : (I^n).fg :=
 begin
   induction n with n ih,
@@ -42,6 +29,7 @@ variables {R : Type*} {A : Type*} [comm_ring R] [ring A] [algebra R A]
 local attribute [instance] set.pointwise_mul_semiring
 local attribute [instance] set.singleton.is_monoid_hom
 
+-- PR being prepared
 instance span.is_semiring_hom : is_semiring_hom (submodule.span R : set A → submodule R A) :=
 { map_zero := span_empty,
   map_one := show _ = map _ ⊤,
@@ -51,6 +39,7 @@ instance span.is_semiring_hom : is_semiring_hom (submodule.span R : set A → su
 
 variables (R A)
 
+-- PR being prepared
 instance semimodule_set : semimodule (set A) (submodule R A) :=
 { smul := λ s P, span R s * P,
   smul_add := λ _ _ _, mul_add _ _ _,
@@ -66,13 +55,16 @@ variables {R A}
 
 set_option class.instance_max_depth 40
 
+-- PR being prepared
 lemma smul_def {s : set A} {P : submodule R A} :
   s • P = span R s * P := rfl
 
+-- PR being prepared
 lemma smul_le_smul {s t : set A} {M N : submodule R A} (h₁ : s ≤ t) (h₂ : M ≤ N) :
   s • M ≤ t • N :=
 mul_le_mul (span_mono h₁) h₂
 
+-- PR being prepared
 lemma smul_singleton (a : A) (M : submodule R A) :
   ({a} : set A) • M = M.map (lmul_left _ _ a) :=
 begin
@@ -116,6 +108,7 @@ begin
       apply submodule.smul_mem (span _ _) b hsi } } }
 end
 
+-- PR being prepared
 lemma add_group_closure_eq_span_int (s : set R) :
   add_group.closure s = ↑(span ℤ s) :=
 set.subset.antisymm (add_group.closure_subset subset_span)
@@ -126,6 +119,7 @@ set.subset.antisymm (add_group.closure_subset subset_span)
   (λ n a ha, by { erw [show n • a = gsmul n a, from (gsmul_eq_mul a n).symm],
     exact is_add_subgroup.gsmul_mem ha}))
 
+-- PR being prepared
 @[simp] lemma add_subgroup_eq_span_int (s : set R) [is_add_subgroup s] :
   (↑(span ℤ s) : set R) = s :=
 begin
