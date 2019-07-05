@@ -10,6 +10,7 @@ variables {R : Type*} {S : Type*} [comm_ring R] [comm_ring S]
 
 local attribute [instance] set.pointwise_mul_comm_semiring
 
+-- PR being prepared
 lemma pow_le_pow (I : ideal R) {m n : ℕ} (h : m ≤ n) :
   I^n ≤ I^m :=
 begin
@@ -18,6 +19,7 @@ begin
   exact le_trans (mul_le_inf) (lattice.inf_le_left)
 end
 
+-- PR being prepared
 lemma mul_subset_mul (I J : ideal R) :
   (↑I : set R) * (↑J : set R) ⊆ (↑(I * J) : set R) :=
 begin
@@ -25,6 +27,7 @@ begin
   exact mul_mem_mul hi hj
 end
 
+-- PR being prepared
 lemma pow_subset_pow (I : ideal R) {n : ℕ} :
   (↑I : set R)^n ⊆ ↑(I^n : ideal R) :=
 begin
@@ -40,13 +43,14 @@ end
 -- { map_one := ideal.map_top f,
 --   map_mul := ideal.map_mul f }
 
-lemma span_image {R : Type u} [comm_ring R] {S : Type v} [comm_ring S]
-  (f : R → S) [is_ring_hom f] (X : set R) :
-  span (f '' X) = map f (span X) :=
-le_antisymm
-  (span_mono $ set.image_subset _ $ subset_span)
-  (map_le_iff_le_comap.2 $ span_le.2 $ λ x hx, subset_span $ set.mem_image_of_mem f hx)
+-- lemma span_image {R : Type u} [comm_ring R] {S : Type v} [comm_ring S]
+--   (f : R → S) [is_ring_hom f] (X : set R) :
+--   span (f '' X) = map f (span X) :=
+-- le_antisymm
+--   (span_mono $ set.image_subset _ $ subset_span)
+--   (map_le_iff_le_comap.2 $ span_le.2 $ λ x hx, subset_span $ set.mem_image_of_mem f hx)
 
+-- PR being prepared
 @[simp] lemma map_quotient_self {R : Type u} [comm_ring R] (I : ideal R) :
   ideal.map (ideal.quotient.mk I) I = ⊥ :=
 lattice.eq_bot_iff.2 $ ideal.map_le_iff_le_comap.2 $
@@ -56,6 +60,7 @@ begin
   exact ideal.quotient.eq_zero_iff_mem.2 hx, apply_instance
 end
 
+-- PR being prepared
 lemma eq_bot_or_top {K : Type u} [discrete_field K] (I : ideal K) :
   I = ⊥ ∨ I = ⊤ :=
 begin
@@ -70,13 +75,17 @@ begin
   simpa [H, h1] using submodule.smul_mem I r⁻¹ hr,
 end
 
+-- PR being prepared
 lemma eq_bot_of_prime {K : Type u} [discrete_field K] (I : ideal K) [h : I.is_prime] :
   I = ⊥ :=
 classical.or_iff_not_imp_right.mp I.eq_bot_or_top h.1
 
--- This should just be the conjunction of
+-- The following should just be the conjunction of
 -- comap f ⊥ = ker f
 -- ker f = ⊥  (for injective f)
+
+-- jmc: we have inj_iff_ker_eq_bot in mathlib (ideal_operations.lean). I guess that should work.
+-- So I think this one can be deleted.
 lemma comap_bot_of_inj {R : Type u} [comm_ring R] {S : Type v} [comm_ring S] (f : R → S) [is_ring_hom f]
 (h : injective f) :
   ideal.comap f ⊥ = ⊥ :=
