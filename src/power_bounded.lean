@@ -64,7 +64,7 @@ begin
     use V,
     refine set.subset.trans _ hW,
     change ↑(span _ _ * span _ _) ⊆ _,
-    rw [span_mul_span, ← add_group_closure_eq_spanℤ, add_group.closure_subset_iff],
+    rw [span_mul_span, ← add_group_closure_eq_span_int, add_group.closure_subset_iff],
     exact set.subset.trans (set.mul_subset_mul hV (set.subset.refl B)) H' },
   { intros H,
     rw is_bounded_iff,

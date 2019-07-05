@@ -124,9 +124,9 @@ begin
   rcases hs with ⟨hs, rfl⟩,
   intros l hl,
   rcases finset.mem_image.mp hl with ⟨f, hf, rfl⟩,
-  apply submodule.sum_mem_span,
+  refine is_add_submonoid.finset_sum_mem ↑(span _ _) _ _ _,
   intros t ht,
-  refine ⟨t, _, _, _, mul_comm _ _⟩,
+  refine subset_span ⟨t, _, _, _, mul_comm _ _⟩,
   { replace hf := hs hf,
     erw finsupp.mem_supported A f at hf,
     exact hf ht },
@@ -189,7 +189,7 @@ begin
     { exact V.zero_mem },
     apply_instance },
   rw ← image_subset_iff at hm,
-  erw [← add_subgroup_eq_spanℤ (V : set A), ← add_subgroup_eq_spanℤ (↑(I^m) : set A₀)] at hm,
+  erw [← add_subgroup_eq_span_int (V : set A), ← add_subgroup_eq_span_int (↑(I^m) : set A₀)] at hm,
   change (submodule.map (alg_hom_int $ to_fun A).to_linear_map _) ≤ _ at hm,
   work_on_goal 1 {apply_instance},
   -- It suffices to provide an open subgroup
@@ -202,7 +202,7 @@ begin
   -- And now we start a long calculation
   -- Unfortunately it seems to be hard to express in calc mode
   -- First observe: I^(m+1) = L • I^m as A₀-ideal, but also as ℤ-submodule
-  erw [subtype.coe_mk, pow_succ, ← hL, ← submodule.smul_def, hL, smul_eq_smul_spanℤ],
+  erw [subtype.coe_mk, pow_succ, ← hL, ← submodule.smul_def, hL, smul_eq_smul_span_int],
   change (submodule.map (alg_hom_int $ to_fun A).to_linear_map _) ≤ _,
   work_on_goal 1 {apply_instance},
   -- Now we map the above equality through the canonical map A₀ → A
@@ -226,7 +226,7 @@ begin
   refine ⟨⟨_, mul_T_open _ hT U, by apply_instance⟩, _⟩,
   erw [subtype.coe_mk (↑(T • span ℤ ↑U) : set A), @submodule.smul_def ℤ, span_mul_span],
   change _ • span _ ↑(submodule.map (alg_hom_int $ (of_id A ATs : A → ATs)).to_linear_map _) ≤ _,
-  erw [← span_image, span_spanℤ, submodule.smul_def, span_mul_span, span_le],
+  erw [← span_image, span_span_int, submodule.smul_def, span_mul_span, span_le],
   rintros _ ⟨s_inv, hs_inv, tu, htu, rfl⟩,
   erw mem_image at htu,
   rcases htu with ⟨_, ⟨t, ht, u, hu, rfl⟩, rfl⟩,
@@ -374,8 +374,9 @@ begin
       rw finsupp.mem_supported at hl₁,
       rw [← hl₂, finsupp.total_apply] at ha ⊢,
       rw finsupp.sum_mul,
-      apply sum_mem_span,
+      refine is_add_submonoid.finset_sum_mem ↑(span _ _) _ _ _,
       intros b hb',
+      apply subset_span,
       show (↑(_ : ℤ) * _) * _ ∈ _,
       rcases hl₁ hb' with ⟨v, hv, b, hb, rfl⟩,
       refine ⟨↑(l (v * b)) * v, _, b * lift T s hs ↑d, _, _⟩,

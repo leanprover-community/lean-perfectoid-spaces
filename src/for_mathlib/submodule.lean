@@ -7,24 +7,6 @@ namespace submodule
 variables {R : Type*} {M : Type*} [ring R] [add_comm_group M] [module R M]
 variables {β : Type*}
 
-lemma sum_mem_span (s : set M) (ι : finset β) (f : β → M) (h : ∀ i ∈ ι, f i ∈ s) :
-  ι.sum f ∈ span R s :=
-begin
-  revert h,
-  apply finset.induction_on ι,
-  { intros, rw finset.sum_empty, apply submodule.zero_mem _ },
-  { intros i ι' hi IH h,
-    rw finset.sum_insert hi,
-    apply submodule.add_mem _ _ _,
-    { apply subset_span,
-      apply h,
-      apply finset.mem_insert_self },
-    { apply IH,
-      intros i' hi',
-      apply h,
-      apply finset.mem_insert_of_mem hi' } }
-end
-
 end submodule
 
 namespace submodule
@@ -33,9 +15,11 @@ variables (I J : ideal R)
 
 open finset
 
--- This doesn't work yet, because submodules of an algebra do not yet form a monoid
+-- jmc: This doesn't work yet, because submodules of an algebra do not yet form a monoid
 -- variables {A : Type*} [ring A] [algebra R A]
 -- variables (M : submodule R A)
+
+-- jmc: Now they are... so maybe it works now?
 
 -- lemma fg_pow (h : M.fg) (n : ℕ) : (M^n).fg := _
 
@@ -107,7 +91,7 @@ end
 
 set_option class.instance_max_depth 80
 
-lemma smul_eq_smul_spanℤ (S : set R) (I : ideal R) :
+lemma smul_eq_smul_span_int (S : set R) (I : ideal R) :
   (↑(S • I) : set R) = (↑(S • (span ℤ (↑I : set R))) : set R) :=
 begin
   conv_lhs {erw ← span_eq I},
@@ -132,7 +116,7 @@ begin
       apply submodule.smul_mem (span _ _) b hsi } } }
 end
 
-lemma add_group_closure_eq_spanℤ (s : set R) :
+lemma add_group_closure_eq_span_int (s : set R) :
   add_group.closure s = ↑(span ℤ s) :=
 set.subset.antisymm (add_group.closure_subset subset_span)
   (λ x hx, span_induction hx
@@ -142,10 +126,10 @@ set.subset.antisymm (add_group.closure_subset subset_span)
   (λ n a ha, by { erw [show n • a = gsmul n a, from (gsmul_eq_mul a n).symm],
     exact is_add_subgroup.gsmul_mem ha}))
 
-@[simp] lemma add_subgroup_eq_spanℤ (s : set R) [is_add_subgroup s] :
+@[simp] lemma add_subgroup_eq_span_int (s : set R) [is_add_subgroup s] :
   (↑(span ℤ s) : set R) = s :=
 begin
-  rw ← add_group_closure_eq_spanℤ,
+  rw ← add_group_closure_eq_span_int,
   refine set.subset.antisymm _ add_group.subset_closure,
   rw add_group.closure_subset_iff
 end
@@ -164,7 +148,7 @@ lemma span_mono' (X : set B) : (↑(span R X) : set B) ⊆ span S X :=
 lemma span_span' (X : set B) : span S ↑(span R X) = span S X :=
 le_antisymm (span_le.mpr $ span_mono' S X) (span_mono subset_span)
 
-lemma span_spanℤ (S' : set B) [is_subring S'] (X : set B) : span S' ↑(span ℤ X) = span S' X :=
+lemma span_span_int (S' : set B) [is_subring S'] (X : set B) : span S' ↑(span ℤ X) = span S' X :=
 le_antisymm
 begin
   rw span_le,
