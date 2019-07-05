@@ -233,7 +233,6 @@ begin
     from (de_coe_units K).comap_nhds_neq_bot,
   have cauchy_fact : cauchy_of units.val (comap cu $ 𝓝 x),
   { refine cauchy_comap _ cauchy_nhds ne_bot,
-
     have : (λ p : hat_star K × hat_star K, (p.1.val, p.2.val)) ∘ (λ p : units K × units K, (cu p.1, cu p.2)) =
     (λ p : K × K, ((p.1 : hat K), (p.2 : hat K))) ∘ (λ p : units K × units K, (p.1, p.2)),
     { ext ; simp [cu, coe_units] ; refl },
@@ -258,7 +257,7 @@ begin
   repeat {rw filter.map_map at hy },
   convert hy,
   ext,
-  simp,
+  simpa using units.inv_eq_inv x_1,
 end
 
 lemma inv_hat_is_inv : ∀ x : hat_star K, x.val*(inv_hat_star_hat K x) = 1 :=

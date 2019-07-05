@@ -96,7 +96,7 @@ begin
     rw image_subset_iff,
     exact hV },
   apply mem_nhds_sets (continuous_mul_left _ _ U.is_open),
-  rw [mem_preimage_eq, mul_zero],
+  rw [mem_preimage, mul_zero],
   exact U.zero_mem
 end
 
@@ -185,7 +185,7 @@ begin
   -- Choose m such that I^m ⊆ V
   cases H₂ _ (mem_nhds_sets (emb.continuous _ V.is_open) _) with m hm,
   work_on_goal 1 {
-    erw [mem_preimage_eq, is_ring_hom.map_zero (to_fun A)],
+    erw [mem_preimage, is_ring_hom.map_zero (to_fun A)],
     { exact V.zero_mem },
     apply_instance },
   rw ← image_subset_iff at hm,

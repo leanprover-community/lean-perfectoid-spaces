@@ -174,7 +174,7 @@ variables x y : units K
 -- in the topology induced by a valuation on a division ring (ie the next instance)
 -- [BouAC, VI.5.1 Lemme 1]
 lemma top_div_ring_aux {x y : units K} {γ : Γ} (h : v (x - y) < min (γ * ((v y) * (v y))) (v y)) :
-  v (x⁻¹.val - y⁻¹.val) < γ :=
+  v (↑x⁻¹ - ↑y⁻¹) < γ :=
 begin
   have hyp1 : v (x - y) < γ * ((v y) * (v y)),
     from lt_of_lt_of_le h (min_le_left _ _),
@@ -204,14 +204,15 @@ instance valuation.topological_division_ring : topological_division_ring (valued
 { continuous_inv :=
     begin
       let Kv := valued_ring K v,
-      have H : units.val ∘ (λ x : units Kv, x⁻¹) = (λ x : Kv, x⁻¹) ∘ units.val,
-        by ext ;simp,
+      have H : (λ x : units Kv, (↑x⁻¹ : Kv)) = (λ x : units Kv, (x : Kv)⁻¹),
+        by funext ; simp,
       rw continuous_iff_continuous_at,
       intro x,
       let emb := topological_ring.units_embedding Kv,
       apply emb.tendsto_iff emb H,
+      show continuous_at (λ x : Kv, x⁻¹) x,
       unfold continuous_at,
-      rw  topological_add_group.tendsto_nhds_nhds_iff (λ (x : Kv), x⁻¹) x.val x.val⁻¹,
+      rw topological_add_group.tendsto_nhds_nhds_iff (λ (x : Kv), x⁻¹) x (x : Kv)⁻¹,
       intros V V_in,
       cases (nhds_zero _ _).1 V_in with γ Hγ,
       let x' : units K := units.mk (x.val : K) (x.inv : K) x.val_inv x.inv_val,
@@ -232,7 +233,7 @@ instance valuation.topological_division_ring : topological_division_ring (valued
         { intro hy,
           simp [hy] at ineq,
           exact lt_irrefl _ ineq.2 },
-        let yu := units.mk' this,
+        let yu := units.mk0 _ this,
         change v ((yu : Kv) - (x : Kv)) < _ at ineq,
         convert top_div_ring_aux v ineq,
         apply congr_arg,
@@ -268,7 +269,7 @@ begin
     exact @mem_nhds_zero _ _  _  _ (λ γ : Γ, {k | v k < γ}) _ _ },
   { intros z hz,
     rw [valuation.coe_unit_map] at hz,
-    rw [mem_preimage_eq, mem_singleton_iff] at *,
+    rw [mem_preimage, mem_singleton_iff] at *,
     rw ← vx,
     exact valuation.unit_map.ext v x z (valuation.map_eq_of_sub_lt v hz),},
 end
@@ -279,7 +280,7 @@ begin
   intros x x_ne,
   have := division_ring,
   use {k | v k < v x},
-  have : ∃ γ : Γ, v x = γ, from valuation.unit_is_some v (units.mk' x_ne),
+  have : ∃ γ : Γ, v x = γ, from valuation.unit_is_some v (units.mk0 _ x_ne),
   cases this with γ H,
   split,
   { -- again, this will be an ugly win
@@ -455,7 +456,7 @@ begin
     rw [nhds_induced],
     refine ⟨{y : Kv | v (y - x.val) < v.unit_map x }, nhds_of_valuation_lt v _ _, _⟩,
     intros y vy,
-    simp [mem_preimage_eq] at vy,
+    simp [mem_preimage] at vy,
     rw is_group_hom.mem_ker at *,
     rw ← x_in,
     exact valuation.unit_map.ext v _ _ (valuation.map_eq_of_sub_lt v vy) },
@@ -641,7 +642,7 @@ begin
       rcases exists_mem_of_ne_empty this with ⟨_, H, ⟨x, x_in, rfl⟩⟩,
       clear this key,
       change v x < γ₀ at x_in,
-      rw [mem_preimage_eq, mem_singleton_iff] at H,
+      rw [mem_preimage, mem_singleton_iff] at H,
       rwa [← vhat_extends_v v x, H] at x_in },
   },
   { exact continuous_vhat_aux v h }

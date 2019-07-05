@@ -142,7 +142,7 @@ have dhf : dense_embedding (h ∘ f),
     use f a,
     split, swap, apply mem_range_self,
     apply mem_of_mem_of_subset _ hinc,
-    rwa mem_preimage_eq,
+    rwa mem_preimage,
   end ,
   inj := λ a b H, dhf.inj (by {show h (f a) = _, rw H}),
   induced := λ a, by rw [←dhf.induced a, ←@comap_comap_comp _ _ _ _ _ h, dh.induced] }

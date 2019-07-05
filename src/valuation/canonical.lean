@@ -723,7 +723,7 @@ lemma is_equiv.norm_one_eq_norm_one (h : is_equiv v₁ v₂) :
   = valuation_field_norm_one v₁ :=
 begin
   ext x,
-  rw [set.mem_preimage_eq, val_one_iff_unit_val_one x,
+  rw [set.mem_preimage, val_one_iff_unit_val_one x,
     is_equiv.v_eq_one (is_equiv.on_valuation_field_is_equiv h) x, val_one_iff_unit_val_one],
   refl,
 end

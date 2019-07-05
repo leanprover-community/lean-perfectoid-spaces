@@ -108,7 +108,7 @@ begin
   work_on_goal 0 {
     rwa [set.pointwise_mul_eq_image, set.image_subset_iff] },
   apply mem_nhds_sets (continuous_mul' _ U.is_open),
-  simpa only [prod.fst_zero, prod.snd_zero, set.mem_preimage_eq, mul_zero] using U.zero_mem
+  simpa only [prod.fst_zero, prod.snd_zero, set.mem_preimage, mul_zero] using U.zero_mem
 end
 
 end nonarchimedean
