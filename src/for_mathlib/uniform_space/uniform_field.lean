@@ -48,7 +48,6 @@ but constructing that diagonal arrow is ok if the vertical one is indeed a dense
 
 import for_mathlib.uniform_space.ring
 import for_mathlib.topological_field
-import for_mathlib.division_ring
 
 noncomputable theory
 local attribute [instance, priority 0] classical.prop_decidable

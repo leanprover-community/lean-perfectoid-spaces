@@ -1,6 +1,5 @@
 import for_mathlib.topological_field
 import for_mathlib.topology
-import for_mathlib.division_ring
 import for_mathlib.uniform_space.uniform_field
 import valuation.topology
 import topology.algebra.ordered
