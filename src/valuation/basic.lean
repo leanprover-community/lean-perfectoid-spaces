@@ -39,41 +39,32 @@ are the valuation field, valuation ring, maximal ideal and residue field
 of v. See Definition 1.26 of Wedhorn.
 -/
 
-local attribute [instance] classical.prop_decidable
-noncomputable theory
-
-/- Seems to be in mathlib already
--- Some counter-Kenny trick, no need to read
-def classical.decidable_linear_order {α : Type*} [linear_order α] : decidable_linear_order α :=
-{ decidable_le := by apply_instance,
-  decidable_eq := by apply_instance,
-  decidable_lt := by apply_instance, ..‹linear_order α› }
--/
-
+local attribute [instance, priority 0] classical.prop_decidable
 local attribute [instance, priority 0] classical.decidable_linear_order
+noncomputable theory
 
 open function with_zero ideal localization
 
 universes u u₀ u₁ u₂ u₃ -- v is used for valuations
 
-variables {Γ : Type u} [linear_ordered_comm_group Γ]
-variables {Γ₁ : Type u₁} [linear_ordered_comm_group Γ₁]
-variables {Γ₂ : Type u₂} [linear_ordered_comm_group Γ₂]
-variables {Γ₃ : Type u₃} [linear_ordered_comm_group Γ₃]
+variables {M : Type u} [linear_ordered_cancel_comm_monoid_with_zero M]
+--variables {Γ₁ : Type u₁} [linear_ordered_comm_group Γ₁]
+--variables {Γ₂ : Type u₂} [linear_ordered_comm_group Γ₂]
+--variables {Γ₃ : Type u₃} [linear_ordered_comm_group Γ₃]
 
 variables {R : Type u₀} -- This will be a ring, assumed commutative in some sections
 
 
 -- Valuations on a ring with values in {0} ∪ Γ
-class valuation.is_valuation [ring R] (v : R → with_zero Γ) : Prop :=
+class valuation.is_valuation [ring R] (v : R → M) : Prop :=
 (map_zero : v 0 = 0)
 (map_one  : v 1 = 1)
 (map_mul  : ∀ x y, v (x * y) = v x * v y)
 (map_add  : ∀ x y, v (x + y) ≤ v x ∨ v (x + y) ≤ v y)
 
 /-- Γ-valued valuations on R -/
-def valuation (R : Type u₀) [ring R] (Γ : Type u) [linear_ordered_comm_group Γ] :=
-{ v : R → with_zero Γ // valuation.is_valuation v }
+def valuation (R : Type u₀) [ring R] (M : Type u) [linear_ordered_cancel_comm_monoid_with_zero M] :=
+{ v : R → M // valuation.is_valuation v }
 
 namespace valuation
 
@@ -81,14 +72,15 @@ section
 variables [ring R]
 
 -- A valuation is coerced to the underlying function R → {0} ∪ Γ
-instance (R : Type u₀) [ring R] (Γ : Type u) [linear_ordered_comm_group Γ] :
-has_coe_to_fun (valuation R Γ) := { F := λ _, R → with_zero Γ, coe := subtype.val}
+instance (R : Type u₀) [ring R] (M : Type u) [linear_ordered_cancel_comm_monoid_with_zero M] :
+has_coe_to_fun (valuation R M) := { F := λ _, R → M, coe := subtype.val}
 
-@[extensionality] lemma ext {Γ : Type u} [linear_ordered_comm_group Γ] (v₁ v₂ : valuation R Γ) :
+@[extensionality] lemma ext {M : Type u} [linear_ordered_cancel_comm_monoid_with_zero M]
+  (v₁ v₂ : valuation R M) :
   v₁ = v₂ ↔ ∀ r, v₁ r = v₂ r :=
 subtype.ext.trans ⟨λ h r, congr h rfl, funext⟩
 
-variables (v : valuation R Γ) {x y z : R}
+variables (v : valuation R M) {x y z : R}
 
 instance : is_valuation v := v.property
 
@@ -97,7 +89,7 @@ instance : is_valuation v := v.property
 @[simp] lemma map_mul  : ∀ x y, v (x * y) = v x * v y := v.property.map_mul
 @[simp] lemma map_add  : ∀ x y, v (x + y) ≤ v x ∨ v (x + y) ≤ v y := v.property.map_add
 
-lemma map_one_ne_zero : v 1 ≠ 0 := by rw map_one; simp
+lemma map_one_ne_zero : v 1 ≠ 0 := by rw map_one; exact one_ne_zero
 
 lemma map_add_le_max (x y) : v (x + y) ≤ max (v x) (v y) :=
 begin
@@ -109,6 +101,8 @@ end
 -- not an instance, because more than one v on a given R
 /-- a valuation gives a preorder on the underlying ring-/
 def to_preorder : preorder R := preorder.lift v (by apply_instance)
+
+-- TODO(kmb) I need to prove 0 is not a unit.
 
 -- If x ∈ R is a unit then v x is non-zero
 theorem map_unit (h : x * y = 1) : (v x).is_some :=

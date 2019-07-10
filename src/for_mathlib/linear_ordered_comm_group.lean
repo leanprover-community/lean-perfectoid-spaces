@@ -454,3 +454,25 @@ lemma mul_inv_le_of_le_mul (h : c ≠ 0) (hab : a ≤ b * c) : a * c⁻¹ ≤ b 
 le_of_le_mul_right h (by rwa [mul_assoc, mul_left_inv _ h, mul_one])
 
 end with_zero
+
+example (Γ : Type*) [linear_ordered_comm_group Γ] : (1 : with_zero Γ) ≠ 0 := by simp
+
+-- Floris says do this with old structure command
+class linear_ordered_cancel_comm_monoid_with_zero (α : Type*)
+  extends linear_ordered_comm_monoid α, has_zero α :=
+(zero_le : ∀ a : α, 0 ≤ a)
+(zero_ne_one : (0 : α) ≠ 1)
+(mul_left_cancel {a b c : α} (h : a ≠ 0) : a * b = a * c → b = c)
+
+namespace linear_ordered_cancel_comm_monoid_with_zero
+
+instance (α : Type*) [linear_ordered_cancel_comm_monoid_with_zero α] : zero_ne_one_class α :=
+{ zero := 0,
+  one := 1,
+  zero_ne_one := zero_ne_one α}
+
+lemma zero_ne_unit
+
+--variables {α : Type u} [linear_ordered_cancel_comm_monoid_with_zero α] {x: α}
+
+end linear_ordered_cancel_comm_monoid_with_zero
