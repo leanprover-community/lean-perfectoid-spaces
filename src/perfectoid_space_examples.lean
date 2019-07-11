@@ -20,26 +20,18 @@ def empty_CLVRS : CLVRS := {
   Hid := λ U, by {funext x, cases x, refl},
   Hcomp := λ U V W _ _, rfl,
   Fring := λ x, punit.comm_ring,
-  res_is_ring_hom := λ U V _, { map_one := _,
+  res_is_ring_hom := λ U V _, { map_one := rfl,
   map_mul := λ  _ _, rfl,
-  map_add := λ _ _, rfl,
+  map_add := λ _ _, rfl},
   Ftop := λ U, by apply_instance,
   Ftop_ring := λ U, by apply_instance,
-  res_continuous := continuous_of_discrete_topology },
-  locality := sorry,
+  res_continuous := λ U V _, continuous_of_discrete_topology},
+  locality := begin sorry end,
   gluing := sorry,
   homeo := sorry },
   complete := λ U, {complete := sorry},
   valuation := by rintro ⟨⟩,
   local_stalks := by rintro ⟨⟩,
   supp_maximal := by rintro ⟨⟩ }
-}
 
 example : PerfectoidSpace ⟨37, by norm_num⟩ := ⟨empty_CLVRS, by rintro ⟨⟩⟩
-
-#exit
-begin
-  unfold is_perfectoid,
-  intro x,
-  cases x,
-end⟩
