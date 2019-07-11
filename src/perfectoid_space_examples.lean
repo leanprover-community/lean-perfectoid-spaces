@@ -88,6 +88,4 @@ def empty_CLVRS : CLVRS := {
   local_stalks := by rintro ⟨⟩,
   supp_maximal := by rintro ⟨⟩ }
 
-def X37 : PerfectoidSpace ⟨37, by norm_num⟩ := ⟨empty_CLVRS, by rintro ⟨⟩⟩
-
-#print axioms X37
+example : PerfectoidSpace ⟨37, by norm_num⟩ := ⟨empty_CLVRS, by rintro ⟨⟩⟩
