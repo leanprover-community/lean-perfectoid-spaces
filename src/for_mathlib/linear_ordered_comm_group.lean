@@ -7,55 +7,55 @@ import tactic.abel
 import for_mathlib.with_zero
 
 universes u v
+set_option old_structure_cmd true
 
 class linear_ordered_comm_monoid (α : Type*) extends comm_monoid α, linear_order α :=
 (mul_le_mul_left : ∀ {a b : α}, a ≤ b → ∀ c : α, c * a ≤ c * b)
 
-class linear_ordered_comm_group (α : Type*) extends comm_group α, linear_order α :=
-(mul_le_mul_left : ∀ {a b : α}, a ≤ b → ∀ c : α, c * a ≤ c * b)
+#check linear_ordered_comm_ring
+class linear_ordered_comm_group (α : Type*) extends comm_group α, linear_ordered_comm_monoid α
 
-namespace linear_ordered_comm_monoid
-
+namespace
 variables {α : Type u} [linear_ordered_comm_monoid α] {x y z : α}
 variables {β : Type v} [linear_ordered_comm_monoid β]
 
-class is_hom (f : α → β) extends is_monoid_hom f : Prop :=
+lemma mul_le_mul_left' (h : x ≤ y) (c : α) : c * x ≤ c * y :=
+linear_ordered_comm_monoid.mul_le_mul_left h c
+
+class linear_ordered_comm_monoid.is_hom (f : α → β) extends is_monoid_hom f : Prop :=
 (ord : ∀ {a b : α}, a ≤ b → f a ≤ f b)
 
-structure equiv extends equiv α β :=
-(is_hom : is_hom to_fun)
+structure linear_ordered_comm_monoid.equiv extends equiv α β :=
+(is_hom : linear_ordered_comm_monoid.is_hom to_fun)
 
-lemma mul_le_mul_right (H : x ≤ y) : ∀ z : α, x * z ≤ y * z :=
-λ z, mul_comm z x ▸ mul_comm z y ▸ mul_le_mul_left H z
+lemma mul_le_mul_right' (H : x ≤ y) : ∀ z : α, x * z ≤ y * z :=
+λ z, mul_comm z x ▸ mul_comm z y ▸ mul_le_mul_left' H z
+end temp
 
-end linear_ordered_comm_monoid
+--namespace linear_ordered_comm_group'
 
-namespace linear_ordered_comm_group
-
+namespace temp
 variables {α : Type u} [linear_ordered_comm_group α] {x y z : α}
 variables {β : Type v} [linear_ordered_comm_group β]
 
-class is_hom (f : α → β) extends is_group_hom f : Prop :=
+class linear_ordered_comm_group.is_hom (f : α → β) extends is_group_hom f : Prop :=
 (ord : ∀ {a b : α}, a ≤ b → f a ≤ f b)
 
 -- this is Kenny's; I think we should have iff
-structure equiv extends equiv α β :=
-(is_hom : is_hom to_fun)
-
-lemma mul_le_mul_right (H : x ≤ y) : ∀ z : α, x * z ≤ y * z :=
-λ z, mul_comm z x ▸ mul_comm z y ▸ mul_le_mul_left H z
+structure linear_ordered_comm_group.equiv extends equiv α β :=
+(is_hom : linear_ordered_comm_group.is_hom to_fun)
 
 lemma div_le_div (a b c d : α) : a * b⁻¹ ≤ c * d⁻¹ ↔ a * d ≤ c * b :=
 begin
   split ; intro h,
-  have := mul_le_mul_right (mul_le_mul_right h b) d,
+  have := mul_le_mul_right' (mul_le_mul_right' h b) d,
   rwa [inv_mul_cancel_right, mul_assoc _ _ b, mul_comm _ b, ← mul_assoc, inv_mul_cancel_right] at this,
-  have := mul_le_mul_right (mul_le_mul_right h d⁻¹) b⁻¹,
-  rwa [mul_inv_cancel_right, mul_assoc, mul_comm d⁻¹ b⁻¹, ← mul_assoc, mul_inv_cancel_right] at this,
+  have := mul_le_mul_right' (mul_le_mul_right' h d⁻¹) b⁻¹,
+  rwa [mul_inv_cancel_right, _root_.mul_assoc, _root_.mul_comm d⁻¹ b⁻¹, ← mul_assoc, mul_inv_cancel_right] at this,
 end
 
 lemma one_le_mul_of_one_le_of_one_le (Hx : 1 ≤ x) (Hy : 1 ≤ y) : 1 ≤ x * y :=
-have h1 : x * 1 ≤ x * y, from mul_le_mul_left Hy x,
+have h1 : x * 1 ≤ x * y, from mul_le_mul_left' Hy x,
 have h2 : x ≤ x * y, by rwa mul_one x at h1,
 le_trans Hx h2
 
@@ -454,3 +454,21 @@ lemma mul_inv_le_of_le_mul (h : c ≠ 0) (hab : a ≤ b * c) : a * c⁻¹ ≤ b 
 le_of_le_mul_right h (by rwa [mul_assoc, mul_left_inv _ h, mul_one])
 
 end with_zero
+
+example (Γ : Type*) [linear_ordered_comm_group Γ] : (1 : with_zero Γ) ≠ 0 := by simp
+
+set_option old_structure_cmd true
+
+class linear_ordered_cancel_comm_monoid_with_zero (α : Type*)
+  extends linear_ordered_comm_monoid α, zero_ne_one_class α :=
+(zero_le : ∀ a : α, 0 ≤ a)
+(mul_left_cancel {a b c : α} (h : a ≠ 0) : a * b = a * c → b = c)
+
+#print linear_ordered_cancel_comm_monoid_with_zero
+
+namespace linear_ordered_cancel_comm_monoid_with_zero
+
+-- variables {α : Type u} [linear_ordered_cancel_comm_monoid_with_zero α] {x: α}
+-- when we need to make an API for this object
+
+end linear_ordered_cancel_comm_monoid_with_zero
