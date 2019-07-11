@@ -53,8 +53,7 @@ def empty_CLVRS : CLVRS := {
       convert is_open_empty,
       convert set.image_empty _
     },
-    { -- gluing should be surjectivity assumption.
-      rw h,
+    { rw h,
       convert is_open_univ,
       apply set.image_univ_of_surjective,
       intro x,
@@ -65,12 +64,6 @@ def empty_CLVRS : CLVRS := {
       show () = s i,
       apply subsingleton.elim,
     },
---    unfold sheaf.gluing_map, dsimp,
---    convert is_open_univ,
---    funext x,
---    cases x with s hs,
---    change _ = true,
---    rw eq_true,
   end
   },
   complete := λ U, {complete := λ f hf, begin
