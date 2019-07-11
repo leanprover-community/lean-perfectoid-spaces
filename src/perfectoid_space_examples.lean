@@ -5,6 +5,7 @@ import topology.algebra.uniform_group
 import perfectoid_space
 import algebra.punit_instances
 import data.padics.padic_numbers
+import algebra.pi_instances
 
 instance : topological_add_monoid unit :=
   { continuous_add := continuous_of_discrete_topology}
@@ -12,6 +13,7 @@ instance : topological_add_monoid unit :=
 instance : topological_ring unit :=
 { continuous_neg := continuous_of_discrete_topology }
 
+--set_option pp.all true
 def empty_CLVRS : CLVRS := {
   space := empty,
   top := ⊤,
@@ -26,10 +28,31 @@ def empty_CLVRS : CLVRS := {
   Ftop := λ U, by apply_instance,
   Ftop_ring := λ U, by apply_instance,
   res_continuous := λ U V _, continuous_of_discrete_topology},
-  locality := begin sorry end,
-  gluing := sorry,
-  homeo := sorry },
-  complete := λ U, {complete := sorry},
+  locality := by {rintro _ _ ⟨s⟩ ⟨t⟩ _, refl},
+  gluing := by {intros _ _ c _, use (), intro i, cases c i, refl},
+  homeo := begin rintros ⟨U, HU⟩ ⟨γ, Uis, _⟩ c d,
+    dsimp at *,
+--    unfold_coes at c,
+    unfold sheaf.gluing_map, dsimp,
+    convert is_open_univ,
+    funext x,
+    cases x with s hs,
+    change _ = true,
+    rw eq_true,
+    sorry,
+  end
+  },
+  complete := λ U, {complete := λ f hf, begin
+    use (),
+    rintro V HV,
+    dsimp at *,
+    cases hf with h1 h2,
+    convert f.univ_sets,
+    funext x,
+    cases x,
+    show _ = true, rw eq_true, show () ∈ V,
+    exact mem_of_nhds HV,
+  end},
   valuation := by rintro ⟨⟩,
   local_stalks := by rintro ⟨⟩,
   supp_maximal := by rintro ⟨⟩ }
