@@ -13,6 +13,21 @@ instance : topological_add_monoid unit :=
 instance : topological_ring unit :=
 { continuous_neg := continuous_of_discrete_topology }
 
+lemma subset_unit (c : set unit) : c = ∅ ∨ c = set.univ :=
+begin
+  classical,
+  by_cases h : c = ∅,
+  left, exact h,
+  right,
+  cases set.exists_mem_of_ne_empty h with x hx,
+  rw set.eq_univ_iff_forall,
+  intro y,
+  cases x,
+  cases y,
+  exact hx
+end
+
+
 --set_option pp.all true
 def empty_CLVRS : CLVRS := {
   space := empty,
@@ -23,8 +38,8 @@ def empty_CLVRS : CLVRS := {
   Hcomp := λ U V W _ _, rfl,
   Fring := λ x, punit.comm_ring,
   res_is_ring_hom := λ U V _, { map_one := rfl,
-  map_mul := λ  _ _, rfl,
-  map_add := λ _ _, rfl},
+    map_mul := λ  _ _, rfl,
+    map_add := λ _ _, rfl},
   Ftop := λ U, by apply_instance,
   Ftop_ring := λ U, by apply_instance,
   res_continuous := λ U V _, continuous_of_discrete_topology},
@@ -32,14 +47,30 @@ def empty_CLVRS : CLVRS := {
   gluing := by {intros _ _ c _, use (), intro i, cases c i, refl},
   homeo := begin rintros ⟨U, HU⟩ ⟨γ, Uis, _⟩ c d,
     dsimp at *,
---    unfold_coes at c,
-    unfold sheaf.gluing_map, dsimp,
-    convert is_open_univ,
-    funext x,
-    cases x with s hs,
-    change _ = true,
-    rw eq_true,
-    sorry,
+    change set unit at c,
+    cases subset_unit c,
+    { rw h,
+      convert is_open_empty,
+      convert set.image_empty _
+    },
+    { -- gluing should be surjectivity assumption.
+      rw h,
+      convert is_open_univ,
+      apply set.image_univ_of_surjective,
+      intro x,
+      cases x with s hs,
+      use (),
+      apply subtype.eq,
+      funext i,
+      show () = s i,
+      apply subsingleton.elim,
+    },
+--    unfold sheaf.gluing_map, dsimp,
+--    convert is_open_univ,
+--    funext x,
+--    cases x with s hs,
+--    change _ = true,
+--    rw eq_true,
   end
   },
   complete := λ U, {complete := λ f hf, begin
@@ -57,4 +88,6 @@ def empty_CLVRS : CLVRS := {
   local_stalks := by rintro ⟨⟩,
   supp_maximal := by rintro ⟨⟩ }
 
-example : PerfectoidSpace ⟨37, by norm_num⟩ := ⟨empty_CLVRS, by rintro ⟨⟩⟩
+def X37 : PerfectoidSpace ⟨37, by norm_num⟩ := ⟨empty_CLVRS, by rintro ⟨⟩⟩
+
+#print axioms X37
