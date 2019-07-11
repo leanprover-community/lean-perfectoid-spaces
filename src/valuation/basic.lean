@@ -62,6 +62,12 @@ class valuation.is_valuation [ring R] (v : R → M) : Prop :=
 (map_mul  : ∀ x y, v (x * y) = v x * v y)
 (map_add  : ∀ x y, v (x + y) ≤ v x ∨ v (x + y) ≤ v y)
 
+set_option pp.all true
+instance valuation.is_monoid_hom [ring R] (v : R → M) [valuation.is_valuation v] :
+  is_monoid_hom v :=
+  { map_mul := valuation.is_valuation.map_mul v,
+  map_one := valuation.is_valuation.map_one v }
+
 /-- Γ-valued valuations on R -/
 def valuation (R : Type u₀) [ring R] (M : Type u) [linear_ordered_cancel_comm_monoid_with_zero M] :=
 { v : R → M // valuation.is_valuation v }
