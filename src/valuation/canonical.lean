@@ -99,7 +99,7 @@ by unfold value_group.to_Γ; apply_instance
 instance value_group_quotient.is_group_hom :
 is_group_hom (value_group_quotient v) := ⟨λ _ _, rfl⟩
 
-instance : linear_order (value_group v) :=
+instance value_group.linear_order : linear_order (value_group v) :=
 { le := λ a' b',
     -- KMB now worried that this should change to λ s t, s ≤ t with possible breakage
     quotient.lift_on₂' a' b' (λ s t, v.on_valuation_field ↑s ≤ v.on_valuation_field ↑t) $
@@ -142,7 +142,9 @@ instance : linear_ordered_comm_group (value_group v) :=
     rw v.on_valuation_field.map_mul,
     rw v.on_valuation_field.map_mul,
     exact with_zero.mul_le_mul_left _ _ h _
-end}
+end,
+ ..value_group.linear_order v,
+ ..value_group.comm_group v }
 
 lemma value_group.to_Γ_monotone :
   monotone (value_group.to_Γ v) :=
@@ -341,11 +343,69 @@ show (valuation_field.canonical_valuation_v v (localization.of sq)) *
   convert units.inv_val _,
 end
 
+--set_option trace.class_instances true
+--theorem to_Γ :
+--let a : valuation R (value_group v) := canonical_valuation v in
+--let b : value_group v → Γ := value_group.to_Γ v in
+--let c : monotone b := value_group.to_Γ_monotone v in
+--let d := @valuation.map (value_group v) _ R _ a Γ _ b _ c in ℕ := sorry
+
+--let b := value_group.to_Γ v in let c := value_group.to_Γ_monotone v in
+-- let d := a.map b c in d = v :=
+--sorry
+-- #exit
+
+
+--lemma to_Γ :
+--(canonical_valuation v).map (value_group.to_Γ v)
+--  (value_group.to_Γ_monotone _) = v :=
+
+/- WORKS
+lemma to_Γ :
+  ∀ {R : Type u\0} [_inst_1 : comm_ring.{u\0} R] {Γ : Type u_1} [_inst_2 : linear_ordered_comm_group.{u_1} Γ]
+  (v : @valuation.{u_1 u\0} R (@comm_ring.to_ring.{u\0} R _inst_1) Γ _inst_2),
+    @eq.{(max 1 (u\0+1) (u_1+1))} (@valuation.{u_1 u\0} R (@comm_ring.to_ring.{u\0} R _inst_1) Γ _inst_2)
+      (@valuation.map.{u\0 u\0 u_1} (@valuation.value_group.{u_1 u\0} R _inst_1 Γ _inst_2 v)
+         (@valuation.linear_ordered_comm_group.{u_1 u\0} R _inst_1 Γ _inst_2 v)
+         R
+         (@comm_ring.to_ring.{u\0} R _inst_1)
+         (@valuation.canonical_valuation.{u_1 u\0} R _inst_1 Γ _inst_2 v)
+         Γ
+         _inst_2
+         (@valuation.value_group.to_Γ.{u_1 u\0} R _inst_1 Γ _inst_2 v)
+         (@valuation.is_group_hom.{u_1 u\0} R _inst_1 Γ _inst_2 v)
+         (@valuation.value_group.to_Γ_monotone.{u_1 u\0} R _inst_1 Γ _inst_2 v))
+      v :=
+
+-/
+
+-- lemma to_Γ :
+-- @valuation.map (value_group v) (by apply_instance) R (by apply_instance)
+--   (@valuation.canonical_valuation R (by apply_instance) Γ (by apply_instance) v) Γ (by apply_instance)
+--   (@value_group.to_Γ R (by apply_instance) Γ (by apply_instance) v) _
+--   (@value_group.to_Γ_monotone R (by apply_instance) Γ (by apply_instance) v) = v :=
+-- sorry
+
+-- #exit
 -- This lemma shows that the valuation v can be reconstructed from its
 -- associated canonical valuation
+
+--theorem to_Γ :
+--let a := canonical_valuation v in let b := value_group.to_Γ v in let c := value_group.to_Γ_monotone v in
+-- let d := a.map b c in d = v :=
+-- (canonical_valuation v).map (value_group.to_Γ v)
+--   (value_group.to_Γ_monotone _) = v :=
+
+--lemma to_Γ :
+--(canonical_valuation v).map (value_group.to_Γ v)
+--  (value_group.to_Γ_monotone _) = v :=
+
 lemma to_Γ :
-(canonical_valuation v).map (value_group.to_Γ v)
-  (value_group.to_Γ_monotone _) = v :=
+      @valuation.map _ _ _ _ (canonical_valuation v)
+         _ _ (value_group.to_Γ v)
+         (valuation.is_group_hom v) -- it's this
+         (value_group.to_Γ_monotone v) =
+      v :=
 begin
   rw valuation.ext,
   intro r,

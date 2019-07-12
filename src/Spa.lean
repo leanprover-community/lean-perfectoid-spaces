@@ -355,8 +355,8 @@ begin
   split,
   { rintros t ⟨t₁, ht₁, t₂, ht₂, rfl⟩,
     convert le_trans
-      (linear_ordered_comm_monoid.mul_le_mul_right (hv₁ t₁ ht₁) _)
-      (linear_ordered_comm_monoid.mul_le_mul_left  (hv₂ t₂ ht₂) _);
+      (linear_ordered_structure.mul_le_mul_right (hv₁ t₁ ht₁) _)
+      (linear_ordered_structure.mul_le_mul_left  (hv₂ t₂ ht₂) _);
     apply valuation.map_mul },
   { rw with_zero.ne_zero_iff_exists at hs₁ hs₂,
     cases hs₁ with γ₁ hγ₁,
@@ -381,7 +381,7 @@ begin
   { suffices H : v t * v s₂ ≤ v s₁ * v s₂,
     { cases hs₂ with γ hγ,
       rw hγ at H,
-      have := linear_ordered_comm_monoid.mul_le_mul_right H γ⁻¹,
+      have := linear_ordered_structure.mul_le_mul_right H γ⁻¹,
       simp [mul_assoc, -coe_fn_coe_base] at this,
       erw [mul_one, mul_one] at this,
       exact this },
@@ -390,7 +390,7 @@ begin
   { suffices H : v s₁ * v t ≤ v s₁ * v s₂,
     { cases hs₁ with γ hγ,
       rw hγ at H,
-      have := linear_ordered_comm_monoid.mul_le_mul_left H γ⁻¹,
+      have := linear_ordered_structure.mul_le_mul_left H γ⁻¹,
       erw [← mul_assoc, ← mul_assoc] at this,
       simp [-coe_fn_coe_base] at this,
       erw [one_mul, one_mul] at this,

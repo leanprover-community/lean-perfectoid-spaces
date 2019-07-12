@@ -189,7 +189,7 @@ begin
   change v (-1 : units R) = 1,
   rw ← unit_map_eq,
   congr' 1,
-  apply linear_ordered_comm_group.eq_one_of_pow_eq_one (_ : _ ^ 2 = _),
+  apply linear_ordered_structure.eq_one_of_pow_eq_one (_ : _ ^ 2 = _),
   rw pow_two,
   apply option.some.inj,
   change (some _ * some _ : with_zero Γ) = _,
@@ -604,10 +604,10 @@ def on_frac_val.is_valuation (hv : supp v = 0) : is_valuation (v.on_frac_val hv)
     dsimp,
     cases (is_valuation.map_add v (x.2 * y.1) (y.2 * x.1)) with h h;
     [right, left];
-    refine le_trans (linear_ordered_comm_monoid.mul_le_mul_right h _) _;
+    refine le_trans (linear_ordered_structure.mul_le_mul_right h _) _;
     erw [v.map_mul, v.map_mul, with_zero.mul_inv_rev];
     refine le_trans (le_of_eq _)
-      (le_trans (linear_ordered_comm_monoid.mul_le_mul_right
+      (le_trans (linear_ordered_structure.mul_le_mul_right
         (mul_inv_self $ v (_ : R × (non_zero_divisors R)).snd.val) _) $
         le_of_eq $ one_mul _),
     { exact x },
@@ -747,7 +747,7 @@ instance : is_subring (valuation_ring v) :=
   neg_mem := by simp [valuation_ring],
   one_mem := by simp [valuation_ring, le_refl],
   mul_mem := λ x y (hx : _ ≤ _) (hy : _ ≤ _), show v.on_valuation_field _ ≤ 1,
-  by convert le_trans (linear_ordered_comm_monoid.mul_le_mul_left hy _) _; simp [hx] }
+  by convert le_trans (linear_ordered_structure.mul_le_mul_left hy _) _; simp [hx] }
 
 definition max_ideal : ideal (valuation_ring v) :=
 { carrier := { r | v.on_valuation_field r < 1 },
@@ -761,7 +761,7 @@ definition max_ideal : ideal (valuation_ring v) :=
   begin
     refine lt_of_le_of_lt _ _,
     swap,
-    convert (linear_ordered_comm_monoid.mul_le_mul_right _ _),
+    convert (linear_ordered_structure.mul_le_mul_right _ _),
     exact map_mul _ _ _,
     swap,
     convert c.property,

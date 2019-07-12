@@ -77,7 +77,7 @@ lemma valuation.subgroups_basis : is_subgroups_basis (λ γ : Γ, {x | v x < γ}
       by_cases h : γ < 1,
       { have : (γ*γ : with_zero Γ) < γ,
         { norm_cast,
-          have := linear_ordered_comm_group.mul_lt_right γ h,
+          have := linear_ordered_structure.mul_lt_right γ h,
           rwa one_mul at this },
         use γ,
         rintro x ⟨r, r_in, s, s_in, rfl⟩,
