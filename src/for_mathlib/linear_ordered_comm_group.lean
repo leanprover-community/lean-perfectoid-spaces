@@ -7,43 +7,40 @@ import tactic.abel
 import for_mathlib.with_zero
 
 universes u v
+set_option old_structure_cmd true
 
 class linear_ordered_comm_monoid (α : Type*) extends comm_monoid α, linear_order α :=
 (mul_le_mul_left : ∀ {a b : α}, a ≤ b → ∀ c : α, c * a ≤ c * b)
 
-class linear_ordered_comm_group (α : Type*) extends comm_group α, linear_order α :=
-(mul_le_mul_left : ∀ {a b : α}, a ≤ b → ∀ c : α, c * a ≤ c * b)
+class linear_ordered_comm_group (α : Type*) extends comm_group α, linear_ordered_comm_monoid α
 
-namespace linear_ordered_comm_monoid
-
+namespace linear_ordered_structure
 variables {α : Type u} [linear_ordered_comm_monoid α] {x y z : α}
 variables {β : Type v} [linear_ordered_comm_monoid β]
 
-class is_hom (f : α → β) extends is_monoid_hom f : Prop :=
+lemma mul_le_mul_left (h : x ≤ y) (c : α) : c * x ≤ c * y :=
+linear_ordered_comm_monoid.mul_le_mul_left h c
+
+class linear_ordered_comm_monoid.is_hom (f : α → β) extends is_monoid_hom f : Prop :=
 (ord : ∀ {a b : α}, a ≤ b → f a ≤ f b)
 
-structure equiv extends equiv α β :=
-(is_hom : is_hom to_fun)
+structure linear_ordered_comm_monoid.equiv extends equiv α β :=
+(is_hom : linear_ordered_comm_monoid.is_hom to_fun)
 
 lemma mul_le_mul_right (H : x ≤ y) : ∀ z : α, x * z ≤ y * z :=
 λ z, mul_comm z x ▸ mul_comm z y ▸ mul_le_mul_left H z
+end linear_ordered_structure
 
-end linear_ordered_comm_monoid
-
-namespace linear_ordered_comm_group
-
+namespace linear_ordered_structure
 variables {α : Type u} [linear_ordered_comm_group α] {x y z : α}
 variables {β : Type v} [linear_ordered_comm_group β]
 
-class is_hom (f : α → β) extends is_group_hom f : Prop :=
+class linear_ordered_comm_group.is_hom (f : α → β) extends is_group_hom f : Prop :=
 (ord : ∀ {a b : α}, a ≤ b → f a ≤ f b)
 
 -- this is Kenny's; I think we should have iff
-structure equiv extends equiv α β :=
-(is_hom : is_hom to_fun)
-
-lemma mul_le_mul_right (H : x ≤ y) : ∀ z : α, x * z ≤ y * z :=
-λ z, mul_comm z x ▸ mul_comm z y ▸ mul_le_mul_left H z
+structure linear_ordered_comm_group.equiv extends equiv α β :=
+(is_hom : linear_ordered_comm_group.is_hom to_fun)
 
 lemma div_le_div (a b c d : α) : a * b⁻¹ ≤ c * d⁻¹ ↔ a * d ≤ c * b :=
 begin
@@ -51,7 +48,7 @@ begin
   have := mul_le_mul_right (mul_le_mul_right h b) d,
   rwa [inv_mul_cancel_right, mul_assoc _ _ b, mul_comm _ b, ← mul_assoc, inv_mul_cancel_right] at this,
   have := mul_le_mul_right (mul_le_mul_right h d⁻¹) b⁻¹,
-  rwa [mul_inv_cancel_right, mul_assoc, mul_comm d⁻¹ b⁻¹, ← mul_assoc, mul_inv_cancel_right] at this,
+  rwa [mul_inv_cancel_right, _root_.mul_assoc, _root_.mul_comm d⁻¹ b⁻¹, ← mul_assoc, mul_inv_cancel_right] at this,
 end
 
 lemma one_le_mul_of_one_le_of_one_le (Hx : 1 ≤ x) (Hy : 1 ≤ y) : 1 ≤ x * y :=
@@ -139,22 +136,22 @@ definition convex_linear_order : linear_order {S : set α // is_convex S} :=
     end,
   .. subtype.partial_order is_convex }
 
-def ker (f : α → β) (hf : is_hom f) : set α :=
+def ker (f : α → β) (hf : linear_ordered_comm_group.is_hom f) : set α :=
 { x | f x = 1 }
 
-theorem ker.is_convex (f : α → β) (hf : is_hom f) : is_convex (ker f hf) :=
+theorem ker.is_convex (f : α → β) (hf : linear_ordered_comm_group.is_hom f) : is_convex (ker f hf) :=
 { one_mem := is_group_hom.map_one f,
   mul_mem := λ x y hx hy, show f (x * y) = 1, by dsimp [ker] at hx hy; rw
-    [(hf.1).map_mul, hx, hy, mul_one],
+    [is_group_hom.map_mul f, hx, hy, mul_one],
   inv_mem := λ x hx, show f x⁻¹ = 1, by dsimp [ker] at hx;
-    rw [@is_group_hom.map_inv _ _ _ _ f (hf.1) x, hx, one_inv],
+    rw [is_group_hom.map_inv f x, hx, one_inv],
   mem_of_between := λ x y hxy hy1 hx,
     le_antisymm (is_group_hom.map_one f ▸ is_hom.ord _ hy1) (hx ▸ is_hom.ord _ hxy) }
 
 def height (α : Type) [linear_ordered_comm_group α] : cardinal :=
 cardinal.mk {S : set α // is_proper_convex S}
 
-end linear_ordered_comm_group
+end linear_ordered_structure
 
 namespace with_zero
 
@@ -176,7 +173,7 @@ lemma mul_le_mul_left : ∀ a b : with_zero α, a ≤ b → ∀ c : with_zero α
     rw with_bot.some_le_some at hxy,
     change @has_le.le (with_zero α) _ (some (z * x)) (some (z * y)),
     simp,
-    exact linear_ordered_comm_group.mul_le_mul_left hxy z,
+    exact linear_ordered_structure.mul_le_mul_left hxy z,
   end
 | _        _        hxy 0        := by simp
 | (some x) 0        hxy _        := by simp [le_antisymm hxy (le_of_lt (with_bot.bot_lt_some x))]
@@ -210,12 +207,12 @@ begin
   rcases ne_zero_iff_exists.1 hb with ⟨b, rfl⟩,
   rcases ne_zero_iff_exists.1 hd with ⟨d, rfl⟩,
   with_zero_cases a c,
-  exact linear_ordered_comm_group.div_le_div _ _ _ _
+  exact linear_ordered_structure.div_le_div _ _ _ _
 end
 
 end with_zero
 
-namespace linear_ordered_comm_group
+namespace linear_ordered_structure
 variables {α : Type*} [linear_ordered_comm_group α]
 instance inhabited : inhabited α := ⟨1⟩
 
@@ -224,7 +221,7 @@ lemma mul_lt_right  :
 begin
   introv h,
   rw lt_iff_le_and_ne,
-  refine ⟨linear_ordered_comm_group.mul_le_mul_right (le_of_lt h) _, _⟩,
+  refine ⟨linear_ordered_structure.mul_le_mul_right (le_of_lt h) _, _⟩,
   intro h',
   rw mul_right_cancel h' at h,
   exact lt_irrefl b h
@@ -249,12 +246,12 @@ end
 lemma lt_of_mul_lt_mul_left {α : Type*} [linear_ordered_comm_group α] :
   ∀ a b c : α, a * b < a * c → b < c :=
 λ a b c h, lt_of_not_ge (λ h', lt_irrefl _ $ lt_of_lt_of_le h $
-                               linear_ordered_comm_group.mul_le_mul_left h' a)
+                               linear_ordered_structure.mul_le_mul_left h' a)
 
 -- TODO: for completeness, we would need variations
 lemma mul_inv_lt_of_lt_mul {x y z : α} (h : x < y*z) : x*z⁻¹ < y :=
 by simpa [mul_inv_cancel_right] using mul_lt_right z⁻¹ h
-end linear_ordered_comm_group
+end linear_ordered_structure
 
 
 section
@@ -373,7 +370,7 @@ end actual_ordered_comm_monoid
 variables {Γ : Type*} [linear_ordered_comm_group Γ]
 
 namespace with_zero
-open linear_ordered_comm_group
+open linear_ordered_structure
 
 lemma coe_of_gt {x y : with_zero Γ} (h : x < y) : ∃ γ : Γ, y = (γ : with_zero Γ) :=
 by { with_zero_cases y, use y }
@@ -420,9 +417,9 @@ end
 
 instance : actual_ordered_comm_monoid (with_zero Γ) :=
 { mul_le_mul_left := λ x y x_le_y z,
-    by { with_zero_cases x y z, exact linear_ordered_comm_group.mul_le_mul_left x_le_y z },
+    by { with_zero_cases x y z, exact linear_ordered_structure.mul_le_mul_left x_le_y z },
   lt_of_mul_lt_mul_left := λ x y z hlt,
-    by { with_zero_cases x y z, exact linear_ordered_comm_group.lt_of_mul_lt_mul_left _ _ _ hlt },
+    by { with_zero_cases x y z, exact linear_ordered_structure.lt_of_mul_lt_mul_left _ _ _ hlt },
   ..(by apply_instance : comm_monoid (with_zero Γ)),
   ..(by apply_instance : partial_order (with_zero Γ)),
 }
@@ -435,12 +432,12 @@ begin
   rcases coe_of_gt hcd with ⟨γ, rfl⟩,
   rcases coe_of_gt hab with ⟨γ', rfl⟩,
   with_zero_cases a c,
-  exact linear_ordered_comm_group.mul_lt_mul hab hcd
+  exact linear_ordered_structure.mul_lt_mul hab hcd
 end
 
 lemma le_of_le_mul_right (h : c ≠ 0) (hab : a * c ≤ b * c) : a ≤ b :=
 begin
-  replace hab := linear_ordered_comm_monoid.mul_le_mul_right hab c⁻¹,
+  replace hab := linear_ordered_structure.mul_le_mul_right hab c⁻¹,
   rwa [mul_assoc, mul_assoc, mul_right_inv _ h, mul_one, mul_one] at hab,
 end
 
@@ -457,22 +454,14 @@ end with_zero
 
 example (Γ : Type*) [linear_ordered_comm_group Γ] : (1 : with_zero Γ) ≠ 0 := by simp
 
--- Floris says do this with old structure command
 class linear_ordered_cancel_comm_monoid_with_zero (α : Type*)
-  extends linear_ordered_comm_monoid α, has_zero α :=
+  extends linear_ordered_comm_monoid α, zero_ne_one_class α :=
 (zero_le : ∀ a : α, 0 ≤ a)
-(zero_ne_one : (0 : α) ≠ 1)
 (mul_left_cancel {a b c : α} (h : a ≠ 0) : a * b = a * c → b = c)
 
 namespace linear_ordered_cancel_comm_monoid_with_zero
 
-instance (α : Type*) [linear_ordered_cancel_comm_monoid_with_zero α] : zero_ne_one_class α :=
-{ zero := 0,
-  one := 1,
-  zero_ne_one := zero_ne_one α}
-
-lemma zero_ne_unit
-
---variables {α : Type u} [linear_ordered_cancel_comm_monoid_with_zero α] {x: α}
+-- variables {α : Type u} [linear_ordered_cancel_comm_monoid_with_zero α] {x: α}
+-- when we need to make an API for this object
 
 end linear_ordered_cancel_comm_monoid_with_zero
