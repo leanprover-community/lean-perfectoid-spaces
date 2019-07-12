@@ -461,8 +461,6 @@ class linear_ordered_cancel_comm_monoid_with_zero (α : Type*)
 (zero_le : ∀ a : α, 0 ≤ a)
 (mul_left_cancel {a b c : α} (h : a ≠ 0) : a * b = a * c → b = c)
 
-#print linear_ordered_cancel_comm_monoid_with_zero
-
 namespace linear_ordered_cancel_comm_monoid_with_zero
 
 -- variables {α : Type u} [linear_ordered_cancel_comm_monoid_with_zero α] {x: α}
