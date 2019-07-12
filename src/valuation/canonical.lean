@@ -85,6 +85,9 @@ def value_group_quotient (v : valuation R Γ) :
 units (valuation_field v) → value_group v :=
 quotient.mk'
 
+/- The priorities of the next two instances are lower than the default so that
+  the `linear_ordered_comm_group` instance below is found first. If these are found first,
+  it will cause timeouts during type class inference. -/
 @[priority 100] instance value_group.comm_group : comm_group (value_group v) :=
 by dunfold value_group; apply_instance
 
