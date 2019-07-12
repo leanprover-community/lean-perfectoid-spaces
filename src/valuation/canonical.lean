@@ -85,21 +85,10 @@ def value_group_quotient (v : valuation R Γ) :
 units (valuation_field v) → value_group v :=
 quotient.mk'
 
-instance value_group.comm_group : comm_group (value_group v) :=
-by unfold value_group; apply_instance
+@[priority 999] instance value_group.comm_group : comm_group (value_group v) :=
+by dunfold value_group; apply_instance
 
-def value_group.to_Γ (v : valuation R Γ) :
-value_group v → Γ :=
-quotient_group.lift (valuation_field_norm_one v) v.on_valuation_field.unit_map $
-  λ x, (is_group_hom.mem_ker _).1
-
-instance : is_group_hom (value_group.to_Γ v) :=
-by unfold value_group.to_Γ; apply_instance
-
-instance value_group_quotient.is_group_hom :
-is_group_hom (value_group_quotient v) := ⟨λ _ _, rfl⟩
-
-instance value_group.linear_order : linear_order (value_group v) :=
+@[priority 999] instance value_group.linear_order : linear_order (value_group v) :=
 { le := λ a' b',
     -- KMB now worried that this should change to λ s t, s ≤ t with possible breakage
     quotient.lift_on₂' a' b' (λ s t, v.on_valuation_field ↑s ≤ v.on_valuation_field ↑t) $
@@ -131,6 +120,9 @@ lemma mk_le_mk_iff (x y : units (valuation_field v)) :
   v.value_group_quotient x ≤ v.value_group_quotient y ↔
   v.on_valuation_field x ≤ v.on_valuation_field y := iff.rfl
 
+instance value_group_quotient.is_group_hom :
+is_group_hom (value_group_quotient v) := ⟨λ _ _, rfl⟩
+
 instance : linear_ordered_comm_group (value_group v) :=
 { mul_le_mul_left := begin rintro ⟨a⟩ ⟨b⟩ h ⟨c⟩,
     change v.on_valuation_field a ≤ v.on_valuation_field b at h,
@@ -143,8 +135,16 @@ instance : linear_ordered_comm_group (value_group v) :=
     rw v.on_valuation_field.map_mul,
     exact with_zero.mul_le_mul_left _ _ h _
 end,
- ..value_group.linear_order v,
- ..value_group.comm_group v }
+ ..value_group.comm_group v,
+ ..value_group.linear_order v }
+
+def value_group.to_Γ (v : valuation R Γ) :
+value_group v → Γ :=
+quotient_group.lift (valuation_field_norm_one v) v.on_valuation_field.unit_map $
+  λ x, (is_group_hom.mem_ker _).1
+
+instance : is_group_hom (value_group.to_Γ v) :=
+by unfold value_group.to_Γ; apply_instance
 
 lemma value_group.to_Γ_monotone :
   monotone (value_group.to_Γ v) :=
@@ -400,10 +400,11 @@ lemma to_Γ :
 --(canonical_valuation v).map (value_group.to_Γ v)
 --  (value_group.to_Γ_monotone _) = v :=
 
+--set_option trace.class_instances true
 lemma to_Γ :
       @valuation.map _ _ _ _ (canonical_valuation v)
          _ _ (value_group.to_Γ v)
-         (valuation.is_group_hom v) -- it's this
+         _ --((by apply_instance) : is_group_hom (value_group.to_Γ v))
          (value_group.to_Γ_monotone v) =
       v :=
 begin
