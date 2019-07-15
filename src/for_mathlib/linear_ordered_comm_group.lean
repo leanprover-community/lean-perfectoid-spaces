@@ -454,8 +454,6 @@ end with_zero
 
 example (Γ : Type*) [linear_ordered_comm_group Γ] : (1 : with_zero Γ) ≠ 0 := by simp
 
-set_option old_structure_cmd true
-
 class linear_ordered_cancel_comm_monoid_with_zero (α : Type*)
   extends linear_ordered_comm_monoid α, zero_ne_one_class α :=
 (zero_le : ∀ a : α, 0 ≤ a)
