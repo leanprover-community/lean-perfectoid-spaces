@@ -10,24 +10,26 @@ import for_mathlib.equiv
 /- valuations.basic
 
 The basic theory of valuations (non-archimedean norms) on a commutative ring,
-following Wedhorn's unpublished notes on adic spaces.
+following Wedhorn's unpublished notes on adic spaces, except that instead
+of {0} ∪ Γ as the target for our valuations, we use some slightly more
+general monoid M ({0} union a totally ordered cancellative commutative monoid)
 
-The definition of a valuation is Definition 1.22 of Wedhorn. `valuation R Γ`
-is the type of valuations R → Γ ∪ {0}, with a coercion to the underlying
-function. If v is a valuation from R to Γ ∪ {0} then the induced group
-homomorphism units(R) → Γ is called `unit_map v`.
+The definition of a valuation is Definition 1.22 of Wedhorn. `valuation R M`
+is the type of valuations R → M, with a coercion to the underlying
+function. If v is a valuation from R to M then the induced group
+homomorphism units(R) → units(M) plays the role of the map R^* -> Γ in Wedhorn.
 
 The equivalence "relation" `is_equiv v₁ v₂ : Prop` is not strictly speaking a
-relation, because v₁ : valuation R Γ₁ and v₂ : valuation R Γ₂ might
+relation, because v₁ : valuation R M₁ and v₂ : valuation R M₂ might
 not have the same type. This corresponds in ZFC to the set-theoretic difficulty
-that the class of all valuations (as Γ varies) on a ring R is not a set.
+that the class of all valuations (as M varies) on a ring R is not a set.
 The "relation" is however reflexive, symmetric and transitive in the obvious
 sense.
 
 The trivial valuation associated to a prime ideal P is
-`trivial P : valuation R Γ`.
+`trivial P : valuation R M`.
 
-The support of a valuation v : valuation R Γ is `supp v`. The induced valuation
+The support of a valuation v : valuation R M is `supp v`. The induced valuation
 on R / J = `ideal.quotient J` if `h : J ⊆ supp v` is `on_quot v h`.
 
 If v is a valuation on an integral domain R and `hv : supp v = 0`, then
@@ -43,26 +45,24 @@ local attribute [instance, priority 0] classical.prop_decidable
 local attribute [instance, priority 0] classical.decidable_linear_order
 noncomputable theory
 
-open function with_zero ideal localization
+open function with_zero ideal localization linear_ordered_structure
 
 universes u u₀ u₁ u₂ u₃ -- v is used for valuations
 
 variables {M : Type u} [linear_ordered_cancel_comm_monoid_with_zero M]
---variables {Γ₁ : Type u₁} [linear_ordered_comm_group Γ₁]
---variables {Γ₂ : Type u₂} [linear_ordered_comm_group Γ₂]
---variables {Γ₃ : Type u₃} [linear_ordered_comm_group Γ₃]
+variables {M₁ : Type u₁} [linear_ordered_cancel_comm_monoid_with_zero M₁]
+variables {M₂ : Type u₂} [linear_ordered_cancel_comm_monoid_with_zero M₂]
+variables {M₃ : Type u₃} [linear_ordered_cancel_comm_monoid_with_zero M₃]
 
 variables {R : Type u₀} -- This will be a ring, assumed commutative in some sections
 
-
--- Valuations on a ring with values in {0} ∪ Γ
+-- Valuations on a ring with values in M (which you can think of as {0} ∪ Γ)
 class valuation.is_valuation [ring R] (v : R → M) : Prop :=
 (map_zero : v 0 = 0)
 (map_one  : v 1 = 1)
 (map_mul  : ∀ x y, v (x * y) = v x * v y)
 (map_add  : ∀ x y, v (x + y) ≤ v x ∨ v (x + y) ≤ v y)
 
-set_option pp.all true
 instance valuation.is_monoid_hom [ring R] (v : R → M) [valuation.is_valuation v] :
   is_monoid_hom v :=
   { map_mul := valuation.is_valuation.map_mul v,
@@ -74,10 +74,12 @@ def valuation (R : Type u₀) [ring R] (M : Type u) [linear_ordered_cancel_comm_
 
 namespace valuation
 
+-- basic facts about valuations on rings
 section
+
 variables [ring R]
 
--- A valuation is coerced to the underlying function R → {0} ∪ Γ
+-- A valuation is coerced to the underlying function R → M
 instance (R : Type u₀) [ring R] (M : Type u) [linear_ordered_cancel_comm_monoid_with_zero M] :
 has_coe_to_fun (valuation R M) := { F := λ _, R → M, coe := subtype.val}
 
@@ -104,11 +106,15 @@ begin
   apply le_max_right_of_le h,
 end
 
--- not an instance, because more than one v on a given R
+-- not an instance, because there will be more than one v on a given R
 /-- a valuation gives a preorder on the underlying ring-/
 def to_preorder : preorder R := preorder.lift v (by apply_instance)
 
--- TODO(kmb) I need to prove 0 is not a unit.
+/-
+TODO(kmb) one could show that 0 is not a unit of M.
+
+The next load of lemmas are all just special cases
+or corollaries of units.map
 
 -- If x ∈ R is a unit then v x is non-zero
 theorem map_unit (h : x * y = 1) : (v x).is_some :=
@@ -122,12 +128,13 @@ begin
 end
 
 -- As far as Patrick can see, this is the useful version of valuation.map_unit
-lemma unit_is_some (x : units R) : ∃ γ : Γ, v x = γ :=
+lemma unit_is_some (x : units R) : ∃ γ : units M, v x = γ :=
 begin
-  have h1 := v.map_mul x.val x.inv,
-  rw [x.val_inv, valuation.map_one] at h1,
-  exact with_zero.eq_coe_of_mul_eq_coe_left h1.symm
+  use units.map v x,
+  refl,
 end
+
+-- do we need this now?
 
 lemma unit_is_not_none (x : units R) : v x ≠ 0 :=
 begin
@@ -136,6 +143,7 @@ begin
   apply option.no_confusion,
 end
 
+-- do we need this??
 lemma unit_is_some' {Γ : Type u} [_inst_1 : linear_ordered_comm_group Γ] {R : Type u₀} [comm_ring R]
   (v : valuation R Γ) {x : R} (h : ∃ y : R, x * y = 1) : ∃ γ : Γ, v x = γ :=
 begin
@@ -151,7 +159,7 @@ begin
   exact with_zero.eq_inv_of_mul_eq_one_right this,
 end
 
-lemma map_unit' (x : units R) : (v x).is_some := map_unit v x.val_inv
+--lemma map_unit' (x : units R) : (v x).is_some := map_unit v x.val_inv
 
 definition unit_map : units R → Γ :=
 λ u, match v u with
@@ -159,7 +167,7 @@ definition unit_map : units R → Γ :=
 | none := 1
 end
 
-@[simp] theorem unit_map_eq (u : units R) : some (unit_map v u) = v u :=
+--@[simp] theorem unit_map_eq (u : units R) : (units.map v u).1 = v u := rfl
 begin
   unfold unit_map,
   have h1 := v.map_mul u.val u.inv,
@@ -171,30 +179,25 @@ begin
   refl,
 end
 
-lemma unit_map.ext (x z : units R) (H : v (z.val) = v (x.val)) :
-  valuation.unit_map v z = valuation.unit_map v x :=
-by rwa [←option.some_inj, valuation.unit_map_eq, valuation.unit_map_eq]
 
-@[simp]
-lemma coe_unit_map (x : units R)  : ↑(v.unit_map x) = v x :=
-by rw ← valuation.unit_map_eq ; refl
+--lemma units.map.ext (x z : units R) (H : v (z.val) = v (x.val)) :
+--  units.map v z = units.map v x := units.ext H
 
-instance is_group_hom.unit_map : is_group_hom (unit_map v) :=
-⟨λ a b, option.some.inj $
-  show _ = (some _ * some _ : with_zero Γ),
-  by simp⟩
+--@[simp]
+--lemma coe_unit_map (x : units R)  : ↑(v.unit_map x) = v x :=
+--by rw ← valuation.unit_map_eq ; refl
+
+--instance is_group_hom.unit_map : is_group_hom (unit_map v) :=
+--⟨λ a b, option.some.inj $
+--  show _ = (some _ * some _ : with_zero Γ),
+--  by simp⟩
+
+-/
 
 @[simp] theorem map_neg_one : v (-1) = 1 :=
 begin
-  change v (-1 : units R) = 1,
-  rw ← unit_map_eq,
-  congr' 1,
   apply linear_ordered_structure.eq_one_of_pow_eq_one (_ : _ ^ 2 = _),
-  rw pow_two,
-  apply option.some.inj,
-  change (some _ * some _ : with_zero Γ) = _,
-  rw [unit_map_eq, ← v.map_mul, units.coe_neg, units.coe_one, neg_one_mul, neg_neg, v.map_one],
-  refl
+  rw [pow_two, ←v.map_mul, neg_one_mul, neg_neg, v.map_one],
 end
 
 @[simp] lemma map_neg (x : R) : v (-x) = v x :=
@@ -235,41 +238,47 @@ begin
 end
 
 @[simp] theorem eq_zero_iff_le_zero {r : R} : v r = 0 ↔ v r ≤ v 0 :=
-v.map_zero.symm ▸ with_zero.le_zero_iff_eq_zero.symm
+begin
+  rw v.map_zero,
+  exact linear_ordered_structure.le_zero_iff_eq_zero.symm,
+end
 
-section
+section -- change of monoid,
 
-variables {v₁ : R → with_zero Γ₁} {v₂ : R → with_zero Γ₂}
-variables {ψ : Γ₁ → Γ₂}
-variables (H12 : ∀ r, with_zero.map ψ (v₁ r) = v₂ r)
-variables (Hle : ∀ g h : Γ₁, g ≤ h ↔ ψ g ≤ ψ h)
+variables {v₁ : R → M₁} {v₂ : R → M₂}
+variables {ψ : M₁ →ₘ₀ M₂} -- g ≤ h → ψ g ≤ ψ h not iff
+variables (H12 : ∀ r, ψ (v₁ r) = v₂ r)
+variables (Hle : ∀ g h : M₁, g ≤ h ↔ ψ g ≤ ψ h)
 -- This include statement means that we have an underlying assumption
--- that ψ : Γ₁ → Γ₂ is order-preserving, and that v₁ and v₂ are functions with ψ ∘ v₁ = v₂.
+-- that ψ : M₁ → M₂ is (strictly) order-preserving, and that v₁ and v₂
+-- are functions with ψ ∘ v₁ = v₂.
 include H12 Hle
 
 theorem le_of_le (r s : R) : v₁ r ≤ v₁ s ↔ v₂ r ≤ v₂ s :=
-by { rw ←H12 r, rw ←H12 s, exact with_zero.map_le Hle _ _ }
+by { rw ←H12 r, rw ←H12 s, exact Hle _ _}
 
 -- Restriction of a Γ₂-valued valuation to a subgroup Γ₁ is still a valuation
-theorem valuation_of_valuation [is_group_hom ψ] (Hiψ : function.injective ψ) (H : is_valuation v₂) :
+theorem valuation_of_valuation (Hiψ : function.injective ψ)
+  (H : is_valuation v₂) :
 is_valuation v₁ :=
-{ map_zero := with_zero.injective_map Hiψ $
-    by erw [H12, H.map_zero, ← with_zero.map_zero],
-  map_one := with_zero.injective_map Hiψ $
-    by erw [H12, H.map_one, with_zero.map_coe, is_group_hom.map_one ψ]; refl,
-  map_mul := λ r s, with_zero.injective_map Hiψ $
-    by rw [H12, H.map_mul, ←H12 r, ←H12 s]; exact (with_zero.map_mul _ _ _).symm,
+{ map_zero := Hiψ $
+by rw [H12, H.map_zero,
+←ψ.map_zero]; refl,
+  map_one := Hiψ $ by rw [H12, H.map_one, is_monoid_hom.map_one ψ],
+  map_mul := λ r s, Hiψ $
+    by rw [H12, H.map_mul, ←H12 r, ←H12 s, is_monoid_hom.map_mul ψ],
   map_add := λ r s,
   begin
     apply (is_valuation.map_add v₂ r s).imp _ _;
-    erw [with_zero.map_le Hle, ←H12, ←H12];
-    exact id
+    rw [←H12, ←H12];
+    intro h;
+    rwa Hle,
   end }
 
 end -- section
 
 /-- f : S → R induces map valuation R Γ → valuation S Γ -/
-def comap {S : Type u₁} [ring S] (f : S → R) [is_ring_hom f] : valuation S Γ :=
+def comap {S : Type u₁} [ring S] (f : S → R) [is_ring_hom f] : valuation S M :=
 { val := v ∘ f,
   property := by constructor;
     simp [is_ring_hom.map_zero f, is_ring_hom.map_one f,
@@ -282,41 +291,44 @@ lemma comap_comp {S₁ : Type u₁} [ring S₁] {S₂ : Type u₂} [ring S₂]
   v.comap (g ∘ f) = (v.comap g).comap f :=
 subtype.ext.mpr $ rfl
 
-def map {Γ₁ : Type u₁} [linear_ordered_comm_group Γ₁]
-  (f : Γ → Γ₁) [is_group_hom f] (hf : monotone f) :
-valuation R Γ₁ :=
-{ val := with_zero.map f ∘ v,
+def map {M₁ : Type u₁} [linear_ordered_cancel_comm_monoid_with_zero M₁]
+  (f : M →ₘ₀ M₁) :
+valuation R M₁ :=
+{ val := f ∘ v,
   property :=
-  { map_zero := by simp [with_zero.map_zero],
+  { map_zero := begin
+      show f (v 0) = 0,
+      rw valuation.map_zero,
+      rw f.map_zero,
+    end,
     map_one :=
     begin
-      show with_zero.map f (_) = 1,
-      erw [v.map_one, with_zero.map_coe, is_group_hom.map_one f],
-      refl
+      show f (_) = 1,
+      rw [v.map_one, is_monoid_hom.map_one f],
     end,
     map_mul := λ x y,
     begin
       delta function.comp,
-      erw [v.map_mul, with_zero.map_mul f],
-      refl
+      rw [v.map_mul, is_monoid_hom.map_mul f],
     end,
     map_add := λ x y,
     begin
       delta function.comp,
       apply (v.map_add x y).imp _ _;
-      exact λ h, with_zero.map_monotone hf h,
+      exact λ h, linear_ordered_comm_monoid.is_hom.ord f h,
     end } }
 
 
 -- Definition of equivalence relation on valuations
-def is_equiv (v₁ : valuation R Γ₁) (v₂ : valuation R Γ₂) : Prop :=
+def is_equiv (v₁ : valuation R M₁) (v₂ : valuation R M₂) : Prop :=
 ∀ r s, v₁ r ≤ v₁ s ↔ v₂ r ≤ v₂ s
-end
+
+end -- of nameless section
 
 namespace is_equiv
 variables [ring R]
-variables {v : valuation R Γ}
-variables {v₁ : valuation R Γ₁} {v₂ : valuation R Γ₂} {v₃ : valuation R Γ₃}
+variables {v : valuation R M}
+variables {v₁ : valuation R M₁} {v₂ : valuation R M₂} {v₃ : valuation R M₃}
 
 @[refl] lemma refl : v.is_equiv v :=
 λ _ _, iff.refl _
@@ -327,15 +339,17 @@ variables {v₁ : valuation R Γ₁} {v₂ : valuation R Γ₂} {v₃ : valuatio
 @[trans] lemma trans (h₁₂ : v₁.is_equiv v₂) (h₂₃ : v₂.is_equiv v₃) : v₁.is_equiv v₃ :=
 λ _ _, iff.trans (h₁₂ _ _) (h₂₃ _ _)
 
-lemma of_eq {v' : valuation R Γ} (h : v = v') : v.is_equiv v' :=
+lemma of_eq {v' : valuation R M} (h : v = v') : v.is_equiv v' :=
 by subst h; refl
 
-lemma map {v' : valuation R Γ} (f : Γ → Γ₁) [is_group_hom f] (inf : injective f) (hf : monotone f)
-  (h : v.is_equiv v') : (map v f hf).is_equiv (map v' f hf) := λ r s, begin
-  show (with_zero.map f) (v r) ≤ (with_zero.map f) (v s) ↔
-    (with_zero.map f) (v' r) ≤ (with_zero.map f) (v' s),
-  rw ←linear_order_le_iff_of_monotone_injective (with_zero.injective_map inf) (with_zero.map_monotone hf),
-  rw ←linear_order_le_iff_of_monotone_injective (with_zero.injective_map inf) (with_zero.map_monotone hf),
+lemma map {v' : valuation R M} (f : M →ₘ₀ M₁)
+  (inf : injective f)
+  (h : v.is_equiv v') : (map v f).is_equiv (map v' f) := λ r s, begin
+  show f (v r) ≤ f (v s) ↔ f (v' r) ≤ f (v' s),
+  rw ←linear_order_le_iff_of_monotone_injective (inf)
+    (λ x y, linear_ordered_comm_monoid.is_hom.ord f),
+  rw ←linear_order_le_iff_of_monotone_injective (inf)
+    (λ x y, linear_ordered_comm_monoid.is_hom.ord f),
   apply h,
 end
 
@@ -357,19 +371,21 @@ end
 
 end is_equiv
 
-lemma is_equiv_of_map_of_strict_mono [ring R] {v : valuation R Γ}
-(f : Γ → Γ₁) [is_group_hom f] (H : strict_mono f) :
-  is_equiv (v.map f (H.monotone)) v :=
-λ x y, ⟨(with_zero.map_strict_mono H).le_iff_le.mp, λ h, with_zero.map_monotone H.monotone h⟩
+lemma is_equiv_of_map_of_strict_mono [ring R] {v : valuation R M}
+(f : M →ₘ₀ M₁) (H : strict_mono f) :
+  is_equiv (v.map f) v :=
+λ x y, ⟨H.le_iff_le.mp, λ h, H.monotone h⟩
 
 section trivial
-variable [comm_ring R]
+variables [comm_ring R]
 variables (S : ideal R) [prime : ideal.is_prime S]
 include prime
 
--- trivial Γ-valued valuation associated to a prime ideal S
-def trivial : valuation R Γ :=
-{ val := λ x, if x ∈ S then 0 else 1,
+--set_option trace.class_instances true
+-- trivial M-valued valuation associated to a prime ideal S
+def trivial : valuation R M :=
+{ val := λ x, if x ∈ S then (0 : M) else (1 : M),
+  property := sorry } #exit
   property :=
   { map_zero := if_pos S.zero_mem,
     map_one  := if_neg (assume h, prime.1 (S.eq_top_iff_one.2 h)),

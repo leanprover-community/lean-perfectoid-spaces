@@ -29,27 +29,6 @@ structure linear_ordered_comm_monoid.equiv extends equiv α β :=
 
 lemma mul_le_mul_right (H : x ≤ y) : ∀ z : α, x * z ≤ y * z :=
 λ z, mul_comm z x ▸ mul_comm z y ▸ mul_le_mul_left H z
-end linear_ordered_structure
-
-namespace linear_ordered_structure
-variables {α : Type u} [linear_ordered_comm_group α] {x y z : α}
-variables {β : Type v} [linear_ordered_comm_group β]
-
-class linear_ordered_comm_group.is_hom (f : α → β) extends is_group_hom f : Prop :=
-(ord : ∀ {a b : α}, a ≤ b → f a ≤ f b)
-
--- this is Kenny's; I think we should have iff
-structure linear_ordered_comm_group.equiv extends equiv α β :=
-(is_hom : linear_ordered_comm_group.is_hom to_fun)
-
-lemma div_le_div (a b c d : α) : a * b⁻¹ ≤ c * d⁻¹ ↔ a * d ≤ c * b :=
-begin
-  split ; intro h,
-  have := mul_le_mul_right (mul_le_mul_right h b) d,
-  rwa [inv_mul_cancel_right, mul_assoc _ _ b, mul_comm _ b, ← mul_assoc, inv_mul_cancel_right] at this,
-  have := mul_le_mul_right (mul_le_mul_right h d⁻¹) b⁻¹,
-  rwa [mul_inv_cancel_right, _root_.mul_assoc, _root_.mul_comm d⁻¹ b⁻¹, ← mul_assoc, mul_inv_cancel_right] at this,
-end
 
 lemma one_le_mul_of_one_le_of_one_le (Hx : 1 ≤ x) (Hy : 1 ≤ y) : 1 ≤ x * y :=
 have h1 : x * 1 ≤ x * y, from mul_le_mul_left Hy x,
@@ -89,6 +68,40 @@ begin
     { have h2 := one_le_pow_of_one_le h,
       exact ih (le_antisymm h1 h2) } }
 end
+
+end linear_ordered_structure
+
+instance (α : Type*) [linear_ordered_comm_monoid α] : linear_ordered_comm_group (units α) :=
+{
+  le := λ x y, (x : α) ≤ y,
+  le_refl := le_refl,
+  le_trans := λ _ _ _, le_trans,
+  le_antisymm := λ _ _, le_antisymm,
+  le_total := le_total,
+  mul_le_mul_left := λ a b h c, linear_ordered_structure.mul_le_mul_left h c,
+  ..units.comm_group }
+
+namespace linear_ordered_structure
+variables {α : Type u} [linear_ordered_comm_group α] {x y z : α}
+variables {β : Type v} [linear_ordered_comm_group β]
+
+class linear_ordered_comm_group.is_hom (f : α → β) extends is_group_hom f : Prop :=
+(ord : ∀ {a b : α}, a ≤ b → f a ≤ f b)
+
+-- this is Kenny's; I think we should have iff
+structure linear_ordered_comm_group.equiv extends equiv α β :=
+(is_hom : linear_ordered_comm_group.is_hom to_fun)
+
+lemma div_le_div (a b c d : α) : a * b⁻¹ ≤ c * d⁻¹ ↔ a * d ≤ c * b :=
+begin
+  split ; intro h,
+  have := mul_le_mul_right (mul_le_mul_right h b) d,
+  rwa [inv_mul_cancel_right, mul_assoc _ _ b, mul_comm _ b, ← mul_assoc, inv_mul_cancel_right] at this,
+  have := mul_le_mul_right (mul_le_mul_right h d⁻¹) b⁻¹,
+  rwa [mul_inv_cancel_right, _root_.mul_assoc, _root_.mul_comm d⁻¹ b⁻¹, ← mul_assoc, mul_inv_cancel_right] at this,
+end
+
+
 
 lemma inv_le_one_of_one_le (H : 1 ≤ x) : x⁻¹ ≤ 1 :=
 by simpa using mul_le_mul_left H (x⁻¹)
@@ -459,9 +472,33 @@ class linear_ordered_cancel_comm_monoid_with_zero (α : Type*)
 (zero_le : ∀ a : α, 0 ≤ a)
 (mul_left_cancel {a b c : α} (h : a ≠ 0) : a * b = a * c → b = c)
 
-namespace linear_ordered_cancel_comm_monoid_with_zero
+namespace linear_ordered_structure
 
--- variables {α : Type u} [linear_ordered_cancel_comm_monoid_with_zero α] {x: α}
--- when we need to make an API for this object
+open linear_ordered_cancel_comm_monoid_with_zero
 
-end linear_ordered_cancel_comm_monoid_with_zero
+variables {α : Type u} [linear_ordered_cancel_comm_monoid_with_zero α]
+
+def le_zero_iff_eq_zero {x : α} : x ≤ 0 ↔ x = 0 := ⟨λ h, le_antisymm h $ zero_le x,
+  λ h, h ▸ (_root_.le_refl x)⟩
+
+variables {β : Type v} [linear_ordered_cancel_comm_monoid_with_zero β]
+
+structure linear_ordered_cancel_comm_monoid_with_zero.hom (α : Type*)
+  [linear_ordered_cancel_comm_monoid_with_zero α]
+  (β : Type*) [linear_ordered_cancel_comm_monoid_with_zero β] :=
+(f : α → β)
+(is_hom : linear_ordered_comm_monoid.is_hom f)
+(map_zero' : f 0 = 0)
+
+instance : has_coe_to_fun (linear_ordered_cancel_comm_monoid_with_zero.hom α β) :=
+{ F := λ _, α → β,
+  coe := λ h, h.f}
+
+infixr ` →ₘ₀ `:25 := linear_ordered_cancel_comm_monoid_with_zero.hom
+
+instance (f : α →ₘ₀ β) : linear_ordered_comm_monoid.is_hom f := f.is_hom
+
+lemma linear_ordered_cancel_comm_monoid_with_zero.hom.map_zero (f : α →ₘ₀ β) :
+f 0 = 0 := f.map_zero'
+
+end linear_ordered_structure
