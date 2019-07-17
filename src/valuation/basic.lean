@@ -42,10 +42,10 @@ of v. See Definition 1.26 of Wedhorn.
 -/
 
 local attribute [instance, priority 0] classical.prop_decidable
-local attribute [instance, priority 0] classical.decidable_linear_order
+--local attribute [instance, priority 0] classical.decidable_linear_order
 noncomputable theory
 
-open function with_zero ideal localization linear_ordered_structure
+open function ideal localization linear_ordered_structure
 
 universes u u₀ u₁ u₂ u₃ -- v is used for valuations
 
@@ -381,11 +381,11 @@ variables [comm_ring R]
 variables (S : ideal R) [prime : ideal.is_prime S]
 include prime
 
---set_option trace.class_instances true
+def f : R → M := λ x, if x ∈ S then (0 : M) else (1 : M)
+
 -- trivial M-valued valuation associated to a prime ideal S
 def trivial : valuation R M :=
 { val := λ x, if x ∈ S then (0 : M) else (1 : M),
-  property := sorry } #exit
   property :=
   { map_zero := if_pos S.zero_mem,
     map_one  := if_neg (assume h, prime.1 (S.eq_top_iff_one.2 h)),
@@ -411,21 +411,21 @@ def trivial : valuation R M :=
       end } }
 
 @[simp] lemma trivial_val :
-(trivial S).val = (λ x, if x ∈ S then 0 else 1 : R → (with_zero Γ)) := rfl
+(trivial S).val = (λ x, if x ∈ S then 0 else 1 : R → M) := rfl
 
 end trivial
 
 section supp
 variables  [comm_ring R]
-variables (v : valuation R Γ)
+variables (v : valuation R M)
 
 -- support of a valuation v : R → {0} ∪ Γ
 def supp : ideal R :=
 { carrier := {x | v x = 0},
   zero := map_zero v,
   add  := λ x y hx hy, or.cases_on (map_add v x y)
-    (λ hxy, le_antisymm (hx ▸ hxy) zero_le)
-    (λ hxy, le_antisymm (hy ▸ hxy) zero_le),
+    (λ hxy, le_antisymm (hx ▸ hxy) $ zero_le _)
+    (λ hxy, le_antisymm (hy ▸ hxy) $ zero_le _),
   smul  := λ c x hx, calc v (c * x)
                         = v c * v x : map_mul v c x
                     ... = v c * 0 : congr_arg _ hx
@@ -438,22 +438,25 @@ def supp : ideal R :=
 instance : ideal.is_prime (supp v) :=
 ⟨λ h, have h1 : (1:R) ∈ supp v, by rw h; trivial,
     have h2 : v 1 = 0 := h1,
-    by rw [map_one v] at h2; exact option.no_confusion h2,
+    by {rw [map_one v] at h2, exact zero_ne_one h2.symm},
  λ x y hxy, begin
     dsimp [supp] at hxy ⊢,
     change v (x * y) = 0 at hxy,
     rw [map_mul v x y] at hxy,
-    exact eq_zero_or_eq_zero_of_mul_eq_zero _ _ hxy
+    exact eq_zero_or_eq_zero_of_mul_eq_zero hxy
   end⟩
 
 lemma v_nonzero_of_not_in_supp (a : R) (h : a ∉ supp v) : v a ≠ 0 := λ h2, h h2
 
+/- do we need this now?
 -- group version of v
 def v_to_Γ (a : R) : Γ :=
 option.rec_on (v a) 1 id
+-/
 
 variable {v}
 
+/- do we need this now?
 lemma v_to_Γ_is_v {a : R} (h : a ∉ supp v) : v a = ↑(v_to_Γ v a) :=
 begin
   destruct (v a),
@@ -467,6 +470,7 @@ begin
     rw hg, refl,
   }
 end
+-/
 
 -- v(a)=v(a+s) if s in support. First an auxiliary lemma
 lemma val_add_supp_aux (a s : R) (h : v s = 0) : v (a + s) ≤ v a :=
@@ -474,7 +478,7 @@ begin
   cases map_add v a s with H H, exact H,
   change v s = 0 at h,
   rw h at H,
-  exact le_trans H with_zero.zero_le
+  exact le_trans H (zero_le _)
 end
 
 lemma val_add_supp (a s : R) (h : s ∈ supp v) : v (a + s) = v a :=
@@ -488,7 +492,7 @@ variable (v)
 
 -- Function corresponding to extension of a valuation on R to a valuation on R / J if J is in the support -/
 definition on_quot_val {J : ideal R} (hJ : J ≤ supp v) :
-  J.quotient → with_zero Γ :=
+  J.quotient → M :=
 λ q, quotient.lift_on' q v $ λ a b h,
 begin
   have hsupp : a - b ∈ supp v := hJ h,
@@ -509,7 +513,7 @@ is_valuation (on_quot_val v hJ) :=
 variable (v)
 /-- Extension of valuation v on R to valuation on R/J if J ⊆ supp v -/
 definition on_quot {J : ideal R} (hJ : J ≤ supp v) :
-  valuation J.quotient Γ :=
+  valuation J.quotient M :=
 { val := v.on_quot_val hJ,
   property := on_quot_val.is_valuation hJ }
 
@@ -523,7 +527,7 @@ end supp
 
 section supp_comm
 variable [comm_ring R]
-variables (v : valuation R Γ)
+variables (v : valuation R M)
 
 lemma comap_supp {S : Type u₁} [comm_ring S] (f : S → R) [is_ring_hom f] :
   supp (v.comap f) = ideal.comap f v.supp :=
@@ -533,7 +537,7 @@ begin
   refl,
 end
 
-@[simp] lemma comap_on_quot_eq (J : ideal R) (v : valuation J.quotient Γ) :
+@[simp] lemma comap_on_quot_eq (J : ideal R) (v : valuation J.quotient M) :
   (v.comap (ideal.quotient.mk J)).on_quot
   (by rw [comap_supp, ← ideal.map_le_iff_le_comap]; simp)
   = v :=
@@ -572,12 +576,12 @@ end supp_comm
 section fraction_ring
 
 variables [integral_domain R] -- integral domain is abreviated ID in the following
-variables (v : valuation R Γ)
+variables (v : valuation R M)
 
 -- function corresponding to extension of valuation on ID with support 0
 -- to valuation on field of fractions
-definition on_frac_val (hv : supp v = 0) : fraction_ring R → with_zero Γ :=
-quotient.lift (λ rs, v rs.1 / v rs.2.1 : R × non_zero_divisors R → with_zero Γ)
+definition on_frac_val (hv : supp v = 0) : fraction_ring R → M :=
+quotient.lift (λ rs, v rs.1 / v rs.2.1 : R × non_zero_divisors R → M)
 begin
   rintro ⟨r, s, hs⟩ ⟨t, u, hu⟩ ⟨w, hw, h⟩,
   change v r / v s = v t / v u,

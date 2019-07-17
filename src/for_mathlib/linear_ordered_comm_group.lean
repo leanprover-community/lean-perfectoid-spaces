@@ -12,6 +12,14 @@ set_option old_structure_cmd true
 class linear_ordered_comm_monoid (α : Type*) extends comm_monoid α, linear_order α :=
 (mul_le_mul_left : ∀ {a b : α}, a ≤ b → ∀ c : α, c * a ≤ c * b)
 
+noncomputable instance linear_ordered_structure.linear_ordered_comm_monoid.decidable_linear_order
+  (α : Type*) [linear_ordered_comm_monoid α] : decidable_linear_order α :=
+{
+  decidable_le := λ _ _, classical.prop_decidable _,
+  decidable_eq := λ _ _, classical.prop_decidable _,
+  decidable_lt := λ _ _, classical.prop_decidable _,
+  ..linear_ordered_comm_monoid.to_linear_order α}
+
 class linear_ordered_comm_group (α : Type*) extends comm_group α, linear_ordered_comm_monoid α
 
 namespace linear_ordered_structure
@@ -470,6 +478,7 @@ example (Γ : Type*) [linear_ordered_comm_group Γ] : (1 : with_zero Γ) ≠ 0 :
 class linear_ordered_cancel_comm_monoid_with_zero (α : Type*)
   extends linear_ordered_comm_monoid α, zero_ne_one_class α :=
 (zero_le : ∀ a : α, 0 ≤ a)
+(zero_mul : ∀ a : α, 0 * a = 0)
 (mul_left_cancel {a b c : α} (h : a ≠ 0) : a * b = a * c → b = c)
 
 namespace linear_ordered_structure
@@ -477,6 +486,35 @@ namespace linear_ordered_structure
 open linear_ordered_cancel_comm_monoid_with_zero
 
 variables {α : Type u} [linear_ordered_cancel_comm_monoid_with_zero α]
+
+instance : mul_zero_class α := {
+  mul := (*),
+  zero := 0,
+  zero_mul := linear_ordered_cancel_comm_monoid_with_zero.zero_mul,
+  mul_zero := λ a, _root_.mul_comm 0 a ▸ zero_mul a,
+}
+
+def mul_left_cancel {a b c : α} (h : a ≠ 0) : a * b = a * c → b = c :=
+mul_left_cancel h
+
+instance : no_zero_divisors α :=
+{ mul := (*), zero := 0,
+  eq_zero_or_eq_zero_of_mul_eq_zero := λ a b h, begin
+    by_cases ha : a = 0,
+      left, assumption,
+    right,
+    apply mul_left_cancel ha,
+    simp [h],
+  end}
+
+@[simp] lemma zero_le : ∀ a : α, 0 ≤ a :=
+linear_ordered_cancel_comm_monoid_with_zero.zero_le
+
+@[simp] lemma linear_ordered_cancel_comm_monoid_with_zero.mul_zero : ∀ a : α, a * 0 = 0 :=
+mul_zero
+
+@[simp] lemma linear_ordered_cancel_comm_monoid_with_zero.zero_mul : ∀ a : α, 0 * a = 0 :=
+linear_ordered_cancel_comm_monoid_with_zero.zero_mul
 
 def le_zero_iff_eq_zero {x : α} : x ≤ 0 ↔ x = 0 := ⟨λ h, le_antisymm h $ zero_le x,
   λ h, h ▸ (_root_.le_refl x)⟩
