@@ -97,6 +97,10 @@ instance : is_valuation v := v.property
 @[simp] lemma map_mul  : ∀ x y, v (x * y) = v x * v y := v.property.map_mul
 @[simp] lemma map_add  : ∀ x y, v (x + y) ≤ v x ∨ v (x + y) ≤ v y := v.property.map_add
 
+lemma map_pow (x : R) : ∀ (n : ℕ), v(x^n) = (v x)^n
+| 0     := by rw [pow_zero, pow_zero, map_one]
+| (n+1) := by rw [pow_succ, pow_succ, map_mul, map_pow]
+
 lemma map_one_ne_zero : v 1 ≠ 0 := by rw map_one; simp
 
 lemma map_add_le_max (x y) : v (x + y) ≤ max (v x) (v y) :=
