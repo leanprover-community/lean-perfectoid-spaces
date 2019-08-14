@@ -8,7 +8,7 @@ specifically Definition 3.1 and 3.19
 -/
 
 -- We import definitions of adic_space, preadic_space, Huber_pair, etc
-import prime
+import Frobenius
 import adic_space
 import Tate_ring
 import power_bounded
@@ -17,10 +17,10 @@ section
 -- notation for the power bounded subring
 local postfix `ᵒ` : 66 := power_bounded_subring
 
-open power_bounded_subring topological_space function
+open nat power_bounded_subring topological_space function
 
 -- We fix a prime number p
-parameter (p : Prime)
+parameter (p : primes)
 
 structure perfectoid_ring (R : Type) [Huber_ring R] extends Tate_ring R : Prop :=
 (complete  : is_complete_hausdorff R)
