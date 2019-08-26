@@ -137,7 +137,7 @@ lemma eq_localization_of_comap (w : valuation (_root_.localization R S) Γ)
     show w r * _ = _,
     congr,
     show (w s)⁻¹ = _,
-    have hs0 : w s ≠ 0 := unit_is_not_none w  (localization.to_units ⟨s, hs⟩),
+    have hs0 : w s ≠ 0 := map_unit_ne_zero w  (localization.to_units ⟨s, hs⟩),
     apply with_zero.mul_right_cancel hs0,
     rw ←w.map_mul,
     rw with_zero.mul_left_inv _ hs0,
