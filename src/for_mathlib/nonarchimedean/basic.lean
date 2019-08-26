@@ -5,6 +5,7 @@ import ring_theory.ideal_operations
 import tactic.abel tactic.chain
 
 import for_mathlib.submodule
+import for_mathlib.open_embeddings
 import for_mathlib.rings
 import topology.algebra.open_subgroup
 
@@ -32,13 +33,13 @@ variables (f : G₀ → G) [is_group_hom f]
 
 @[to_additive topological_add_group.nonarchimedean_of_nonarchimedean_open_embedding]
 lemma nonarchimedean_of_nonarchimedean_open_embedding
-  (emb : embedding f) (hf : is_open (range f)) (h : nonarchimedean G₀) :
+  (emb : topological_space.open_embedding f) (h : nonarchimedean G₀) :
   nonarchimedean G :=
 begin
   intros U hU,
   cases h (f ⁻¹' U) _ with V hV,
   { refine ⟨⟨f '' V, _, _⟩, _⟩,
-    { exact embedding_open emb hf V.is_open },
+    { exact emb.op _ V.is_open },
     { apply_instance },
     { rwa ← set.image_subset_iff at hV } },
   { apply continuous.tendsto (emb.continuous),
