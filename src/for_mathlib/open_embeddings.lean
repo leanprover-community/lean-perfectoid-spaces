@@ -12,22 +12,29 @@ theorem is_open_map_of_open {α : Type*} [topological_space α] {s : set α} (hs
 end
 
 theorem is_embedding_of_open {α : Type*} [topological_space α] {s : set α} (hs : _root_.is_open s) :
-  embedding (subtype.val : {x // x ∈ s} → α) := ⟨subtype.val_injective, rfl⟩
+  embedding (subtype.val : {x // x ∈ s} → α) := ⟨⟨rfl⟩, subtype.val_injective⟩
 
-def open_embedding {α : Type*} {β : Type*} [topological_space α] [topological_space β]
-  (f : α → β) : Prop := is_open_map f ∧ embedding f
+structure open_embedding {α : Type*} {β : Type*} [topological_space α] [topological_space β]
+  (f : α → β) : Prop :=
+(op : is_open_map f)
+(emb : embedding f)
 
 namespace open_embedding
 -- is this the right order, or is {α : Type*} [topological_space α] {β : Type*} ... better?
 variables {α : Type*} {β : Type*} {γ : Type*} {δ : Type*}
   [topological_space α] [topological_space β] [topological_space γ] [topological_space δ]
 
+-- TODO: in mathlib is_open_map, put implicit argument for the subset
+
+lemma mk' {f : α → β} (emb : embedding f) (h : _root_.is_open (set.range f)) : open_embedding f :=
+⟨λ U, embedding_open emb h, emb⟩
+
 -- one is .id, one is _id. Which is "correct"?
 lemma id : open_embedding (@id α : α → α) := ⟨is_open_map.id, embedding_id⟩
 
 -- one is .comp, one is _compose. Which is "correct"?
 lemma comp {f : α → β} {g : β → γ} (hg : open_embedding g) (hf : open_embedding f) :
-  open_embedding (g ∘ f) := ⟨is_open_map.comp hf.1 hg.1, embedding_compose hg.2 hf.2⟩
+  open_embedding (g ∘ f) := ⟨is_open_map.comp hf.1 hg.1, hg.2.comp hf.2⟩
 
 theorem of_open {s : set α} (hs : _root_.is_open s) :
   open_embedding (subtype.val : {x // x ∈ s} → α) :=
@@ -35,6 +42,8 @@ theorem of_open {s : set α} (hs : _root_.is_open s) :
 
 -- todo: prod : α → β and γ → δ gives α x γ → β x δ?
 
+lemma continuous {f : α → β} (hf : open_embedding f) : continuous f :=
+hf.emb.to_inducing.continuous
 end open_embedding
 
 section is_open_map
