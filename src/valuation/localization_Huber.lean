@@ -59,7 +59,7 @@ begin
   rcases Hl with ⟨t, ht, rfl⟩,
   change v' (↑(unit_s hs)⁻¹) * _ ≤ _,
   rw mul_comm,
-  apply with_zero.le_of_le_mul_right (unit_is_not_none v' u),
+  apply with_zero.le_of_le_mul_right (map_unit_ne_zero v' u),
   rw [mul_assoc, one_mul, ←v'.map_mul, units.inv_mul, v'.map_one, mul_one],
   change canonical_valuation v t ≤ v' u.val,
   rw remember_this,
@@ -125,7 +125,7 @@ Huber_ring.away.lift T s (unit_aux hs)
 instance (hs : v s ≠ 0) : is_ring_hom (to_valuation_field hs) :=
 by delta to_valuation_field; apply_instance
 
-local attribute [instance] valuation.subgroups_basis
+local attribute [instance] valued.subgroups_basis
 
 theorem to_valuation_field_cts' (hs : v s ≠ 0)(hT2 : ∀ t : A, t ∈ T → v t ≤ v s) (hv : is_continuous v) :
   continuous (to_valuation_field hs) :=
