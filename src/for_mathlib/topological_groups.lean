@@ -7,7 +7,7 @@ import ring_theory.subring
 import for_mathlib.topology
 import for_mathlib.filter
 import for_mathlib.data.set.basic
-
+import algebra.pointwise
 
 /-
 open filter function
