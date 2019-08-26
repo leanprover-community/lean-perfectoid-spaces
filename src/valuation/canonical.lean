@@ -730,11 +730,9 @@ end
 
 -- group part of Wedhorn 1.27 (iii) -> (i)
 def is_equiv.value_group_equiv (h : is_equiv v₁ v₂) :
-group_equiv (value_group v₁) (value_group v₂) := group_equiv.quotient
-  (valfield_units_equiv_units_of_eq_supp h.supp_eq)
-  (valuation_field_norm_one v₁)
-  (valuation_field_norm_one v₂) $ is_equiv.norm_one_eq_norm_one h
-
+  group_equiv (value_group v₁) (value_group v₂) :=
+group_equiv.quotient (valfield_units_equiv_units_of_eq_supp h.supp_eq) (valuation_field_norm_one v₁)
+  (valuation_field_norm_one v₂) (is_equiv.norm_one_eq_norm_one h : _)
 
 lemma value_group_equiv_units_mk_eq_mk (h : is_equiv v₁ v₂) (r : R) (hr : r ∉ supp v₁) :
   (h.value_group_equiv).to_equiv (value_group_quotient v₁ (units_valfield_mk v₁ r hr)) =
