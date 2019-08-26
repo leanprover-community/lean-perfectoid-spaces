@@ -1,18 +1,36 @@
 import topology.opens
-import topology.uniform_space.cauchy
-import topology.algebra.group
 
 import for_mathlib.filter
+import for_mathlib.data.set.basic
 
-open topological_space
+open topological_space function
 
+local notation `𝓝` x:70 := nhds x
 local notation f `∘₂` g := function.bicompr f g
-
--- predicates we need for topological rings
 
 -- We need to think whether we could directly use the class t2_space (which is not using opens though)
 definition is_hausdorff (α : Type*) [topological_space α] : Prop :=
   ∀ x y, x ≠ y → ∃ u v : opens α, x ∈ u ∧ y ∈ v ∧ u ∩ v = ∅
+
+open set filter
+
+instance regular_of_discrete {α : Type*} [topological_space α] [discrete_topology α] :
+  regular_space α :=
+{ t1 := λ x, is_open_discrete _,
+  regular :=
+  begin
+    intros s a s_closed a_not,
+    refine ⟨s, is_open_discrete s, subset.refl s, _⟩,
+    erw [← empty_in_sets_eq_bot, mem_inf_sets],
+    use {a},
+    rw nhds_discrete α,
+    simp,
+    refine ⟨s, subset.refl s, _ ⟩,
+    rintro x ⟨xa, xs⟩,
+    rw ← mem_singleton_iff.1 xa at a_not,
+    exact a_not xs
+  end }
+
 
 lemma continuous_of_const {α : Type*} {β : Type*}
   [topological_space α] [topological_space β]
@@ -27,24 +45,18 @@ variables {α : Type*} {β : Type*} {γ : Type*} {δ : Type*}
 
 variables [topological_space α] [topological_space β] [topological_space γ] [topological_space δ]
 
-def continuous₂ (f : α → β → γ) := continuous (function.uncurry f)
+def continuous₂ (f : α → β → γ) := continuous (function.uncurry' f)
 
-lemma continuous₂_def (f : α → β → γ) : continuous₂ f ↔ continuous (function.uncurry f) := iff.rfl
+lemma continuous₂_def (f : α → β → γ) : continuous₂ f ↔ continuous (function.uncurry' f) := iff.rfl
 
 lemma continuous₂_curry (f : α × β → γ) : continuous₂ (function.curry f) ↔ continuous f :=
-by rw  [←function.uncurry_curry f] {occs := occurrences.pos [2]} ; refl
+by rw  [←function.uncurry'_curry f] {occs := occurrences.pos [2]} ; refl
 
-lemma continuous₂.comp {f : α → β → γ} {g : γ → δ}
-  (hf : continuous₂ f)(hg : continuous g) :
-continuous₂ (g ∘₂ f) :=
-begin
-  unfold continuous₂,
-  rw function.uncurry_bicompr,
-  exact hg.comp hf
-end
+lemma continuous₂.comp {f : α → β → γ} {g : γ → δ} (hf : continuous₂ f)(hg : continuous g) :
+  continuous₂ (g ∘₂ f) := hg.comp hf
 
 section
-open filter
+open set filter lattice function
 
 /-
     f
@@ -53,18 +65,38 @@ g ↓   ↓ h
   γ → δ
     i
 -/
-variables {g : α → γ} (eg : embedding g)
+variables {f : α → β} {g : α → γ} {i : γ → δ} {h : β → δ}
+
+lemma continuous_of_continuous_on_of_induced (H : h ∘ f = i ∘ g) (hi : continuous_on i $ range g)
+  (hg : ‹topological_space α› = induced g ‹topological_space γ›)
+  (hh : ‹topological_space β› = induced h ‹topological_space δ›) : continuous f :=
+begin
+  rw continuous_iff_continuous_at,
+  intro x,
+  dsimp [continuous_at, tendsto],
+  rw [hg, hh, nhds_induced, nhds_induced, ← map_le_iff_le_comap, map_comm H],
+  specialize hi (g x) ⟨x, rfl⟩,
+  have := calc
+    nhds_within (g x) (range g) = 𝓝 g x ⊓ principal (range g) : rfl
+    ... = 𝓝 g x ⊓ map g (principal univ) : by rw [← image_univ, ← map_principal]
+    ... = 𝓝 g x ⊓ map g ⊤ : by rw principal_univ,
+  rw [continuous_within_at, this, ← comp_app i g, ← congr_fun H x] at hi, clear this,
+  have := calc
+    map g (comap g 𝓝 g x) = map g (comap  g 𝓝 g x ⊓ ⊤) : by rw inf_top_eq
+    ... ≤ map g (comap g 𝓝 g x) ⊓ map g ⊤ : map_inf_le g _ _
+    ... ≤ 𝓝 g x ⊓ map g ⊤ : inf_le_inf map_comap_le (le_refl _),
+  exact le_trans (map_mono this) hi,
+end
+
+variables  (eg : embedding g) (eh : embedding h)
 include eg
 
 lemma embedding.nhds_eq_comap (a : α) : nhds a = comap g (nhds $ g a) :=
-by rw [eg.2, nhds_induced_eq_comap]
+by rw [eg.induced, nhds_induced]
 
-variables {f : α → β} {i : γ → δ}
-          {h : β → δ} (eh : embedding h)
-          (H : h ∘ f = i ∘ g)
-include eh H
+include eh
 
-lemma embedding.tendsto_iff (a : α) : continuous_at i (g a) → continuous_at f a:=
+lemma embedding.tendsto_iff (H : h ∘ f = i ∘ g) (a : α) : continuous_at i (g a) → continuous_at f a:=
 begin
   let N := nhds a, let Nf := nhds (f a),
   let Nhf := nhds (h $ f a), let Ng := nhds (g a),
@@ -85,12 +117,11 @@ end
 end
 end
 
-namespace dense_embedding
+namespace dense_inducing
 open set function filter
-variables {α : Type*} {β : Type*} {γ : Type*} {δ : Type*}
-variables [topological_space α] [topological_space β] [topological_space γ] [topological_space δ]
+variables {α : Type*} {β : Type*} {δ : Type*} {γ : Type*}
+variables [topological_space α] [topological_space β] [topological_space δ] [topological_space γ]
 
-variables {f : α → β} {g : α → γ} {h : β → δ} {i : γ → δ}
 /-
     f
   α → β
@@ -98,43 +129,22 @@ g ↓   ↓ h
   γ → δ
     i
 -/
--- The following lemma correct a typo in mathlib topology/maps.lean
-protected lemma continuous' (df : dense_embedding f) : continuous f :=
-continuous_iff_continuous_at.mpr $ λ a, df.continuous_at
+variables {f : α → β} {g : α → γ} {i : γ → δ} {h : β → δ}
 
--- TODO: The first item in the next proof should be extracted as a lemma about functions with dense image
+lemma comp (dh : dense_inducing h) (df : dense_inducing f) : dense_inducing (h ∘ f) :=
+{ dense := dense_range.comp _ dh.dense df.dense dh.continuous,
+  induced := (dh.to_inducing.comp df.to_inducing).induced }
 
-lemma comp (df : dense_embedding f) (dh : dense_embedding h) : dense_embedding (h ∘ f) :=
-{ dense :=
-    begin
-      intro,
-      rw range_comp,
-      have Hf : closure (range f) = univ,
-        from eq_univ_of_forall df.dense,
-      have Hh : closure (range h) = univ,
-        from eq_univ_of_forall dh.dense,
-      rw [← image_univ, ← Hf] at Hh,
-      have : h '' (closure $ range f) ⊆ closure (h '' range f),
-        from image_closure_subset_closure_image dh.continuous',
-      have := closure_mono this,
-      rw closure_closure at this,
-      apply this,
-      simp [Hh]
-    end,
-  inj :=  function.injective_comp dh.inj df.inj,
-  induced := λ a, by rw [← comap_comap_comp, dh.induced, df.induced] }
-
--- density proof should be easier
-lemma of_comm_square (dg : dense_embedding g) (di : dense_embedding i)
-  (dh : dense_embedding h) (H : h ∘ f = i ∘ g) : dense_embedding f :=
-have dhf : dense_embedding (h ∘ f),
-  by {rw H, exact comp dg di},
+lemma of_comm_square (dg : dense_inducing g) (di : dense_inducing i)
+  (dh : dense_inducing h) (H : h ∘ f = i ∘ g) : dense_inducing f :=
+have dhf : dense_inducing (h ∘ f),
+  by {rw H, exact di.comp dg },
 { dense := begin
     intro x,
     have H := dhf.dense (h x),
     rw mem_closure_iff_nhds at H ⊢,
     intros t ht,
-    rw [←dh.induced x, mem_comap_sets] at ht,
+    rw [dh.nhds_eq_comap x, mem_comap_sets] at ht,
     rcases ht with ⟨u, hu, hinc⟩,
     replace H := H u hu,
     rw ne_empty_iff_exists_mem at H ⊢,
@@ -144,27 +154,47 @@ have dhf : dense_embedding (h ∘ f),
     apply mem_of_mem_of_subset _ hinc,
     rwa mem_preimage,
   end ,
-  inj := λ a b H, dhf.inj (by {show h (f a) = _, rw H}),
-  induced := λ a, by rw [←dhf.induced a, ←@comap_comap_comp _ _ _ _ _ h, dh.induced] }
+--  inj := λ a b H, dhf.inj (by {show h (f a) = _, rw H}),
+  induced := by rw [dg.induced, di.induced, induced_compose, ← H, ← induced_compose, dh.induced] }
+end dense_inducing
+
+namespace dense_embedding
+open set function filter
+variables {α : Type*} {β : Type*} {δ : Type*} {γ : Type*}
+
+variables [topological_space α] [topological_space β] [topological_space δ] [topological_space γ]
+
+/-
+    f
+  α → β
+g ↓   ↓ h
+  γ → δ
+    i
+-/
+variables {f : α → β} {g : α → γ} {i : γ → δ} {h : β → δ}
+
+-- TODO: fix implicit argument in dense_range.comp before PRing
+
+lemma comp (dh : dense_embedding h) (df : dense_embedding f) : dense_embedding (h ∘ f) :=
+{ dense := dense_range.comp _ dh.dense df.dense dh.to_dense_inducing.continuous,
+  inj :=  function.injective_comp dh.inj df.inj,
+  induced := (dh.to_inducing.comp df.to_inducing).induced }
 
 lemma of_homeo (h : α ≃ₜ β) : dense_embedding h :=
-{ dense :=
-  begin
-    intro x,
-    erw range_iff_surjective.mpr (h.to_equiv.surjective),
-    simp
-  end,
+{ dense := (dense_range_iff_closure_eq _).mpr $
+             (range_iff_surjective.mpr h.to_equiv.surjective).symm ▸ closure_univ,
   inj := h.to_equiv.injective,
-  induced :=
-  begin
-    intro a,
-    symmetry,
-    apply embedding.nhds_eq_comap,
-    refine ⟨h.to_equiv.injective, _⟩,
-    symmetry,
-    apply homeomorph.induced_eq
-  end }
+  induced := h.induced_eq.symm, }
 
+lemma of_comm_square (dg : dense_embedding g) (di : dense_embedding i)
+  (dh : dense_embedding h) (H : h ∘ f = i ∘ g) : dense_embedding f :=
+{ inj := begin
+    intros a b hab,
+    have : (h ∘ f) a = (h ∘ f) b := by convert congr_arg h hab,
+    rw H at this,
+    exact dg.inj (di.inj this),
+  end,
+  ..dense_inducing.of_comm_square dg.to_dense_inducing di.to_dense_inducing dh.to_dense_inducing H }
 end dense_embedding
 
 section
