@@ -9,6 +9,20 @@ import for_mathlib.algebra
 import for_mathlib.submodule
 import for_mathlib.nonarchimedean.basic
 import for_mathlib.group
+import for_mathlib.open_subgroup
+
+/-!
+This file covers (a special case of) Wedhorn's Proposition and Definition 5.51.
+Starting with a Huber ring `A`, `s ∈ A` and `T ⊆ A`, we construct a (nonarchimedean)
+topological ring `A⟮T/s⟯` and a map `coe : A → A⟮T/s⟯` such that `s` becomes invertibles
+and `{t/s ; t ∈ T}` is power-bounded in `A⟮T/s⟯`. In addition `A⟮T/s⟯` is universal for these
+properties. Algebraically, `A⟮T/s⟯` is simply the localization `s⁻¹A`, but the topology does
+depend on `T`. In Wedhorn, the setup is slighly more general because the single element `s`
+is replaced by a family of elements. The case covered here will be sufficient for our purposes.
+
+In view of our applications in Spa.lean, we assume right away that T is finite and generates
+an open ideal in A.
+-/
 
 universes u v
 
@@ -18,49 +32,71 @@ local attribute [instance] set.pointwise_mul_comm_semiring
 local attribute [instance] set.pointwise_mul_action
 local attribute [instance] set.pointwise_mul_image_is_semiring_hom
 
+local notation `𝓝` x: 70 := nhds x
+
 namespace Huber_ring
 open localization algebra topological_ring submodule set topological_add_group
-variables {A  : Type u} [comm_ring A] [topological_space A] [topological_ring A]
-variables (T : set A) (s : A)
+variables (A  : Type u) [comm_ring A] [topological_space A] [topological_ring A]
 
 /-
 Our goal is to define a topology on (away s), which is the localization of A at s.
 This topology will depend on T, and should not depend on the ring of definition.
 In the literature, this ring is commonly denoted with A(T/s) to indicate the
-dependence on T. For the same reason, we start by defining a wrapper type that
-includes T in its assumptions.
+dependence on T. See discussion in Wedhorn starting around Proposition 5.51
 -/
 
-/--The localization at `s`, endowed with a topology that depends on `T`-/
-def away (T : set A) (s : A) := away s
+/-- The package needed to define a rational open subset R(T/s) of Spa(A) -/
+structure rational_open_data :=
+(s : A)
+(T : set A)
+[Tfin : fintype T]
+(Hopen : is_open (ideal.span T).carrier)
 
-local notation `ATs` := away T s
+variables {A}
 
-namespace away
+/-- Topological localization A(T/s) -/
+def rational_open_data.top_loc (r : rational_open_data A) := away r.s
 
-instance : comm_ring ATs := by delta away; apply_instance
+protected def rational_open_data.ideal (r : rational_open_data A) := ideal.span r.T
 
-instance : module A ATs := by delta away; apply_instance
+-- useless?
+lemma rational_open_data.is_open_ideal (r : rational_open_data A) : is_open r.ideal.carrier :=
+r.Hopen
 
-instance : algebra A ATs := by delta away; apply_instance
+namespace top_loc
+variables (r : rational_open_data A)
 
-instance : has_coe A ATs := ⟨λ a, (of_id A ATs : A → ATs) a⟩
+local notation `A⟮T/s⟯` := r.top_loc
+
+meta def find_inst : tactic unit := `[delta rational_open_data.top_loc away; apply_instance]
+
+instance : comm_ring A⟮T/s⟯ := by find_inst
+
+instance : module A A⟮T/s⟯ := by find_inst
+
+instance : algebra A A⟮T/s⟯ := by find_inst
+
+instance : has_coe A A⟮T/s⟯ := ⟨λ a, (of_id A A⟮T/s⟯ : A → A⟮T/s⟯) a⟩
+
+@[elim_cast]
+lemma coe_zero: coe (0 : A) = (0 : A⟮T/s⟯) :=
+is_ring_hom.map_zero _
 
 /--An auxiliary subring, used to define the topology on `away T s`-/
-def D.aux : set ATs :=
-let s_inv : ATs := ((to_units ⟨s, ⟨1, by simp⟩⟩)⁻¹ : units ATs) in
-ring.closure (s_inv • of_id A ATs '' T)
+def D.aux : set A⟮T/s⟯ :=
+let s_inv : A⟮T/s⟯ := ((to_units ⟨r.s, ⟨1, by simp⟩⟩)⁻¹ : units A⟮T/s⟯) in
+ring.closure (s_inv • (coe : A → A⟮T/s⟯) '' r.T)
 
-local notation `D` := D.aux T s
+local notation `D` := D.aux r
 
 instance : is_subring D := by delta D.aux; apply_instance
 
-local notation `Dspan` U := span D (of_id A ATs '' (U : set A))
+local notation `Dspan` U := span D ((coe : A → A⟮T/s⟯) '' (U : set A))
 
 /-
-To put a topology on `away T s` we want to use the construction
+To put a topology on `A⟮T/s⟯` we want to use the construction
 `topology_of_submodules_comm` which needs a directed family of
-submodules of `ATs = away T s` viewed as `D`-algebra.
+submodules of `A⟮T/s⟯` viewed as `D`-algebra.
 This directed family has two satisfy two extra conditions.
 Proving these two conditions takes up the beef of this file.
 
@@ -86,13 +122,13 @@ end
 there exists an open subgroup `V` of `A`,
 such that `a • (span D V)` is contained in the `D`-span of `U`.-/
 lemma left_mul_subset (h : nonarchimedean A) (U : open_add_subgroup A) (a : A) :
-  ∃ V : open_add_subgroup A, (a : ATs) • (Dspan V) ≤ (Dspan U) :=
+  ∃ V : open_add_subgroup A, (a : A⟮T/s⟯) • (Dspan V) ≤ (Dspan U) :=
 begin
   cases h _ _ with V hV,
   use V,
   work_on_goal 0 {
     erw [smul_singleton, ← span_image, span_le, ← image_comp, ← algebra.map_lmul_left, image_comp],
-    refine subset.trans (image_subset (of_id A ATs : A → ATs) _) subset_span,
+    refine subset.trans (image_subset (coe: A → A⟮T/s⟯) _) subset_span,
     rw image_subset_iff,
     exact hV },
   apply mem_nhds_sets (continuous_mul_left _ _ U.is_open),
@@ -109,15 +145,16 @@ begin
   use V,
   rw span_mul_span,
   apply span_mono,
-  rw ← is_semiring_hom.map_mul (image (of_id A ATs : A → ATs)),
+  rw ← is_semiring_hom.map_mul (image (coe : A → A⟮T/s⟯)),
   exact image_subset _ hV,
 end
 
-lemma K.aux (L : finset A) (h : (↑L : set A) ⊆ ideal.span T) :
-  ∃ (K : finset A), (↑L : set A) ⊆ (↑(span ℤ (T * ↑K)) : set A) :=
+lemma K.aux (L : finset A) (h : (↑L : set A) ⊆ r.ideal) :
+  ∃ (K : finset A), (↑L : set A) ⊆ (↑(span ℤ (r.T * ↑K)) : set A) :=
 begin
+  unfold rational_open_data.ideal at h,
   delta ideal.span at h,
-  rw [← set.image_id T] at h,
+  rw [← set.image_id r.T] at h,
   erw finsupp.span_eq_map_total at h,
   choose s hs using finset.subset_image_iff.mp h,
   use s.bind (λ f, f.frange),
@@ -137,27 +174,31 @@ begin
     exact ⟨ht, ⟨t, rfl⟩⟩ }
 end
 
-end away
+end top_loc
 
 end Huber_ring
 
 namespace Huber_ring
 open localization algebra topological_ring submodule set topological_add_group
 variables {A  : Type u} [Huber_ring A]
-variables (T : set A) (s : A)
+variables (r : rational_open_data A)
 
-namespace away
+namespace rational_open_data
 
-local notation `ATs` := away T s
-local notation `D` := D.aux T s
-local notation `Dspan` U := span D (of_id A ATs '' (U : set A))
+local notation `A⟮T/s⟯` := r.top_loc
+local notation `D` := top_loc.D.aux r
+local notation `Dspan` U := span D ((coe : A → A⟮T/s⟯) '' (U : set A))
 
 set_option class.instance_max_depth 80
 
 /- Wedhorn 6.20 for n = 1-/
-lemma mul_T_open (hT : is_open (↑(ideal.span T) : set A)) (U : open_add_subgroup A) :
-  is_open (↑(T • span ℤ (U : set A)) : set A) :=
+lemma mul_T_open (U : open_add_subgroup A) : is_open (↑(r.T • span ℤ (U : set A)) : set A) :=
 begin
+  suffices : (↑(r.T • span ℤ (U : set A)) : set A) ∈ nhds (0 : A),
+    from (open_add_subgroup.of_mem_nhds A this).is_open,
+  sorry,
+  /-
+  refine open_add_subgroup.is_open_of_nonempty_open_subset _,
   -- Choose an ideal I ⊆ span T
   rcases exists_pod_subset _ (mem_nhds_sets hT $ ideal.zero_mem $ ideal.span T)
     with ⟨A₀, _, _, _, ⟨_, emb, hf, I, fg, top⟩, hI⟩,
@@ -215,17 +256,18 @@ begin
   change span _ _ * _ = _,
   erw [span_span, ← mul_smul],
   refl
+  -/
 end
 
 set_option class.instance_max_depth 80
 
-lemma mul_left.aux₁ (hT : is_open (↑(ideal.span T) : set A)) (U : open_add_subgroup A) :
+lemma mul_left.aux₁ (U : open_add_subgroup A) :
   ∃ (V : open_add_subgroup A),
-    (↑((to_units ⟨s, ⟨1, pow_one s⟩⟩)⁻¹ : units ATs) : ATs) • (Dspan ↑V) ≤ Dspan ↑U :=
+    (↑((to_units ⟨r.s, ⟨1, pow_one r.s⟩⟩)⁻¹ : units A⟮T/s⟯) : A⟮T/s⟯) • (Dspan ↑V) ≤ Dspan ↑U :=
 begin
-  refine ⟨⟨_, mul_T_open _ hT U, by apply_instance⟩, _⟩,
-  erw [subtype.coe_mk (↑(T • span ℤ ↑U) : set A), @submodule.smul_def ℤ, span_mul_span],
-  change _ • span _ ↑(submodule.map (alg_hom_int $ (of_id A ATs : A → ATs)).to_linear_map _) ≤ _,
+  refine ⟨⟨_, mul_T_open r U, by apply_instance⟩, _⟩,
+  erw [subtype.coe_mk (↑(r.T • span ℤ ↑U) : set A), @submodule.smul_def ℤ, span_mul_span],
+  change _ • span _ ↑(submodule.map (alg_hom_int $ (of_id A A⟮T/s⟯ : A → A⟮T/s⟯)).to_linear_map _) ≤ _,
   erw [← span_image, span_span_int, submodule.smul_def, span_mul_span, span_le],
   rintros _ ⟨s_inv, hs_inv, tu, htu, rfl⟩,
   erw mem_image at htu,
@@ -241,106 +283,122 @@ begin
   { apply ring.mem_closure, exact ⟨s_inv, hs_inv, _, ⟨t, ht, rfl⟩, rfl⟩ }
 end
 
-lemma mul_left.aux₂ (hT : is_open (↑(ideal.span T) : set A))
-  (s' : powers s) (U : open_add_subgroup A) :
+lemma mul_left.aux₂ (s' : powers r.s) (U : open_add_subgroup A) :
   ∃ (V : open_add_subgroup A),
-    (↑((to_units s')⁻¹ : units ATs) : ATs) • (Dspan (V : set A)) ≤ Dspan (U : set A) :=
+    (↑((to_units s')⁻¹ : units A⟮T/s⟯) : A⟮T/s⟯) • (Dspan (V : set A)) ≤ Dspan (U : set A) :=
 begin
   rcases s' with ⟨_, ⟨n, rfl⟩⟩,
   induction n with k hk,
   { use U,
     simp only [pow_zero],
-    change (1 : ATs) • _ ≤ _,
+    change (1 : A⟮T/s⟯) • _ ≤ _,
     rw one_smul,
     exact le_refl _ },
   cases hk with W hW,
-  cases mul_left.aux₁ T s hT W with V hV,
+  cases mul_left.aux₁ r W with V hV,
   use V,
   refine le_trans _ hW,
   refine le_trans (le_of_eq _) (smul_le_smul (le_refl _) hV),
-  change _ = (_ : ATs) • _,
+  change _ = (_ : A⟮T/s⟯) • _,
   rw ← mul_smul,
   congr' 1,
   change ⟦((1 : A), _)⟧ = ⟦(1 * 1, _)⟧,
   simpa [pow_succ'],
 end
 
-lemma mul_left (hT : is_open (↑(ideal.span T) : set A)) (a : ATs) (U : open_add_subgroup A) :
+lemma mul_left (a : A⟮T/s⟯) (U : open_add_subgroup A) :
   ∃ (V : open_add_subgroup A), a • (Dspan (V : set A)) ≤ Dspan (U : set A) :=
 begin
   apply localization.induction_on a,
   intros a' s',
   clear a,
-  cases mul_left.aux₂ _ _ hT s' U with W hW,
-  cases left_mul_subset T s Huber_ring.nonarchimedean W a' with V hV,
+  cases mul_left.aux₂ _ s' U with W hW,
+  cases top_loc.left_mul_subset r Huber_ring.nonarchimedean W a' with V hV,
   use V,
   erw [localization.mk_eq, mul_comm, mul_smul],
   exact le_trans (smul_le_smul (le_refl _) hV) hW
 end
 
-lemma is_basis (hT : is_open (↑(ideal.span T) : set A)) :
-  is_subgroups_basis (λ U : open_add_subgroup A, (span D (of_id A ATs '' U.1) : set ATs)) :=
-is_subgroups_basis.of_submodules_comm _
-  (directed T s) (mul_left T s hT) (mul_le T s Huber_ring.nonarchimedean)
+def top_loc_basis : subgroups_basis A⟮T/s⟯ :=
+subgroups_basis.of_indexed_submodules_of_comm
+  (λ U : open_add_subgroup A, (span D (coe '' U.1)))
+  (top_loc.directed r) (mul_left r) (top_loc.mul_le r Huber_ring.nonarchimedean)
 
-def ring_with_nhds (hT : is_open (↑(ideal.span T) : set A)) :
-  ring_with_zero_nhd ATs :=
-@is_subgroups_basis.to_ring_with_zero_nhd ATs _ _ _
-(λ U : open_add_subgroup A, (span D (of_id A ATs '' U.1) : set ATs)) (away.is_basis T s hT)
+local attribute [instance] top_loc_basis
 
-def top_space (hT : is_open (↑(ideal.span T) : set A)) : topological_space ATs :=
-@ring_with_zero_nhd.topological_space ATs (ring_with_nhds T s hT)
+def top_space : topological_space A⟮T/s⟯ :=
+subgroups_basis.topology A⟮T/s⟯
+
+local attribute [instance] top_space
+
+def top_ring : topological_ring A⟮T/s⟯ :=
+ring_filter_basis.topological_ring _
+
+local attribute [instance] top_ring
+
+lemma mem_nhds_zero {V : set A⟮T/s⟯} :
+  V ∈ 𝓝 (0 : A⟮T/s⟯) ↔ ∃ U : open_add_subgroup A, (span D (coe '' U.1)).carrier ⊆ V :=
+begin
+  rw subgroups_basis.mem_nhds_zero,
+  split ; intro h,
+  { rcases h with ⟨G, ⟨U, hG⟩, hG'⟩,
+    use U,
+    convert hG' },
+  { rcases h with ⟨U, hU⟩,
+    exact ⟨_, mem_range_self _, hU⟩ },
+end
+
+-- Still part of Wedhorn 5.51
+-- TODO? Rename continuous_coe
+lemma of_continuous :
+  continuous (coe : A → A⟮T/s⟯) :=
+begin
+  suffices : continuous_at (coe : A → A⟮T/s⟯) 0,
+    from topological_add_group.continuous_of_continuous_at_zero _ this,
+  unfold continuous_at,
+  rw subgroups_basis.tendsto_into,
+  rintros _ ⟨U, rfl⟩,
+  suffices : coe ⁻¹' (Dspan U.val).carrier ∈ 𝓝 (0 : A),
+  { simpa only [top_loc.coe_zero, sub_zero] using this },
+  apply filter.mem_sets_of_superset (open_add_subgroup.mem_nhds_zero U),
+  rw ← image_subset_iff,
+  exact subset_span
+end
 
 section
+
+-- We now derive the universal property of `coe : A → A⟮T/s⟯`, still part of Wedhorn 5.51
+
 variables {B : Type*} [comm_ring B] [topological_space B] [topological_ring B]
 variables (hB : nonarchimedean B) {f : A → B} [is_ring_hom f] (hf : continuous f)
-variables {fs_inv : units B} (hs : fs_inv.inv = f s)
-variables (hT : is_open (↑(ideal.span T) : set A))
-variables (hTB : is_power_bounded_subset ((↑fs_inv : B) • f '' T))
+variables {fs_inv : units B} (hs : fs_inv.inv = f r.s)
+variables (hTB : is_power_bounded_subset ((↑fs_inv : B) • f '' r.T))
 
 include hs
-lemma is_unit : is_unit (f s) :=
+lemma is_unit : is_unit (f r.s) :=
 by rw [← hs, ← units.coe_inv]; exact is_unit_unit _
 
-noncomputable def lift : ATs → B := localization.away.lift f (is_unit s hs)
+noncomputable def lift : A⟮T/s⟯ → B := localization.away.lift f (is_unit r hs)
 
-instance : is_ring_hom (lift T s hs : ATs → B) :=
+instance : is_ring_hom (r.lift hs : A⟮T/s⟯ → B) :=
 localization.away.lift.is_ring_hom f _
 
 @[simp] lemma lift_of (a : A) :
-  lift T s hs (of a) = f a := localization.away.lift_of _ _ _
+  r.lift hs (of a) = f a := localization.away.lift_of _ _ _
 
 @[simp] lemma lift_coe (a : A) :
-  lift T s hs a = f a := localization.away.lift_of _ _ _
+  r.lift hs a = f a := localization.away.lift_of _ _ _
 
 @[simp] lemma lift_comp_of :
-  lift T s hs ∘ of = f := localization.lift'_comp_of _ _ _
+  r.lift hs ∘ of = f := localization.lift'_comp_of _ _ _
 
--- TODO: this has nothing to do with lift so should perhaps be elsewhere
--- (because KMB keeps confusing it with the next lemma ;-))
-lemma of_continuous (hT : is_open (↑(ideal.span T) : set A)) :
-  @continuous _ _ _ (away.top_space T s hT) (of : A → ATs) :=
-begin
-  apply is_subgroups_basis.continuous_into _,
-  all_goals {try {apply_instance}},
-  intro U,
-  apply open_add_subgroup.is_open_of_open_add_subgroup _,
-  all_goals {try {apply_instance}},
-  { apply is_add_group_hom.preimage _ _,
-    all_goals {apply_instance} },
-  { use U,
-    rw ← image_subset_iff,
-    exact subset_span }
-end
 
-include hB hf hT hTB
-lemma lift_continuous : @continuous _ _ (away.top_space T s hT) _ (lift T s hs) :=
+include hB hf hTB
+lemma lift_continuous : continuous (r.lift hs) :=
 begin
-  apply continuous_of_continuous_at_zero _ _,
-  all_goals {try {apply_instance}},
-  apply is_subgroups_basis.is_topological_add_group,
+  refine continuous_of_continuous_at_zero _ _,
   intros U hU,
-  rw is_ring_hom.map_zero (lift T s hs) at hU,
+  rw is_ring_hom.map_zero (r.lift hs) at hU,
   rw filter.mem_map_sets_iff,
   let hF := power_bounded.ring.closure' hB _ hTB,
   erw is_bounded_add_subgroup_iff hB at hF,
@@ -353,7 +411,8 @@ begin
   cases Huber_ring.nonarchimedean W hW with Y hY,
   refine ⟨↑(Dspan Y), _, _⟩,
   { apply mem_nhds_sets,
-    { convert is_subgroups_basis.is_op _ Y },
+    { convert subgroups_basis.is_op _ rfl _,
+      apply mem_range_self,  },
     { exact (Dspan ↑Y).zero_mem } },
   { refine set.subset.trans _ hVF,
     rintros _ ⟨x, hx, rfl⟩,
@@ -362,14 +421,14 @@ begin
       erw [lift_of, ← mul_one (f a)],
       refine mul_mem_mul (subset_span $ hWV $ ⟨a, hY ha, rfl⟩)
         (subset_span $ is_submonoid.one_mem _) },
-    { rw is_ring_hom.map_zero (lift T s hs),
+    { rw is_ring_hom.map_zero (r.lift hs),
       exact is_add_submonoid.zero_mem _ },
     { intros a b ha hb,
-      rw is_ring_hom.map_add (lift T s hs),
+      rw is_ring_hom.map_add (r.lift hs),
       exact is_add_submonoid.add_mem ha hb },
     { rw [submodule.smul_def, span_mul_span],
       intros d a ha,
-      rw [(show d • a = ↑d * a, from rfl), is_ring_hom.map_mul (lift T s hs), mul_comm],
+      rw [(show d • a = ↑d * a, from rfl), is_ring_hom.map_mul (r.lift hs), mul_comm],
       rcases (finsupp.mem_span_iff_total ℤ).mp (by rw set.image_id; exact ha) with ⟨l, hl₁, hl₂⟩,
       rw finsupp.mem_supported at hl₁,
       rw [← hl₂, finsupp.total_apply] at ha ⊢,
@@ -379,35 +438,35 @@ begin
       apply subset_span,
       show (↑(_ : ℤ) * _) * _ ∈ _,
       rcases hl₁ hb' with ⟨v, hv, b, hb, rfl⟩,
-      refine ⟨↑(l (v * b)) * v, _, b * lift T s hs ↑d, _, _⟩,
+      refine ⟨↑(l (v * b)) * v, _, b * r.lift hs ↑d, _, _⟩,
       { rw ← gsmul_eq_mul, exact is_add_subgroup.gsmul_mem hv },
       { refine is_submonoid.mul_mem hb _,
         cases d with d hd,
         rw subtype.coe_mk,
         apply ring.in_closure.rec_on hd,
-        { rw is_ring_hom.map_one (lift T s hs), exact is_submonoid.one_mem _ },
-        { rw [is_ring_hom.map_neg (lift T s hs), is_ring_hom.map_one (lift T s hs)],
+        { rw is_ring_hom.map_one (r.lift hs), exact is_submonoid.one_mem _ },
+        { rw [is_ring_hom.map_neg (r.lift hs), is_ring_hom.map_one (r.lift hs)],
           exact is_add_subgroup.neg_mem (is_submonoid.one_mem _) },
         { rintros _ ⟨sinv, hsinv, _, ⟨t, ht, rfl⟩, rfl⟩ b hb,
-          rw is_ring_hom.map_mul (lift T s hs),
+          rw is_ring_hom.map_mul (r.lift hs),
           refine is_submonoid.mul_mem _ hb,
           apply ring.mem_closure,
-          erw [is_ring_hom.map_mul (lift T s hs), lift_of],
+          erw [is_ring_hom.map_mul (r.lift hs), lift_of],
           refine ⟨_, _, _, ⟨t, ht, rfl⟩, rfl⟩,
           rw mem_singleton_iff at hsinv ⊢,
           subst hsinv,
-          erw [← units.coe_map (lift T s hs), ← units.ext_iff, is_group_hom.map_inv (units.map _),
+          erw [← units.coe_map (r.lift hs), ← units.ext_iff, is_group_hom.map_inv (units.map _),
             inv_eq_iff_inv_eq, units.ext_iff, units.coe_inv, hs],
-          { symmetry, exact lift_of T s hs s },
+          { symmetry, exact r.lift_of hs r.s },
           { apply_instance } },
         { intros a b ha hb,
-          rw is_ring_hom.map_add (lift T s hs),
+          rw is_ring_hom.map_add (r.lift hs),
           exact is_add_submonoid.add_mem ha hb } },
       { simp [mul_assoc] } } }
 end
 
 end
 
-end away
+end rational_open_data
 
 end Huber_ring
