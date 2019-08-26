@@ -254,6 +254,20 @@ lemma lt_of_mul_lt_mul_left {α : Type*} [linear_ordered_comm_group α] :
 -- TODO: for completeness, we would need variations
 lemma mul_inv_lt_of_lt_mul {x y z : α} (h : x < y*z) : x*z⁻¹ < y :=
 by simpa [mul_inv_cancel_right] using mul_lt_right z⁻¹ h
+
+-- TODO find the right decidability type class when PRing, instead of using `classical`
+lemma exists_square_le (a : α) : ∃ b : α, b*b ≤ a :=
+begin
+  classical,
+  by_cases h : a < 1,
+  { use a,
+    have := mul_lt_right a h,
+    rw one_mul at this,
+    exact le_of_lt this },
+  { use 1,
+    push_neg at h,
+    rwa mul_one }
+end
 end linear_ordered_comm_group
 
 
@@ -277,7 +291,7 @@ actual_ordered_comm_monoid.mul_le_mul_left a b h c
 lemma mul_le_mul_right' (h : a ≤ b) : a * c ≤ b * c :=
 mul_comm c a ▸ mul_comm c b ▸ mul_le_mul_left' h
 
-lemma lt_of_mul_lt_mul_left' : a * b < a * c → b < c :=
+lemma lt_of_mul_lt_mul_left' (a : α) : a * b < a * c → b < c :=
 actual_ordered_comm_monoid.lt_of_mul_lt_mul_left a b c
 
 lemma mul_le_mul' (h₁ : a ≤ b) (h₂ : c ≤ d) : a * c ≤ b * d :=
@@ -291,8 +305,8 @@ lemma le_mul_of_nonneg_left' (h : b ≥ 1) : a ≤ b * a :=
 have 1 * a ≤ b * a, from mul_le_mul_right' h,
 by rwa one_mul at this
 
-lemma lt_of_mul_lt_mul_right' (h : a * b < c * b) : a < c :=
-lt_of_mul_lt_mul_left'
+lemma lt_of_mul_lt_mul_right' (b : α) (h : a * b < c * b) : a < c :=
+lt_of_mul_lt_mul_left' b
   (show b * a < b * c, begin rw [mul_comm b a, mul_comm b c], assumption end)
 
 -- here we start using properties of one.
@@ -437,6 +451,20 @@ begin
   with_zero_cases a c,
   exact linear_ordered_comm_group.mul_lt_mul hab hcd
 end
+
+lemma mul_lt_right (γ : Γ) (h : a < b) : a*γ < b*γ :=
+begin
+  rcases coe_of_gt h with ⟨γ', rfl⟩,
+  with_zero_cases a,
+  exact linear_ordered_comm_group.mul_lt_right _ h
+end
+
+lemma mul_lt_left (γ : Γ) (h : a < b) : (γ : with_zero Γ)*a < γ*b :=
+begin
+  repeat { rw mul_comm (γ : with_zero Γ) },
+  exact mul_lt_right γ h
+end
+
 
 lemma le_of_le_mul_right (h : c ≠ 0) (hab : a * c ≤ b * c) : a ≤ b :=
 begin
