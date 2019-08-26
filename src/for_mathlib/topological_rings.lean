@@ -4,8 +4,12 @@ import ring_theory.subring
 import ring_theory.ideal_operations
 
 import for_mathlib.topological_groups
+import for_mathlib.topology
 
 universes u v
+
+local prefix 𝓝:100 := nhds
+local infixr ` ×ᶠ `:51 := filter.prod
 
 variables {A : Type u} {B : Type v}
 variables [comm_ring A] [topological_space A] [topological_ring A]
@@ -54,56 +58,90 @@ instance pi_topological_ring {I : Type*} {R : I → Type*} [∀ i, comm_ring (R 
   continuous_neg := continuous_pi₁ (λ i, (h i).continuous_neg) }
 
 section
-open filter
+open function filter
 
-class ring_with_zero_nhd (α : Type u) extends ring α:=
-(Z : filter α)
-(zero_Z {} : pure 0 ≤ Z)
-(sub_Z {} : tendsto (λp:α×α, p.1 - p.2) (Z.prod Z) Z)
-(left_mul (x₀ : α) : tendsto (λ x : α, x₀ * x) Z Z)
-(right_mul (x₀ : α) : tendsto (λ x : α, x * x₀) Z Z)
-(mul_Z {} : tendsto (λp:α×α, p.1 * p.2) (Z.prod Z) Z)
-
-end
-
-namespace ring_with_zero_nhd
-variables (α : Type*) [ring_with_zero_nhd α]
-open filter add_group_with_zero_nhd function
-local notation `Z` := add_group_with_zero_nhd.Z
-
-def to_add_group_with_zero_nhd {α :Type*} [ring_with_zero_nhd α] :
-  add_group_with_zero_nhd α :=
-{..‹ring_with_zero_nhd α›}
-
-local attribute [instance] to_add_group_with_zero_nhd
-
-def topological_space : topological_space α := by apply_instance
-
-def is_topological_ring : topological_ring α :=
+lemma topological_ring.of_nice_nhds_zero (α : Type u) [ring α] [topological_space α]
+  (hadd : tendsto (uncurry' ((+) : α → α → α)) (𝓝 0 ×ᶠ 𝓝 0) 𝓝 0)
+  (hneg : tendsto (λ x, -x : α → α) 𝓝 0 𝓝 0)
+  (hmul : tendsto (uncurry' ((*) : α → α → α)) (𝓝 0 ×ᶠ 𝓝 0) 𝓝 0)
+  (hmul_left : ∀ (x₀ : α), tendsto (λ x : α, x₀ * x) 𝓝 0 𝓝 0)
+  (hmul_right : ∀ (x₀ : α), tendsto (λ x : α, x * x₀) 𝓝 0 𝓝 0)
+  (hleft : ∀ x₀ : α, 𝓝 x₀ = map (λ x, x₀+x) 𝓝 0) : topological_ring α :=
 begin
-  refine {..add_group_with_zero_nhd.topological_add_group, ..},
+  refine {..topological_add_group.of_nice_nhds_zero α hadd hneg hleft, ..},
   rw continuous_iff_continuous_at,
   rintro ⟨x₀, y₀⟩,
-  rw [continuous_at, nhds_prod_eq, nhds_eq', nhds_eq', nhds_eq', filter.prod_map_map_eq,
+  rw [continuous_at, nhds_prod_eq, hleft x₀, hleft y₀, hleft (x₀*y₀), filter.prod_map_map_eq,
       tendsto_map'_iff],
   suffices :
-  tendsto ((λ (x : α), x + x₀ * y₀) ∘ (λ (p : α × α), p.fst + p.snd) ∘
-            (λ (p : α × α), (p.1*y₀ + x₀*p.2, p.1*p.2)))
-    (filter.prod (Z α) $ Z α)
-    (map (λ (x : α), x + x₀ * y₀) $ Z α),
+    tendsto ((λ (x : α), x + x₀ * y₀) ∘ (λ (p : α × α), p.1 + p.2) ∘
+              (λ (p : α × α), (p.1*y₀ + x₀*p.2, p.1*p.2)))
+            (𝓝 0 ×ᶠ 𝓝 0) (map (λ (x : α), x + x₀ * y₀) 𝓝 0),
   { convert this using 1,
-    { ext, simp only [comp_app],
-      repeat { rw mul_add <|> rw add_mul },
-      abel },
-    simp },
-  refine tendsto.comp tendsto_map _,
-  refine tendsto.comp add_Z _,
-  apply tendsto.prod_mk _ ring_with_zero_nhd.mul_Z,
-  { change tendsto ((λ p : α × α, p.1 + p.2) ∘ (λ (x : α × α), (x.fst * y₀, x₀ * x.snd))) (filter.prod (Z α) (Z α)) (Z α),
-    refine tendsto.comp add_Z _,
-    apply tendsto.prod_mk,
-    { exact (ring_with_zero_nhd.right_mul y₀).comp  tendsto_fst},
-    { exact (ring_with_zero_nhd.left_mul  x₀).comp  tendsto_snd} },
+    { ext, simp only [comp_app, mul_add, add_mul], abel },
+    { simp only [add_comm] } },
+  refine tendsto_map.comp (hadd.comp (tendsto.prod_mk _ hmul)),
+  { change tendsto ((λ p : α × α, p.1 + p.2) ∘ λ (x : α × α), (x.1 * y₀, x₀ * x.2)) (𝓝 0 ×ᶠ 𝓝 0) 𝓝 0,
+    exact hadd.comp (tendsto.prod_mk ((hmul_right y₀).comp tendsto_fst)
+                                     ((hmul_left  x₀).comp tendsto_snd)) }
 end
 
-end ring_with_zero_nhd
+end
+local attribute [instance] pointwise_mul pointwise_add
+
+class ring_filter_basis (α : Type u) [ring α] extends add_group_filter_basis α :=
+(mul : ∀ {U}, U ∈ sets → ∃ V ∈ sets, V * V ⊆ U)
+(mul_left : ∀ (x₀ : α) {U}, U ∈ sets → ∃ V ∈ sets, V ⊆ (λ x, x₀*x) ⁻¹' U)
+(mul_right : ∀ (x₀ : α) {U}, U ∈ sets → ∃ V ∈ sets, V ⊆ (λ x, x*x₀) ⁻¹' U)
+
+
+namespace ring_filter_basis
+lemma is_top_ring {α : Type u} [ring α] [t : topological_space α] (b : ring_filter_basis α)
+  (hnhds : ∀ x₀ : α, 𝓝 x₀ = b.to_add_group_filter_basis.N x₀) : topological_ring α :=
+begin
+  let basis := b.to_filter_basis,
+  have hnhds0 : 𝓝 0 = basis.filter, by rw [hnhds, b.to_add_group_filter_basis.N_zero],
+  apply topological_ring.of_nice_nhds_zero,
+  { rw [hnhds0, ← basis.prod_filter, filter_basis.tendsto_both],
+    intros V V_in,
+    rcases add_group_filter_basis.add V_in with ⟨W, W_in, hW⟩,
+    use [set.prod W W, filter_basis.mem_prod_of_mem W_in W_in],
+    rwa [pointwise_add_eq_image, image_subset_iff] at hW },
+  { rw [hnhds0, basis.tendsto_both],
+    exact b.neg },
+  { rw [hnhds0, ← basis.prod_filter, filter_basis.tendsto_both],
+    intros V V_in,
+    rcases ring_filter_basis.mul V_in with ⟨W, W_in, hW⟩,
+    use [set.prod W W, filter_basis.mem_prod_of_mem W_in W_in],
+    rwa [pointwise_mul_eq_image, image_subset_iff] at hW },
+  { simp only [hnhds0, basis.tendsto_both],
+    exact b.mul_left },
+  { simp only [hnhds0, basis.tendsto_both],
+    exact b.mul_right },
+  { exact hnhds0.symm ▸ hnhds }
+end
+
+lemma is_topological_ring (α : Type u) [ring α] [t : topological_space α] [b : ring_filter_basis α]
+  (h : t = b.to_add_group_filter_basis.topology) : topological_ring α :=
+begin
+  let nice := b.to_add_group_filter_basis.N_is_nice,
+  apply b.is_top_ring,
+  rw h,
+  intro x₀,
+  exact topological_space.nhds_mk_of_nhds _ _ nice.1 nice.2,
+end
+
+local attribute [instance] add_group_filter_basis.topology
+
+--meta instance cut_trace : has_bind tactic := by apply_instance
+
+def workaround (α : Type u) [ring α] [ring_filter_basis α] : topological_space α :=
+begin
+  apply add_group_filter_basis.topology,
+  apply_instance,
+end
+local attribute [instance] workaround
+
+lemma topological_ring (α : Type u) [ring α] [b : ring_filter_basis α] : topological_ring α :=
+is_topological_ring α rfl
+end ring_filter_basis
