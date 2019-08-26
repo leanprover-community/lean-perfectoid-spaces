@@ -5,7 +5,7 @@ import ring_theory.subring
 import tactic.ring
 
 import for_mathlib.topological_rings
-import for_mathlib.nonarchimedean.adic_topology
+import for_mathlib.nonarchimedean.basic
 
 local attribute [instance] set.pointwise_mul_semiring
 
@@ -24,9 +24,9 @@ definition is_topologically_nilpotent (r : R) : Prop :=
 -- | 0 := {1}
 -- | (n + 1) := ((*) <$> monoid.set_pow n <*> T)
 
-def is_topologically_nilpotent_subset (T : set R) : Prop :=
+/- def is_topologically_nilpotent_subset (T : set R) : Prop :=
 ∀ U ∈ (nhds (0 : R)), ∃ n : ℕ, T ^ n ⊆ U
-
+ -/
 namespace topologically_nilpotent
 
 -- don't know what to prove
@@ -76,7 +76,7 @@ begin
     exact mul_mem_mul (subset_span hv) (subset_span hb) }
 end
 
-lemma is_ideal_adic.topologically_nilpotent {J : ideal R} (h : is-J-adic) :
+/- lemma is_ideal_adic.topologically_nilpotent {J : ideal R} (h : is-J-adic) :
   is_topologically_nilpotent_subset (↑J : set R) :=
 begin
   rw is_ideal_adic_iff at h,
@@ -85,7 +85,7 @@ begin
   use n,
   exact set.subset.trans (J.pow_subset_pow) hn
 end
-
+ -/
 end
 
 namespace bounded
@@ -325,7 +325,7 @@ end power_bounded_subring
 section
 open set
 
-lemma is_adic.is_bounded (h : is_adic R) : is_bounded (univ : set R) :=
+/- lemma is_adic.is_bounded (h : is_adic R) : is_bounded (univ : set R) :=
 begin
   intros U hU,
   rw mem_nhds_sets_iff at hU,
@@ -345,7 +345,7 @@ begin
   { rintros a ha b hb,
     apply hV₁,
     exact hn ((J^n).mul_mem_right ha), }
-end
+end -/
 
 lemma is_bounded_subset (S₁ S₂ : set R) (h : S₁ ⊆ S₂) (H : is_bounded S₂) : is_bounded S₁ :=
 begin

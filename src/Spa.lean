@@ -1,11 +1,12 @@
 import ring_theory.localization
 import ring_theory.subring
+import topology.algebra.uniform_ring -- need completions of rings plus UMP
+
 import continuous_valuations
 import Huber_pair
 import Huber_ring.localization
 
 import for_mathlib.nonarchimedean.basic
-import for_mathlib.uniform_space.ring -- need completions of rings plus UMP
 import for_mathlib.group -- some stupid lemma about units
 import for_mathlib.sheaves.presheaf_of_topological_rings
 import for_mathlib.topological_rings -- subring of a top ring
@@ -58,20 +59,10 @@ end
 lemma basic_open_eq (s : A) : basic_open s s = {v | v s ≠ 0} :=
 set.ext $ λ v, ⟨λ h, h.right, λ h, ⟨le_refl _, h⟩⟩
 
--- should only be applied with (Hfin : fintype T) and (Hopen: is_open (span T))
-definition rational_open (s : A) (T : set A) : set (spa A) :=
-{v | (∀ t ∈ T, (v t ≤ v s)) ∧ (v s ≠ 0)}
-
--- Here's everything in one package.
-structure rational_open_data (A : Huber_pair) :=
-(s : A)
-(T : set A)
-(Tfin : fintype T)
-(Hopen : is_open ((ideal.span T) : set A))
-
-instance (r : rational_open_data A) : fintype r.T := r.Tfin
-
 namespace rational_open_data
+open Huber_ring Huber_ring.rational_open_data
+
+local attribute [instance] top_loc_basis top_space top_ring
 
 def ext (r₁ r₂ : rational_open_data A) (hs : r₁.s = r₂.s) (hT : r₁.T = r₂.T) :
   r₁ = r₂ :=
@@ -80,26 +71,10 @@ begin
   congr; assumption
 end
 
-def rational_open (r : rational_open_data A) : set (spa A) :=
-rational_open r.s r.T
+definition rational_open (r : rational_open_data A) : set (spa A) :=
+{v | (∀ t ∈ r.T, (v t ≤ v r.s)) ∧ (v r.s ≠ 0)}
 
-def localization (r : rational_open_data A) := Huber_ring.away r.T r.s
-
-instance ring_with_zero_nhd_of_localization (r : rational_open_data A) :
-  ring_with_zero_nhd (localization r) :=
-Huber_ring.away.ring_with_nhds  r.T r.s r.Hopen
-
-instance (r : rational_open_data A) : comm_ring (localization r) :=
-by unfold localization; apply_instance
-
-instance (r : rational_open_data A) : topological_space (localization r) :=
-ring_with_zero_nhd.topological_space _
-
-instance (r : rational_open_data A) : topological_ring (localization r) :=
-ring_with_zero_nhd.is_topological_ring _
 open algebra
-
-instance (r : rational_open_data A) : algebra A (localization r) := Huber_ring.away.algebra r.T r.s
 
 /- In this file, we are going to take a projective limit over a preordered set of rings,
    to make a presheaf. The underlying type of this preorder is `rational_open_data A`.
@@ -113,15 +88,15 @@ def correct_preorder : preorder (rational_open_data A) :=
 }
 
 One can prove (in maths) that r1 ≤ r2 iff there's a continuous R-algebra morphism
-of Huber pairs localization r2 → localization r1. I think the ← direction of this
+of Huber pairs r2.top_loc → r1.top_loc. I think the ← direction of this
 iff is straightforward (but I didn't think about it too carefully). However we
 definitely cannot prove the → direction of this iff in this repo yet because we
 don't have enough API for cont. Here is an indication
-of part of the problem. localization r2 is just A[1/r2.s]. But we cannot prove yet r2.s is
+of part of the problem. r2.top_loc is just A[1/r2.s]. But we cannot prove yet r2.s is
 invertible in localization.r1, even though we know it doesn't canish anywhere on
 rational_open r2 and hence on rational_open r1, because the fact that it doesn't vanish anywhere
 on rational_open r1 only means that it's not in any prime ideal corresponding
-to a *continuous* valuation on localization r1 which is bounded by 1 on some + subring;
+to a *continuous* valuation on r1.top_loc which is bounded by 1 on some + subring;
 one would now need to prove, at least, that every maximal ideal
 is the support of a continuous valuation, which is Wedhorn 7.52(2). This is not
 too bad -- but it is work that we have not yet done. However this is by no means the whole story;
@@ -134,7 +109,7 @@ fact that it would take weeks of work.
 
 We have to work with a weaker preorder then, because haven't made a good enough
 API for continuous valuations. We basically work with the preorder r1 ≤ r2 iff
-there's a continuous R-algebra map localization r2 → localization r1, i.e, we
+there's a continuous R-algebra map r2.top_loc → r1.top_loc, i.e, we
 define our way around the problem. We are fortunate in that we can prove
 (in maths) that the projective limit over this preorder agrees with the projective
 limit over the correct preorder.
@@ -163,15 +138,15 @@ instance : preorder (rational_open_data A) :=
 -- our preorder is weaker than the preorder we're supposed to have but don't. However
 -- the projective limit we take over our preorder is provably (in maths) equal to
 -- the projective limit that we cannot even formalise. The thing we definitely need
--- is that if r1 ≤ r2 then there's a map localization r1 → localization r2
+-- is that if r1 ≤ r2 then there's a map r1.top_loc → r2.top_loc
 
-/-- This awful function produces r1.s as a unit in localization r2 -/
-noncomputable def s_inv_aux (r1 r2 : rational_open_data A) (h : r1 ≤ r2) : units (localization r2) :=
+/-- This awful function produces r1.s as a unit in r2.top_loc -/
+noncomputable def s_inv_aux (r1 r2 : rational_open_data A) (h : r1 ≤ r2) : units (r2.top_loc) :=
 @units.unit_of_mul_left_eq_unit _ _
-  ((of_id A (localization r2)).to_fun r1.s)
-  ((of_id A (localization r2)).to_fun (classical.some h))
+  ((of_id A (r2.top_loc)).to_fun r1.s)
+  ((of_id A (r2.top_loc)).to_fun (classical.some h))
   (localization.to_units (⟨r2.s, 1, by simp⟩ : powers r2.s)) (begin
-    suffices : (of_id A (localization r2)).to_fun (r1.s * classical.some h) =
+    suffices : (of_id A (r2.top_loc)).to_fun (r1.s * classical.some h) =
       (localization.to_units (⟨r2.s, 1, by simp⟩ : powers r2.s)).val,
       convert this,
       convert (is_ring_hom.map_mul _).symm,
@@ -182,38 +157,41 @@ end)
 
 /-- The map A(T1/s1) -> A(T2/s2) coming from the inequality r1 ≤ r2 -/
 noncomputable def localization_map {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
-  localization r1 → localization r2 :=
-Huber_ring.away.lift r1.T r1.s
-( show ((s_inv_aux r1 r2 h)⁻¹).inv = (of_id A (localization r2)).to_fun r1.s, from rfl)
+  r1.top_loc → r2.top_loc :=
+r1.lift
+( show ((s_inv_aux r1 r2 h)⁻¹).inv = (of_id A (r2.top_loc)).to_fun r1.s, from rfl)
 
 instance {r1 r2 : rational_open_data A} (h : r1 ≤ r2) : is_ring_hom
-(localization_map h) := by delta localization_map; apply_instance
+(localization_map h) := rational_open_data.is_ring_hom _ _
 
 lemma localization.nonarchimedean (r : rational_open_data A) :
-  topological_add_group.nonarchimedean (localization r) :=
-@is_subgroups_basis.nonarchimedean _ _ _ _ _ (Huber_ring.away.is_basis _ _ _)
+  topological_add_group.nonarchimedean r.top_loc :=
+subgroups_basis.nonarchimedean
 
 section
-open localization submodule Huber_ring.away
+open localization submodule Huber_ring.rational_open_data
 
-def localization.power_bounded_data (r : rational_open_data A) : set (localization r) :=
-let s_inv : localization r := ((to_units ⟨r.s, ⟨1, by simp⟩⟩)⁻¹ : units (localization r)) in
-(s_inv • of_id A (localization r) '' r.T)
+def localization.power_bounded_data (r : rational_open_data A) : set (r.top_loc) :=
+let s_inv : r.top_loc := ((to_units ⟨r.s, ⟨1, by simp⟩⟩)⁻¹ : units (r.top_loc)) in
+(s_inv • of_id A (r.top_loc) '' r.T)
+
+variables r : rational_open_data A
+
+example : top_loc.D.aux r = ring.closure (localization.power_bounded_data r) := rfl
 
 set_option class.instance_max_depth 50
 
 theorem localization.power_bounded (r : rational_open_data A) :
   is_power_bounded_subset (localization.power_bounded_data r) :=
 begin
-  haveI := Huber_ring.away.is_basis r.T r.s r.Hopen,
-  apply bounded.subset,
-  work_on_goal 0 { apply add_group.subset_closure },
-  show is_bounded (ring.closure (localization.power_bounded_data r)),
+  suffices : is_bounded (ring.closure (localization.power_bounded_data r)),
+    from bounded.subset add_group.subset_closure this,
   intros U hU,
-  rw is_subgroups_basis.nhds_zero at hU,
-  cases hU with V hV,
-  refine ⟨_, mem_nhds_sets (is_subgroups_basis.is_op _ V) _, _⟩,
-  { rw submodule.mem_coe,
+  rcases r.mem_nhds_zero.mp hU with ⟨V, hV⟩,
+  use (span ↥(top_loc.D.aux r) (coe '' V.val)).carrier,
+  have := Dspan V,
+  refine ⟨_, mem_nhds_sets (subgroups_basis.is_op _ rfl V_in) _, _⟩,
+  {
     exact submodule.zero_mem _ },
   { intros v hv b hb,
     apply hV,
@@ -232,7 +210,7 @@ end -- section
 
 lemma localization_map_is_cts_aux {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
 is_power_bounded_subset
-  ((s_inv_aux r1 r2 h)⁻¹.val • (λ (x : ↥A), to_fun (localization r2) x) '' r1.T) :=
+  ((s_inv_aux r1 r2 h)⁻¹.val • (λ (x : ↥A), to_fun (r2.top_loc) x) '' r1.T) :=
 begin
   refine power_bounded.subset _ (localization.power_bounded r2),
   intros x hx,
@@ -241,15 +219,15 @@ begin
   let h' := h, -- need it later
   rcases h with ⟨a, ha, h₂⟩,
   rcases h₂ t₁ ht₁ with ⟨t₂, ht₂, N, hN⟩,
-  show ↑(s_inv_aux r1 r2 _)⁻¹ * to_fun (localization r2) t₁ ∈
-    localization.mk 1 ⟨r2.s, _⟩ • (of_id ↥A (localization r2)).to_fun '' r2.T,
+  show ↑(s_inv_aux r1 r2 _)⁻¹ * to_fun (r2.top_loc) t₁ ∈
+    localization.mk 1 ⟨r2.s, _⟩ • (of_id ↥A (r2.top_loc)).to_fun '' r2.T,
   rw mem_smul_set,
-  use (of_id ↥A (localization r2)).to_fun t₂,
+  use (of_id ↥A (r2.top_loc)).to_fun t₂,
   existsi _, swap,
     rw mem_image, use t₂, use ht₂,
   rw [←units.mul_left_inj (s_inv_aux r1 r2 h'), units.mul_inv_cancel_left],
-  show to_fun (localization r2) t₁ = to_fun (localization r2) (r1.s) *
-    (localization.mk 1 ⟨r2.s, _⟩ * to_fun (localization r2) t₂),
+  show to_fun (r2.top_loc) t₁ = to_fun (r2.top_loc) (r1.s) *
+    (localization.mk 1 ⟨r2.s, _⟩ * to_fun (r2.top_loc) t₂),
   rw [mul_comm, mul_assoc],
   rw ←units.mul_left_inj (localization.to_units (⟨r2.s, 1, by simp⟩ : powers r2.s)),
   rw ←mul_assoc,
@@ -258,17 +236,17 @@ begin
     localization.mk (1 : A) (⟨r2.s, 1, by simp⟩ : powers r2.s) = 1,
   convert units.mul_inv _,
   rw [this, one_mul], clear this,
-  show to_fun (localization r2) r2.s * _ = _,
+  show to_fun (r2.top_loc) r2.s * _ = _,
   rw ←units.mul_left_inj (localization.to_units (⟨r2.s ^ N, N, rfl⟩ : powers r2.s)),
-  show to_fun (localization r2) (r2.s ^ N) * _ = to_fun (localization r2) (r2.s ^ N) * _,
-  have hrh : is_ring_hom (to_fun (localization r2)) := begin
-    change is_ring_hom ((of_id ↥A (localization r2)).to_fun),
+  show to_fun (r2.top_loc) (r2.s ^ N) * _ = to_fun (r2.top_loc) (r2.s ^ N) * _,
+  have hrh : is_ring_hom (to_fun (r2.top_loc)) := begin
+    change is_ring_hom ((of_id ↥A (r2.top_loc)).to_fun),
     apply_instance,
   end,
-  rw ←@is_ring_hom.map_mul _ _ _ _ (to_fun (localization r2)) hrh,
-  rw ←@is_ring_hom.map_mul _ _ _ _ (to_fun (localization r2)) hrh,
-  rw ←@is_ring_hom.map_mul _ _ _ _ (to_fun (localization r2)) hrh,
-  rw ←@is_ring_hom.map_mul _ _ _ _ (to_fun (localization r2)) hrh,
+  rw ←@is_ring_hom.map_mul _ _ _ _ (to_fun (r2.top_loc)) hrh,
+  rw ←@is_ring_hom.map_mul _ _ _ _ (to_fun (r2.top_loc)) hrh,
+  rw ←@is_ring_hom.map_mul _ _ _ _ (to_fun (r2.top_loc)) hrh,
+  rw ←@is_ring_hom.map_mul _ _ _ _ (to_fun (r2.top_loc)) hrh,
   congr' 1,
   rw [←mul_assoc _ t₂, hN],
   rw ←ha, ring,
@@ -279,8 +257,8 @@ lemma localization_map_is_cts {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
   continuous (localization_map h) := Huber_ring.away.lift_continuous r1.T r1.s
   (localization.nonarchimedean r2)
   (Huber_ring.away.of_continuous r2.T r2.s
-  (show ((localization.to_units (⟨r2.s, 1, by simp⟩ : powers r2.s))⁻¹ : units (localization r2)).inv =
-    (of_id A (localization r2)).to_fun r2.s, from rfl) r2.Hopen) _ _
+  (show ((localization.to_units (⟨r2.s, 1, by simp⟩ : powers r2.s))⁻¹ : units (r2.top_loc)).inv =
+    (of_id A (r2.top_loc)).to_fun r2.s, from rfl) r2.Hopen) _ _
     (localization_map_is_cts_aux h)
 
 noncomputable def insert_s (r : rational_open_data A) : rational_open_data A :=
@@ -422,7 +400,7 @@ def rational_basis (A : Huber_pair) : set (set (spa A)) :=
 
 section
 open algebra lattice
-
+-- Wedhorn, first part of Remark 7.30 (5)
 lemma rational_basis.is_basis.mul (T₁ T₂ : set A)
   (h₁ : is_open (↑(ideal.span T₁) : set A)) (h₂ : is_open (↑(ideal.span T₂) : set A)) :
   is_open (↑(ideal.span (T₁ * T₂)) : set A) :=
@@ -597,10 +575,10 @@ begin
   exact rational_open_data.rational_open_data_symm r1.1 r2.1
 end
 
-instance (r : rational_open_data A) : uniform_space (rational_open_data.localization r) :=
+instance (r : rational_open_data A) : uniform_space (r.top_loc) :=
 topological_add_group.to_uniform_space _
 
-instance (rd : rational_open_data A): uniform_add_group (rational_open_data.localization rd) :=
+instance (rd : rational_open_data A): uniform_add_group (r.top_locd) :=
 topological_add_group_is_uniform
 
 def localization_map_is_uniform_continuous {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
@@ -609,11 +587,13 @@ uniform_continuous_of_continuous (rational_open_data.localization_map_is_cts h)
 
 end -- section
 
+open uniform_space
+
 -- r_o_d is short for "rational open data". KB needs to think more clearly
 -- about namespaces etc.
 /-- A<T/s>, the functions on D(T,s). A topological ring -/
 def r_o_d_completion (r : rational_open_data A) :=
-ring_completion (rational_open_data.localization r)
+completion (r.top_loc)
 
 namespace r_o_d_completion
 open topological_space
@@ -631,16 +611,16 @@ instance (r : rational_open_data A) : topological_ring (r_o_d_completion r)
 
 noncomputable def restriction {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
 r_o_d_completion r1 → r_o_d_completion r2 :=
-ring_completion.map (rational_open_data.localization_map h)
+completion.map (rational_open_data.localization_map h)
 
 instance restriction_is_ring_hom {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
   is_ring_hom (restriction h) :=
 by delta r_o_d_completion.restriction;
-exact ring_completion.map_is_ring_hom _ _ (rational_open_data.localization_map_is_cts h)
+exact completion.is_ring_hom_map (rational_open_data.localization_map_is_cts h)
 
 lemma restriction_is_uniform_continuous {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
 uniform_continuous (r_o_d_completion.restriction h) :=
-ring_completion.map_uniform_continuous $ localization_map_is_uniform_continuous h
+completion.uniform_continuous_map
 
 end r_o_d_completion -- namespace
 

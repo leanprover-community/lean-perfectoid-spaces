@@ -1,7 +1,7 @@
 import r_o_d_completion
 import valuation.field
 
-open topological_space valuation Spv spa
+open topological_space uniform_space valuation Spv spa
 
 namespace spa.presheaf
 
@@ -18,9 +18,9 @@ local attribute [instance] uniform_space'
 
 noncomputable def stalk_to_valuation_field (x : spa A) :
   stalk_of_rings (spa.presheaf_of_topological_rings A).to_presheaf_of_rings x →
-  ring_completion (valuation_field (Spv.out x.1)) :=
+  completion (valuation_field (Spv.out x.1)) :=
 to_stalk.rec (spa.presheaf_of_topological_rings A).to_presheaf_of_rings x
-  (ring_completion (valuation_field (Spv.out x.1))) (λ U hxU, to_valuation_field_completion hxU)
+  (completion (valuation_field (Spv.out x.1))) (λ U hxU, to_valuation_field_completion hxU)
   (λ U V HUV r hxU, (to_valuation_field_completion_commutes hxU HUV r).symm)
 
 instance is_ring_hom' (x : spa A) :
@@ -28,8 +28,8 @@ instance is_ring_hom' (x : spa A) :
 
 noncomputable def stalk_valuation (x : spa A) :
 valuation (stalk_of_rings (spa.presheaf_of_topological_rings A).to_presheaf_of_rings x)
-  (value_group (out x.1)) :=
-valuation.comap (valuation_on_completion (out x.1)) (stalk_to_valuation_field x)
+  (value_group (out x.1)) := sorry
+--valuation.comap (valuation_on_completion (out x.1)) (stalk_to_valuation_field x)
 
 
 end scary_uniform_space_instance
