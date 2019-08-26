@@ -15,13 +15,7 @@ lemma separated_of_group_hom {f : α → β} [is_add_group_hom f] (hf : continuo
   separated_map f := (uniform_continuous_of_continuous hf).separated_map
 
 lemma uniform_continuous₂_add : uniform_continuous₂ ((+) : α → α → α) :=
-begin
-  dsimp [uniform_continuous₂],
-  convert @uniform_continuous_add' α _ _ _,
-  ext x,
-  cases x,
-  refl
-end
+uniform_continuous_add'
 
 local attribute [instance] separation_setoid
 
