@@ -5,7 +5,6 @@ import Huber_pair
 import Huber_ring.localization
 
 import for_mathlib.nonarchimedean.basic
-import for_mathlib.uniform_space.ring -- need completions of rings plus UMP
 import for_mathlib.group -- some stupid lemma about units
 import for_mathlib.sheaves.presheaf_of_topological_rings
 import for_mathlib.topological_rings -- subring of a top ring
@@ -85,21 +84,24 @@ rational_open r.s r.T
 
 def localization (r : rational_open_data A) := Huber_ring.away r.T r.s
 
-instance ring_with_zero_nhd_of_localization (r : rational_open_data A) :
-  ring_with_zero_nhd (localization r) :=
-Huber_ring.away.ring_with_nhds  r.T r.s r.Hopen
-
-instance (r : rational_open_data A) : comm_ring (localization r) :=
-by unfold localization; apply_instance
-
-instance (r : rational_open_data A) : topological_space (localization r) :=
-ring_with_zero_nhd.topological_space _
-
-instance (r : rational_open_data A) : topological_ring (localization r) :=
-ring_with_zero_nhd.is_topological_ring _
 open algebra
+variables (r : rational_open_data A)
 
-instance (r : rational_open_data A) : algebra A (localization r) := Huber_ring.away.algebra r.T r.s
+instance : comm_ring (localization r) :=
+by unfold localization ; apply_instance
+
+instance : subgroups_basis (localization r) :=
+Huber_ring.away.top_loc_basis r.T r.s r.Hopen
+
+instance : topological_space (localization r) :=
+subgroups_basis.topology _
+
+instance : topological_ring (localization r) :=
+ring_filter_basis.is_topological_ring _ rfl
+
+instance : algebra A (localization r) := Huber_ring.away.algebra r.T r.s
+
+instance : has_coe A (localization r) := ⟨λ a, (of_id A (localization r) : A → localization r) a⟩
 
 /- In this file, we are going to take a projective limit over a preordered set of rings,
    to make a presheaf. The underlying type of this preorder is `rational_open_data A`.
@@ -191,7 +193,7 @@ instance {r1 r2 : rational_open_data A} (h : r1 ≤ r2) : is_ring_hom
 
 lemma localization.nonarchimedean (r : rational_open_data A) :
   topological_add_group.nonarchimedean (localization r) :=
-@is_subgroups_basis.nonarchimedean _ _ _ _ _ (Huber_ring.away.is_basis _ _ _)
+subgroups_basis.nonarchimedean
 
 section
 open localization submodule Huber_ring.away
@@ -205,16 +207,16 @@ set_option class.instance_max_depth 50
 theorem localization.power_bounded (r : rational_open_data A) :
   is_power_bounded_subset (localization.power_bounded_data r) :=
 begin
-  haveI := Huber_ring.away.is_basis r.T r.s r.Hopen,
+  --haveI := Huber_ring.away.is_basis r.T r.s r.Hopen,
   apply bounded.subset,
   work_on_goal 0 { apply add_group.subset_closure },
   show is_bounded (ring.closure (localization.power_bounded_data r)),
   intros U hU,
-  rw is_subgroups_basis.nhds_zero at hU,
-  cases hU with V hV,
-  refine ⟨_, mem_nhds_sets (is_subgroups_basis.is_op _ V) _, _⟩,
-  { rw submodule.mem_coe,
-    exact submodule.zero_mem _ },
+  rcases subgroups_basis.mem_nhds_zero.mp hU with ⟨_, ⟨V, rfl⟩, hV⟩,
+  refine ⟨_, mem_nhds_sets (subgroups_basis.is_op _ rfl (mem_range_self _)) _, _⟩,
+  { exact V },
+  { erw submodule.mem_coe,
+    convert submodule.zero_mem _ },
   { intros v hv b hb,
     apply hV,
     rw mul_comm,
@@ -277,11 +279,8 @@ end
 -- Continuity now follows from the universal property.
 lemma localization_map_is_cts {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
   continuous (localization_map h) := Huber_ring.away.lift_continuous r1.T r1.s
-  (localization.nonarchimedean r2)
-  (Huber_ring.away.of_continuous r2.T r2.s
-  (show ((localization.to_units (⟨r2.s, 1, by simp⟩ : powers r2.s))⁻¹ : units (localization r2)).inv =
-    (of_id A (localization r2)).to_fun r2.s, from rfl) r2.Hopen) _ _
-    (localization_map_is_cts_aux h)
+  (localization.nonarchimedean r2) (Huber_ring.away.of_continuous r2.T r2.s _) _ _
+  (localization_map_is_cts_aux h)
 
 noncomputable def insert_s (r : rational_open_data A) : rational_open_data A :=
 { s := r.s,
@@ -428,14 +427,14 @@ lemma rational_basis.is_basis.mul (T₁ T₂ : set A)
   is_open (↑(ideal.span (T₁ * T₂)) : set A) :=
 begin
   rcases Huber_ring.exists_pod_subset _ (mem_nhds_sets h₁ $ ideal.zero_mem $ ideal.span T₁)
-    with ⟨A₀, _, _, _, ⟨_, emb, hf, I, fg, top⟩, hI⟩,
+    with ⟨A₀, _, _, _, ⟨_, emb, I, fg, top⟩, hI⟩,
   dsimp only at hI,
   resetI,
   rw is_ideal_adic_iff at top,
   cases top.2 (algebra_map A ⁻¹' ↑(ideal.span T₂)) _ with n hn,
   { apply submodule.is_open_of_open_submodule,
     use ideal.map (of_id A₀ A) (I^(n+1)),
-    refine ⟨is_open_ideal_map_open_embedding emb hf _ (top.1 (n+1)), _⟩,
+    refine ⟨is_open_ideal_map_open_embedding emb.emb emb.open_range _ (top.1 (n+1)), _⟩,
     delta ideal.span,
     erw [pow_succ, ideal.map_mul, ← submodule.span_mul_span],
     apply submodule.mul_le_mul,
@@ -609,11 +608,13 @@ uniform_continuous_of_continuous (rational_open_data.localization_map_is_cts h)
 
 end -- section
 
+open uniform_space
+
 -- r_o_d is short for "rational open data". KB needs to think more clearly
 -- about namespaces etc.
 /-- A<T/s>, the functions on D(T,s). A topological ring -/
 def r_o_d_completion (r : rational_open_data A) :=
-ring_completion (rational_open_data.localization r)
+completion (rational_open_data.localization r)
 
 namespace r_o_d_completion
 open topological_space
@@ -624,23 +625,20 @@ by dunfold r_o_d_completion; apply_instance
 instance uniform_space (r : rational_open_data A) : uniform_space (r_o_d_completion r) :=
 by dunfold r_o_d_completion; apply_instance
 
--- example (r : rational_open_data A) : topological_space (r_o_d_completion r) := by apply_instance
-
-instance (r : rational_open_data A) : topological_ring (r_o_d_completion r)
-:= by dunfold r_o_d_completion; apply_instance
+instance (r : rational_open_data A) : topological_ring (r_o_d_completion r) :=
+by dunfold r_o_d_completion; apply_instance
 
 noncomputable def restriction {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
 r_o_d_completion r1 → r_o_d_completion r2 :=
-ring_completion.map (rational_open_data.localization_map h)
+completion.map (rational_open_data.localization_map h)
 
 instance restriction_is_ring_hom {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
   is_ring_hom (restriction h) :=
-by delta r_o_d_completion.restriction;
-exact ring_completion.map_is_ring_hom _ _ (rational_open_data.localization_map_is_cts h)
+completion.is_ring_hom_map (rational_open_data.localization_map_is_cts h)
 
 lemma restriction_is_uniform_continuous {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
 uniform_continuous (r_o_d_completion.restriction h) :=
-ring_completion.map_uniform_continuous $ localization_map_is_uniform_continuous h
+completion.uniform_continuous_map
 
 end r_o_d_completion -- namespace
 

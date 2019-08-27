@@ -14,7 +14,7 @@ import for_mathlib.sheaves.stalk_of_rings -- for defining valuations on stalks
 
 variable {A : Huber_pair}
 
-open topological_space valuation Spv spa
+open topological_space valuation Spv spa uniform_space
 
 namespace spa.r_o_d_completion
 
@@ -32,8 +32,8 @@ topological_add_group_is_uniform
 
 noncomputable def to_complete_valuation_field {r : rational_open_data A} {v : spa A}
   (hv : v ∈ r.rational_open) :
-  r_o_d_completion r → ring_completion (valuation_field (Spv.out v.1)) :=
-ring_completion.map (Huber_pair.rational_open_data.to_valuation_field hv)
+  r_o_d_completion r → completion (valuation_field (Spv.out v.1)) :=
+completion.map (Huber_pair.rational_open_data.to_valuation_field hv)
 
 example {r : rational_open_data A} {v : spa A} (hv : v ∈ r.rational_open) :
   is_ring_hom (Huber_pair.rational_open_data.to_valuation_field hv) := by apply_instance
@@ -43,8 +43,7 @@ example {r : rational_open_data A} {v : spa A} (hv : v ∈ r.rational_open) :
 
 instance {r : rational_open_data A} {v : spa A} (hv : v ∈ r.rational_open) :
   is_ring_hom (to_complete_valuation_field hv) :=
-ring_completion.map_is_ring_hom (rational_open_data.localization r) (valuation_field (Spv.out v.1))
-  (Huber_pair.rational_open_data.to_valuation_field_cts hv)
+completion.is_ring_hom_map (Huber_pair.rational_open_data.to_valuation_field_cts hv)
 
 -- next we need to show that the completed maps to K_v-hat all commute with the
 -- restriction maps
@@ -56,14 +55,11 @@ theorem to_valuation_field_commutes {r1 r2 : spa.rational_open_data A} {v : spa 
 begin
   delta to_complete_valuation_field,
   delta r_o_d_completion.restriction,
-  let uc1 : uniform_continuous (rational_open_data.localization_map h) :=
-  localization_map_is_uniform_continuous h,
-  let uc2 : continuous (Huber_pair.rational_open_data.to_valuation_field hv2) :=
-    Huber_pair.rational_open_data.to_valuation_field_cts hv2,
-  rw Huber_pair.rational_open_data.to_valuation_field_commutes hv1 hv2 h,
-  -- is the noncompleted commute.
-  convert ring_completion.map_comp uc1 _,
-  apply uniform_continuous_of_continuous uc2,
+  have uc1 : uniform_continuous (rational_open_data.localization_map h),
+    from localization_map_is_uniform_continuous h,
+  have uc2 : uniform_continuous (Huber_pair.rational_open_data.to_valuation_field hv2),
+    from uniform_continuous_of_continuous (Huber_pair.rational_open_data.to_valuation_field_cts hv2),
+  rw [Huber_pair.rational_open_data.to_valuation_field_commutes hv1 hv2 h, completion.map_comp uc2 uc1]
 end
 
 end scary_uniform_space_instance
@@ -109,7 +105,7 @@ local attribute [instance] uniform_space'
 
 /-- The map from F(U) to K_v for v ∈ U -/
 noncomputable def to_valuation_field_completion {v : spa A} {U : opens (spa A)} (hv : v ∈ U)
-  (f : spa.presheaf_value U) : ring_completion (valuation_field (Spv.out v.1)) :=
+  (f : spa.presheaf_value U) : completion (valuation_field (Spv.out v.1)) :=
 spa.r_o_d_completion.to_complete_valuation_field (spa.mem_rational_open_subset_nhd hv) $
   f.1 $ spa.rational_open_subset_nhd hv
 
