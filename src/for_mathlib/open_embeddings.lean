@@ -24,6 +24,11 @@ namespace open_embedding
 variables {α : Type*} {β : Type*} {γ : Type*} {δ : Type*}
   [topological_space α] [topological_space β] [topological_space γ] [topological_space δ]
 
+lemma open_range {f : α → β} (hf : open_embedding f) : _root_.is_open (set.range f) :=
+begin
+  rw ← set.image_univ,
+  exact hf.op _ (is_open_univ _)
+end
 -- TODO: in mathlib is_open_map, put implicit argument for the subset
 
 lemma mk' {f : α → β} (emb : embedding f) (h : _root_.is_open (set.range f)) : open_embedding f :=
