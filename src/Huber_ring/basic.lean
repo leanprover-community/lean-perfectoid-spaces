@@ -5,6 +5,8 @@ import group_theory.subgroup
 import power_bounded
 
 import for_mathlib.submodule
+import for_mathlib.nonarchimedean.adic_topology
+import for_mathlib.open_embeddings
 
 -- f-adic rings are called Huber rings by Scholze. A Huber ring is a topological
 -- ring A which contains an open subring A0 such that the subspace topology on A0 is
@@ -16,15 +18,14 @@ local attribute [instance, priority 0] classical.prop_decidable
 universes u v
 
 section
-open set
+open set topological_space
 
 structure Huber_ring.ring_of_definition
   (A₀ : Type*) (A : Type*)
   [comm_ring A₀] [topological_space A₀] [topological_ring A₀]
   [comm_ring A] [topological_space A] [topological_ring A]
   extends algebra A₀ A :=
-(emb : embedding to_fun)
-(hf  : is_open (range to_fun))
+(emb : open_embedding to_fun)
 (J   : ideal A₀)
 (fin : J.fg)
 (top : is_ideal_adic J)
@@ -41,10 +42,10 @@ variables {A : Type u} [Huber_ring A]
 
 protected lemma nonarchimedean : nonarchimedean A :=
 begin
-  rcases Huber_ring.pod A with ⟨A₀, H₁, H₂, H₃, H₄, emb, hf, J, Hfin, Htop⟩,
+  rcases Huber_ring.pod A with ⟨A₀, H₁, H₂, H₃, H₄, emb, J, Hfin, Htop⟩,
   resetI,
-  apply nonarchimedean_of_nonarchimedean_open_embedding (algebra_map A) emb hf,
-  exact Htop.nonarchimedean,
+  apply nonarchimedean_of_nonarchimedean_open_embedding (algebra_map A) emb,
+  exact Htop.nonarchimedean
 end
 
 instance power_bounded_subring.is_subring : is_subring (power_bounded_subring A) :=
@@ -58,12 +59,12 @@ lemma exists_pod_subset (U : set A) (hU : U ∈ nhds (0:A)) :
     exact (algebra_map A : A₀ → A) '' (rod.J) ⊆ U :=
 begin
   unfreezeI,
-  rcases ‹Huber_ring A› with ⟨_, _, _, ⟨A₀, _, _, _, ⟨⟨alg, emb, hf, J, fin, top⟩⟩⟩⟩,
+  rcases ‹Huber_ring A› with ⟨_, _, _, ⟨A₀, _, _, _, ⟨⟨alg, emb, J, fin, top⟩⟩⟩⟩,
   resetI,
   rw is_ideal_adic_iff at top,
   cases top with H₁ H₂,
   cases H₂ (algebra_map A ⁻¹' U) _ with n hn,
-  refine ⟨A₀, ‹_›, ‹_›, ‹_›, ⟨⟨alg, emb, hf, _, _, _⟩, _⟩⟩,
+  refine ⟨A₀, ‹_›, ‹_›, ‹_›, ⟨⟨alg, emb, _, _, _⟩, _⟩⟩,
   { exact J^(n+1) },
   { exact submodule.fg_pow J fin _, },
   { apply is_ideal_adic_pow top, apply nat.succ_pos },
