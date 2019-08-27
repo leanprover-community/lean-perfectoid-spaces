@@ -307,7 +307,7 @@ instance : topological_monoid (with_zero Γ) :=
     rw mem_prod_same_iff <|> rw mem_prod_iff,
     try { cases U_in with γ hγ  }
     },
-  { cases linear_ordered_comm_group.exists_square_le γ with γ₀ hγ₀,
+  { cases linear_ordered_structure.exists_square_le γ with γ₀ hγ₀,
     simp only [with_zero.mem_nhds_zero, exists_prop],
     use [{x : with_zero Γ | x < ↑γ₀}, γ₀, subset.refl _,
          {x : with_zero Γ | x < ↑γ₀}, γ₀, subset.refl _],

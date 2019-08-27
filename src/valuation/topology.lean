@@ -99,7 +99,7 @@ def subgroups_basis : subgroups_basis R :=
   h_mul := begin
     rintros _ ⟨γ, rfl⟩,
     rw set.exists_mem_range',
-    cases linear_ordered_comm_group.exists_square_le γ with γ₀ h,
+    cases linear_ordered_structure.exists_square_le γ with γ₀ h,
     replace h : (γ₀*γ₀ : with_zero $ valued.Γ R) ≤ γ, exact_mod_cast h,
     use γ₀,
     rintro x ⟨r, r_in, s, s_in, rfl⟩,
