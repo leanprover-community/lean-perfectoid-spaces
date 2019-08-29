@@ -81,7 +81,7 @@ begin
   exact not_coe_le_zero x (le_of_lt h),
 end
 
-def map (f : α → β) : with_zero α → with_zero β := option.map f
+-- def map (f : α → β) : with_zero α → with_zero β := option.map f
 
 @[simp] lemma map_zero {f : α → β} : map f 0 = 0 := option.map_none'
 
