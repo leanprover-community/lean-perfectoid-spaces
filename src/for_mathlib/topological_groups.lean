@@ -1,24 +1,323 @@
 import tactic.abel
 
 import topology.algebra.group
---import topology.algebra.uniform_ring
-import for_mathlib.uniform_space.ring
+import topology.algebra.uniform_ring
 import ring_theory.subring
 
 import for_mathlib.topology
 import for_mathlib.filter
+import for_mathlib.data.set.basic
+import algebra.pointwise
 
-universes u v
-open filter set
+/-
+open filter function
+
+universe u
+
+class filter_at_one (α : Type u) [group α] :=
+(F : filter α)
+(one_in : pure 1 ≤ F) -- we could ask instead that Z ≠ ⊥
+(mul {} : tendsto (uncurry' ((*) : α → α → α)) (F.prod F) F)
+(inv {} : tendsto (λ x: α, x⁻¹) F F)
+(conj {} : ∀ x₀ : α, tendsto (λ x: α, x₀*x*x₀⁻¹) F F).
+
+namespace filter_at_one
+
+def topology (α : Type u) [group α] [filter_at_one α] : topological_space α :=
+topological_space.mk_of_nhds $ λa, map (λx, a*x) (F α)
+
+local attribute [instance] topology
+lemma topological_group (α : Type u) [group α] [filter_at_one α]: topological_group α :=
+sorry
+
+end filter_at_one
+
+Using the above setup, we get :
+
+filter_at_one.topological_group :
+  ∀ (α : Type u_1) [_inst_1 : group α] [_inst_2 : @filter_at_one α _inst_1],
+    @topological_group α (@filter_at_one.topology α _inst_1 _inst_2) _inst_1
+
+So this lemma (which could be then turned into a local instance) is only about the
+topology built by `filter_at_one.topology`. It doesn't not say anything about
+a group endowed by a random topology that happens to satisfies the axioms of filter_at_one.
+-/
+universe u
+open filter function set topological_space
+local infixr ` ×ᶠ `:51 := filter.prod
+local prefix 𝓝:100 := nhds
+
+@[to_additive topological_add_monoid.of_comm_of_nice_nhds_zero]
+lemma topological_monoid.of_comm_of_nice_nhds_one (α : Type u) [comm_monoid α] [topological_space α]
+  (hmul : tendsto (uncurry' ((*) : α → α → α)) (𝓝 1 ×ᶠ 𝓝 1) 𝓝 1)
+  (hleft : ∀ x₀ : α, 𝓝 x₀ = map (λ x, x₀*x) 𝓝 1) : topological_monoid α :=
+{ continuous_mul := begin
+    rw continuous_iff_continuous_at,
+    rintros ⟨x₀, y₀⟩,
+    have key : (λ (p : α × α), x₀ * p.1 * (y₀ * p.2)) =
+      ((λ x, x₀*y₀*x) ∘ (uncurry' (*))),
+    { ext,
+      change x₀ * x.1 * (y₀ * x.2) = x₀ * y₀ * (x.1 *  x.2),
+      ac_refl },
+
+    calc map (λ (p : α × α), p.1 * p.2) 𝓝 (x₀, y₀)
+        = map (λ (p : α × α), p.1 * p.2) (𝓝 x₀ ×ᶠ 𝓝 y₀)
+            : by rw nhds_prod_eq
+    ... = map (λ (p : α × α), x₀ * p.1 * (y₀ * p.2)) ((𝓝 1) ×ᶠ (𝓝 1))
+            : by rw [hleft x₀, hleft y₀, prod_map_map_eq, filter.map_map]
+    ... = map ((λ x, x₀*y₀*x) ∘ (uncurry' (*))) ((𝓝 1) ×ᶠ (𝓝 1)) : by rw key
+    ... = map (λ x, x₀*y₀*x) (map (uncurry' (*)) ((𝓝 1) ×ᶠ (𝓝 1)))   : by rw filter.map_map
+    ... ≤ map (λ x, x₀*y₀*x) (𝓝 1)   : map_mono hmul
+    ... = 𝓝 (x₀*y₀)   : (hleft _).symm
+  end }
+
+protected meta def prove_conj : tactic unit :=
+`[ intro x₀,
+   convert continuous_id.continuous_at,
+   simpa [mul_comm, inv_mul_cancel_left]]
+
+@[to_additive topological_add_group.of_nice_nhds_zero]
+lemma topological_group.of_nice_nhds_one (α : Type u) [group α] [topological_space α]
+  (hmul : tendsto (uncurry' ((*) : α → α → α)) ((𝓝 1).prod 𝓝 1) 𝓝 1)
+  (hinv : tendsto (λ x : α, x⁻¹) 𝓝 1 𝓝 1)
+  (hleft : ∀ x₀ : α, 𝓝 x₀ = map (λ x, x₀*x) 𝓝 1)
+  (hconj : ∀ x₀ : α, tendsto (λ x: α, x₀*x*x₀⁻¹) 𝓝 1 𝓝 1 . prove_conj) : topological_group α :=
+{ continuous_mul := begin
+    rw continuous_iff_continuous_at,
+    rintros ⟨x₀, y₀⟩,
+    have key : (λ (p : α × α), x₀ * p.1 * (y₀ * p.2)) =
+      ((λ x, x₀*y₀*x) ∘ (uncurry' (*)) ∘ ((λ x, y₀⁻¹*x*y₀) ⨯ id)),
+      by { ext, simp [uncurry', prod.map', mul_assoc] },
+    specialize hconj y₀⁻¹, rw inv_inv at hconj,
+    calc map (λ (p : α × α), p.1 * p.2) 𝓝 (x₀, y₀)
+        = map (λ (p : α × α), p.1 * p.2) (𝓝 x₀ ×ᶠ 𝓝 y₀)
+            : by rw nhds_prod_eq
+    ... = map (λ (p : α × α), x₀ * p.1 * (y₀ * p.2)) ((𝓝 1) ×ᶠ (𝓝 1))
+            : by rw [hleft x₀, hleft y₀, prod_map_map_eq, filter.map_map]
+    ... = map (((λ x, x₀*y₀*x) ∘ (uncurry' (*))) ∘ ((λ x, y₀⁻¹*x*y₀) ⨯ id))((𝓝 1) ×ᶠ (𝓝 1))
+            : by rw key
+    ... = map ((λ x, x₀*y₀*x) ∘ (uncurry' (*))) ((map  (λ x, y₀⁻¹*x*y₀) 𝓝 1) ×ᶠ (𝓝 1))
+            : by rw [← filter.map_map, filter.map_prod_prod, map_id]
+    ... ≤ map ((λ x, x₀*y₀*x) ∘ (uncurry' (*))) ((𝓝 1) ×ᶠ (𝓝 1))
+            : map_mono (filter.prod_mono hconj $ le_refl _)
+    ... = map (λ x, x₀*y₀*x) (map (uncurry' (*)) ((𝓝 1) ×ᶠ (𝓝 1)))   : by rw filter.map_map
+    ... ≤ map (λ x, x₀*y₀*x) (𝓝 1)   : map_mono hmul
+    ... = 𝓝 (x₀*y₀)   : (hleft _).symm
+  end,
+  continuous_inv := begin
+    rw continuous_iff_continuous_at,
+    rintros x₀,
+    have key : (λ x, (x₀*x)⁻¹) = (λ x, x₀⁻¹*x) ∘ (λ x, x₀*x*x₀⁻¹) ∘ (λ x, x⁻¹),
+      by {ext ; simp[mul_assoc] },
+    calc map (λ x, x⁻¹) (𝓝 x₀)
+        = map (λ x, x⁻¹) (map (λ x, x₀*x) 𝓝 1) : by rw hleft
+    ... = map (λ x, (x₀*x)⁻¹) 𝓝 1 : by rw filter.map_map
+    ... = map (((λ x, x₀⁻¹*x) ∘ (λ x, x₀*x*x₀⁻¹)) ∘ (λ x, x⁻¹)) 𝓝 1 : by rw key
+    ... = map ((λ x, x₀⁻¹*x) ∘ (λ x, x₀*x*x₀⁻¹)) _ : by rw ← filter.map_map
+    ... ≤ map ((λ x, x₀⁻¹ * x) ∘ λ x, x₀ * x * x₀⁻¹) (𝓝 1) : map_mono hinv
+    ... = map (λ x, x₀⁻¹ * x) (map (λ x, x₀ * x * x₀⁻¹) (𝓝 1)) : filter.map_map
+    ... ≤ map (λ x, x₀⁻¹ * x) 𝓝 1 : map_mono (hconj x₀)
+    ... = 𝓝 x₀⁻¹ : (hleft _).symm
+  end }
+
+
+@[to_additive topological_add_group.of_comm_of_nice_nhds_zero]
+lemma topological_group.of_comm_of_nice_nhds_one (α : Type u) [comm_group α] [topological_space α]
+  (hmul : tendsto (uncurry' ((*) : α → α → α)) ((𝓝 1).prod 𝓝 1) 𝓝 1)
+  (hinv : tendsto (λ x : α, x⁻¹) 𝓝 1 𝓝 1)
+  (hleft : ∀ x₀ : α, 𝓝 x₀ = map (λ x, x₀*x) 𝓝 1) : topological_group α :=
+topological_group.of_nice_nhds_one α hmul hinv hleft
+
+open set
+local attribute [instance] pointwise_mul pointwise_add
+
+class group_filter_basis (α : Type u) [group α] extends filter_basis α :=
+(one : ∀ {U}, U ∈ sets → (1 : α) ∈ U)
+(mul : ∀ {U}, U ∈ sets → ∃ V ∈ sets, V * V ⊆ U)
+(inv : ∀ {U}, U ∈ sets → ∃ V ∈ sets, V ⊆ (λ x, x⁻¹) ⁻¹' U)
+(conj : ∀ x₀, ∀ U ∈ sets, ∃ V ∈ sets, V ⊆ (λ x, x₀*x*x₀⁻¹) ⁻¹' U)
+
+class add_group_filter_basis (α : Type u) [add_group α] extends filter_basis α :=
+(zero : ∀ {U}, U ∈ sets → (0 : α) ∈ U)
+(add : ∀ {U}, U ∈ sets → ∃ V ∈ sets, V + V ⊆ U)
+(neg : ∀ {U}, U ∈ sets → ∃ V ∈ sets, V ⊆ (λ x, -x) ⁻¹' U)
+(conj : ∀ x₀, ∀ U ∈ sets, ∃ V ∈ sets, V ⊆ (λ x, x₀+x-x₀) ⁻¹' U)
+
+attribute [to_additive add_group_filter_basis] group_filter_basis
+attribute [to_additive add_group_filter_basis.zero] group_filter_basis.one
+attribute [to_additive add_group_filter_basis.add] group_filter_basis.mul
+attribute [to_additive add_group_filter_basis.neg] group_filter_basis.inv
+attribute [to_additive add_group_filter_basis.conj] group_filter_basis.conj
+attribute [to_additive add_group_filter_basis.to_filter_basis] group_filter_basis.to_filter_basis
+
+
+/- -- We didn't use class directly because we still want α to be an explicit argument of projections
+attribute [class] group_filter_basis
+attribute [class] add_group_filter_basis
+ -/
+instance group_filter_basis.has_mem {α : Type*} [group α] : has_mem (set α) (group_filter_basis α) := ⟨λ s f, s ∈ f.sets⟩
+instance add_group_filter_basis.has_mem {α : Type*} [add_group α] : has_mem (set α) (add_group_filter_basis α) := ⟨λ s f, s ∈ f.sets⟩
+
+attribute [to_additive add_group_filter_basis.has_mem] group_filter_basis.has_mem
+
+namespace group_filter_basis
+variables {α : Type*} [group α]
+
+@[to_additive add_group_filter_basis.add_subset_self]
+lemma prod_subset_self (f : group_filter_basis α) {U : set α} (h : U ∈ f) : U ⊆ U*U :=
+λ x x_in, (mul_one x) ▸ mul_mem_pointwise_mul x_in $ group_filter_basis.one h
+
+/-- The neighborhood function of a `group_filter_basis` -/
+@[to_additive add_group_filter_basis.N]
+def N (f : group_filter_basis α) : α → filter α :=
+λ x, map (λ y, x*y) f.to_filter_basis.filter
+
+attribute [to_additive add_group_filter_basis.N.equations._eqn_1]
+  group_filter_basis.N.equations._eqn_1
+
+@[simp, to_additive add_group_filter_basis.N_zero]
+lemma N_one (f : group_filter_basis α) : f.N 1 = f.to_filter_basis.filter :=
+by simpa [N, map_id]
+
+@[to_additive add_group_filter_basis.mem_N]
+lemma mem_N (f : group_filter_basis α) (x : α) (U : set α) :
+  U ∈ f.N x ↔ ∃ V ∈ f, (λ y, x*y) '' V ⊆ U :=
+by simpa [N, mem_map, filter_basis.mem_filter, image_subset_iff]
+
+@[to_additive add_group_filter_basis.mem_N_of_mem]
+lemma mem_N_of_mem (f : group_filter_basis α) (x : α) {U : set α} (h : U ∈ f) :
+(λ y, x*y) '' U ∈ f.N x :=
+by { rw mem_N, use [U, h] }
+
+@[to_additive add_group_filter_basis.N_is_nice]
+lemma N_is_nice (f : group_filter_basis α) :
+  (pure ≤ f.N) ∧
+  ∀ {a s}, s ∈ f.N a → ∃ t ∈ f.N a, t ⊆ s ∧ ∀ a' ∈ t, s ∈ f.N a' :=
+begin
+  split,
+  { intros x U U_in,
+    rw f.mem_N at U_in,
+    rcases U_in with ⟨V, V_in, H⟩,
+    simpa [mem_pure] using H (mem_image_of_mem _ (group_filter_basis.one V_in)) },
+  { intros x U U_in,
+    rw f.mem_N at U_in,
+    rcases U_in with ⟨V, V_in, H⟩,
+    rcases group_filter_basis.mul V_in with ⟨W, W_in, hW⟩,
+    use [(λ y, x*y) '' W, image_mem_map (filter_basis.mem_filter_of_mem W_in)],
+    split,
+    { rw image_subset_iff at H ⊢,
+      exact subset.trans (subset.trans (f.prod_subset_self W_in) hW) H},
+    { rintros y ⟨t, tW, rfl⟩,
+      rw f.mem_N,
+      use [W, W_in],
+      apply subset.trans _ H, clear H,
+      rintros z ⟨w, wW, rfl⟩,
+      exact ⟨t*w, hW (mul_mem_pointwise_mul tW wW), by simp [mul_assoc]⟩ } },
+end
+
+@[to_additive add_group_filter_basis.is_top_group]
+lemma is_top_group {α : Type u} [group α] (basis : group_filter_basis α) [topological_space α]
+  (hnhds : ∀ x₀ : α, 𝓝 x₀ = basis.N x₀) : topological_group α :=
+begin
+  have hnhds1 : 𝓝 1 = basis.to_filter_basis.filter, by rw [hnhds 1, N_one],
+  apply topological_group.of_nice_nhds_one,
+  { rw [hnhds1, ← basis.to_filter_basis.prod_filter, filter_basis.tendsto_both],
+    intros V V_in,
+    rcases group_filter_basis.mul V_in with ⟨W, W_in, hW⟩,
+    use [set.prod W W, filter_basis.mem_prod_of_mem W_in W_in],
+    rwa [pointwise_mul_eq_image, image_subset_iff] at hW },
+  { rw [hnhds1, basis.to_filter_basis.tendsto_both],
+    exact basis.inv },
+  { exact hnhds1.symm ▸ hnhds },
+  { intro x₀,
+    rw [hnhds1, basis.to_filter_basis.tendsto_both],
+    exact  group_filter_basis.conj x₀ }
+end
+
+/-- The topological space structure coming a group filter basis. -/
+@[to_additive add_group_filter_basis.topology]
+def topology {α : Type u} [group α] (basis : group_filter_basis α) : topological_space α :=
+topological_space.mk_of_nhds basis.N
+
+/-- The topological space structure coming a group filter basis. Version using tc resolution -/
+@[to_additive add_group_filter_basis.to_topological_space]
+def to_topological_space {α : Type u} [group α] [basis : group_filter_basis α] : topological_space α :=
+basis.topology
+
+@[to_additive add_group_filter_basis.nhds_eq]
+lemma nhds_eq {α : Type u} [group α] (basis : group_filter_basis α)
+  [t : topological_space α] (h : t = basis.topology) {x₀ : α} :
+  𝓝 x₀ = basis.N x₀ :=
+by rw [h, nhds_mk_of_nhds _ x₀ basis.N_is_nice.1 basis.N_is_nice.2]
+
+@[to_additive add_group_filter_basis.nhds_zero_eq]
+lemma nhds_one_eq {α : Type u} [group α] (basis : group_filter_basis α)
+  [t : topological_space α] (h : t = basis.topology) :
+  𝓝 (1 : α) = basis.to_filter_basis.filter :=
+by { rw basis.nhds_eq h, simp only [N, one_mul], exact map_id }
+
+@[to_additive add_group_filter_basis.mem_nhds]
+lemma mem_nhds {α : Type u} [group α] (basis : group_filter_basis α)
+  [t : topological_space α] (h : t = basis.topology) {x₀ : α} {U : set α} :
+  U ∈ 𝓝 x₀ ↔ ∃ V ∈ basis, V ⊆ (λ x, x₀ * x) ⁻¹' U :=
+begin
+  rw basis.nhds_eq h,
+  exact filter_basis.mem_filter basis.to_filter_basis
+end
+
+@[to_additive add_group_filter_basis.is_topological_group]
+lemma is_topological_group {α : Type u} [group α] (basis : group_filter_basis α)
+  [t : topological_space α] (h : t = basis.topology) : topological_group α :=
+begin
+  apply basis.is_top_group,
+  rw h,
+  exact λ x, nhds_mk_of_nhds _ x basis.N_is_nice.1 basis.N_is_nice.2
+end
+
+
+/-- The neighborhood basis on a group coming from a group filter basis -/
+def nhds_basis {α : Type u} [group α] (basis : group_filter_basis α)
+  [t : topological_space α] (h : t = basis.topology) : nhds_basis α :=
+{ B := λ x₀, filter_basis.map (λ x, x₀*x) basis.to_filter_basis,
+  is_nhds := λ x₀, by rw [← filter_basis.map_filter, h,
+                          nhds_mk_of_nhds _ x₀ basis.N_is_nice.1 basis.N_is_nice.2, N] }
+
+
+local attribute [instance] group_filter_basis.to_topological_space
+
+-- The following can be made an instance when needed
+def to_nhds_basis {α : Type u} [group α] [basis : group_filter_basis α]
+   : _root_.nhds_basis α := basis.nhds_basis rfl
+
+attribute [to_additive add_group_filter_basis.nhds_basis._proof_1] nhds_basis._proof_1
+attribute [to_additive add_group_filter_basis.nhds_basis] nhds_basis
+attribute [to_additive add_group_filter_basis.to_nhds_basis._proof_1] to_nhds_basis._proof_1
+attribute [to_additive add_group_filter_basis.to_nhds_basis] to_nhds_basis
+
+local attribute [instance] group_filter_basis.to_nhds_basis add_group_filter_basis.to_nhds_basis
+
+@[to_additive add_group_filter_basis.mem_nhds_basis]
+lemma mem_nhds_basis {α : Type u} [group α] [basis : group_filter_basis α] {s : set α} {x₀ : α} :
+s ∈ nhds_basis.B x₀ ↔ (λ x, x₀*x) ⁻¹' s ∈ basis.to_filter_basis.sets :=
+begin
+  change s ∈ filter_basis.map (λ x, x₀*x) basis.to_filter_basis ↔ _,
+  rw filter_basis.mem_map,
+  split ; intro h,
+  { rcases h with ⟨U, h, rfl⟩,
+    rw preimage_image_eq,
+    exact h,
+    intros x y, simp },
+  { use [(λ (x : α), x₀ * x) ⁻¹' s, h],
+    rw image_preimage_eq,
+    intros y,
+    use [x₀⁻¹*y], simp }
+end
+end group_filter_basis
+
+
 
 section
 variables {G : Type u} [add_comm_group G]
-
-def prod_map {α₁ : Type*} {α₂ : Type*} {β₁ : Type*} {β₂ : Type*}
-  (f : α₁ → α₂) (g : β₁ → β₂) : α₁ × β₁ → α₂ × β₂
-:= λ p, (f p.1, g p.2)
-
-infix `⨯`:90 := prod_map
 
 def add_group_with_zero_nhd.of_open_add_subgroup
   (H : set G) [is_add_subgroup H] (t : topological_space H) (h : @topological_add_group H t _) :
@@ -191,16 +490,13 @@ begin
     refl }
 end
 
-lemma set.not_mem_singleton {α : Type*} (a x : α) : x ∈ -({a} : set α) ↔ x ≠ a :=
-by simp  [finset.not_mem_singleton]
-
 lemma topological_add_group.separated_of_zero_sep
   (H : ∀ x : G, x ≠ 0 → ∃ U ∈ nhds (0 : G), x ∉ U) : separated G:=
 begin
   rw topological_add_group.separated_iff_zero_closed,
   rw [← is_open_compl_iff, is_open_iff_mem_nhds],
   intros x x_not,
-  have : x ≠ 0, from (set.not_mem_singleton 0 x).1 x_not,
+  have : x ≠ 0, from mem_compl_singleton_iff.mp x_not,
   rcases H x this with ⟨U, U_in, xU⟩,
   rw ← nhds_zero_symm G at U_in,
   rcases U_in with ⟨W, W_in, UW⟩,
@@ -291,7 +587,7 @@ variables {G : Type*} [group G] [topological_space G] [topological_group G]
 variables {H : Type*} [group H] [topological_space H] [topological_group H]
 variables {Γ : Type*} [group Γ] [topological_space Γ] [topological_group Γ] [regular_space Γ]
 
-variables {ι : G → H} [is_group_hom ι] (de : dense_embedding ι)
+variables {ι : G → H} [is_group_hom ι] (dι : dense_inducing ι)
 variables {φ : G → Γ} [is_group_hom φ]
 
 -- misc missing lemma, nothing to do with extensions of stuff
@@ -308,19 +604,12 @@ begin
 end
 
 
--- in Lean the "extension by continuity" of φ always exists, and extends φ.
-example : ∀ g, (de.extend φ) (ι g) = φ g := de.extend_e_eq
-
--- But, without additional assumption, it gives junk outside the range of ι.
--- Here we explain how to make sure it's continuous, under the crucial assumption
--- is_open (ker φ) which will be true in our case because Γ is discrete
-
-lemma continuous_extend_of_open_kernel (op_ker : is_open (ker φ)) : continuous (de.extend φ) :=
+lemma continuous_extend_of_open_kernel (op_ker : is_open (ker φ)) : continuous (dι.extend φ) :=
 begin
-  have : ∃ V, V ∈ nhds (1 : H) ∧ ker φ = ι ⁻¹' V,
+  have : ∃ V, V ∈ nhds (1 : H) ∧ ι ⁻¹' V ⊆ ker φ,
   { have : ker φ ∈ nhds (1 : G),
       from mem_nhds_sets op_ker (is_submonoid.one_mem (ker φ)),
-    rw [← de.induced, mem_comap_sets_of_inj de.inj] at this,
+    rw [dι.nhds_eq_comap, mem_comap_sets] at this,
     rcases this with ⟨V, V_in, hV⟩,
     rw map_one ι at V_in,
     use [V, V_in, hV] },
@@ -328,21 +617,21 @@ begin
   have : ∃ V' ∈ nhds (1 : H), ∀ x y ∈ V', x*y⁻¹ ∈ V,
     from exists_nhds_split_inv V_in,
   rcases this with ⟨V', V'_in, hV'⟩,
-  apply dense_embedding.continuous_extend,
+  refine dι.continuous_extend _,
   intro h,
   have : ι ⁻¹' ((λ x, x*h) '' V') ∈ comap ι (nhds h),
-  { rw mem_comap_sets_of_inj de.inj,
-    exact ⟨(λ (x : H), x * h) '' V', mul_right_nhds_one V'_in h, rfl⟩ },
-  apply exists_limit_of_ultimately_const de.comap_nhds_neq_bot this, clear this,
+    from ⟨(λ (x : H), x * h) '' V', mul_right_nhds_one V'_in h, subset.refl _⟩,
+  apply exists_limit_of_ultimately_const dι.comap_nhds_neq_bot this, clear this,
   intros x y x_in y_in,
   rw mem_preimage at x_in y_in,
   rcases x_in with ⟨vₓ, vₓ_in, hx⟩,
   rcases y_in with ⟨vy, vy_in, hy⟩,
   change vₓ * h = ι x at hx,
   change vy * h = ι y at hy,
-  rw [inv_iff_ker φ, hV, mem_preimage, map_mul ι, map_inv ι, ← hx, ← hy],
-  simp [mul_assoc],
-  simp [hV', *],
+  rw inv_iff_ker φ,
+  apply hV,
+  rw [mem_preimage, map_mul ι, map_inv ι, ← hx, ← hy, mul_assoc, mul_inv_rev, mul_inv_cancel_left],
+  simp only [hV', *],
 end
 end
 
@@ -350,3 +639,37 @@ instance discrete_top_group {G : Type*} [group G] [topological_space G] [discret
   topological_group G :=
 { continuous_mul := continuous_of_discrete_topology,
   continuous_inv := continuous_of_discrete_topology }
+
+/- section top_group_extend
+open is_group_hom
+variables {G : Type*} [group G] [topological_space G] [topological_group G]
+variables {H : Type*} [group H] [topological_space H] [topological_group H]
+variables {L : Type*} [group L] [topological_space L] [topological_group L]
+[t2_space L]
+
+variables {ι : G → H} [is_group_hom ι] (de : dense_inducing ι)
+variables {φ : G → L} [is_group_hom φ]
+
+lemma topological_group.extend_is_group_hom (hφ : continuous φ) (h : continuous (de.extend φ)) :
+  is_group_hom (de.extend φ) :=
+sorry
+-- TODO: Fix is_closed_property2 in mathlib. It has nothing to do with dense embedding. Need
+-- dense_range.prod etc.
+/- ⟨begin
+  let Φ := de.extend φ,
+  let P := λ x y : H, Φ (x*y) = Φ x*Φ y,
+  have closed : is_closed { q : H × H | P q.1 q.2 } :=
+    have c1 : continuous (λ q : H × H, Φ (q.1 * q.2)), from h.comp continuous_mul',
+    have c2 : continuous (λ q : H × H, Φ q.1 * Φ q.2),
+      from continuous_mul (h.comp continuous_fst) (h.comp continuous_snd),
+  is_closed_eq c1 c2,
+
+  apply is_closed_property2 de closed,
+  intros x y,
+  dsimp [P, Φ],
+  rw ← is_group_hom.map_mul ι,
+  repeat { rw dense_embedding.extend_e_eq },
+  rw is_group_hom.map_mul φ
+end⟩ -/
+end top_group_extend
+ -/

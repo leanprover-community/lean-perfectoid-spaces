@@ -1,6 +1,26 @@
 import data.subtype data.equiv.algebra ring_theory.ideal_operations
-
+import for_mathlib.data.set.basic
 universes u u₁ u₂ v v₁ w
+
+attribute [move_cast] units.inv_eq_inv units.coe_inv
+open set
+
+lemma range_units_coe (K : Type*) [division_ring K]: range (coe : units K → K) = -{0} :=
+begin
+  ext x,
+  rw mem_compl_singleton_iff,
+  split,
+  { rintro ⟨u, hu⟩ h',
+    change u.val = x at hu,
+    simpa [hu, h'] using u.val_inv },
+  { intro h,
+    refine ⟨units.mk0 _ h, _⟩,
+    change (units.mk0 x h).val = _,
+    simp [units.mk0] }
+end
+
+lemma range_units_val (K : Type*) [division_ring K]: range (coe : units K → K) = -{0} :=
+range_units_coe K
 
 namespace ideal
 

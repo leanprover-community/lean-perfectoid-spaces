@@ -1,8 +1,8 @@
 import topology.uniform_space.separation
+import topology.uniform_space.uniform_embedding
 
 import for_mathlib.quotient
 import for_mathlib.topology
-import for_mathlib.uniform_space.basic
 
 noncomputable theory
 local attribute [instance, priority 0] classical.prop_decidable
@@ -20,7 +20,7 @@ local attribute [instance] uniform_space.separation_setoid
 
 def uniform_space.separated_map (f : α → β) : Prop := ∀ x y, x ≈ y → f x ≈ f y
 
-def uniform_space.separated_map₂ (f : α → β → γ) : Prop := uniform_space.separated_map (function.uncurry f)
+def uniform_space.separated_map₂ (f : α → β → γ) : Prop := uniform_space.separated_map (function.uncurry' f)
 
 --∀ x x' y y', x ≈ x' → y ≈ y' → f x y ≈ f x' y'
 
@@ -40,7 +40,7 @@ lemma uniform_space.separated_map.comp₂ {f : α → β → γ} {g : γ → δ}
 separated_map₂ (g ∘₂ f) :=
 begin
   unfold separated_map₂,
-  rw function.uncurry_bicompr,
+  rw function.uncurry'_bicompr,
   exact hf.comp hg
 end
 
@@ -78,7 +78,8 @@ variables [uniform_space α] [uniform_space β] [uniform_space γ]
 def mk {α : Type u} [uniform_space α] : α → sep_quot α := quotient.mk
 
 lemma uniform_embedding [separated α] : uniform_embedding (sep_quot.mk : α → sep_quot α) :=
-⟨λ x y h, separated.eq_iff (quotient.exact h), comap_quotient_eq_uniformity⟩
+{ comap_uniformity :=  comap_quotient_eq_uniformity,
+  inj := λ x y h, separated.eq_iff (quotient.exact h) }
 
 lemma uniform_continuous_mk :
   uniform_continuous (quotient.mk : α → sep_quot α) :=
@@ -155,7 +156,7 @@ end
 lemma prod_mk_mk (a : α) (b : β) : sep_quot.prod ⟦a⟧ ⟦b⟧ = ⟦(a, b)⟧ := rfl
 
 def lift₂ [separated γ] (f : α → β → γ) : sep_quot α → sep_quot β → γ :=
-(lift $ function.uncurry f) ∘₂ sep_quot.prod
+(lift $ function.uncurry' f) ∘₂ sep_quot.prod
 
 lemma uniform_continuous_lift₂ [separated γ] {f : α → β → γ} (hf : uniform_continuous₂ f) :
   uniform_continuous₂ (sep_quot.lift₂ f) :=
@@ -188,22 +189,14 @@ variables {δ : Type*} {δ' : Type*} {δ'' : Type*} {ε : Type*}
   [uniform_space δ] [uniform_space δ'] [uniform_space δ''] [uniform_space ε]
 
 lemma continuous_map₂ {f : α → β → γ} (h : continuous₂ f) : continuous₂ (map₂ f) :=
-begin
-  unfold continuous₂ map₂ lift₂,
-  rw function.uncurry_bicompr,
-  apply (continuous_lift _).comp uniform_continuous_prod.continuous,
-  rw function.uncurry_bicompr,
-  exact continuous_quotient_mk.comp h
-end
+(continuous_lift $ by exact continuous_quotient_mk.comp h).comp uniform_continuous_prod.continuous
 
 -- Now begins a long series of lemmas for which we use an ad hoc killing tactic.
 
 meta def sep_quot_tac : tactic unit :=
 `[repeat { rintros ⟨x⟩ },
   repeat { rw quot_mk_quotient_mk },
-  repeat { rw map_mk },
-  repeat { rw map₂_mk_mk },
-  repeat { rw map_mk },
+  repeat { rw map_mk <|> rw map₂_mk_mk },
   repeat { rw H },
   repeat { assumption } ]
 

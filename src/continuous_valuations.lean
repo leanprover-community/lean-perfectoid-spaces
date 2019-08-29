@@ -1,6 +1,6 @@
 import topology.algebra.ring
 import valuation_spectrum
-import valuation.topology -- for valuation top on K_v
+import valuation.valuation_field_completion -- for valuation top on K_v
 
 import for_mathlib.nonarchimedean.basic -- continuous_of_continuous_at_zero
 
@@ -86,6 +86,8 @@ begin
 end
 -/
 
+local attribute [instance] valued.subgroups_basis valued.uniform_space
+
 -- It is *not true* that v is continuous iff the map R -> with_zero Γ is continuous
 -- where with_zero Γ gets the usual topology where {γ} and {x < γ} are open. What is
 -- true is that the valuation is continuous iff the associated map from R to the
@@ -98,8 +100,7 @@ begin
   conv at HU in (valuation_field_mk v 0) begin
     rw is_ring_hom.map_zero (valuation_field_mk v),
   end,
-  rw is_subgroups_basis.nhds_zero _ U at HU,
-  cases HU with γ Hγ,
+  rcases subgroups_basis.mem_nhds_zero.mp HU with ⟨_, ⟨γ, rfl⟩, Hγ⟩,
   show valuation_field_mk v ⁻¹' U ∈ (nhds (0 : R)),
   let V := {r : R | (canonical_valuation v) r < ↑γ},
   have HV : is_open V := hv γ,

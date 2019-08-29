@@ -11,6 +11,8 @@ import Spa
 
 noncomputable theory
 
+local attribute [instance] valued.subgroups_basis valued.uniform_space
+
 variables {A : Huber_pair}
 {Γ : Type*} [linear_ordered_comm_group Γ] {v : valuation A Γ}
 {rd : spa.rational_open_data A} (hv : valuation.is_continuous v)
@@ -59,7 +61,7 @@ begin
   rcases Hl with ⟨t, ht, rfl⟩,
   change v' (↑(unit_s hs)⁻¹) * _ ≤ _,
   rw mul_comm,
-  apply with_zero.le_of_le_mul_right (unit_is_not_none v' u),
+  apply with_zero.le_of_le_mul_right (map_unit_ne_zero v' u),
   rw [mul_assoc, one_mul, ←v'.map_mul, units.inv_mul, v'.map_one, mul_one],
   change canonical_valuation v t ≤ v' u.val,
   rw remember_this,
@@ -68,27 +70,23 @@ begin
   exact hT2 _ ht,
 end
 
+
 lemma v_le_one_is_bounded {R : Type*} [comm_ring R] (v : valuation R Γ) :
   is_bounded {x : valuation_field v | valuation_field.canonical_valuation v x ≤ 1} :=
 begin
   let v' := valuation_field.canonical_valuation v,
   intros U HU,
-  rw is_subgroups_basis.nhds_zero at HU,
-  rcases HU with ⟨γ, HU⟩,
+  rcases subgroups_basis.mem_nhds_zero.mp HU with ⟨_, ⟨γ, rfl⟩, H⟩,
   let V := {k : valuation_field v | v' k < ↑γ},
   use V,
   existsi _, swap,
-  { apply mem_nhds_sets,
-      apply is_subgroups_basis.is_op,
-    show v' 0 < γ,
-    rw v'.map_zero,
-    exact with_zero.zero_lt_coe
-  },
+  { rw subgroups_basis.mem_nhds_zero,
+    use [V, set.mem_range_self _] },
   intros w Hw b Hb,
-  change V ⊆ U at HU,
+  change V ⊆ U at H,
   change v' w < γ at Hw,
   change v' b ≤ 1 at Hb,
-  apply set.mem_of_mem_of_subset _ HU,
+  apply set.mem_of_mem_of_subset _ H,
   change v' (w * b) < γ,
   rw v'.map_mul,
   exact actual_ordered_comm_monoid.mul_lt_of_lt_of_nongt_one' Hw Hb,
@@ -125,11 +123,11 @@ Huber_ring.away.lift T s (unit_aux hs)
 instance (hs : v s ≠ 0) : is_ring_hom (to_valuation_field hs) :=
 by delta to_valuation_field; apply_instance
 
-local attribute [instance] valuation.subgroups_basis
+local attribute [instance] valued.subgroups_basis
 
 theorem to_valuation_field_cts' (hs : v s ≠ 0)(hT2 : ∀ t : A, t ∈ T → v t ≤ v s) (hv : is_continuous v) :
   continuous (to_valuation_field hs) :=
-Huber_ring.away.lift_continuous T s (is_subgroups_basis.nonarchimedean _)
+Huber_ring.away.lift_continuous T s (by convert subgroups_basis.nonarchimedean)
   (continuous_valuation_field_mk_of_continuous v hv) (unit_aux hs) (rd.Hopen)
   (v_T_over_s_is_power_bounded hs hT2)
 

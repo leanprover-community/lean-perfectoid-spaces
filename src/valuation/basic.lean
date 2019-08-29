@@ -129,14 +129,14 @@ begin
   exact with_zero.eq_coe_of_mul_eq_coe_left h1.symm
 end
 
-lemma unit_is_not_none (x : units R) : v x ≠ 0 :=
+lemma map_unit_ne_zero (x : units R) : v x ≠ 0 :=
 begin
   cases unit_is_some v x with γ Hγ,
   rw Hγ,
   apply option.no_confusion,
 end
 
-lemma unit_is_some' {Γ : Type u} [_inst_1 : linear_ordered_comm_group Γ] {R : Type u₀} [comm_ring R]
+lemma unit_is_some' {Γ : Type u} [linear_ordered_comm_group Γ] {R : Type u₀} [comm_ring R]
   (v : valuation R Γ) {x : R} (h : ∃ y : R, x * y = 1) : ∃ γ : Γ, v x = γ :=
 begin
   cases h with y hy,
@@ -144,7 +144,35 @@ begin
   exact unit_is_some v x'
 end
 
-lemma map_inv (x : units R) : v x⁻¹.val = (v x)⁻¹ :=
+lemma zero_iff {Γ : Type u} [linear_ordered_comm_group Γ] {K : Type u₀} [division_ring K]
+  (v : valuation K Γ) {x : K} : v x = 0 ↔ x = 0 :=
+begin
+  split ; intro h,
+  { by_contradiction h',
+    -- TODO: replace next two lines by `obtain` after bump
+    cases valuation.unit_is_some v (units.mk0 x h') with γ h'',
+    change v x = γ at h'',
+    rw h'' at h,
+    exact with_zero.coe_ne_zero h },
+  { exact h.symm ▸ v.map_zero },
+end
+
+lemma map_inv {Γ : Type u} [linear_ordered_comm_group Γ] {K : Type u₀} [division_ring K]
+  (v : valuation K Γ) {x : K} (h : x ≠ 0) : v x⁻¹ = (v x)⁻¹ :=
+begin
+  apply with_zero.eq_inv_of_mul_eq_one_right,
+  rw [← v.map_mul, mul_inv_cancel h, v.map_one]
+end
+
+lemma ne_zero_iff {Γ : Type u} [linear_ordered_comm_group Γ] {K : Type u₀} [division_ring K]
+  (v : valuation K Γ) {x : K} : v x ≠ 0 ↔ x ≠ 0 :=
+not_iff_not_of_iff v.zero_iff
+
+lemma coe_of_ne_zero {Γ : Type u} [linear_ordered_comm_group Γ] {K : Type u₀} [division_ring K]
+  (v : valuation K Γ) {x : K} (h : x ≠ 0) : ∃ γ : Γ, v x = γ :=
+by rwa [← v.ne_zero_iff, with_zero.ne_zero_iff_exists] at h
+
+lemma map_units_inv (x : units R) : v x⁻¹.val = (v x)⁻¹ :=
 begin
   have := congr_arg v x.val_inv,
   rw [v.map_one, map_mul] at this,

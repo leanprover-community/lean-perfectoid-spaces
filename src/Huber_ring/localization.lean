@@ -160,7 +160,7 @@ lemma mul_T_open (hT : is_open (↑(ideal.span T) : set A)) (U : open_add_subgro
 begin
   -- Choose an ideal I ⊆ span T
   rcases exists_pod_subset _ (mem_nhds_sets hT $ ideal.zero_mem $ ideal.span T)
-    with ⟨A₀, _, _, _, ⟨_, emb, hf, I, fg, top⟩, hI⟩,
+    with ⟨A₀, _, _, _, ⟨_, emb, I, fg, top⟩, hI⟩,
   resetI, dsimp only at hI,
   -- Choose a generating set L ⊆ I
   cases fg with L hL,
@@ -173,7 +173,7 @@ begin
   -- Choose V such that K * V ⊆ U
   let nonarch := Huber_ring.nonarchimedean,
   let V := K.inf (λ k : A, classical.some (nonarch.left_mul_subset U k)),
-  cases (is_ideal_adic_iff I).mp top with H₁ H₂,
+  cases is_ideal_adic_iff.mp top with H₁ H₂,
   have hV : ↑K * (V : set A) ⊆ U,
   { rintros _ ⟨k, hk, v, hv, rfl⟩,
     apply classical.some_spec (nonarch.left_mul_subset U k),
@@ -189,6 +189,7 @@ begin
     { exact V.zero_mem },
     apply_instance },
   rw ← image_subset_iff at hm,
+  change to_fun A '' ↑(I ^ m) ⊆ ↑V at hm,
   erw [← add_subgroup_eq_span_int (V : set A), ← add_subgroup_eq_span_int (↑(I^m) : set A₀)] at hm,
   change (submodule.map (alg_hom_int $ to_fun A).to_linear_map _) ≤ _ at hm,
   work_on_goal 1 {apply_instance},
@@ -198,7 +199,7 @@ begin
   refine ⟨⟨to_fun A '' ↑(I^(m+1)), _, _⟩, _⟩,
   work_on_goal 2 {assumption},
   all_goals { try {apply_instance} },
-  { exact embedding_open emb hf (H₁ _) },
+  { exact emb.op _ (H₁ _) },
   -- And now we start a long calculation
   -- Unfortunately it seems to be hard to express in calc mode
   -- First observe: I^(m+1) = L • I^m as A₀-ideal, but also as ℤ-submodule
@@ -278,18 +279,31 @@ begin
   exact le_trans (smul_le_smul (le_refl _) hV) hW
 end
 
-lemma is_basis (hT : is_open (↑(ideal.span T) : set A)) :
-  is_subgroups_basis (λ U : open_add_subgroup A, (span D (of_id A ATs '' U.1) : set ATs)) :=
-is_subgroups_basis.of_submodules_comm _
+def top_loc_basis (hT : is_open (↑(ideal.span T) : set A)) : subgroups_basis ATs :=
+subgroups_basis.of_indexed_submodules_of_comm
+  (λ U : open_add_subgroup A, (span D (coe '' U.1)))
   (directed T s) (mul_left T s hT) (mul_le T s Huber_ring.nonarchimedean)
 
-def ring_with_nhds (hT : is_open (↑(ideal.span T) : set A)) :
-  ring_with_zero_nhd ATs :=
-@is_subgroups_basis.to_ring_with_zero_nhd ATs _ _ _
-(λ U : open_add_subgroup A, (span D (of_id A ATs '' U.1) : set ATs)) (away.is_basis T s hT)
-
 def top_space (hT : is_open (↑(ideal.span T) : set A)) : topological_space ATs :=
-@ring_with_zero_nhd.topological_space ATs (ring_with_nhds T s hT)
+@subgroups_basis.topology ATs _  (top_loc_basis T s hT)
+
+lemma of_continuous (hT : is_open (↑(ideal.span T) : set A)) :
+  @continuous _ _ _ (away.top_space T s hT) (of : A → ATs) :=
+begin
+  letI := away.top_loc_basis T s hT,
+  letI := away.top_space T s hT,
+  haveI : topological_add_group ATs := subgroups_basis.is_topological_add_group,
+  suffices : continuous_at (coe : A → ATs) 0,
+    from topological_add_group.continuous_of_continuous_at_zero _ this,
+  unfold continuous_at,
+  rw subgroups_basis.tendsto_into,
+  rintros _ ⟨U, rfl⟩,
+  suffices : coe ⁻¹' (Dspan U.val).carrier ∈ nhds (0 : A),
+  { simpa only [show ((0:A) : ATs) = 0, from rfl, sub_zero] using this },
+  apply filter.mem_sets_of_superset (open_add_subgroup.mem_nhds_zero U),
+  rw ← image_subset_iff,
+  exact subset_span
+end
 
 section
 variables {B : Type*} [comm_ring B] [topological_space B] [topological_ring B]
@@ -316,29 +330,14 @@ localization.away.lift.is_ring_hom f _
 @[simp] lemma lift_comp_of :
   lift T s hs ∘ of = f := localization.lift'_comp_of _ _ _
 
--- TODO: this has nothing to do with lift so should perhaps be elsewhere
--- (because KMB keeps confusing it with the next lemma ;-))
-lemma of_continuous (hT : is_open (↑(ideal.span T) : set A)) :
-  @continuous _ _ _ (away.top_space T s hT) (of : A → ATs) :=
-begin
-  apply is_subgroups_basis.continuous_into _,
-  all_goals {try {apply_instance}},
-  intro U,
-  apply open_add_subgroup.is_open_of_open_add_subgroup _,
-  all_goals {try {apply_instance}},
-  { apply is_add_group_hom.preimage _ _,
-    all_goals {apply_instance} },
-  { use U,
-    rw ← image_subset_iff,
-    exact subset_span }
-end
-
 include hB hf hT hTB
 lemma lift_continuous : @continuous _ _ (away.top_space T s hT) _ (lift T s hs) :=
 begin
+  letI := away.top_loc_basis T s hT,
+  letI := away.top_space T s hT,
+  haveI : topological_add_group ATs := subgroups_basis.is_topological_add_group,
   apply continuous_of_continuous_at_zero _ _,
   all_goals {try {apply_instance}},
-  apply is_subgroups_basis.is_topological_add_group,
   intros U hU,
   rw is_ring_hom.map_zero (lift T s hs) at hU,
   rw filter.mem_map_sets_iff,
@@ -353,7 +352,7 @@ begin
   cases Huber_ring.nonarchimedean W hW with Y hY,
   refine ⟨↑(Dspan Y), _, _⟩,
   { apply mem_nhds_sets,
-    { convert is_subgroups_basis.is_op _ Y },
+    { exact subgroups_basis.is_op _ rfl (mem_range_self _) },
     { exact (Dspan ↑Y).zero_mem } },
   { refine set.subset.trans _ hVF,
     rintros _ ⟨x, hx, rfl⟩,
