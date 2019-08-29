@@ -47,7 +47,7 @@ open filter function set topological_space
 local infixr ` ×ᶠ `:51 := filter.prod
 local prefix 𝓝:100 := nhds
 
-@[to_additive topological_add_monoid.of_comm_of_nice_nhds_zero]
+@[to_additive]
 lemma topological_monoid.of_comm_of_nice_nhds_one (α : Type u) [comm_monoid α] [topological_space α]
   (hmul : tendsto (uncurry' ((*) : α → α → α)) (𝓝 1 ×ᶠ 𝓝 1) 𝓝 1)
   (hleft : ∀ x₀ : α, 𝓝 x₀ = map (λ x, x₀*x) 𝓝 1) : topological_monoid α :=
@@ -76,7 +76,7 @@ protected meta def prove_conj : tactic unit :=
    convert continuous_id.continuous_at,
    simpa [mul_comm, inv_mul_cancel_left]]
 
-@[to_additive topological_add_group.of_nice_nhds_zero]
+@[to_additive]
 lemma topological_group.of_nice_nhds_one (α : Type u) [group α] [topological_space α]
   (hmul : tendsto (uncurry' ((*) : α → α → α)) ((𝓝 1).prod 𝓝 1) 𝓝 1)
   (hinv : tendsto (λ x : α, x⁻¹) 𝓝 1 𝓝 1)
@@ -121,7 +121,7 @@ lemma topological_group.of_nice_nhds_one (α : Type u) [group α] [topological_s
   end }
 
 
-@[to_additive topological_add_group.of_comm_of_nice_nhds_zero]
+@[to_additive]
 lemma topological_group.of_comm_of_nice_nhds_one (α : Type u) [comm_group α] [topological_space α]
   (hmul : tendsto (uncurry' ((*) : α → α → α)) ((𝓝 1).prod 𝓝 1) 𝓝 1)
   (hinv : tendsto (λ x : α, x⁻¹) 𝓝 1 𝓝 1)
@@ -144,11 +144,11 @@ class add_group_filter_basis (α : Type u) [add_group α] extends filter_basis �
 (conj : ∀ x₀, ∀ U ∈ sets, ∃ V ∈ sets, V ⊆ (λ x, x₀+x-x₀) ⁻¹' U)
 
 attribute [to_additive add_group_filter_basis] group_filter_basis
-attribute [to_additive add_group_filter_basis.zero] group_filter_basis.one
-attribute [to_additive add_group_filter_basis.add] group_filter_basis.mul
-attribute [to_additive add_group_filter_basis.neg] group_filter_basis.inv
-attribute [to_additive add_group_filter_basis.conj] group_filter_basis.conj
-attribute [to_additive add_group_filter_basis.to_filter_basis] group_filter_basis.to_filter_basis
+attribute [to_additive] group_filter_basis.one
+attribute [to_additive] group_filter_basis.mul
+attribute [to_additive] group_filter_basis.inv
+attribute [to_additive] group_filter_basis.conj
+attribute [to_additive] group_filter_basis.to_filter_basis
 
 
 /- -- We didn't use class directly because we still want α to be an explicit argument of projections
@@ -158,38 +158,35 @@ attribute [class] add_group_filter_basis
 instance group_filter_basis.has_mem {α : Type*} [group α] : has_mem (set α) (group_filter_basis α) := ⟨λ s f, s ∈ f.sets⟩
 instance add_group_filter_basis.has_mem {α : Type*} [add_group α] : has_mem (set α) (add_group_filter_basis α) := ⟨λ s f, s ∈ f.sets⟩
 
-attribute [to_additive add_group_filter_basis.has_mem] group_filter_basis.has_mem
+attribute [to_additive] group_filter_basis.has_mem
 
 namespace group_filter_basis
 variables {α : Type*} [group α]
 
-@[to_additive add_group_filter_basis.add_subset_self]
+@[to_additive]
 lemma prod_subset_self (f : group_filter_basis α) {U : set α} (h : U ∈ f) : U ⊆ U*U :=
 λ x x_in, (mul_one x) ▸ mul_mem_pointwise_mul x_in $ group_filter_basis.one h
 
 /-- The neighborhood function of a `group_filter_basis` -/
-@[to_additive add_group_filter_basis.N]
+@[to_additive]
 def N (f : group_filter_basis α) : α → filter α :=
 λ x, map (λ y, x*y) f.to_filter_basis.filter
 
-attribute [to_additive add_group_filter_basis.N.equations._eqn_1]
-  group_filter_basis.N.equations._eqn_1
-
-@[simp, to_additive add_group_filter_basis.N_zero]
+@[simp, to_additive]
 lemma N_one (f : group_filter_basis α) : f.N 1 = f.to_filter_basis.filter :=
 by simpa [N, map_id]
 
-@[to_additive add_group_filter_basis.mem_N]
+@[to_additive]
 lemma mem_N (f : group_filter_basis α) (x : α) (U : set α) :
   U ∈ f.N x ↔ ∃ V ∈ f, (λ y, x*y) '' V ⊆ U :=
 by simpa [N, mem_map, filter_basis.mem_filter, image_subset_iff]
 
-@[to_additive add_group_filter_basis.mem_N_of_mem]
+@[to_additive]
 lemma mem_N_of_mem (f : group_filter_basis α) (x : α) {U : set α} (h : U ∈ f) :
 (λ y, x*y) '' U ∈ f.N x :=
 by { rw mem_N, use [U, h] }
 
-@[to_additive add_group_filter_basis.N_is_nice]
+@[to_additive]
 lemma N_is_nice (f : group_filter_basis α) :
   (pure ≤ f.N) ∧
   ∀ {a s}, s ∈ f.N a → ∃ t ∈ f.N a, t ⊆ s ∧ ∀ a' ∈ t, s ∈ f.N a' :=
@@ -215,7 +212,7 @@ begin
       exact ⟨t*w, hW (mul_mem_pointwise_mul tW wW), by simp [mul_assoc]⟩ } },
 end
 
-@[to_additive add_group_filter_basis.is_top_group]
+@[to_additive]
 lemma is_top_group {α : Type u} [group α] (basis : group_filter_basis α) [topological_space α]
   (hnhds : ∀ x₀ : α, 𝓝 x₀ = basis.N x₀) : topological_group α :=
 begin
@@ -235,28 +232,28 @@ begin
 end
 
 /-- The topological space structure coming a group filter basis. -/
-@[to_additive add_group_filter_basis.topology]
+@[to_additive]
 def topology {α : Type u} [group α] (basis : group_filter_basis α) : topological_space α :=
 topological_space.mk_of_nhds basis.N
 
 /-- The topological space structure coming a group filter basis. Version using tc resolution -/
-@[to_additive add_group_filter_basis.to_topological_space]
+@[to_additive]
 def to_topological_space {α : Type u} [group α] [basis : group_filter_basis α] : topological_space α :=
 basis.topology
 
-@[to_additive add_group_filter_basis.nhds_eq]
+@[to_additive]
 lemma nhds_eq {α : Type u} [group α] (basis : group_filter_basis α)
   [t : topological_space α] (h : t = basis.topology) {x₀ : α} :
   𝓝 x₀ = basis.N x₀ :=
 by rw [h, nhds_mk_of_nhds _ x₀ basis.N_is_nice.1 basis.N_is_nice.2]
 
-@[to_additive add_group_filter_basis.nhds_zero_eq]
+@[to_additive]
 lemma nhds_one_eq {α : Type u} [group α] (basis : group_filter_basis α)
   [t : topological_space α] (h : t = basis.topology) :
   𝓝 (1 : α) = basis.to_filter_basis.filter :=
 by { rw basis.nhds_eq h, simp only [N, one_mul], exact map_id }
 
-@[to_additive add_group_filter_basis.mem_nhds]
+@[to_additive]
 lemma mem_nhds {α : Type u} [group α] (basis : group_filter_basis α)
   [t : topological_space α] (h : t = basis.topology) {x₀ : α} {U : set α} :
   U ∈ 𝓝 x₀ ↔ ∃ V ∈ basis, V ⊆ (λ x, x₀ * x) ⁻¹' U :=
@@ -265,7 +262,7 @@ begin
   exact filter_basis.mem_filter basis.to_filter_basis
 end
 
-@[to_additive add_group_filter_basis.is_topological_group]
+@[to_additive]
 lemma is_topological_group {α : Type u} [group α] (basis : group_filter_basis α)
   [t : topological_space α] (h : t = basis.topology) : topological_group α :=
 begin
@@ -276,6 +273,7 @@ end
 
 
 /-- The neighborhood basis on a group coming from a group filter basis -/
+@[to_additive]
 def nhds_basis {α : Type u} [group α] (basis : group_filter_basis α)
   [t : topological_space α] (h : t = basis.topology) : nhds_basis α :=
 { B := λ x₀, filter_basis.map (λ x, x₀*x) basis.to_filter_basis,
@@ -286,17 +284,14 @@ def nhds_basis {α : Type u} [group α] (basis : group_filter_basis α)
 local attribute [instance] group_filter_basis.to_topological_space
 
 -- The following can be made an instance when needed
+@[to_additive]
 def to_nhds_basis {α : Type u} [group α] [basis : group_filter_basis α]
    : _root_.nhds_basis α := basis.nhds_basis rfl
 
-attribute [to_additive add_group_filter_basis.nhds_basis._proof_1] nhds_basis._proof_1
-attribute [to_additive add_group_filter_basis.nhds_basis] nhds_basis
-attribute [to_additive add_group_filter_basis.to_nhds_basis._proof_1] to_nhds_basis._proof_1
-attribute [to_additive add_group_filter_basis.to_nhds_basis] to_nhds_basis
 
 local attribute [instance] group_filter_basis.to_nhds_basis add_group_filter_basis.to_nhds_basis
 
-@[to_additive add_group_filter_basis.mem_nhds_basis]
+@[to_additive]
 lemma mem_nhds_basis {α : Type u} [group α] [basis : group_filter_basis α] {s : set α} {x₀ : α} :
 s ∈ nhds_basis.B x₀ ↔ (λ x, x₀*x) ⁻¹' s ∈ basis.to_filter_basis.sets :=
 begin
@@ -377,7 +372,7 @@ variables (f : G → H) [is_group_hom f]
 
 -- TODO when PR'ing to mathlib, make sure to include _right in the name
 -- of this and nhds_translation_mul_inv
-@[to_additive nhds_translation_add]
+@[to_additive]
 lemma nhds_translation_mul (g : G) :
   map (λ h, h*g) (nhds 1) = nhds g :=
 begin
@@ -386,7 +381,7 @@ begin
 end
 
 
-@[to_additive nhds_translation_add_neg_left]
+@[to_additive]
 lemma nhds_translation_mul_inv_left (g : G) :
   comap (λ h, g⁻¹*h) (nhds 1) = nhds g :=
 begin
@@ -398,7 +393,7 @@ begin
     exact tendsto_mul tendsto_const_nhds tendsto_id }
 end
 
-@[to_additive nhds_translation_add_left]
+@[to_additive]
 lemma nhds_translation_mul_left (g : G) :
   map (λ h, g*h) (nhds 1) = nhds g :=
 begin
@@ -406,7 +401,7 @@ begin
   apply map_eq_comap_of_inverse ; ext ; simp
 end
 
-@[to_additive topological_add_group.continuous_of_continuous_at_zero]
+@[to_additive]
 lemma continuous_of_continuous_at_one (h : continuous_at f 1) :
   continuous f :=
 begin
@@ -414,7 +409,7 @@ begin
   rw continuous_iff_continuous_at,
   intro g,
   have key : (f ∘ λ (h : G), g * h) = (λ (h : H), (f g) * h) ∘ f,
-    by ext ; simp [is_group_hom.map_mul f],
+    by ext ; simp [is_mul_hom.map_mul f],
   change map f (nhds g) ≤ nhds (f g),
   rw [← nhds_translation_mul_left g, ← nhds_translation_mul_left (f g),
       filter.map_comm key],
@@ -466,6 +461,7 @@ end add_group_with_zero_nhd
 
 
 section
+open topological_add_group
 variables (G : Type u) [add_comm_group G] [topological_space G] [topological_add_group G]
 
 local attribute [instance] topological_add_group.to_uniform_space
@@ -515,20 +511,20 @@ end
 
 -- I used to think I would need the next section soon, but I no longer do.
 -- I keep it because we'll want some form of this in mathlib at some point
-section top_group_equiv
+section top_mul_equiv
 variables (G : Type*) [group G] [topological_space G] [topological_group G]
 variables (H : Type*) [group H] [topological_space H] [topological_group H]
 
-structure top_group_equiv extends homeomorph G H :=
+structure top_mul_equiv extends homeomorph G H :=
 (hom : is_group_hom to_fun)
 
-infix ` ≃*ₜ `:50 := top_group_equiv
+infix ` ≃*ₜ `:50 := top_mul_equiv
 
-instance top_group_equiv.is_group_hom (h : G ≃*ₜ H) : is_group_hom h.to_homeomorph :=
+instance top_mul_equiv.is_group_hom (h : G ≃*ₜ H) : is_group_hom h.to_homeomorph :=
 h.hom
-end top_group_equiv
+end top_mul_equiv
 
-namespace top_group_equiv
+namespace top_mul_equiv
 variables (G : Type*) [group G] [topological_space G] [topological_group G]
 variables (H : Type*) [group H] [topological_space H] [topological_group H]
 variables (K : Type*) [group K] [topological_space K] [topological_group K]
@@ -540,8 +536,8 @@ variables (K : Type*) [group K] [topological_space K] [topological_group K]
   ..equiv.refl _}
 
 @[symm] def symm (h : G ≃*ₜ H) : H ≃*ₜ G :=
-{ hom := ⟨λ n₁ n₂, function.injective_of_left_inverse h.left_inv begin
-   rw h.hom.map_mul, unfold equiv.symm, rw [h.right_inv, h.right_inv, h.right_inv], end⟩,
+{ hom := is_group_hom.mk' $ λ n₁ n₂, function.injective_of_left_inverse h.left_inv begin
+   rw h.hom.map_mul, unfold equiv.symm, rw [h.right_inv, h.right_inv, h.right_inv], end,
   continuous_to_fun := h.continuous_inv_fun,
   continuous_inv_fun := h.continuous_to_fun,
   ..h.to_equiv.symm}
@@ -552,7 +548,7 @@ variables (K : Type*) [group K] [topological_space K] [topological_group K]
   continuous_inv_fun := h1.continuous_inv_fun.comp h2.continuous_inv_fun,
   ..equiv.trans h1.to_equiv h2.to_equiv }
 
-end top_group_equiv
+end top_mul_equiv
 
 -- Next secton will move to topology/basic.lean
 section
@@ -630,7 +626,7 @@ begin
   change vy * h = ι y at hy,
   rw inv_iff_ker φ,
   apply hV,
-  rw [mem_preimage, map_mul ι, map_inv ι, ← hx, ← hy, mul_assoc, mul_inv_rev, mul_inv_cancel_left],
+  rw [mem_preimage, is_mul_hom.map_mul ι, map_inv ι, ← hx, ← hy, mul_assoc, mul_inv_rev, mul_inv_cancel_left],
   simp only [hV', *],
 end
 end

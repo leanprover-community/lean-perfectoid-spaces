@@ -23,13 +23,13 @@ end quotient_group
 
 open quotient_group
 
--- I don't use this any more, first because group_equiv.quotient is more general
+-- I don't use this any more, first because mul_equiv.quotient is more general
 -- and second because I don't like the definition of the function via quotient_group.map
-def group_equiv.quotient' {G : Type*} {H : Type*} [group G] [group H]
-(h : group_equiv G H) (K : set H) [normal_subgroup K] :
-group_equiv (quotient_group.quotient (h.to_equiv ⁻¹' K)) (quotient_group.quotient K) :=
-{ to_fun := map (h.to_equiv ⁻¹' K) K h.to_fun (le_refl (h.to_equiv ⁻¹' K)),
-  inv_fun := map K (h.to_equiv ⁻¹' K) h.symm.to_fun (λ x H, show h.to_fun (h.inv_fun x) ∈ K, by rwa h.right_inv x),
+def mul_equiv.quotient' {G : Type*} {H : Type*} [group G] [group H]
+(h : mul_equiv G H) (K : set H) [normal_subgroup K] :
+mul_equiv (quotient_group.quotient (h ⁻¹' K)) (quotient_group.quotient K) :=
+{ to_fun := map (h ⁻¹' K) K h (le_refl (h ⁻¹' K)),
+  inv_fun := map K (h ⁻¹' K) h.symm (λ x H, show h (h.symm x) ∈ K, by rwa h.apply_symm_apply),
   left_inv := λ g, begin
     rw quotient_group.map_comp,
     convert map_id _ g,
@@ -40,26 +40,26 @@ group_equiv (quotient_group.quotient (h.to_equiv ⁻¹' K)) (quotient_group.quot
     convert map_id _ g,
     ext x, exact h.right_inv x
   end,
-  hom := ⟨begin
-    have H : is_group_hom (map (h.to_equiv ⁻¹' K) K h.to_fun (le_refl (h.to_equiv ⁻¹' K))) :=
+  map_mul' := begin
+    have H : is_group_hom (map (h ⁻¹' K) K h (le_refl (h ⁻¹' K))) :=
     by apply_instance,
-    cases H with H, exact H,
-  end⟩}
+    exact H.map_mul,
+  end}
 
 -- This version is better, but Mario points out that really I shuold be using a
 -- relation rather than h2 : he.to_equiv ⁻¹' K = J.
-def group_equiv.quotient {G : Type*} {H : Type*} [group G] [group H]
-  (he : group_equiv G H) (J : set G) [normal_subgroup J] (K : set H) [normal_subgroup K]
+def mul_equiv.quotient {G : Type*} {H : Type*} [group G] [group H]
+  (he : G ≃* H) (J : set G) [normal_subgroup J] (K : set H) [normal_subgroup K]
   (h2 : he.to_equiv ⁻¹' K = J) :
-group_equiv (quotient_group.quotient J) (quotient_group.quotient K) :=
-{ to_fun := quotient_group.lift J (λ g, quotient_group.mk (he.to_equiv g)) begin
+mul_equiv (quotient_group.quotient J) (quotient_group.quotient K) :=
+{ to_fun := quotient_group.lift J (mk ∘ he) begin
     unfold set.preimage at h2,
     intros g hg,
     rw ←h2 at hg,
     rw ←is_group_hom.mem_ker (quotient_group.mk : H → quotient_group.quotient K),
     rwa quotient_group.ker_mk,
   end,
-  inv_fun := quotient_group.lift K (λ h, quotient_group.mk (he.symm.to_equiv h)) begin
+  inv_fun := quotient_group.lift K (mk ∘ he.symm) begin
     intros h hh,
     rw ←is_group_hom.mem_ker (quotient_group.mk : G → quotient_group.quotient J),
     rw quotient_group.ker_mk,
@@ -85,9 +85,4 @@ group_equiv (quotient_group.quotient J) (quotient_group.quotient K) :=
     end,
     refl, refl,
   end,
-  hom := ⟨begin
-    have H := quotient_group.is_group_hom_quotient_lift J _ _,
-    cases H with H,
-    exact H, -- !
-  end⟩
-  }
+  map_mul' := (quotient_group.is_group_hom_quotient_lift J _ _).map_mul }
