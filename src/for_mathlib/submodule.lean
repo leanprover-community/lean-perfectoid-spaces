@@ -24,7 +24,7 @@ end submodule
 
 namespace submodule
 open algebra
-variables {R : Type*} {A : Type*} [comm_ring R] [ring A] [algebra R A]
+variables {R : Type*} {A : Type*} [comm_ring R] [comm_ring A] [algebra R A]
 
 local attribute [instance] set.pointwise_mul_semiring
 local attribute [instance] set.singleton.is_monoid_hom
@@ -108,7 +108,7 @@ begin
       apply submodule.smul_mem (span _ _) b hsi } } }
 end
 
--- -- PR being prepared
+-- PR being prepared
 -- lemma add_group_closure_eq_span_int (s : set R) :
 --   add_group.closure s = ↑(span ℤ s) :=
 -- set.subset.antisymm (add_group.closure_subset subset_span)
@@ -158,10 +158,10 @@ end
 
 end
 
--- instance mul_action_algebra : mul_action A (submodule R A) :=
--- { smul := λ a M, ({a} : set A) • M,
---   mul_smul := λ s t P, show ({s * t} : set A) • _ = _,
---     by { rw [is_monoid_hom.map_mul (singleton : A → set A)], apply mul_smul },
---   one_smul := one_smul _ }
+instance mul_action_algebra : mul_action A (submodule R A) :=
+{ smul := λ a M, ({a} : set A) • M,
+  mul_smul := λ s t P, show ({s * t} : set A) • _ = _,
+    by { rw [is_mul_hom.map_mul (singleton : A → set A)], apply mul_smul },
+  one_smul := (submodule.semimodule_set R A).one_smul }
 
 end submodule

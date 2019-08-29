@@ -70,7 +70,7 @@ begin
   { apply is_ideal_adic_pow top, apply nat.succ_pos },
   { change algebra_map A '' ↑(J ^ (n + 1)) ⊆ U,
     rw set.image_subset_iff,
-    exact set.subset.trans (J.pow_le_pow $ nat.le_succ n) hn },
+    exact set.subset.trans (ideal.pow_le_pow $ nat.le_succ n) hn },
   { apply emb.continuous.tendsto,
     rw show algebra.to_fun A (0:A₀) = 0,
     { apply is_ring_hom.map_zero },

@@ -98,7 +98,7 @@ lemma prod (hR : nonarchimedean R) (hS : nonarchimedean S) :
 begin
   intros U hU,
   rcases prod_subset hR hS U hU with ⟨V, W, h⟩,
-  refine ⟨V.prod W, ‹_›⟩
+  refine ⟨V.sum W, ‹_›⟩
 end
 
 lemma mul_subset (h : nonarchimedean R) (U : open_add_subgroup R) :

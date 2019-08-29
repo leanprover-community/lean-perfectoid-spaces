@@ -12,49 +12,17 @@ def equiv.with_zero_equiv {α β : Type*} (h : α ≃ β) : (with_zero α) ≃ (
 
 variables {α : Type*} {β : Type*} {γ : Type*}
 
--- equiv of semigroups
-
-def semigroup_equiv (α β : Type*) [semigroup α] [semigroup β] := mul_equiv α β
-
--- equiv of monoids
-
-def monoid_equiv (α : Type*) (β : Type*) [monoid α] [monoid β] := mul_equiv α β
-
-namespace monoid_equiv
+namespace mul_equiv
 variables [monoid α] [monoid β] [monoid γ]
 
-@[refl] def refl (α : Type*) [monoid α] : monoid_equiv α α := mul_equiv.refl α
+def to_with_zero_mul_equiv (h : α ≃* β) : (with_zero α) ≃* (with_zero β) :=
+{ map_mul' := λ x y,
+  begin cases x; cases y; try { refl},
+    show some _ = some _, congr, exact @is_mul_hom.map_mul _ _ _ _ h _ x y
+  end,
+  ..h.to_equiv.with_zero_equiv }
 
-@[symm] def symm : monoid_equiv α β → monoid_equiv β α := mul_equiv.symm
-
-@[trans] def trans : monoid_equiv α β → monoid_equiv β γ → monoid_equiv α γ := mul_equiv.trans
-
-def to_with_zero_monoid_equiv (h : monoid_equiv α β) : monoid_equiv (with_zero α) (with_zero β) :=
-{ hom := ⟨λ x y, begin cases x; cases y,
-  { refl},
-  { refl},
-  { refl},
-  { show some _ = some _, congr, exact @is_mul_hom.map_mul _ _ _ _ h.to_equiv _ x y}
-  end⟩
-  ..h.to_equiv.with_zero_equiv
-}
-
-end monoid_equiv
-
--- equiv of groups
-
-def group_equiv (α : Type*) (β : Type*) [group α] [group β] := mul_equiv α β
-
-namespace group_equiv
-variables [group α] [group β] [group γ]
-
-@[refl] def refl (α : Type*) [group α] : group_equiv α α := mul_equiv.refl α
-
-@[symm] def symm : group_equiv α β → group_equiv β α := mul_equiv.symm
-
-@[trans] def trans : group_equiv α β → group_equiv β γ → group_equiv α γ := mul_equiv.trans
-
-end group_equiv
+end mul_equiv
 
 -- from here on -- should this go in data.equiv.order?
 
