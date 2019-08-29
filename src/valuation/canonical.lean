@@ -1,7 +1,7 @@
 import valuation.basic
 
 import for_mathlib.quotient_group
-import for_mathlib.group -- group_equiv
+import for_mathlib.group -- mul_equiv
 
 /-
 The purpose of this file is to define a "canonical" valuation equivalent to
@@ -124,15 +124,15 @@ lemma mk_le_mk_iff (x y : units (valuation_field v)) :
   v.on_valuation_field x ≤ v.on_valuation_field y := iff.rfl
 
 instance value_group_quotient.is_group_hom :
-is_group_hom (value_group_quotient v) := ⟨λ _ _, rfl⟩
+is_group_hom (value_group_quotient v) := is_group_hom.mk' $ λ _ _, rfl
 
 instance : linear_ordered_comm_group (value_group v) :=
 { mul_le_mul_left := begin rintro ⟨a⟩ ⟨b⟩ h ⟨c⟩,
     change v.on_valuation_field a ≤ v.on_valuation_field b at h,
     change value_group_quotient v c * value_group_quotient v a
     ≤ value_group_quotient v c * value_group_quotient v b,
-    rw ←is_group_hom.map_mul (value_group_quotient v),
-    rw ←is_group_hom.map_mul (value_group_quotient v),
+    rw ←is_mul_hom.map_mul (value_group_quotient v),
+    rw ←is_mul_hom.map_mul (value_group_quotient v),
     change v.on_valuation_field (c * a) ≤ v.on_valuation_field (c * b),
     rw v.on_valuation_field.map_mul,
     rw v.on_valuation_field.map_mul,
@@ -671,7 +671,7 @@ def valfield.preorder_equiv (h : v₁.is_equiv v₂) :
 
 def valfield_units_of_valfield_units_of_eq_supp (h : supp v₁ = supp v₂) :
   units (valuation_field v₁) → units (valuation_field v₂) :=
-units.map $ valfield_of_valfield_of_eq_supp h
+units.map' $ valfield_of_valfield_of_eq_supp h
 
 instance valfield_units.is_group_hom (h : supp v₁ = supp v₂) :
 is_group_hom (valfield_units_of_valfield_units_of_eq_supp h) :=
@@ -683,9 +683,9 @@ lemma units_valfield_of_units_valfield_of_eq_supp_mk
   = units_valfield_mk v₂ r (h ▸ hr) := units.ext $ valfield_equiv_valfield_mk_eq_mk h r
 
 def valfield_units_equiv_units_of_eq_supp (h : supp v₁ = supp v₂) :
-group_equiv (units (valuation_field v₁)) (units (valuation_field v₂)) :=
+mul_equiv (units (valuation_field v₁)) (units (valuation_field v₂)) :=
 let h' := valfield_equiv_valfield_of_eq_supp h in
-by letI := h'.hom; exact units.map_equiv {hom := ⟨h'.hom.map_mul⟩, ..h'}
+by letI := h'.hom; exact units.map_equiv {map_mul' := h'.hom.map_mul, ..h'}
 end
 
 lemma valfield_units_equiv_units_mk_eq_mk (h : supp v₁ = supp v₂) (r : R) (hr : r ∉ supp v₁):
@@ -733,26 +733,26 @@ begin
 end
 
 -- group part of Wedhorn 1.27 (iii) -> (i)
-def is_equiv.value_group_equiv (h : is_equiv v₁ v₂) :
-  group_equiv (value_group v₁) (value_group v₂) :=
-group_equiv.quotient (valfield_units_equiv_units_of_eq_supp h.supp_eq) (valuation_field_norm_one v₁)
+def is_equiv.value_mul_equiv (h : is_equiv v₁ v₂) :
+  mul_equiv (value_group v₁) (value_group v₂) :=
+mul_equiv.quotient (valfield_units_equiv_units_of_eq_supp h.supp_eq) (valuation_field_norm_one v₁)
   (valuation_field_norm_one v₂) (is_equiv.norm_one_eq_norm_one h : _)
 
-lemma value_group_equiv_units_mk_eq_mk (h : is_equiv v₁ v₂) (r : R) (hr : r ∉ supp v₁) :
-  (h.value_group_equiv).to_equiv (value_group_quotient v₁ (units_valfield_mk v₁ r hr)) =
+lemma value_mul_equiv_units_mk_eq_mk (h : is_equiv v₁ v₂) (r : R) (hr : r ∉ supp v₁) :
+  (h.value_mul_equiv) (value_group_quotient v₁ (units_valfield_mk v₁ r hr)) =
   value_group_quotient v₂ (units_valfield_mk v₂ r (h.supp_eq ▸ hr)) :=
 begin
   rw ←valfield_units_equiv_units_mk_eq_mk (h.supp_eq) r hr,
   refl,
 end
 
-def is_equiv.with_zero_value_group_equiv (h : is_equiv v₁ v₂) :
-  monoid_equiv (with_zero (value_group v₁)) (with_zero (value_group v₂)) :=
-monoid_equiv.to_with_zero_monoid_equiv $ is_equiv.value_group_equiv h
+def is_equiv.with_zero_value_mul_equiv (h : is_equiv v₁ v₂) :
+  (with_zero (value_group v₁)) ≃* (with_zero (value_group v₂)) :=
+ h.value_mul_equiv.to_with_zero_mul_equiv
 
 -- ordering part of 1.27 (iii) -> (i)
 def is_equiv.value_group_order_equiv_aux (h : is_equiv v₁ v₂) (x y : value_group v₁) (h2 : x ≤ y) :
-  h.value_group_equiv.to_equiv x ≤ h.value_group_equiv.to_equiv y :=
+  h.value_mul_equiv x ≤ h.value_mul_equiv y :=
 begin
   induction x with x, induction y, swap, refl, swap, refl,
   exact (is_equiv.on_valuation_field_is_equiv h x y).1 h2,
@@ -761,12 +761,12 @@ end
 def is_equiv.value_group_le_equiv (h : is_equiv v₁ v₂) :
   (value_group v₁) ≃≤ (value_group v₂) :=
 { le_map := λ x y, linear_order_le_iff_of_monotone_injective
-  (h.value_group_equiv.to_equiv.bijective.1)
+  (h.value_mul_equiv.to_equiv.bijective.1)
   (is_equiv.value_group_order_equiv_aux h) x y
-   ..h.value_group_equiv.to_equiv}
+   ..h.value_mul_equiv}
 
-def is_equiv.value_group_equiv_monotone (h : is_equiv v₁ v₂) :
-  monotone (h.value_group_equiv.to_equiv) := λ x y,
+def is_equiv.value_mul_equiv_monotone (h : is_equiv v₁ v₂) :
+  monotone (h.value_mul_equiv) := λ x y,
   (@@le_equiv.le_map _ _ (is_equiv.value_group_le_equiv h)).1
 
 def is_equiv.with_zero_value_group_le_equiv (h : is_equiv v₁ v₂) :
@@ -777,8 +777,8 @@ def is_equiv.with_zero_value_group_lt_equiv (h : is_equiv v₁ v₂) :
   (with_zero (value_group v₁)) ≃< (with_zero (value_group v₂)) :=
 preorder_equiv.to_lt_equiv h.with_zero_value_group_le_equiv
 
-lemma is_equiv.with_zero_value_group_equiv_mk_eq_mk (h : v₁.is_equiv v₂) (r : R) :
-  with_zero.map h.value_group_equiv.to_equiv (canonical_valuation v₁ r) =
+lemma is_equiv.with_zero_value_mul_equiv_mk_eq_mk (h : v₁.is_equiv v₂) (r : R) :
+  with_zero.map h.value_mul_equiv (canonical_valuation v₁ r) =
   canonical_valuation v₂ r :=
 begin
   by_cases h1 : (r ∈ supp v₁),
@@ -795,7 +795,7 @@ begin
     rw v₁.canonical_valuation_not_mem_supp_eq _ h1,
     rw v₂.canonical_valuation_not_mem_supp_eq _ h2,
     show some _ = some _, congr,
-    exact value_group_equiv_units_mk_eq_mk h r h1,
+    exact value_mul_equiv_units_mk_eq_mk h r h1,
   }
 end
 

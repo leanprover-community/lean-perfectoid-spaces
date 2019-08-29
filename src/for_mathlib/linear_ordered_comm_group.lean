@@ -142,7 +142,7 @@ def ker (f : α → β) (hf : linear_ordered_comm_group.is_hom f) : set α :=
 theorem ker.is_convex (f : α → β) (hf : linear_ordered_comm_group.is_hom f) : is_convex (ker f hf) :=
 { one_mem := is_group_hom.map_one f,
   mul_mem := λ x y hx hy, show f (x * y) = 1, by dsimp [ker] at hx hy; rw
-    [is_group_hom.map_mul f, hx, hy, mul_one],
+    [is_mul_hom.map_mul f, hx, hy, mul_one],
   inv_mem := λ x hx, show f x⁻¹ = 1, by dsimp [ker] at hx;
     rw [is_group_hom.map_inv f x, hx, one_inv],
   mem_of_between := λ x y hxy hy1 hx,
@@ -165,7 +165,7 @@ begin
   cases hx : x; cases hy : y; try {refl},
   show some (f (val * val_1)) = some ((f val) * (f val_1)),
   apply option.some_inj.2,
-  exact is_group_hom.map_mul f val val_1
+  exact is_mul_hom.map_mul f val val_1
 end
 
 lemma mul_le_mul_left : ∀ a b : with_zero α, a ≤ b → ∀ c : with_zero α, c * a ≤ c * b

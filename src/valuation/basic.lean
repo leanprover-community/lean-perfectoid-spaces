@@ -208,9 +208,10 @@ lemma coe_unit_map (x : units R)  : ↑(v.unit_map x) = v x :=
 by rw ← valuation.unit_map_eq ; refl
 
 instance is_group_hom.unit_map : is_group_hom (unit_map v) :=
-⟨λ a b, option.some.inj $
+is_group_hom.mk' $
+λ a b, option.some.inj $
   show _ = (some _ * some _ : with_zero Γ),
-  by simp⟩
+  by simp
 
 @[simp] theorem map_neg_one : v (-1) = 1 :=
 begin

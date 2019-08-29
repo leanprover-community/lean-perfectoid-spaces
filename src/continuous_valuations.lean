@@ -20,7 +20,7 @@ def is_continuous (v : valuation R Γ) : Prop :=
 lemma is_equiv.is_continuous_iff (h : v₁.is_equiv v₂) :
   v₁.is_continuous ↔ v₂.is_continuous := begin
   unfold valuation.is_continuous,
-  rw ←forall_iff_forall_surj (h.value_group_equiv.to_equiv.bijective.2),
+  rw ←forall_iff_forall_surj (h.value_mul_equiv.to_equiv.bijective.2),
   apply forall_congr,
   intro g,
   convert iff.rfl,
@@ -28,7 +28,7 @@ lemma is_equiv.is_continuous_iff (h : v₁.is_equiv v₂) :
   apply propext,
   rw h.with_zero_value_group_lt_equiv.lt_map,
   convert iff.rfl,
-  exact h.with_zero_value_group_equiv_mk_eq_mk r,
+  exact h.with_zero_value_mul_equiv_mk_eq_mk r,
 end
 
 /- Alternative def which KMB has now commented out.
