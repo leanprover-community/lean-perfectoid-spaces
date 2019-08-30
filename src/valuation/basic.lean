@@ -7,7 +7,7 @@ import for_mathlib.rings
 import for_mathlib.linear_ordered_comm_group
 import for_mathlib.equiv
 
-/- valuation.basic
+/-! valuation.basic
 
 The basic theory of valuations (non-archimedean norms) on a commutative ring,
 following T. Wedhorn's unpublished notes "Adic Spaces" ([W])
