@@ -22,7 +22,7 @@ open valuation
 
 local attribute [instance] set.pointwise_mul_action
 
-local notation `ATs` := spa.rational_open_data.localization rd
+local notation `A⟮T/s⟯` := spa.rational_open_data.localization rd
 local notation `s` := rd.s
 local notation `T` := rd.T
 
@@ -117,7 +117,7 @@ begin
   exact v_le_one_is_power_bounded v
 end
 
-noncomputable def to_valuation_field (hs : v s ≠ 0) : ATs → (valuation_field v) :=
+noncomputable def to_valuation_field (hs : v s ≠ 0) : A⟮T/s⟯ → (valuation_field v) :=
 Huber_ring.away.lift T s (unit_aux hs)
 
 instance (hs : v s ≠ 0) : is_ring_hom (to_valuation_field hs) :=
