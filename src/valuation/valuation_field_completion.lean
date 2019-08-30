@@ -1,7 +1,9 @@
 import valuation.field
 import valuation.canonical
 
-/--
+/-!
+# The valuation on the completion of the valuation field
+
 In this file we extend the canonical valuation on the the valuation field of (R, v) to its
 completion (for the topological field structure coming from the valuation).
 -/
@@ -31,6 +33,7 @@ completion.comm_ring _
 instance valuation_field.ring_completion : ring (completion $ valuation.valuation_field v) :=
 comm_ring.to_ring _
 
+/--The valuation on the completion of the valuation field of a valued ring.-/
 def valuation_on_completion (v : valuation R Γ) :
   valuation (completion $ valuation.valuation_field v) (value_group v) :=
 ⟨valued.extension, valued.extension_is_valuation⟩
