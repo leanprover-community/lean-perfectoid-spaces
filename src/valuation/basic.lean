@@ -17,12 +17,12 @@ is the type of valuations R → Γ ∪ {0}, with a coercion to the underlying
 function. If v is a valuation from R to Γ ∪ {0} then the induced group
 homomorphism units(R) → Γ is called `unit_map v`.
 
-The equivalence "relation" `is_equiv v₁ v₂ : Prop` defined in [w; 1.27] is not strictly
+The equivalence "relation" `is_equiv v₁ v₂ : Prop` defined in [W; 1.27] is not strictly
 speaking a relation, because v₁ : valuation R Γ₁ and v₂ : valuation R Γ₂ might
 not have the same type. This corresponds in ZFC to the set-theoretic difficulty
 that the class of all valuations (as Γ varies) on a ring R is not a set.
 The "relation" is however reflexive, symmetric and transitive in the obvious
-sense.
+sense. Note that we use 1.27(iii) as the definition of equivalence.
 
 The trivial valuation associated to a prime ideal P of R is `trivial P : valuation R Γ`.
 
