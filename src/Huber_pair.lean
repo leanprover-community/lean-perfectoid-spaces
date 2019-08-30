@@ -2,7 +2,7 @@ import power_bounded Huber_ring.basic data.polynomial
 
 universes u v
 
---notation
+-- Notation for the power bounded subring
 local postfix `ᵒ` : 66 := power_bounded_subring
 
 open power_bounded
@@ -10,8 +10,14 @@ open power_bounded
 section integral
 variables {R : Type u} [comm_ring R] [decidable_eq R]
 
+-- TODO: mathlib has algebra.is_integral or something like that. We might want to use that.
+
+/-- An element r of a ring is integral over a subring if there exists a monic polynomial p
+over the subring such that p(r) = 0.-/
 def is_integral (S : set R) [is_subring S] (r : R) : Prop :=
 ∃ f : polynomial ↥S, (f.monic) ∧ f.eval₂ (@subtype.val _ S) r = 0
+
+-- TODO: mathlib has integral closures now. Probably we can use some predicate from there.
 
 def is_integrally_closed (S : set R) [is_subring S] : Prop :=
 ∀ r : R, (is_integral S r) → r ∈ S
