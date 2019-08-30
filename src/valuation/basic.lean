@@ -7,28 +7,28 @@ import for_mathlib.rings
 import for_mathlib.linear_ordered_comm_group
 import for_mathlib.equiv
 
-/- valuations.basic
+/- valuation.basic
 
 The basic theory of valuations (non-archimedean norms) on a commutative ring,
-following Wedhorn's unpublished notes on adic spaces.
+following T. Wedhorn's unpublished notes "Adic Spaces" ([W])
 
-The definition of a valuation is Definition 1.22 of Wedhorn. `valuation R Γ`
+The definition of a valuation we use here is Definition 1.22 of [W]. `valuation R Γ`
 is the type of valuations R → Γ ∪ {0}, with a coercion to the underlying
 function. If v is a valuation from R to Γ ∪ {0} then the induced group
 homomorphism units(R) → Γ is called `unit_map v`.
 
-The equivalence "relation" `is_equiv v₁ v₂ : Prop` is not strictly speaking a
-relation, because v₁ : valuation R Γ₁ and v₂ : valuation R Γ₂ might
+The equivalence "relation" `is_equiv v₁ v₂ : Prop` defined in [w; 1.27] is not strictly
+speaking a relation, because v₁ : valuation R Γ₁ and v₂ : valuation R Γ₂ might
 not have the same type. This corresponds in ZFC to the set-theoretic difficulty
 that the class of all valuations (as Γ varies) on a ring R is not a set.
 The "relation" is however reflexive, symmetric and transitive in the obvious
 sense.
 
-The trivial valuation associated to a prime ideal P is
-`trivial P : valuation R Γ`.
+The trivial valuation associated to a prime ideal P of R is `trivial P : valuation R Γ`.
 
-The support of a valuation v : valuation R Γ is `supp v`. The induced valuation
-on R / J = `ideal.quotient J` if `h : J ⊆ supp v` is `on_quot v h`.
+The support of a valuation v : valuation R Γ is `supp v`. If J is an ideal of R
+with `h : J ⊆ supp v` then the induced valuation
+on R / J = `ideal.quotient J` is `on_quot v h`.
 
 If v is a valuation on an integral domain R and `hv : supp v = 0`, then
 `on_frac v hv` is the extension of v to fraction_ring R, the field of
@@ -36,19 +36,11 @@ fractions of R.
 
 `valuation_field v`, `valuation_ring v`, `max_ideal v` and `residue_field v`
 are the valuation field, valuation ring, maximal ideal and residue field
-of v. See Definition 1.26 of Wedhorn.
+of v. See [W; 1.26].
 -/
 
 local attribute [instance] classical.prop_decidable
 noncomputable theory
-
-/- Seems to be in mathlib already
--- Some counter-Kenny trick, no need to read
-def classical.decidable_linear_order {α : Type*} [linear_order α] : decidable_linear_order α :=
-{ decidable_le := by apply_instance,
-  decidable_eq := by apply_instance,
-  decidable_lt := by apply_instance, ..‹linear_order α› }
--/
 
 local attribute [instance, priority 0] classical.decidable_linear_order
 
@@ -63,24 +55,23 @@ variables {Γ₃ : Type u₃} [linear_ordered_comm_group Γ₃]
 
 variables {R : Type u₀} -- This will be a ring, assumed commutative in some sections
 
-
--- Valuations on a ring with values in {0} ∪ Γ
+/-- Predicate for valuations on a ring R with values in {0} ∪ Γ. -/
 class valuation.is_valuation [ring R] (v : R → with_zero Γ) : Prop :=
 (map_zero : v 0 = 0)
 (map_one  : v 1 = 1)
 (map_mul  : ∀ x y, v (x * y) = v x * v y)
 (map_add  : ∀ x y, v (x + y) ≤ v x ∨ v (x + y) ≤ v y)
 
-/-- Γ-valued valuations on R -/
+/-- The type of ({0} ∪ Γ)-valued valuations on R. -/
 def valuation (R : Type u₀) [ring R] (Γ : Type u) [linear_ordered_comm_group Γ] :=
 { v : R → with_zero Γ // valuation.is_valuation v }
 
 namespace valuation
 
-section
+section basic
 variables [ring R]
 
--- A valuation is coerced to the underlying function R → {0} ∪ Γ
+/-- A valuation is coerced to the underlying function R → {0} ∪ Γ. -/
 instance (R : Type u₀) [ring R] (Γ : Type u) [linear_ordered_comm_group Γ] :
 has_coe_to_fun (valuation R Γ) := { F := λ _, R → with_zero Γ, coe := subtype.val}
 
@@ -107,10 +98,10 @@ begin
 end
 
 -- not an instance, because more than one v on a given R
-/-- a valuation gives a preorder on the underlying ring-/
+/-- a valuation gives a preorder on the underlying ring. -/
 def to_preorder : preorder R := preorder.lift v (by apply_instance)
 
--- If x ∈ R is a unit then v x is non-zero
+/-- If x ∈ R is a unit then v x is non-zero. -/
 theorem map_unit (h : x * y = 1) : (v x).is_some :=
 begin
   have h1 := v.map_mul x y,
@@ -121,7 +112,7 @@ begin
   { constructor }
 end
 
--- As far as Patrick can see, this is the useful version of valuation.map_unit
+/-- If x is a unit of R then there exists γ∈Γ with v(x)=γ. -/
 lemma unit_is_some (x : units R) : ∃ γ : Γ, v x = γ :=
 begin
   have h1 := v.map_mul x.val x.inv,
@@ -129,6 +120,7 @@ begin
   exact with_zero.eq_coe_of_mul_eq_coe_left h1.symm
 end
 
+/-- If x is a unit of R then v x is non-zero. -/
 lemma map_unit_ne_zero (x : units R) : v x ≠ 0 :=
 begin
   cases unit_is_some v x with γ Hγ,
@@ -144,6 +136,7 @@ begin
   exact unit_is_some v x'
 end
 
+/-- If v is a valuation on a division ring then v(x)=0 iff x=0. -/
 lemma zero_iff {Γ : Type u} [linear_ordered_comm_group Γ] {K : Type u₀} [division_ring K]
   (v : valuation K Γ) {x : K} : v x = 0 ↔ x = 0 :=
 begin
@@ -181,6 +174,7 @@ end
 
 lemma map_unit' (x : units R) : (v x).is_some := map_unit v x.val_inv
 
+/-- `unit_map v` is the map R^× → Γ associated to a valuation v : R → {0} ∪ Γ.-/
 definition unit_map : units R → Γ :=
 λ u, match v u with
 | some x := x
@@ -203,10 +197,10 @@ lemma unit_map.ext (x z : units R) (H : v (z.val) = v (x.val)) :
   valuation.unit_map v z = valuation.unit_map v x :=
 by rwa [←option.some_inj, valuation.unit_map_eq, valuation.unit_map_eq]
 
-@[simp]
-lemma coe_unit_map (x : units R)  : ↑(v.unit_map x) = v x :=
+@[simp] lemma coe_unit_map (x : units R)  : ↑(v.unit_map x) = v x :=
 by rw ← valuation.unit_map_eq ; refl
 
+/-- The unit_map associated to a valuation is a group homomorphism. -/
 instance is_group_hom.unit_map : is_group_hom (unit_map v) :=
 is_group_hom.mk' $
 λ a b, option.some.inj $
@@ -266,7 +260,7 @@ end
 @[simp] theorem eq_zero_iff_le_zero {r : R} : v r = 0 ↔ v r ≤ v 0 :=
 v.map_zero.symm ▸ with_zero.le_zero_iff_eq_zero.symm
 
-section
+section change_of_group
 
 variables {v₁ : R → with_zero Γ₁} {v₂ : R → with_zero Γ₂}
 variables {ψ : Γ₁ → Γ₂}
@@ -279,7 +273,7 @@ include H12 Hle
 theorem le_of_le (r s : R) : v₁ r ≤ v₁ s ↔ v₂ r ≤ v₂ s :=
 by { rw ←H12 r, rw ←H12 s, exact with_zero.map_le Hle _ _ }
 
--- Restriction of a Γ₂-valued valuation to a subgroup Γ₁ is still a valuation
+/-- Restriction of a Γ₂-valued valuation to a subgroup Γ₁ is still a valuation. -/
 theorem valuation_of_valuation [is_group_hom ψ] (Hiψ : function.injective ψ) (H : is_valuation v₂) :
 is_valuation v₁ :=
 { map_zero := with_zero.injective_map Hiψ $
@@ -295,9 +289,9 @@ is_valuation v₁ :=
     exact id
   end }
 
-end -- section
+end change_of_group -- section
 
-/-- f : S → R induces map valuation R Γ → valuation S Γ -/
+/-- A ring homomorphism S → R induces a map valuation R Γ → valuation S Γ -/
 def comap {S : Type u₁} [ring S] (f : S → R) [is_ring_hom f] : valuation S Γ :=
 { val := v ∘ f,
   property := by constructor;
@@ -311,6 +305,7 @@ lemma comap_comp {S₁ : Type u₁} [ring S₁] {S₂ : Type u₂} [ring S₂]
   v.comap (g ∘ f) = (v.comap g).comap f :=
 subtype.ext.mpr $ rfl
 
+/-- A ≤-preserving group homomorphism Γ → Γ₁ induces a map valuation R Γ → valuation R Γ₁. -/
 def map {Γ₁ : Type u₁} [linear_ordered_comm_group Γ₁]
   (f : Γ → Γ₁) [is_group_hom f] (hf : monotone f) :
 valuation R Γ₁ :=
@@ -337,10 +332,11 @@ valuation R Γ₁ :=
     end } }
 
 
--- Definition of equivalence relation on valuations
+/-- Two valuations on R are defined to be equivalent if they induce the same preorder on R. -/
 def is_equiv (v₁ : valuation R Γ₁) (v₂ : valuation R Γ₂) : Prop :=
 ∀ r s, v₁ r ≤ v₁ s ↔ v₂ r ≤ v₂ s
-end
+
+end basic -- end of section
 
 namespace is_equiv
 variables [ring R]
@@ -368,6 +364,7 @@ lemma map {v' : valuation R Γ} (f : Γ → Γ₁) [is_group_hom f] (inf : injec
   apply h,
 end
 
+/-- `comap` preserves equivalence. -/
 lemma comap {S : Type u₃} [ring S] (f : S → R) [is_ring_hom f] (h : v₁.is_equiv v₂) :
   (v₁.comap f).is_equiv (v₂.comap f) :=
 λ r s, h (f r) (f s)
@@ -384,19 +381,19 @@ begin
   rwa [v₁.map_zero, v₂.map_zero] at this,
 end
 
-end is_equiv
+end is_equiv -- end of namespace
 
 lemma is_equiv_of_map_of_strict_mono [ring R] {v : valuation R Γ}
 (f : Γ → Γ₁) [is_group_hom f] (H : strict_mono f) :
   is_equiv (v.map f (H.monotone)) v :=
 λ x y, ⟨(with_zero.map_strict_mono H).le_iff_le.mp, λ h, with_zero.map_monotone H.monotone h⟩
 
-section trivial
+section trivial -- the trivial valuation
 variable [comm_ring R]
 variables (S : ideal R) [prime : ideal.is_prime S]
 include prime
 
--- trivial Γ-valued valuation associated to a prime ideal S
+/-- The trivial Γ-valued valuation associated to a prime ideal S of R. -/
 def trivial : valuation R Γ :=
 { val := λ x, if x ∈ S then 0 else 1,
   property :=
@@ -426,13 +423,13 @@ def trivial : valuation R Γ :=
 @[simp] lemma trivial_val :
 (trivial S).val = (λ x, if x ∈ S then 0 else 1 : R → (with_zero Γ)) := rfl
 
-end trivial
+end trivial -- end of section
 
 section supp
 variables  [comm_ring R]
 variables (v : valuation R Γ)
 
--- support of a valuation v : R → {0} ∪ Γ
+/-- The support of a valuation v : R → {0} ∪ Γ is the ideal of R where v vanishes. -/
 def supp : ideal R :=
 { carrier := {x | v x = 0},
   zero := map_zero v,
@@ -447,7 +444,7 @@ def supp : ideal R :=
 @[simp] lemma mem_supp_iff (x : R) : x ∈ supp v ↔ v x = 0 := iff.rfl
 @[simp] lemma mem_supp_iff' (x : R) : x ∈ (supp v : set R) ↔ v x = 0 := iff.rfl
 
--- support is a prime ideal.
+/-- The support of a valuation is a prime ideal. -/
 instance : ideal.is_prime (supp v) :=
 ⟨λ h, have h1 : (1:R) ∈ supp v, by rw h; trivial,
     have h2 : v 1 = 0 := h1,
@@ -461,7 +458,7 @@ instance : ideal.is_prime (supp v) :=
 
 lemma v_nonzero_of_not_in_supp (a : R) (h : a ∉ supp v) : v a ≠ 0 := λ h2, h h2
 
--- group version of v
+/-- A Γ-valued variant v_to_Γ of a valuation v, with v_to_Γ(x)=1 if v(x)=0. -/
 def v_to_Γ (a : R) : Γ :=
 option.rec_on (v a) 1 id
 
@@ -481,7 +478,7 @@ begin
   }
 end
 
--- v(a)=v(a+s) if s in support. First an auxiliary lemma
+-- just an auxiliary lemma.
 lemma val_add_supp_aux (a s : R) (h : v s = 0) : v (a + s) ≤ v a :=
 begin
   cases map_add v a s with H H, exact H,
@@ -490,6 +487,7 @@ begin
   exact le_trans H with_zero.zero_le
 end
 
+/-- v(a)=v(a+s) if s ∈ supp(v). -/
 lemma val_add_supp (a s : R) (h : s ∈ supp v) : v (a + s) = v a :=
 begin
   apply le_antisymm (val_add_supp_aux a s h),
@@ -499,7 +497,8 @@ end
 
 variable (v)
 
--- Function corresponding to extension of a valuation on R to a valuation on R / J if J is in the support -/
+/-- If `hJ : J ⊆ supp v` then `on_quot_val hJ` is the induced function on R/J as a function.
+Note: it's just the function; the valuation is `on_quot hJ`. -/
 definition on_quot_val {J : ideal R} (hJ : J ≤ supp v) :
   J.quotient → with_zero Γ :=
 λ q, quotient.lift_on' q v $ λ a b h,
@@ -509,8 +508,9 @@ begin
   simp,
 end
 
--- Proof that function is a valuation.
 variable {v}
+
+/-- Proof that `on_quot_val hJ` is a valuation. -/
 instance on_quot_val.is_valuation {J : ideal R} (hJ : J ≤ supp v) :
 is_valuation (on_quot_val v hJ) :=
 { map_zero := v.map_zero,
@@ -518,9 +518,9 @@ is_valuation (on_quot_val v hJ) :=
   map_mul  := λ xbar ybar, quotient.ind₂' v.map_mul xbar ybar,
   map_add  := λ xbar ybar, quotient.ind₂' v.map_add xbar ybar }
 
--- Now the valuation
 variable (v)
-/-- Extension of valuation v on R to valuation on R/J if J ⊆ supp v -/
+
+/-- The extension of valuation v on R to valuation on R/J if J ⊆ supp v -/
 definition on_quot {J : ideal R} (hJ : J ≤ supp v) :
   valuation J.quotient Γ :=
 { val := v.on_quot_val hJ,
@@ -532,7 +532,8 @@ subtype.ext.mpr $ funext $
   λ r, @quotient.lift_on_beta _ _ (J.quotient_rel) v
   (λ a b h, have hsupp : a - b ∈ supp v := hJ h,
     by convert val_add_supp b (a - b) hsupp; simp) _
-end supp
+
+end supp -- end of section
 
 section supp_comm
 variable [comm_ring R]
@@ -559,7 +560,7 @@ begin
   refl,
 end
 
-/-- quotient valuation on R/J has support supp(v)/J if J ⊆ supp v-/
+/-- The quotient valuation on R/J has support supp(v)/J if J ⊆ supp v. -/
 lemma supp_quot_supp {J : ideal R} (hJ : J ≤ supp v) :
 supp (v.on_quot hJ) = (supp v).map (ideal.quotient.mk J) :=
 begin
@@ -578,17 +579,15 @@ lemma quot_preorder_comap {J : ideal R} (hJ : J ≤ supp v) :
 preorder.lift (ideal.quotient.mk J) (v.on_quot hJ).to_preorder = v.to_preorder :=
 preorder.ext $ λ x y, iff.rfl
 
-end supp_comm
-
-
+end supp_comm -- end of section
 
 section fraction_ring
 
 variables [integral_domain R] -- integral domain is abreviated ID in the following
 variables (v : valuation R Γ)
 
--- function corresponding to extension of valuation on ID with support 0
--- to valuation on field of fractions
+/-- The function corresponding to the extension of a valuation on an ID R with support 0
+to a valuation on `fraction_ring R`. Note: the valuation itself is `on_frac`. -/
 definition on_frac_val (hv : supp v = 0) : fraction_ring R → with_zero Γ :=
 quotient.lift (λ rs, v rs.1 / v rs.2.1 : R × non_zero_divisors R → with_zero Γ)
 begin
@@ -615,6 +614,7 @@ end
 @[simp] lemma on_frac_val_mk' (hv : supp v = 0) (rs : R × non_zero_divisors R) :
   v.on_frac_val hv (quotient.mk' rs) = v rs.1 / v rs.2.1 := rfl
 
+/-- The function on `fraction_ring R` induced by a valuation on R with support 0 is a valuation. -/
 def on_frac_val.is_valuation (hv : supp v = 0) : is_valuation (v.on_frac_val hv) :=
 { map_zero := show v.on_frac_val hv (quotient.mk' ⟨0,1⟩) = 0, by simp,
   map_one  := show v.on_frac_val hv (quotient.mk' ⟨_,1⟩) = 1, by simp,
@@ -647,7 +647,7 @@ def on_frac_val.is_valuation (hv : supp v = 0) : is_valuation (v.on_frac_val hv)
       rw mul_left_comm, },
   end) xbar ybar }
 
-/-- Extension of valuation on R with supp 0 to valuation on field of fractions -/
+/-- The extension of valuation on R with support 0 to a valuation on the field of fractions. -/
 def on_frac (hv : supp v = 0) : valuation (fraction_ring R) Γ :=
 { val := on_frac_val v hv,
   property := on_frac_val.is_valuation v hv }
@@ -662,6 +662,8 @@ subtype.ext.mpr $ funext $ λ r, show v r / v 1 = v r, by simp
 lemma on_frac_comap_eq' (hv : supp v = 0) (r : R) :
   ((v.on_frac hv).comap of : valuation R Γ) r = v r := by rw on_frac_comap_eq
 
+/-- Pulling back a valuation on `fraction_ring R` to R and then applying `on_frac` is the
+identity function. -/
 @[simp] lemma comap_on_frac_eq (v : valuation (fraction_ring R) Γ) :
   (v.comap of).on_frac
   (by {rw [comap_supp, ideal.zero_eq_bot, (supp v).eq_bot_of_prime],
@@ -671,6 +673,14 @@ subtype.ext.mpr $ funext $
 begin
   rintro ⟨x⟩,
   dsimp [on_frac, on_frac_val, comap, function.comp],
+  /-
+  ⊢ quotient.lift
+      (λ (rs : R × ↥(non_zero_divisors R)),
+         ⇑⟨λ (x : R), ⇑v (of x), _⟩ (rs.fst) / ⇑⟨λ (x : R), ⇑v (of x), _⟩ ((rs.snd).val))
+      _
+      (quot.mk setoid.r x) =
+    v.val (quot.mk setoid.r x)
+  -/
   erw quotient.lift_beta,
   change v (x.1) / v (x.2.val) = _,
   rw with_zero.div_eq_iff_mul_eq,
@@ -694,38 +704,47 @@ lemma frac_preorder_comap (hv : supp v = 0) :
 preorder.ext $ λ x y, begin show (v.on_frac hv) x ≤ (v.on_frac hv) y ↔ v x ≤ v y,
 rw [←on_frac_comap_eq' v hv, ←on_frac_comap_eq' v hv], exact iff.rfl end
 
-end fraction_ring
+end fraction_ring -- end of section
 
 section valuation_field
 
 variables [comm_ring R]
 variables (v : valuation R Γ)
 
+/-- The quotient ring R/supp(v) associated to a valuation. -/
 definition valuation_ID := (supp v).quotient
 
+/-- the support of a valuation is a prime ideal, so R/supp(v) is an integral domain. -/
 instance valuation.integral_domain' : integral_domain (valuation_ID v) :=
 by delta valuation_ID; apply_instance
 
+/-- The preorder on R/supp(v) induced by Γ via `v.on_quot` -/
 instance : preorder (valuation_ID v) := (v.on_quot (le_refl _)).to_preorder
 
+/-- The function R → R/supp(v). -/
 def valuation_ID_mk : R → valuation_ID v := ideal.quotient.mk (supp v)
 
--- need that it's a ring hom, need that its kernel is whatever
-
+/-- The function R → R/supp(v) is a ring homomorphism. -/
 instance : is_ring_hom (v.valuation_ID_mk) := by unfold valuation_ID_mk; apply_instance
 
+/-- The kernel of R → R/supp(v) is supp(v). -/
 lemma valuation_ID_mk_ker (r : R) : v.valuation_ID_mk r = 0 ↔ r ∈ supp v :=
 ideal.quotient.eq_zero_iff_mem
 
+/-- `valuation_field v` is the field of fractions of R/supp(v). -/
 definition valuation_field := localization.fraction_ring (valuation_ID v)
 
+/-- The field of fractions of R/supp(v) is a field. -/
 instance : discrete_field (valuation_field v) := by delta valuation_field; apply_instance
 
+/-- The canonical map R → fraction_ring (R/supp(v)). -/
 def valuation_field_mk (r : R) : valuation_field v := localization.of (v.valuation_ID_mk r)
 
+/-- The map R → Frac(R/supp(v)) is a ring homomorphism. -/
 instance to_valuation_field.is_ring_hom : is_ring_hom (valuation_field_mk v) :=
 by delta valuation_field_mk; apply_instance
 
+/-- The kernel of R → Frac(R/supp(v)) is supp(v). -/
 lemma valuation_field_mk_ker (r : R) : v.valuation_field_mk r = 0 ↔ r ∈ supp v :=
 ⟨λ h, (v.valuation_ID_mk_ker r).1 $ localization.fraction_ring.eq_zero_of _ h,
  λ h, show localization.of _ = 0, by rw (v.valuation_ID_mk_ker r).2 h; apply is_ring_hom.map_zero⟩
@@ -733,9 +752,11 @@ lemma valuation_field_mk_ker (r : R) : v.valuation_field_mk r = 0 ↔ r ∈ supp
 lemma valuation_field_mk_ne_zero (r : R) (hr : v r ≠ 0) : valuation_field_mk v r ≠ 0 :=
 λ h, hr ((valuation_field_mk_ker v r).1 h)
 
+/-- The induced preorder on Frac(R/supp(v)). -/
 instance valuation.valfield_preorder : preorder (valuation_field v) :=
   ((v.on_quot (le_refl _)).on_frac $ quot_supp_zero v).to_preorder
 
+/-- The induced map from R \ supp(v) to the units of Frac(R/supp(v)). -/
 def units_valfield_mk (r : R) (h : r ∉ supp v) : units (valuation_field v) :=
 ⟨v.valuation_field_mk r,
  (v.valuation_field_mk r)⁻¹,
@@ -744,20 +765,18 @@ def units_valfield_mk (r : R) (h : r ∉ supp v) : units (valuation_field v) :=
  inv_mul_cancel (λ h2, h $ ideal.quotient.eq_zero_iff_mem.1 $
    localization.fraction_ring.eq_zero_of _ h2)⟩
 
+/-- The preorder on the units of Frac(R/supp(v)) induced by the extension of v. -/
 instance valuation.units_valfield_preorder :
   preorder (units (valuation_field v)) := preorder.lift (λ u, u.val) (by apply_instance)
+
+-- TODO -- on_frac_quot_comap_eq got deleted; it was never used. Can we delete this instance?
 
 -- on_frac_quot_comap_eq needs more class.instance_max_depth to compile if
 -- this instance is not explicitly given as a hint
 instance : is_submonoid (localization.non_zero_divisors (ideal.quotient (supp v))) :=
 by apply_instance
 
--- @[simp] lemma on_frac_quot_comap_eq :
---   ((v.on_quot (le_refl _)).on_frac $ quot_supp_zero v).comap
---   (@localization.of v.supp.quotient _ _ (by {  }) ∘ (ideal.quotient.mk v.supp))
---    = v :=
--- by rw [comap_comp, on_frac_comap_eq, on_quot_comap_eq]
-
+/-- The valuation on Frac(R/supp(v)) induced by v. -/
 definition on_valuation_field : valuation (valuation_field v) Γ :=
 on_frac (v.on_quot (set.subset.refl _))
 begin
@@ -766,8 +785,10 @@ begin
   apply ideal.map_quotient_self,
 end
 
+/-- `valuation_ring v` is the elements of Frac(R/supp(v)) whose valuation is at most 1. -/
 definition valuation_ring := {x | v.on_valuation_field x ≤ 1}
 
+/-- `valuation_ring v` is a subring of Frac(R/supp(v)). -/
 instance : is_subring (valuation_ring v) :=
 { zero_mem := show v.on_valuation_field 0 ≤ 1, by simp,
   add_mem := λ x y hx hy,
@@ -778,6 +799,8 @@ instance : is_subring (valuation_ring v) :=
   mul_mem := λ x y (hx : _ ≤ _) (hy : _ ≤ _), show v.on_valuation_field _ ≤ 1,
   by convert le_trans (linear_ordered_structure.mul_le_mul_left hy _) _; simp [hx] }
 
+/-- `max_ideal v` is the ideal of `valuation_ring v` consisting of things with valuation
+strictly less than 1. -/
 definition max_ideal : ideal (valuation_ring v) :=
 { carrier := { r | v.on_valuation_field r < 1 },
   zero := show v.on_valuation_field 0 < 1, by apply lt_of_le_of_ne; simp,
@@ -799,6 +822,7 @@ definition max_ideal : ideal (valuation_ring v) :=
 
 set_option class.instance_max_depth 40
 
+/-- `max_ideal v` is indeed a maximal ideal of `valuation_ring v`. -/
 instance max_ideal_is_maximal : (max_ideal v).is_maximal :=
 begin
   rw ideal.is_maximal_iff,
@@ -830,8 +854,10 @@ end
 
 set_option class.instance_max_depth 32
 
+/-- `residue_field v` is the quotient of `valuation_ring v` by `max_ideal v`. -/
 definition residue_field := (max_ideal v).quotient
 
+/-- `residue_field v` is a field. -/
 instance residue_field.discrete_field : discrete_field (residue_field v) := ideal.quotient.field _
 end valuation_field
 end valuation
