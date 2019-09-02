@@ -44,8 +44,11 @@ from R to the valuation field is continuous.
 -/
 
 
-lemma continuous_valuation_field_mk_at_zero (v : valuation R Γ) (hv : is_continuous v) :
-continuous_at (valuation_field_mk v) 0 :=
+/--If R is a topological ring with continuous valuation v, then the natural map from R
+to the valuation field of v is continuous.-/
+theorem continuous_valuation_field_mk_of_continuous (v : valuation R Γ) (hv : is_continuous v) :
+  continuous (valuation_field_mk v) :=
+topological_add_group.continuous_of_continuous_at_zero (valuation_field_mk v) $
 begin
   intros U HU,
   rw is_ring_hom.map_zero (valuation_field_mk v) at HU,
@@ -54,19 +57,14 @@ begin
   let V := {r : R | (canonical_valuation v) r < ↑γ},
   have HV : is_open V := hv γ,
   have H0V : (0 : R) ∈ V,
-    show (canonical_valuation v) 0 < γ,
+  { show (canonical_valuation v) 0 < γ,
     rw (canonical_valuation v).map_zero,
-    exact with_zero.zero_lt_coe,
+    exact with_zero.zero_lt_coe },
   refine filter.mem_sets_of_superset (mem_nhds_sets HV H0V) _,
   intros u Hu,
   apply set.mem_of_mem_of_subset _ Hγ,
   exact Hu, -- the joys of definitional equality
 end
-
-theorem continuous_valuation_field_mk_of_continuous (v : valuation R Γ) (hv : is_continuous v) :
-  continuous (valuation_field_mk v) :=
-topological_add_group.continuous_of_continuous_at_zero (valuation_field_mk v) $
-  continuous_valuation_field_mk_at_zero v hv
 
 end valuation
 
@@ -74,21 +72,24 @@ namespace Spv
 
 variables {R : Type u₀} [comm_ring R] [topological_space R] [topological_ring R]
 
+/--An equivalence class of valuations is continuous if one representative is continuous.-/
 def is_continuous : Spv R → Prop := lift (@valuation.is_continuous _ _ _ _)
 
 end Spv
 
 namespace Spv
 
-variables {R : Type u₁} [comm_ring R] [topological_space R] [topological_ring R] [decidable_eq R]
+variables {R : Type u₁} [comm_ring R] [topological_space R] [topological_ring R]
 variables {Γ : Type u} [linear_ordered_comm_group Γ]
 
 variable (R)
 
+/--The type of equivalence classes of continuous valuations.-/
 def Cont := {v : Spv R | v.is_continuous}
 
 variable {R}
 
+/--A valuation v is continuous if and only if its equivalence class is continuous.-/
 lemma mk_mem_Cont {v : valuation R Γ} : mk v ∈ Cont R ↔ v.is_continuous :=
 begin
   show Spv.lift (by exactI (λ _ _, by exactI valuation.is_continuous)) (Spv.mk v)
@@ -103,12 +104,10 @@ instance Cont.topological_space : topological_space (Cont R) := by apply_instanc
 
 end Spv
 
--- jmc: should we keep comments like this
-
 /-
-Wedhorn p59:
+Wedhorn, p.59 contains the following typo:
   A valuation v on A is continuous if and only if for all γ ∈ Γ_v (the value group),
   the set A_{≤γ} := { a ∈ A ; v(a) ≥ γ } is open in A.
 
-  This is a typo -- should be v(a) ≤ γ. [KMB agrees]
+  This is a typo, it should be v(a) ≤ γ.
 -/
