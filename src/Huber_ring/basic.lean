@@ -49,8 +49,8 @@ structure Huber_ring.ring_of_definition
 such that the subspace topology on A₀ is I-adic,
 where I is a finitely generated ideal of A₀.
 The pair (A₀, I) is called a pair of definition (pod) and is not part of the data.
-The name “Huber ring” was introduced by Scholze.
-Before that, they were called f-adic rings. See [Wedhorn, Def 6.1] -/
+(The name “Huber ring” was introduced by Scholze.
+Before that, they were called f-adic rings.) See [Wedhorn, Def 6.1] -/
 class Huber_ring (A : Type u) extends comm_ring A, topological_space A, topological_ring A :=
 (pod : ∃ (A₀ : Type u) [comm_ring A₀] [topological_space A₀] [topological_ring A₀],
   by exactI nonempty (Huber_ring.ring_of_definition A₀ A))

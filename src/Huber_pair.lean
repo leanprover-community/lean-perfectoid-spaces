@@ -1,4 +1,19 @@
-import power_bounded Huber_ring.basic data.polynomial
+import for_mathlib.integral_closure
+
+import power_bounded Huber_ring.basic
+
+/-!
+# Huber pairs
+
+This short file defines Huber pairs.
+
+A Huber pair consists of a Huber ring and a
+so-call ring of integral elements: an integrally closed, power bounded, open subring.
+A typical example is ℤ_p ⊆ ℚ_p. (However, this example is hard to use as is,
+because our fomalisation uses subrings and Lean's version of ℤ_p is not a subring of ℚ_p.
+This could be fixed by using injective ring homomorphisms instead of subrings.)
+
+-/
 
 universes u v
 
@@ -7,24 +22,8 @@ local postfix `ᵒ` : 66 := power_bounded_subring
 
 open power_bounded
 
-section integral
-variables {R : Type u} [comm_ring R] [decidable_eq R]
-
--- TODO: mathlib has algebra.is_integral or something like that. We might want to use that.
-
-/-- An element r of a ring is integral over a subring if there exists a monic polynomial p
-over the subring such that p(r) = 0.-/
-def is_integral (S : set R) [is_subring S] (r : R) : Prop :=
-∃ f : polynomial ↥S, (f.monic) ∧ f.eval₂ (@subtype.val _ S) r = 0
-
--- TODO: mathlib has integral closures now. Probably we can use some predicate from there.
-
-def is_integrally_closed (S : set R) [is_subring S] : Prop :=
-∀ r : R, (is_integral S r) → r ∈ S
-
-end integral
-
--- Wedhorn Def 7.14
+/- An subring of a Huber ring is called a “ring of integral elements”
+if it is open, integrally closed, and power bounded. See [Wedhorn, Def 7.14].-/
 structure is_ring_of_integral_elements {R : Type u}
   [Huber_ring R] [decidable_eq R] (Rplus : set R) : Prop :=
 [is_subring : is_subring Rplus]
@@ -32,10 +31,10 @@ structure is_ring_of_integral_elements {R : Type u}
 (is_int_closed : is_integrally_closed Rplus)
 (is_power_bounded : Rplus ⊆ Rᵒ)
 
--- a Huber Ring is an f-adic ring.
 /-- A Huber pair consists of a Huber ring and a
 so-call ring of integral elements: an integrally closed, power bounded, open subring.
-(Huber called such objects “affinoid rings”.) -/
+(The name “Huber pair” was introduced by Scholze.
+Before that, they were called “affinoid rings”.) See [Wedhorn, Def 7.14].-/
 structure Huber_pair :=
 (R : Type) -- change this to (Type u) to enable universes
 [RHuber : Huber_ring R]
