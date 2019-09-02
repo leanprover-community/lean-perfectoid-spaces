@@ -70,26 +70,26 @@ namespace PreValuedRingedSpace
 
 variables (X : PreValuedRingedSpace.{u})
 
-/-- coercion from a PreValuedRingedSpace to the underlying topological space-/
+/-- Coercion from a PreValuedRingedSpace to the underlying topological space-/
 instance : has_coe_to_sort PreValuedRingedSpace.{u} :=
 { S := Type u,
   coe := λ X, X.space }
 
-/-- Adding the fact that the underlying space of a PreValuedRingedSpace is a topological
-space, to the type class inference system -/
+-- Adding the fact that the underlying space of a PreValuedRingedSpace is a topological
+-- space, to the type class inference system
 instance : topological_space X := X.top
 
 end PreValuedRingedSpace
 
 /- Remainder of this file:
 
-morphisms and isomorphisms in PreValuedRingedSpace.
-Open set in X -> restrict structure to obtain object of PreValuedRingedSpace
-definition of adic space
+* Morphisms and isomorphisms in PreValuedRingedSpace.
+* Open set in X -> restrict structure to obtain object of PreValuedRingedSpace
+* Definition of adic space
 
-A morphism in PreValuedRingedSpace is a map of top spaces,
-an f-map of presheaves, such that the induced
-map on the stalks pulls one valuation back to the other.
+* A morphism in PreValuedRingedSpace is a map of topological spaces,
+  and an f-map of presheaves, such that the induced
+  map on the stalks pulls one valuation back to the other.
 -/
 
 structure presheaf_of_rings.f_map
@@ -467,5 +467,5 @@ instance : large_category AdicSpace := category_theory.full_subcategory _
 
 end AdicSpace
 
-#doc_blame!
+-- #doc_blame!
 -- #sanity_check
