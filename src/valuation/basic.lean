@@ -56,7 +56,7 @@ variables {Γ₃ : Type u₃} [linear_ordered_comm_group Γ₃]
 variables {R : Type u₀} -- This will be a ring, assumed commutative in some sections
 
 /-- Predicate for valuations on a ring R with values in {0} ∪ Γ. -/
-class valuation.is_valuation [ring R] (v : R → with_zero Γ) : Prop :=
+structure valuation.is_valuation [ring R] (v : R → with_zero Γ) : Prop :=
 (map_zero : v 0 = 0)
 (map_one  : v 1 = 1)
 (map_mul  : ∀ x y, v (x * y) = v x * v y)
@@ -81,8 +81,6 @@ subtype.ext.trans ⟨λ h r, congr h rfl, funext⟩
 
 variables (v : valuation R Γ) {x y z : R}
 
-instance : is_valuation v := v.property
-
 @[simp] lemma map_zero : v 0 = 0 := v.property.map_zero
 @[simp] lemma map_one  : v 1 = 1 := v.property.map_one
 @[simp] lemma map_mul  : ∀ x y, v (x * y) = v x * v y := v.property.map_mul
@@ -97,8 +95,8 @@ begin
   apply le_max_right_of_le h,
 end
 
--- not an instance, because more than one v on a given R
-/-- a valuation gives a preorder on the underlying ring. -/
+-- The following definition is not an instance, because we have more than one v on a given R.
+/-- A valuation gives a preorder on the underlying ring. -/
 def to_preorder : preorder R := preorder.lift v (by apply_instance)
 
 /-- If x ∈ R is a unit then v x is non-zero. -/
@@ -201,7 +199,7 @@ by rwa [←option.some_inj, valuation.unit_map_eq, valuation.unit_map_eq]
 by rw ← valuation.unit_map_eq ; refl
 
 /-- The unit_map associated to a valuation is a group homomorphism. -/
-instance is_group_hom.unit_map : is_group_hom (unit_map v) :=
+instance unit_map.is_group_hom : is_group_hom (unit_map v) :=
 is_group_hom.mk' $
 λ a b, option.some.inj $
   show _ = (some _ * some _ : with_zero Γ),
@@ -284,7 +282,7 @@ is_valuation v₁ :=
     by rw [H12, H.map_mul, ←H12 r, ←H12 s]; exact (with_zero.map_mul _ _ _).symm,
   map_add := λ r s,
   begin
-    apply (is_valuation.map_add v₂ r s).imp _ _;
+    apply (H.map_add r s).imp _ _;
     erw [with_zero.map_le Hle, ←H12, ←H12];
     exact id
   end }
@@ -511,7 +509,7 @@ end
 variable {v}
 
 /-- Proof that `on_quot_val hJ` is a valuation. -/
-instance on_quot_val.is_valuation {J : ideal R} (hJ : J ≤ supp v) :
+lemma on_quot_val.is_valuation {J : ideal R} (hJ : J ≤ supp v) :
 is_valuation (on_quot_val v hJ) :=
 { map_zero := v.map_zero,
   map_one  := v.map_one,
@@ -615,7 +613,7 @@ end
   v.on_frac_val hv (quotient.mk' rs) = v rs.1 / v rs.2.1 := rfl
 
 /-- The function on `fraction_ring R` induced by a valuation on R with support 0 is a valuation. -/
-def on_frac_val.is_valuation (hv : supp v = 0) : is_valuation (v.on_frac_val hv) :=
+lemma on_frac_val.is_valuation (hv : supp v = 0) : is_valuation (v.on_frac_val hv) :=
 { map_zero := show v.on_frac_val hv (quotient.mk' ⟨0,1⟩) = 0, by simp,
   map_one  := show v.on_frac_val hv (quotient.mk' ⟨_,1⟩) = 1, by simp,
   map_mul  := λ xbar ybar, quotient.ind₂' (λ x y,
@@ -631,7 +629,7 @@ def on_frac_val.is_valuation (hv : supp v = 0) : is_valuation (v.on_frac_val hv)
       ⟦⟨x.2 * y.1 + y.2 * x.1, _, is_submonoid.mul_mem x.2.2 y.2.2⟩⟧,
     change on_frac_val v hv x_plus_y ≤ _ * _ ∨ on_frac_val v hv x_plus_y ≤ _ * _,
     dsimp,
-    cases (is_valuation.map_add v (x.2 * y.1) (y.2 * x.1)) with h h;
+    cases (v.map_add (x.2 * y.1) (y.2 * x.1)) with h h;
     [right, left];
     refine le_trans (linear_ordered_structure.mul_le_mul_right h _) _;
     erw [v.map_mul, v.map_mul, with_zero.mul_inv_rev];
@@ -715,7 +713,7 @@ variables (v : valuation R Γ)
 definition valuation_ID := (supp v).quotient
 
 /-- the support of a valuation is a prime ideal, so R/supp(v) is an integral domain. -/
-instance valuation.integral_domain' : integral_domain (valuation_ID v) :=
+instance integral_domain' : integral_domain (valuation_ID v) :=
 by delta valuation_ID; apply_instance
 
 /-- The preorder on R/supp(v) induced by Γ via `v.on_quot` -/
@@ -753,7 +751,7 @@ lemma valuation_field_mk_ne_zero (r : R) (hr : v r ≠ 0) : valuation_field_mk v
 λ h, hr ((valuation_field_mk_ker v r).1 h)
 
 /-- The induced preorder on Frac(R/supp(v)). -/
-instance valuation.valfield_preorder : preorder (valuation_field v) :=
+instance valfield_preorder : preorder (valuation_field v) :=
   ((v.on_quot (le_refl _)).on_frac $ quot_supp_zero v).to_preorder
 
 /-- The induced map from R \ supp(v) to the units of Frac(R/supp(v)). -/
@@ -766,7 +764,7 @@ def units_valfield_mk (r : R) (h : r ∉ supp v) : units (valuation_field v) :=
    localization.fraction_ring.eq_zero_of _ h2)⟩
 
 /-- The preorder on the units of Frac(R/supp(v)) induced by the extension of v. -/
-instance valuation.units_valfield_preorder :
+instance units_valfield_preorder :
   preorder (units (valuation_field v)) := preorder.lift (λ u, u.val) (by apply_instance)
 
 -- TODO -- on_frac_quot_comap_eq got deleted; it was never used. Can we delete this instance?

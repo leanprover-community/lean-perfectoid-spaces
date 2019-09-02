@@ -175,7 +175,7 @@ valuation_field v → with_zero (value_group v) :=
   value_group_quotient v ⟨k,k⁻¹,mul_inv_cancel h, inv_mul_cancel h⟩
 
 /-- The valuation Frac(R/supp(v)) → {0} ∪ `value_group v` is a valuation. -/
-instance valuation_field.canonical_valuation_v.is_valuation :
+lemma valuation_field.canonical_valuation_v.is_valuation :
 is_valuation (valuation_field.canonical_valuation_v v) :=
 { map_zero := dif_pos rfl,
   map_one := begin unfold valuation_field.canonical_valuation_v, rw dif_neg zero_ne_one.symm,
@@ -236,13 +236,11 @@ begin
     have h2 := x.val_inv,
     rw [h, zero_mul] at h2,
     exfalso, revert h2,
-    simp
-  },
+    simp },
   { show some _ = some _,
     congr,
     apply units.ext,
-    refl
-  }
+    refl }
 end
 
 /-- The canonical valuation on R/supp(v), taking values in `value_group v`. -/

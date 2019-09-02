@@ -88,10 +88,10 @@ open submodule topological_add_group
 
 set_option class.instance_max_depth 80
 
-/--A subgroup B of a nonarchimediean ring is bounded if and only if
+/--A subset B of a nonarchimedean ring is bounded if and only if
 for all neighbourhoods U of 0 ∈ R, there exists an open additive subgroup V such that
 V * B generates a subgroup contained in U. -/
-lemma is_bounded_add_subgroup_iff (hR : nonarchimedean R) (B : set R) [is_add_subgroup B] :
+lemma is_bounded_add_subgroup_iff (hR : nonarchimedean R) (B : set R) :
   is_bounded B ↔ ∀ U ∈ nhds (0:R), ∃ V : open_add_subgroup R,
     (↑((V : set R) • span ℤ B) : set R) ⊆ U :=
 begin

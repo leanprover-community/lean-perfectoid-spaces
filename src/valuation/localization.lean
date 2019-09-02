@@ -53,7 +53,7 @@ localization.lift (valuation_field_mk v) $ localization_to_valuation_field_aux h
 
 -- I could have pulled back from R[1/S] -> K_v and avoided these proofs.
 -- TODO -- refactor?
-instance localization_is_valuation (h : ∀ s, s ∈ S → v s ≠ 0) : is_valuation (localization_v h) :=
+lemma localization_is_valuation (h : ∀ s, s ∈ S → v s ≠ 0) : is_valuation (localization_v h) :=
 { map_zero := show v 0 * (v 1)⁻¹ = 0, by rw [v.map_zero, zero_mul],
   map_one := show v 1 * (v 1)⁻¹ = 1, by {rw [v.map_one], simp},
   map_mul := λ x y, quotient.induction_on₂' x y begin
@@ -100,7 +100,7 @@ instance localization_is_valuation (h : ∀ s, s ∈ S → v s ≠ 0) : is_valua
 /-- Extension of a valuation to a localization -/
 def localization (h : ∀ s, s ∈ S → v s ≠ 0) : valuation (localization R S) Γ :=
 { val := localization_v h,
-  property := by apply_instance }
+  property := localization_is_valuation h }
 
 /-- the extension of a valuation pulls back to the valuation -/
 lemma localization_comap (h : ∀ s, s ∈ S → v s ≠ 0) : (localization h).comap (localization.of) = v :=
