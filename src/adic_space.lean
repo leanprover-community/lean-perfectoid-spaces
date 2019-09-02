@@ -1,23 +1,43 @@
 import algebra.group_power
 import topology.algebra.ring
 import topology.opens
-
 import category_theory.category
 import category_theory.full_subcategory
 
 import for_mathlib.sheaves.sheaf_of_topological_rings
--- import for_mathlib.opens
 import for_mathlib.open_embeddings
-import for_mathlib.topological_groups -- for the predicate is_complete_hausdorff
+import for_mathlib.topological_groups
 
 import continuous_valuations
 import r_o_d_completion stalk_valuation
 import Huber_pair
 
-/- adic_space
+/-!
+# Adic spaces
 
-TODO (kmb) : write overview of file (once the instances are in the right place)
+Adic spaces were introduced by Huber in [Huber]. They form a very general category of objects
+suitable for p-adic geometry.
 
+In this file we define the category of adic spaces. The category of schemes (from algebraic
+geometry) may provide some useful intuition for the definition.
+One defines the category of “ringed spaces”, and for every commutative ring R
+a ringed space Spec(R). A scheme is a ringed space that admits a cover by subspaces that
+are isomorphic to spaces of the form Spec(R) for some ring R.
+
+Similarly, for adic spaces we need two ingredients: a category CLVRS,
+and the so-called ”adic spectrum” Spa(_), which is defined in Spa.lean.
+An adic space is an object of CLVRS is that admits a cover by subspaces of the form Spa(A).
+
+The main bulk of this file consists in setting up the category that we called CLVRS,
+and that never got a proper name in the literature. (For example, Wedhorn calls this category `𝒱`.)
+
+CLVRS (complete locally valued ringed space) is the category of topological spaces endowed
+with a sheaf of complete topological rings and (an equivalence class of) valuations on the stalks
+(which are required to be local rings; moreover the support of the valuation must be
+the maximal ideal of the stalk).
+
+Once we have the category CLVRS in place, the definition of adic spaces is made in
+a couple of lines.
 -/
 
 universe u
@@ -446,3 +466,6 @@ open category_theory
 instance : large_category AdicSpace := category_theory.full_subcategory _
 
 end AdicSpace
+
+#doc_blame!
+-- #sanity_check
