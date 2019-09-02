@@ -329,15 +329,16 @@ instance large_category : large_category (PreValuedRingedSpace.{u}) :=
   begin
     intros X Y f,
     apply hom_ext,
-    cases f, cases f_fmap,
-    cases X, cases X_presheaf, cases X_presheaf__to_presheaf_of_rings,
-    cases X_presheaf__to_presheaf_of_rings__to_presheaf,
+    rcases f with ⟨⟨f, f_cont, f_flat, f_hom, f_flat_cont, hf⟩, f_stalk⟩,
+    rcases X with ⟨X, top, ⟨⟨presheaf, ps_ring, res_hom⟩, ps_top, ps_top_ring, res_cont⟩, val⟩,
     dsimp [id, comp, continuous.comap, presheaf_of_rings.f_map_id, presheaf_of_rings.f_map_comp,
       presheaf_of_topological_rings.f_map.to_presheaf_of_rings_f_map,
       presheaf_of_topological_rings.f_map_comp, presheaf_of_topological_rings.f_map_id] at *,
+    clear f_stalk,
     congr,
-    clear f_stalk, funext,
-    exact congr_fun (X_presheaf__to_presheaf_of_rings__to_presheaf_Hid ⟨f_fmap_f ⁻¹' V.val, _⟩) (f_fmap_f_flat V s)
+    funext V s,
+    resetI,
+    exact congr_fun (presheaf.Hid ⟨f ⁻¹' V.val, _⟩) (f_flat V s)
   end,
   comp_id' :=
   begin
@@ -468,4 +469,3 @@ instance : large_category AdicSpace := category_theory.full_subcategory _
 end AdicSpace
 
 -- #doc_blame!
--- #sanity_check
