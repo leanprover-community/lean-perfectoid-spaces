@@ -3,7 +3,8 @@ import valuation.basic
 import for_mathlib.quotient_group
 import for_mathlib.group -- mul_equiv
 
-/-
+/-! valuation.canonical
+
 The purpose of this file is to define a "canonical" valuation equivalent to
 a given valuation. The whole raison d'etre for this is that there are set-theoretic
 issues with the equivalence "relation" on valuations, because the target group
@@ -15,7 +16,7 @@ homomorphism K^* → Γ, whose kernel is A^*, the units in the valuation ring
 (or equivalently the things in K^* of norm at most 1). This embeds K^*/A^*
 into Γ and hence gives K^*/A^* the structure of a linearly ordered commutative group.
 There is an induced map R → (K^*/A^*) ∪ {0}, and we call this the
-_canonical valuation_ associated to v, and this valuation is equivalent to v.
+_canonical valuation_ associated to v; this valuation is equivalent to v.
 A technical advantage that this valuation has from the point of view
 of Lean's type theory is that if R is in universe u₁ and Γ in universe u₂,
 then v : valuation R Γ will be in universe `max u₁ u₂` but the canonical
@@ -25,27 +26,20 @@ same universe.
 
 All of the below names are in the `valuation` namespace.
 
-`value_group v` is the totally ordered group $K^*/A^* (note that it is
-isomorphic to the subgroup of Γ which Wedhorn calls the value group), and
+`value_group v` is the totally ordered group K^*/A^* (note that it is
+isomorphic to the subgroup of Γ which Wedhorn calls the value group in [W; 1.22]), and
 `value_group.to_Γ` is the group homomorphism to \Gamma.
 `canonical_valuation v` is the canonical valuation.
-`canonical_valuation.to_\Gamma v` is the lemma that says that we can
-recover v from the canonical valuation using the group homomorphism
-from K^*/A^* to Gamma.
+`canonical_valuation.to_Γ v` is the lemma that says that we can
+recover v from `canonical_valuation v` using the group homomorphism
+from K^*/A^* to Γ.
 
+-- TODO -- rewrite this when I've remembered what we proved.
 We then prove some of Proposition-and-Definition 1.27 of Wedhorn,
 where we note that we used (iii) for the definition, and
 we're now using a different definition to Wedhorn for the value group
 (because it's isomorphic so no mathematician will care, and
 it's easier for us because it's in a smaller universe).
-
-TODO: Do we ever actually use 1.27 now? KMB has left part of it sorried.
-
-TODO: Do we need any of the dead code commented out at the end of
-the file? KMB suspects not.
-This dead code is all about the workaround we had for getting down
-to R's universe from Gamma's universe before Johan's idea of using
-the canonical valuation.
 
 -/
 
@@ -64,16 +58,10 @@ variables (v : valuation R Γ)
 
 section canonical_equivalent_valuation
 
-instance : comm_group (units (valuation_field v)) := by apply_instance
-
-instance valuation.units_preorder : preorder (units (valuation_field v)) :=
-{ le := λ u v, u.val ≤ v.val,
-  le_refl := le_refl,
-  le_trans := λ _ _ _, le_trans
-}
-
+/-- The elements of `units (valuation_field v)` with norm 1. -/
 definition valuation_field_norm_one := is_group_hom.ker v.on_valuation_field.unit_map
 
+/-- `valuation_field_norm_one v is a normal subgroup of `units (valuation_field v)`. -/
 instance (v : valuation R Γ) : normal_subgroup (valuation_field_norm_one v) :=
 by unfold valuation_field_norm_one; apply_instance
 
@@ -81,6 +69,7 @@ by unfold valuation_field_norm_one; apply_instance
 def value_group (v : valuation R Γ) : Type u₀ :=
 quotient_group.quotient (valuation_field_norm_one v)
 
+/-- The natural quotient map from `units (valuation_field v)` to `value_group v`. -/
 def value_group_quotient (v : valuation R Γ) :
 units (valuation_field v) → value_group v :=
 quotient.mk'
@@ -93,7 +82,6 @@ by dunfold value_group; apply_instance
 
 @[priority 100] instance value_group.linear_order : linear_order (value_group v) :=
 { le := λ a' b',
-    -- KMB now worried that this should change to λ s t, s ≤ t with possible breakage
     quotient.lift_on₂' a' b' (λ s t, v.on_valuation_field ↑s ≤ v.on_valuation_field ↑t) $
     λ a b c d hac hbd, begin
       change a⁻¹ * c ∈ is_group_hom.ker v.on_valuation_field.unit_map at hac,
@@ -123,9 +111,12 @@ lemma mk_le_mk_iff (x y : units (valuation_field v)) :
   v.value_group_quotient x ≤ v.value_group_quotient y ↔
   v.on_valuation_field x ≤ v.on_valuation_field y := iff.rfl
 
+/-- The natural quotient map from `units (valuation_field v)` to `value_group v`
+is a group homomorphism. -/
 instance value_group_quotient.is_group_hom :
 is_group_hom (value_group_quotient v) := is_group_hom.mk' $ λ _ _, rfl
 
+/-- `value_group v` is a linearly ordered commutative group. -/
 instance : linear_ordered_comm_group (value_group v) :=
 { mul_le_mul_left := begin rintro ⟨a⟩ ⟨b⟩ h ⟨c⟩,
     change v.on_valuation_field a ≤ v.on_valuation_field b at h,
@@ -141,14 +132,17 @@ end,
  ..value_group.comm_group v,
  ..value_group.linear_order v }
 
+/-- The natural map `value_group v → Γ` induced by v. -/
 def value_group.to_Γ (v : valuation R Γ) :
 value_group v → Γ :=
 quotient_group.lift (valuation_field_norm_one v) v.on_valuation_field.unit_map $
   λ x, (is_group_hom.mem_ker _).1
 
+/-- The natural map `value_group v → Γ` is a group homomorphism. -/
 instance : is_group_hom (value_group.to_Γ v) :=
 by unfold value_group.to_Γ; apply_instance
 
+/-- The natural map `value_group v → Γ` preserves ≤ -/
 lemma value_group.to_Γ_monotone :
   monotone (value_group.to_Γ v) :=
 begin
@@ -157,10 +151,12 @@ begin
   exact id,
 end
 
+/-- The natural map `value_group v → Γ` is injective. -/
 lemma value_group.to_Γ_injective :
   function.injective (value_group.to_Γ v) :=
 quotient_group.injective_ker_lift _
 
+/-- The natural map `value_group v → Γ` preserves <. -/
 lemma value_group.to_Γ_strict_mono :
   strict_mono (value_group.to_Γ v) :=
 strict_mono_of_monotone_of_injective
@@ -171,12 +167,14 @@ strict_mono_of_monotone_of_injective
 -- from R to value_group v := Frac(R/supp(v)) / A^*
 -- (thought of as K^*/A^* union 0)
 
--- First define a valuation on K
+/-- The underlying function of the natural valuation on Frac(R/supp(v)) taking
+values in {0} ∪ `value_group v` -/
 definition valuation_field.canonical_valuation_v :
 valuation_field v → with_zero (value_group v) :=
 λ k, if h : (k = 0) then 0 else
   value_group_quotient v ⟨k,k⁻¹,mul_inv_cancel h, inv_mul_cancel h⟩
 
+/-- The valuation Frac(R/supp(v)) → {0} ∪ `value_group v` is a valuation. -/
 instance valuation_field.canonical_valuation_v.is_valuation :
 is_valuation (valuation_field.canonical_valuation_v v) :=
 { map_zero := dif_pos rfl,
@@ -196,10 +194,8 @@ is_valuation (valuation_field.canonical_valuation_v v) :=
     { exfalso, exact hxy (hx.symm ▸ zero_mul y)},
     { exfalso, exact hxy (hy.symm ▸ mul_zero x)},
     apply option.some_inj.2,
-    show value_group_quotient v
-      {val := x * y, inv := (x * y)⁻¹, val_inv := _, inv_val := _} =
-      value_group_quotient v
-      {val := x * y, inv := _, val_inv := _, inv_val := _},
+    show value_group_quotient v {val := x * y, inv := (x * y)⁻¹, val_inv := _, inv_val := _} =
+      value_group_quotient v {val := x * y, inv := _, val_inv := _, inv_val := _},
     apply congr_arg,
     apply units.ext,
     refl,
@@ -218,7 +214,7 @@ is_valuation (valuation_field.canonical_valuation_v v) :=
       exact v.on_valuation_field.map_add _ _ }
   end }
 
-/-- The canonical valuation on Frac(R/supp(v)) -/
+/-- The canonical valuation on Frac(R/supp(v)), taking values in `value_group v`. -/
 def valuation_field.canonical_valuation :
 valuation (valuation_field v) (value_group v) :=
 ⟨valuation_field.canonical_valuation_v v, valuation_field.canonical_valuation_v.is_valuation v⟩
@@ -226,7 +222,7 @@ valuation (valuation_field v) (value_group v) :=
 lemma valuation_field.canonical_valuation_unit :
 unit_map (valuation_field.canonical_valuation v) = value_group_quotient v :=
 begin
-  -- really hard to get to the if
+  -- one has to really dig to get to the `if`
   ext x,
   rw ←option.some_inj,
   rw unit_map_eq,
@@ -234,7 +230,7 @@ begin
       (λ (h : ¬x.val = 0),
         (value_group_quotient v {val := ↑x, inv := (↑x)⁻¹, val_inv := _, inv_val := _})) =
     some (value_group_quotient v x),
-  -- at last!
+  -- The `if` is now accessible for `split_ifs`.
   split_ifs with h,
   { change x.val = 0 at h,
     have h2 := x.val_inv,
@@ -249,17 +245,18 @@ begin
   }
 end
 
-/-- The canonical valuation on R/supp(v) -/
+/-- The canonical valuation on R/supp(v), taking values in `value_group v`. -/
 definition quotient.canonical_valuation (v : valuation R Γ) :
   valuation (ideal.quotient (supp v)) (value_group v) :=
 @comap _ _ _ _ (valuation_field.canonical_valuation v) _ _ (localization.of)
   (by apply_instance)
 
-/-- The canonical valuation on R -/
+/-- The canonical valuation on R, taking values in `value_group v`. -/
 definition canonical_valuation (v : valuation R Γ) :
   valuation R (value_group v) :=
 comap (quotient.canonical_valuation v) (ideal.quotient.mk (supp v))
 
+/-- The relation between `v.canonical_valuation r` and `v r`. -/
 lemma canonical_valuation_eq (v : valuation R Γ) (r : R) : v.canonical_valuation r =
   if h : (v.valuation_field_mk r = 0) then 0 else
          some (value_group_quotient v
@@ -279,14 +276,12 @@ begin
   exact (v.valuation_field_mk_ker r).1 h
 end
 
-end canonical_equivalent_valuation
+end canonical_equivalent_valuation -- end of section
 
 namespace canonical_valuation
 
--- everything in the image of the value group is a ratio of things
--- coming from the ring
--- Remark (KMB) -- writing this code was surprisingly painful
--- Remark (KMB) -- I am not even sure we ever use it!
+-- This looks handy to know but we never actually use it.
+/-- Every element of `value_group v` is a ratio of things in the image of `canonical_valuation v`.-/
 lemma value_group.is_ratio (v : valuation R Γ) (g : value_group v) :
 ∃ r s : R, r ∉ supp v ∧ s ∉ supp v ∧ canonical_valuation v s * g = canonical_valuation v r :=
 begin
@@ -346,8 +341,8 @@ show (valuation_field.canonical_valuation_v v (localization.of sq)) *
   convert units.inv_val _,
 end
 
---- This lemma shows that the valuation v can be reconstructed from its
---- associated canonical valuation
+/-- v can be reconstructed from `canonical_valuation v` by pushing forward along
+the map `value_group v → Γ`. -/
 lemma to_Γ :
   (canonical_valuation v).map (value_group.to_Γ v) (value_group.to_Γ_monotone v) = v :=
 begin
@@ -400,11 +395,12 @@ begin
   }
 end
 
-end canonical_valuation
+end canonical_valuation -- end of namespace
 
-end valuation
+end valuation -- end of namespace
 
 namespace valuation
+
 variables {Γ : Type u}   [linear_ordered_comm_group Γ]
 variables {Γ₁ : Type u₁} [linear_ordered_comm_group Γ₁]
 variables {Γ₂ : Type u₂} [linear_ordered_comm_group Γ₂]
@@ -422,17 +418,19 @@ begin
   exact canonical_valuation.to_Γ v,
 end
 
-
 namespace is_equiv
 
 -- Various lemmas about valuations being equivalent.
 
 variables {v : valuation R Γ} {v₁ : valuation R Γ₁} {v₂ : valuation R Γ₂} {v₃ : valuation R Γ₃}
 
+/-- If J ⊆ supp(v) then pulling back the induced valuation on R / J back to R gives a
+valuation equivalent to v. -/
 lemma on_quot_comap_self {J : ideal R} (hJ : J ≤ supp v) :
   is_equiv ((v.on_quot hJ).comap (ideal.quotient.mk J)) v :=
 of_eq (on_quot_comap_eq _ _)
 
+/-- Two valuations on R/J are equivalent iff their pullbacks to R are equivalent. -/
 lemma comap_on_quot (J : ideal R) (v₁ : valuation J.quotient Γ₁) (v₂ : valuation J.quotient Γ₂) :
   (v₁.comap (ideal.quotient.mk J)).is_equiv (v₂.comap (ideal.quotient.mk J)) ↔ v₁.is_equiv v₂ :=
 { mp  := begin rintros h ⟨x⟩ ⟨y⟩, exact h x y end,
@@ -440,10 +438,13 @@ lemma comap_on_quot (J : ideal R) (v₁ : valuation J.quotient Γ₁) (v₂ : va
 
 open localization
 
+/-- If supp(v)=0 then v is equivalent to the pullback of the extension of v to Frac(R). -/
 lemma on_frac_comap_self {R : Type u₀} [integral_domain R] (v : valuation R Γ) (hv : supp v = 0) :
   is_equiv ((v.on_frac hv).comap of) v :=
 of_eq (on_frac_comap_eq v hv)
 
+/-- If R is an ID then two valuations on R are equivalent iff their extensions to Frac(R) are
+equivalent. -/
 lemma comap_on_frac {R : Type u₀} [integral_domain R]
 (v₁ : valuation (fraction_ring R) Γ₁) (v₂ : valuation (fraction_ring R) Γ₂) :
   (v₁.comap of).is_equiv (v₂.comap of) ↔ is_equiv v₁ v₂ :=
@@ -467,7 +468,7 @@ lemma comap_on_frac {R : Type u₀} [integral_domain R]
   end,
   mpr := λ h, comap _ h }
 
-/-- Wedhorm 1.27 iii -> ii (part a) -/
+/-- [Wed 1.27] (iii) -> first part of (ii). -/
 lemma supp_eq (h : v₁.is_equiv v₂) : supp v₁ = supp v₂ :=
 ideal.ext $ λ r,
 calc r ∈ supp v₁ ↔ v₁ r = 0    : mem_supp_iff' _ _
@@ -476,7 +477,7 @@ calc r ∈ supp v₁ ↔ v₁ r = 0    : mem_supp_iff' _ _
              ... ↔ v₂ r = 0    : (eq_zero_iff_le_zero _).symm
              ... ↔ r ∈ supp v₂ : (mem_supp_iff' _ _).symm
 
-
+/-- If v₁ and v₂ are equivalent then v₁(r)=1 → v₂(r)=1. -/
 lemma v_eq_one_of_v_eq_one (h : v₁.is_equiv v₂) {r : R} : v₁ r = 1 → v₂ r = 1 :=
 begin
   rw [←v₁.map_one, ←v₂.map_one],
@@ -484,9 +485,11 @@ begin
   exact le_antisymm ((h r 1).1 (le_of_eq hr)) ((h 1 r).1 (le_of_eq hr.symm)),
 end
 
+/-- If v₁ and v₂ are equivalent then v₁(r)=1 ↔ v₂(r)=1. -/
 lemma v_eq_one (h : v₁.is_equiv v₂) (r : R) : v₁ r = 1 ↔ v₂ r = 1 :=
 ⟨v_eq_one_of_v_eq_one h,v_eq_one_of_v_eq_one h.symm⟩
 
+/-- If v₁ and v₂ are equivalent then their canonical valuations are too. -/
 lemma canonical_equiv_of_is_equiv (h : v₁.is_equiv v₂) :
   (canonical_valuation v₁).is_equiv (canonical_valuation v₂) :=
 begin
@@ -496,20 +499,22 @@ begin
   exact v₂.canonical_valuation_is_equiv
 end
 
-end is_equiv
+end is_equiv -- end of namespace
 
+/-- The supports of v and v.canonical_valuation are equal. -/
 lemma canonical_valuation_supp (v : valuation R Γ) :
   supp (v.canonical_valuation) = supp v := (canonical_valuation_is_equiv v).supp_eq
 
-section
+section Wedhorn1_27_equivalences
 
 variables {v : valuation R Γ} {v₁ : valuation R Γ₁} {v₂ : valuation R Γ₂} {v₃ : valuation R Γ₃}
 
 open is_group_hom quotient_group function
 
--- We now start on the equivalences of Wedhorn 1.27. This one is easy.
+-- We now start on the equivalences of Wedhorn 1.27. The first one is easy.
 
--- Wedhorn 1.27 (i) => (iii)
+/-- Wedhorn 1.27 (i) → (iii) : An ordered isomorphism of value groups which commutes with
+canonical valuations implies that valuations are equivalent. -/
 lemma of_inj_value_group (f : v₁.value_group → v₂.value_group)
 [is_group_hom f] (hf : strict_mono f)
 (H : v₂.canonical_valuation = v₁.canonical_valuation.map f (hf.monotone)) :
@@ -522,6 +527,11 @@ begin
   exact is_equiv_of_map_of_strict_mono _ _
 end
 
+-- These lemmas look slightly ridiculous to a mathematician but they are avoiding equality of
+-- types and instead defining and reasoning about maps which mathematicians would call
+-- "the identiy map".
+
+/-- Natural map R/supp(v₁) → R/supp(v₂) induced by equality supp(v₁)=supp(v₂). -/
 def quot_of_quot_of_eq_supp (h : supp v₁ = supp v₂) : valuation_ID v₁ → valuation_ID v₂ :=
 ideal.quotient.lift _ (ideal.quotient.mk _)
 (λ r hr, ideal.quotient.eq_zero_iff_mem.2 $ h ▸ hr)
@@ -534,6 +544,7 @@ lemma quot_of_quot_of_eq_supp.comp (h12 : supp v₁ = supp v₂) (h23 : supp v�
   quot_of_quot_of_eq_supp (h23 ▸ h12 : supp v₁ = supp v₃) r :=
 by rcases r;refl
 
+/-- If supp(v₁)=supp(v₂) then R/supp(v₁) is isomorphic to R/supp(v₂). -/
 def valuation_ID.equiv (h : supp v₁ = supp v₂) : valuation_ID v₁ ≃ valuation_ID v₂ :=
 { to_fun := quot_of_quot_of_eq_supp h,
   inv_fun := quot_of_quot_of_eq_supp (h.symm),
@@ -549,15 +560,18 @@ lemma quot_of_quot_of_eq_supp_quotient_mk' (h : supp v₁ = supp v₂) (r : R) :
   quot_of_quot_of_eq_supp h (ideal.quotient.mk _ r) = ideal.quotient.mk _ r :=
 by rw ←quot_of_quot_of_eq_supp_quotient_mk h
 
+/-- If supp(v₁)=supp(v₂) then the identity map R/supp(v₁) → R/supp(v₂) is a ring homomorphism. -/
 instance quot_of_quot_of_eq_supp.is_ring_hom (h : supp v₁ = supp v₂) :
   is_ring_hom (quot_of_quot_of_eq_supp h) :=
 by delta quot_of_quot_of_eq_supp; apply_instance
 
+/-- If supp(v₁)=supp(v₂) then R/supp(v₁) and R/supp(v₂) are isomorphic rings. -/
 def quot_equiv_quot_of_eq_supp (h : supp v₁ = supp v₂) : valuation_ID v₁ ≃r valuation_ID v₂ :=
 { hom :=quot_of_quot_of_eq_supp.is_ring_hom h,
   ..valuation_ID.equiv h}
 
-def quot_equiv_quot_mk_eq_mk (h : supp v₁ = supp v₂) (r : R) :
+/-- If supp(v₁)=supp(v₂) then the triangle R → R/supp(v₁) → R/supp(v₂) commutes. -/
+lemma quot_equiv_quot_mk_eq_mk (h : supp v₁ = supp v₂) (r : R) :
   (quot_equiv_quot_of_eq_supp h).to_equiv (ideal.quotient.mk _ r) = ideal.quotient.mk _ r :=
 quot_of_quot_of_eq_supp_quotient_mk' h r
 
@@ -569,19 +583,24 @@ lemma valuation_ID_le_of_le_of_equiv (h : v₁.is_equiv v₂) (a b : valuation_I
   quot_of_quot_of_eq_supp (is_equiv.supp_eq h) a ≤ quot_of_quot_of_eq_supp (is_equiv.supp_eq h) b :=
 by rcases a; rcases b; exact (h a b)
 
+/-- If v₁ and v₂ are equivalent, then the associated preorders on
+R/supp(v₁)=R/supp(v₂) are equivalent. -/
 def valuation_ID.preorder_equiv (h : v₁.is_equiv v₂) :
   preorder_equiv (valuation_ID v₁) (valuation_ID v₂) :=
 { le_map := valuation_ID_le_of_le_of_equiv h,
   ..valuation_ID.equiv h.supp_eq
 }
 
-section
+section valuation_field
+
 open localization
 
+/-- The natural map Frac(R/supp(v₁)) → Frac(R/supp(v₂)) if supp(v₁) = supp(v₂). -/
 def valfield_of_valfield_of_eq_supp (h : supp v₁ = supp v₂) :
   valuation_field v₁ → valuation_field v₂ :=
 fraction_ring.map (quot_of_quot_of_eq_supp h) (quot_of_quot_of_eq_supp_inj h)
 
+/-- The triangle R → Frac(R/supp(v₁)) → Frac(R/supp(v₂)) commutes if supp(v₁)=supp(v₂). -/
 lemma valfield_of_valfield_of_eq_supp_quotient_mk (h : supp v₁ = supp v₂) (r : R) :
   valfield_of_valfield_of_eq_supp h (of $ ideal.quotient.mk _ r) = of (ideal.quotient.mk _ r) :=
 begin
@@ -590,26 +609,34 @@ begin
   rw quot_of_quot_of_eq_supp_quotient_mk',
 end
 
+/-- If supp(v₁)=supp(v₂) then the natural map Frac(R/supp(v₁)) → Frac(R/supp(v₂)) is a
+homomorphism of fields. -/
 instance (h : supp v₁ = supp v₂) : is_field_hom (valfield_of_valfield_of_eq_supp h) :=
 by delta valfield_of_valfield_of_eq_supp; apply_instance
 
+-- This should be possible using type class inference but there are max class
+-- instance issues.
+/-- If supp(v₁)=supp(v₂) then the natural map Frac(R/supp(v₁)) → Frac(R/supp(v₂)) is a
+homomorphism of monoids. -/
 instance (h : supp v₁ = supp v₂) : is_monoid_hom (valfield_of_valfield_of_eq_supp h) :=
 is_semiring_hom.is_monoid_hom (valfield_of_valfield_of_eq_supp h)
 
-def valfield_equiv_valfield_of_eq_supp (h : supp v₁ = supp v₂) : valuation_field v₁ ≃r valuation_field v₂ :=
+/-- If supp(v₁)=supp(v₂) then the natural map Frac(R/supp(v₁)) → Frac(R/supp(v₂)) is an
+isomorphism of rings. -/
+def valfield_equiv_valfield_of_eq_supp (h : supp v₁ = supp v₂) :
+  valuation_field v₁ ≃r valuation_field v₂ :=
 fraction_ring.equiv_of_equiv (quot_equiv_quot_of_eq_supp h)
 
 lemma valfield_equiv_eq_valfield_of_valfield (h : supp v₁ = supp v₂) (q : valuation_field v₁) :
 (valfield_equiv_valfield_of_eq_supp h).to_equiv q = valfield_of_valfield_of_eq_supp h q := rfl
-
-instance valfield_equiv.is_field_hom (h : supp v₁ = supp v₂) :
-  is_field_hom (valfield_equiv_valfield_of_eq_supp h).to_fun := by apply_instance
 
 lemma valfield_equiv_valfield_mk_eq_mk (h : supp v₁ = supp v₂) (r : R) :
   (valfield_equiv_valfield_of_eq_supp h).to_equiv (of $ ideal.quotient.mk _ r)
   = of (ideal.quotient.mk _ r) :=
 valfield_of_valfield_of_eq_supp_quotient_mk h r
 
+/-- If v₁ and v₂ are equivalent then the induced valuations on R/supp(v₁) and R/supp(v₂)
+(pulled back to R/supp(v₁) are equivalent. -/
 lemma is_equiv.comap_quot_of_quot (h : v₁.is_equiv v₂) :
   (v₁.on_quot (set.subset.refl _)).is_equiv
   (comap (v₂.on_quot (set.subset.refl _)) (quot_of_quot_of_eq_supp h.supp_eq)) :=
@@ -618,6 +645,8 @@ begin
   simp [h],
 end
 
+/-- If v₁ and v₂ are equivalent then the induced valuations on Frac(R/supp(v₁)) and
+Frac(R/supp(v₂)) [pulled back] are equivalent. -/
 lemma is_equiv.on_valuation_field_is_equiv (h : v₁.is_equiv v₂) :
   v₁.on_valuation_field.is_equiv
   (comap v₂.on_valuation_field (valfield_of_valfield_of_eq_supp h.supp_eq)) :=
@@ -627,6 +656,7 @@ begin
   simp [comap_comp, h.comap_quot_of_quot],
 end
 
+/-- The valuation rings of two equivalent valuations are isomorphic (as types). -/
 def val_ring_equiv_of_is_equiv_aux (h : v₁.is_equiv v₂) :
 v₁.valuation_ring ≃ v₂.valuation_ring :=
 equiv.subtype_congr (valfield_equiv_valfield_of_eq_supp h.supp_eq).to_equiv $
@@ -639,6 +669,7 @@ begin
   exact valuation.map_one _,
 end
 
+/-- The valuation rings of two equivalent valuations are isomorphic as rings. -/
 def val_ring_equiv_of_is_equiv (h : v₁.is_equiv v₂) : v₁.valuation_ring ≃r v₂.valuation_ring :=
 { hom := begin
   cases (valfield_equiv_valfield_of_eq_supp h.supp_eq).hom,
@@ -650,11 +681,8 @@ def val_ring_equiv_of_is_equiv (h : v₁.is_equiv v₂) : v₁.valuation_ring �
 } end,
 ..val_ring_equiv_of_is_equiv_aux h }
 
--- We could prove here
--- lemma val_ring_equiv_mk_eq_mk (h : v₁.is_equiv v₂) (r : R) (hr : v₁ r ≤ 1) :
--- val_ring_equiv_of_is_equiv.to_equiv ⟨of $ ideal.quotient.mk _ r, proof it's in val_ring⟩
--- = ⟨of $ ideal.quotient.mk _ r, longer proof it's in val ring⟩
--- but I'm not sure we need it.
+-- we omit the proof that the diagram {r | v₁ r ≤ 1} → v₁.valuation_ring → v₂.valuation_ring
+-- commutes.
 
 lemma valfeld_le_of_le_of_equiv (h : v₁.is_equiv v₂) (a b : valuation_field v₁) :
   (a ≤ b) ↔ valfield_of_valfield_of_eq_supp (h.supp_eq) a ≤
@@ -686,7 +714,8 @@ def valfield_units_equiv_units_of_eq_supp (h : supp v₁ = supp v₂) :
 mul_equiv (units (valuation_field v₁)) (units (valuation_field v₂)) :=
 let h' := valfield_equiv_valfield_of_eq_supp h in
 by letI := h'.hom; exact units.map_equiv {map_mul' := h'.hom.map_mul, ..h'}
-end
+
+end valuation_field -- section
 
 lemma valfield_units_equiv_units_mk_eq_mk (h : supp v₁ = supp v₂) (r : R) (hr : r ∉ supp v₁):
 (valfield_units_equiv_units_of_eq_supp h).to_equiv (units_valfield_mk v₁ r hr) =
@@ -799,6 +828,6 @@ begin
   }
 end
 
-end -- section
+end Wedhorn1_27_equivalences -- section
 
 end valuation
