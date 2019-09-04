@@ -1,7 +1,7 @@
-import valuation.basic
-
 import for_mathlib.quotient_group
-import for_mathlib.group -- mul_equiv
+import for_mathlib.group
+
+import valuation.localization
 
 /-! valuation.canonical
 
@@ -357,8 +357,7 @@ begin
     rw ideal.quotient.eq_zero_iff_mem.2 h,
     exact (valuation_field.canonical_valuation v).map_zero,
   },
-  { intro g,
-    intro hr,
+  { intros g hr,
     rw hr,
     have h2 : v r ≠ none,
       rw hr, simp,
@@ -376,21 +375,9 @@ begin
     split_ifs with h1,
       contradiction,
     show some (v.on_valuation_field.unit_map ⟨r'',r''⁻¹,_,_⟩) = some g,
-    rw unit_map_eq,
-    rw ←hr,
+    rw [unit_map_eq, ←hr],
     show (on_valuation_field v) (r'') = v r,
-    let v' := on_quot v (le_refl _),
-    have hv' : supp v' = 0,
-      rw supp_quot_supp,
-      simp,
-    show v'.on_frac_val hv' ⟦⟨r',1⟩⟧ = v r,
-    rw on_frac_val_mk,
-    show v' r' / v' 1 = v r,
-    rw v'.map_one,
-    suffices : v' r' = v r,
-      simpa using this,
-    refl,
-  }
+    exact localization_apply _ _ _, }
 end
 
 end canonical_valuation -- end of namespace
@@ -450,12 +437,9 @@ lemma comap_on_frac {R : Type u₀} [integral_domain R]
     rintros h ⟨x⟩ ⟨y⟩,
     erw ← comap_on_frac_eq v₁,
     erw ← comap_on_frac_eq v₂,
-    dsimp [comap],
-    repeat {erw on_frac_val'},
-    repeat {erw on_frac_val_mk},
     repeat {erw with_zero.div_le_div},
-    repeat {erw ← valuation.map_mul},
-    exact h _ _,
+    { repeat {erw ← valuation.map_mul},
+      exact h _ _ },
     all_goals { intro H,
       erw [← mem_supp_iff, comap_supp, (supp _).eq_bot_of_prime] at H,
       simp at H,

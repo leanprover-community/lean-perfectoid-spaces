@@ -1,19 +1,25 @@
--- extending valuations to localizations
+import ring_theory.localization
 
 import valuation.basic
 
---local attribute [instance] classical.prop_decidable
---noncomputable theory
+/-!
+# Extending valuations to localizations
+
+-/
+
+local attribute [instance] classical.prop_decidable
+noncomputable theory
 
 universes u u₀
 
-variables {R : Type u₀} [comm_ring R] {S : set R} [is_submonoid S]
+variables {R : Type u₀} [comm_ring R]
+variables {Γ : Type u} [linear_ordered_comm_group Γ]
+variables {S : set R} [is_submonoid S]
 
 namespace valuation
 open with_zero
 
-variables {Γ : Type u} [linear_ordered_comm_group Γ]
-variables {v : valuation R Γ}
+variables (v : valuation R Γ)
 
 lemma inverse_exists (s : S) : ∃ u : localization R S, u * s = 1 :=
 ⟨(localization.to_units s).inv, units.inv_val _⟩
@@ -39,21 +45,7 @@ def localization_v (h : ∀ s, s ∈ S → v s ≠ 0) : localization R S → wit
     rw [←v.map_mul, ←v.map_mul, hrst]
   end
 
-def localization_to_valuation_field_aux (h : ∀ s, s ∈ S → v s ≠ 0) (s : R) (hs : s ∈ S) :
-  is_unit (valuation_field_mk v s) :=
-is_unit_of_mul_one _ (valuation_field_mk v s)⁻¹ $ mul_inv_cancel $
-  valuation.valuation_field_mk_ne_zero v s (h s hs)
-
---the localization approach would look like this.
-/-
-noncomputable def localization_to_valuation_field (h : ∀ s, s ∈ S → v s ≠ 0) :
-  localization R S → valuation_field v :=
-localization.lift (valuation_field_mk v) $ localization_to_valuation_field_aux h
--/
-
--- I could have pulled back from R[1/S] -> K_v and avoided these proofs.
--- TODO -- refactor?
-lemma localization_is_valuation (h : ∀ s, s ∈ S → v s ≠ 0) : is_valuation (localization_v h) :=
+lemma localization_is_valuation (h : ∀ s, s ∈ S → v s ≠ 0) : is_valuation (v.localization_v h) :=
 { map_zero := show v 0 * (v 1)⁻¹ = 0, by rw [v.map_zero, zero_mul],
   map_one := show v 1 * (v 1)⁻¹ = 1, by {rw [v.map_one], simp},
   map_mul := λ x y, quotient.induction_on₂' x y begin
@@ -98,12 +90,17 @@ lemma localization_is_valuation (h : ∀ s, s ∈ S → v s ≠ 0) : is_valuatio
   end }
 
 /-- Extension of a valuation to a localization -/
-def localization (h : ∀ s, s ∈ S → v s ≠ 0) : valuation (localization R S) Γ :=
-{ val := localization_v h,
-  property := localization_is_valuation h }
+protected def localization (h : ∀ s, s ∈ S → v s ≠ 0) : valuation (localization R S) Γ :=
+{ val := v.localization_v h,
+  property := v.localization_is_valuation h }
+
+/-- Extension of a valuation to a localization -/
+lemma localization_apply (h : ∀ s, s ∈ S → v s ≠ 0) (r : R) :
+  (v.localization h : valuation (localization R S) Γ) r = v r :=
+show v r * (v 1)⁻¹ = v r, by simp
 
 /-- the extension of a valuation pulls back to the valuation -/
-lemma localization_comap (h : ∀ s, s ∈ S → v s ≠ 0) : (localization h).comap (localization.of) = v :=
+lemma localization_comap (h : ∀ s, s ∈ S → v s ≠ 0) : (v.localization h).comap (localization.of) = v :=
 begin
   rw valuation.ext,
   intro r,
@@ -112,7 +109,7 @@ begin
   rw [v.map_one, mul_one]
 end
 
-lemma eq_localization_of_comap_aux (w : valuation (_root_.localization R S) Γ)
+lemma eq_localization_of_comap_aux {v} (w : valuation (localization R S) Γ)
   (h : w.comap (localization.of) = v) : ∀ s, s ∈ S → v s ≠ 0 := λ s hs h0,
 begin
   cases inverse_exists ⟨s, hs⟩ with u hu,
@@ -125,9 +122,9 @@ begin
   exact option.no_confusion h0,
 end
 
-/-- if a valuation on a localisation pulls back to v then it's the localization of v -/
-lemma eq_localization_of_comap (w : valuation (_root_.localization R S) Γ)
-  (h : w.comap (localization.of) = v) : localization (eq_localization_of_comap_aux w h) = w := begin
+/-- If a valuation on a localisation pulls back to v then it's the localization of v -/
+lemma eq_localization_of_comap (w : valuation (localization R S) Γ)
+  (h : w.comap (localization.of) = v) : v.localization (eq_localization_of_comap_aux w h) = w := begin
   rw subtype.ext,
   funext,
   induction q,
@@ -148,4 +145,200 @@ lemma eq_localization_of_comap (w : valuation (_root_.localization R S) Γ)
   refl
 end
 
+section fraction_ring
+open localization localization.fraction_ring
+
+-- move this def
+def integral_domain_of_prime_bot (h : (⊥ : ideal R).is_prime) : integral_domain R :=
+{ zero_ne_one := assume zero_eq_one, h.1 $ (ideal.eq_top_iff_one _).mpr $
+                 (submodule.mem_bot R).mpr zero_eq_one.symm,
+  eq_zero_or_eq_zero_of_mul_eq_zero := λ r s, by { repeat {rw ← submodule.mem_bot R}, apply h.2 },
+  .. ‹comm_ring R› }
+
+def integral_domain_of_supp_zero (hv : v.supp = 0) : integral_domain R :=
+integral_domain_of_prime_bot $
+by { rw [← ideal.zero_eq_bot, ← hv], exact valuation.ideal.is_prime v }
+
+/-- The extension of valuation on R with support 0 to a valuation on the field of fractions. -/
+def on_frac (hv : v.supp = 0) : valuation (fraction_ring R) Γ :=
+v.localization $ λ r hr hnz,
+begin
+  letI := v.integral_domain_of_supp_zero hv,
+  refine (@mem_non_zero_divisors_iff_ne_zero R _ _ r).mp hr _,
+  rwa [← submodule.mem_bot R, ← ideal.zero_eq_bot, ← hv],
+end
+
+@[simp] lemma on_frac_comap_eq (hv : supp v = 0) :
+  (v.on_frac hv).comap of = v :=
+v.localization_comap _
+
+lemma on_frac_comap_eq_apply (hv : supp v = 0) (r : R) :
+  ((v.on_frac hv).comap of : valuation R Γ) r = v r := by rw on_frac_comap_eq
+
+/-- Pulling back a valuation on `fraction_ring R` to R and then applying `on_frac` is the
+identity function. -/
+@[simp] lemma comap_on_frac_eq {R : Type*} [integral_domain R] (v : valuation (fraction_ring R) Γ) :
+  (v.comap of).on_frac
+  (by {rw [comap_supp, ideal.zero_eq_bot, v.supp.eq_bot_of_prime],
+    apply ideal.comap_bot_of_inj, apply fraction_ring.of.injective })
+  = v :=
+valuation.eq_localization_of_comap _ _ rfl
+
+lemma frac_preorder_comap (hv : supp v = 0) :
+  preorder.lift (localization.of) (v.on_frac hv).to_preorder = v.to_preorder :=
+preorder.ext $ λ x y, begin show (v.on_frac hv) x ≤ (v.on_frac hv) y ↔ v x ≤ v y,
+rw [←on_frac_comap_eq_apply v hv, ←on_frac_comap_eq_apply v hv], exact iff.rfl end
+
+end fraction_ring -- end of section
+
+section valuation_field
+
+/-- The quotient ring R/supp(v) associated to a valuation. -/
+definition valuation_ID := (supp v).quotient
+
+/-- the support of a valuation is a prime ideal, so R/supp(v) is an integral domain. -/
+instance integral_domain' : integral_domain (valuation_ID v) :=
+by delta valuation_ID; apply_instance
+
+/-- The preorder on R/supp(v) induced by Γ via `v.on_quot` -/
+instance : preorder (valuation_ID v) := (v.on_quot (le_refl _)).to_preorder
+
+/-- The function R → R/supp(v). -/
+def valuation_ID_mk : R → valuation_ID v := ideal.quotient.mk (supp v)
+
+/-- The function R → R/supp(v) is a ring homomorphism. -/
+instance : is_ring_hom (v.valuation_ID_mk) := by unfold valuation_ID_mk; apply_instance
+
+/-- The kernel of R → R/supp(v) is supp(v). -/
+lemma valuation_ID_mk_ker (r : R) : v.valuation_ID_mk r = 0 ↔ r ∈ supp v :=
+ideal.quotient.eq_zero_iff_mem
+
+/-- `valuation_field v` is the field of fractions of R/supp(v). -/
+definition valuation_field := localization.fraction_ring (valuation_ID v)
+
+/-- The field of fractions of R/supp(v) is a field. -/
+instance : discrete_field (valuation_field v) := by delta valuation_field; apply_instance
+
+/-- The canonical map R → fraction_ring (R/supp(v)). -/
+def valuation_field_mk (r : R) : valuation_field v := localization.of (v.valuation_ID_mk r)
+
+/-- The map R → Frac(R/supp(v)) is a ring homomorphism. -/
+instance to_valuation_field.is_ring_hom : is_ring_hom (valuation_field_mk v) :=
+by delta valuation_field_mk; apply_instance
+
+/-- The kernel of R → Frac(R/supp(v)) is supp(v). -/
+lemma valuation_field_mk_ker (r : R) : v.valuation_field_mk r = 0 ↔ r ∈ supp v :=
+⟨λ h, (v.valuation_ID_mk_ker r).1 $ localization.fraction_ring.eq_zero_of _ h,
+ λ h, show localization.of _ = 0, by rw (v.valuation_ID_mk_ker r).2 h; apply is_ring_hom.map_zero⟩
+
+lemma valuation_field_mk_ne_zero (r : R) (hr : v r ≠ 0) : valuation_field_mk v r ≠ 0 :=
+λ h, hr ((valuation_field_mk_ker v r).1 h)
+
+/-- The induced preorder on Frac(R/supp(v)). -/
+instance valfield_preorder : preorder (valuation_field v) :=
+  ((v.on_quot (le_refl _)).on_frac $ quot_supp_zero v).to_preorder
+
+/-- The induced map from R \ supp(v) to the units of Frac(R/supp(v)). -/
+def units_valfield_mk (r : R) (h : r ∉ supp v) : units (valuation_field v) :=
+⟨v.valuation_field_mk r,
+ (v.valuation_field_mk r)⁻¹,
+ mul_inv_cancel (λ h2, h $ ideal.quotient.eq_zero_iff_mem.1 $
+   localization.fraction_ring.eq_zero_of _ h2),
+ inv_mul_cancel (λ h2, h $ ideal.quotient.eq_zero_iff_mem.1 $
+   localization.fraction_ring.eq_zero_of _ h2)⟩
+
+/-- The preorder on the units of Frac(R/supp(v)) induced by the extension of v. -/
+instance units_valfield_preorder :
+  preorder (units (valuation_field v)) := preorder.lift (λ u, u.val) (by apply_instance)
+
+-- TODO -- on_frac_quot_comap_eq got deleted; it was never used. Can we delete this instance?
+
+-- on_frac_quot_comap_eq needs more class.instance_max_depth to compile if
+-- this instance is not explicitly given as a hint
+instance : is_submonoid (localization.non_zero_divisors (ideal.quotient (supp v))) :=
+by apply_instance
+
+/-- The valuation on Frac(R/supp(v)) induced by v. -/
+definition on_valuation_field : valuation (valuation_field v) Γ :=
+on_frac (v.on_quot (set.subset.refl _))
+begin
+  rw [supp_quot_supp, ideal.zero_eq_bot],
+  apply ideal.map_quotient_self,
+end
+
+/-- `valuation_ring v` is the elements of Frac(R/supp(v)) whose valuation is at most 1. -/
+definition valuation_ring := {x | v.on_valuation_field x ≤ 1}
+
+/-- `valuation_ring v` is a subring of Frac(R/supp(v)). -/
+instance : is_subring (valuation_ring v) :=
+{ zero_mem := show v.on_valuation_field 0 ≤ 1, by simp,
+  add_mem := λ x y hx hy,
+  by cases (v.on_valuation_field.map_add x y) with h h;
+    exact le_trans h (by assumption),
+  neg_mem := by simp [valuation_ring],
+  one_mem := by simp [valuation_ring, le_refl],
+  mul_mem := λ x y (hx : _ ≤ _) (hy : _ ≤ _), show v.on_valuation_field _ ≤ 1,
+  by convert le_trans (linear_ordered_structure.mul_le_mul_left hy _) _; simp [hx] }
+
+/-- `max_ideal v` is the ideal of `valuation_ring v` consisting of things with valuation
+strictly less than 1. -/
+definition max_ideal : ideal (valuation_ring v) :=
+{ carrier := { r | v.on_valuation_field r < 1 },
+  zero := show v.on_valuation_field 0 < 1, by apply lt_of_le_of_ne; simp,
+  add := λ x y (hx : _ < 1) (hy : _ < 1),
+  show v.on_valuation_field _ < 1,
+    by cases (v.on_valuation_field.map_add x y) with h h;
+      exact lt_of_le_of_lt h (by assumption),
+  smul := λ c x (hx : _ < 1),
+  show v.on_valuation_field _ < 1,
+  begin
+    refine lt_of_le_of_lt _ _,
+    swap,
+    convert (linear_ordered_structure.mul_le_mul_right _ _),
+    exact map_mul _ _ _,
+    swap,
+    convert c.property,
+    simpa using hx
+  end }
+
+set_option class.instance_max_depth 40
+
+/-- `max_ideal v` is indeed a maximal ideal of `valuation_ring v`. -/
+instance max_ideal_is_maximal : (max_ideal v).is_maximal :=
+begin
+  rw ideal.is_maximal_iff,
+  split,
+  { exact λ (H : _ < _), ne_of_lt H (map_one _) },
+  { rintros J ⟨x,hx⟩ hJ hxni hxinJ,
+    have vx : v.on_valuation_field x = 1 :=
+    begin
+      rw eq_iff_le_not_lt,
+      split; assumption
+    end,
+    have xinv_mul_x : (x : valuation_field v)⁻¹ * x = 1 :=
+    begin
+      apply inv_mul_cancel,
+      intro hxeq0,
+      simpa [hxeq0] using vx
+    end,
+    have hxinv : v.on_valuation_field x⁻¹ ≤ 1 :=
+    begin
+      refine le_of_eq _,
+      symmetry,
+      simpa [xinv_mul_x, vx] using v.on_valuation_field.map_mul x⁻¹ x
+    end,
+    convert J.smul_mem ⟨x⁻¹, hxinv⟩ hxinJ,
+    symmetry,
+    apply subtype.val_injective,
+    exact xinv_mul_x }
+end
+
+set_option class.instance_max_depth 32
+
+/-- `residue_field v` is the quotient of `valuation_ring v` by `max_ideal v`. -/
+definition residue_field := (max_ideal v).quotient
+
+/-- `residue_field v` is a field. -/
+instance residue_field.discrete_field : discrete_field (residue_field v) := ideal.quotient.field _
+end valuation_field
 end valuation
