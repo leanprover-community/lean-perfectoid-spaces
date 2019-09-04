@@ -1,7 +1,6 @@
-import valuation.basic
-
 import for_mathlib.quotient_group
-import for_mathlib.group -- mul_equiv
+
+import valuation.localization
 
 /-! valuation.canonical
 
@@ -344,7 +343,7 @@ the map `value_group v → Γ`. -/
 lemma to_Γ :
   (canonical_valuation v).map (value_group.to_Γ v) (value_group.to_Γ_monotone v) = v :=
 begin
-  rw valuation.ext,
+  rw valuation.ext_iff,
   intro r,
   change with_zero.map _ _ = _,
   destruct (v r),
@@ -357,8 +356,7 @@ begin
     rw ideal.quotient.eq_zero_iff_mem.2 h,
     exact (valuation_field.canonical_valuation v).map_zero,
   },
-  { intro g,
-    intro hr,
+  { intros g hr,
     rw hr,
     have h2 : v r ≠ none,
       rw hr, simp,
@@ -376,21 +374,9 @@ begin
     split_ifs with h1,
       contradiction,
     show some (v.on_valuation_field.unit_map ⟨r'',r''⁻¹,_,_⟩) = some g,
-    rw unit_map_eq,
-    rw ←hr,
+    rw [unit_map_eq, ←hr],
     show (on_valuation_field v) (r'') = v r,
-    let v' := on_quot v (le_refl _),
-    have hv' : supp v' = 0,
-      rw supp_quot_supp,
-      simp,
-    show v'.on_frac_val hv' ⟦⟨r',1⟩⟧ = v r,
-    rw on_frac_val_mk,
-    show v' r' / v' 1 = v r,
-    rw v'.map_one,
-    suffices : v' r' = v r,
-      simpa using this,
-    refl,
-  }
+    exact localization_apply _ _ _, }
 end
 
 end canonical_valuation -- end of namespace
@@ -450,12 +436,9 @@ lemma comap_on_frac {R : Type u₀} [integral_domain R]
     rintros h ⟨x⟩ ⟨y⟩,
     erw ← comap_on_frac_eq v₁,
     erw ← comap_on_frac_eq v₂,
-    dsimp [comap],
-    repeat {erw on_frac_val'},
-    repeat {erw on_frac_val_mk},
     repeat {erw with_zero.div_le_div},
-    repeat {erw ← valuation.map_mul},
-    exact h _ _,
+    { repeat {erw ← valuation.map_mul},
+      exact h _ _ },
     all_goals { intro H,
       erw [← mem_supp_iff, comap_supp, (supp _).eq_bot_of_prime] at H,
       simp at H,
@@ -682,14 +665,14 @@ def val_ring_equiv_of_is_equiv (h : v₁.is_equiv v₂) : v₁.valuation_ring �
 -- we omit the proof that the diagram {r | v₁ r ≤ 1} → v₁.valuation_ring → v₂.valuation_ring
 -- commutes.
 
-lemma valfeld_le_of_le_of_equiv (h : v₁.is_equiv v₂) (a b : valuation_field v₁) :
+lemma valfield_le_of_le_of_equiv (h : v₁.is_equiv v₂) (a b : valuation_field v₁) :
   (a ≤ b) ↔ valfield_of_valfield_of_eq_supp (h.supp_eq) a ≤
     valfield_of_valfield_of_eq_supp (h.supp_eq) b :=
 is_equiv.on_valuation_field_is_equiv h a b
 
 def valfield.preorder_equiv (h : v₁.is_equiv v₂) :
   preorder_equiv (valuation_field v₁) (valuation_field v₂) :=
-{ le_map := valfeld_le_of_le_of_equiv h,
+{ le_map := valfield_le_of_le_of_equiv h,
   ..(valfield_equiv_valfield_of_eq_supp h.supp_eq).to_equiv
 }
 

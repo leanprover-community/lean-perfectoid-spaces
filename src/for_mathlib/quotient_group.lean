@@ -1,5 +1,5 @@
+import data.equiv.algebra
 import group_theory.quotient_group
-import for_mathlib.group
 
 -- Some stuff is now in mathlib
 
@@ -23,30 +23,8 @@ end quotient_group
 
 open quotient_group
 
--- I don't use this any more, first because mul_equiv.quotient is more general
--- and second because I don't like the definition of the function via quotient_group.map
-def mul_equiv.quotient' {G : Type*} {H : Type*} [group G] [group H]
-(h : mul_equiv G H) (K : set H) [normal_subgroup K] :
-mul_equiv (quotient_group.quotient (h ⁻¹' K)) (quotient_group.quotient K) :=
-{ to_fun := map (h ⁻¹' K) K h (le_refl (h ⁻¹' K)),
-  inv_fun := map K (h ⁻¹' K) h.symm (λ x H, show h (h.symm x) ∈ K, by rwa h.apply_symm_apply),
-  left_inv := λ g, begin
-    rw quotient_group.map_comp,
-    convert map_id _ g,
-    ext x, exact h.left_inv x
-  end,
-  right_inv := λ g, begin
-    rw quotient_group.map_comp,
-    convert map_id _ g,
-    ext x, exact h.right_inv x
-  end,
-  map_mul' := begin
-    have H : is_group_hom (map (h ⁻¹' K) K h (le_refl (h ⁻¹' K))) :=
-    by apply_instance,
-    exact H.map_mul,
-  end}
-
--- This version is better, but Mario points out that really I shuold be using a
+-- This version is better (than a previous, deleted version),
+-- but Mario points out that really I shuold be using a
 -- relation rather than h2 : he.to_equiv ⁻¹' K = J.
 def mul_equiv.quotient {G : Type*} {H : Type*} [group G] [group H]
   (he : G ≃* H) (J : set G) [normal_subgroup J] (K : set H) [normal_subgroup K]

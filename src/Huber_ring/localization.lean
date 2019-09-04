@@ -8,7 +8,6 @@ import for_mathlib.topological_rings
 import for_mathlib.algebra
 import for_mathlib.submodule
 import for_mathlib.nonarchimedean.basic
-import for_mathlib.group
 
 /-!
 # Localization of Huber rings
