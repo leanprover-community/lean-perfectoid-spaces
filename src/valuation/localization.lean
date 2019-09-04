@@ -101,13 +101,7 @@ show v r * (v 1)⁻¹ = v r, by simp
 
 /-- the extension of a valuation pulls back to the valuation -/
 lemma localization_comap (h : ∀ s, s ∈ S → v s ≠ 0) : (v.localization h).comap (localization.of) = v :=
-begin
-  rw valuation.ext,
-  intro r,
-  show v r * (v 1)⁻¹ = v r,
-  apply with_zero.mul_inv_eq_of_eq_mul (v.map_one_ne_zero),
-  rw [v.map_one, mul_one]
-end
+(valuation.ext _ _).mpr $ λ r, localization_apply v h r
 
 lemma eq_localization_of_comap_aux {v} (w : valuation (localization R S) Γ)
   (h : w.comap (localization.of) = v) : ∀ s, s ∈ S → v s ≠ 0 := λ s hs h0,

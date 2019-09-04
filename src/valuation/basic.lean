@@ -74,9 +74,13 @@ variables [ring R]
 instance (R : Type u₀) [ring R] (Γ : Type u) [linear_ordered_comm_group Γ] :
 has_coe_to_fun (valuation R Γ) := { F := λ _, R → with_zero Γ, coe := subtype.val}
 
-@[extensionality] lemma ext {Γ : Type u} [linear_ordered_comm_group Γ] (v₁ v₂ : valuation R Γ) :
+lemma ext_iff {Γ : Type u} [linear_ordered_comm_group Γ] {v₁ v₂ : valuation R Γ} :
   v₁ = v₂ ↔ ∀ r, v₁ r = v₂ r :=
 subtype.ext.trans ⟨λ h r, congr h rfl, funext⟩
+
+@[extensionality] lemma ext {Γ : Type u} [linear_ordered_comm_group Γ] {v₁ v₂ : valuation R Γ} :
+  (∀ r, v₁ r = v₂ r) → v₁ = v₂ :=
+valuation.ext_iff.mpr
 
 variables (v : valuation R Γ) {x y z : R}
 
@@ -84,8 +88,6 @@ variables (v : valuation R Γ) {x y z : R}
 @[simp] lemma map_one  : v 1 = 1 := v.property.map_one
 @[simp] lemma map_mul  : ∀ x y, v (x * y) = v x * v y := v.property.map_mul
 @[simp] lemma map_add  : ∀ x y, v (x + y) ≤ v x ∨ v (x + y) ≤ v y := v.property.map_add
-
-lemma map_one_ne_zero : v 1 ≠ 0 := by rw map_one; simp
 
 lemma map_add_le_max (x y) : v (x + y) ≤ max (v x) (v y) :=
 begin
@@ -123,14 +125,6 @@ begin
   cases unit_is_some v x with γ Hγ,
   rw Hγ,
   apply option.no_confusion,
-end
-
-lemma unit_is_some' {Γ : Type u} [linear_ordered_comm_group Γ] {R : Type u₀} [comm_ring R]
-  (v : valuation R Γ) {x : R} (h : ∃ y : R, x * y = 1) : ∃ γ : Γ, v x = γ :=
-begin
-  cases h with y hy,
-  let x' : units R := units.mk x y hy (mul_comm x y ▸ hy),
-  exact unit_is_some v x'
 end
 
 /-- If v is a valuation on a division ring then v(x)=0 iff x=0. -/
@@ -396,29 +390,17 @@ def trivial : valuation R Γ :=
   property :=
   { map_zero := if_pos S.zero_mem,
     map_one  := if_neg (assume h, prime.1 (S.eq_top_iff_one.2 h)),
-    map_mul  := λ x y, begin
-        split_ifs with hxy hx hy hy hx hy hy,
-        { simp },
-        { simp },
-        { simp },
-        { exfalso, cases ideal.is_prime.mem_or_mem prime hxy with h' h',
-          { exact hx h' },
-          { exact hy h' } },
-        { exfalso, exact hxy (S.mul_mem_right hx) },
-        { exfalso, exact hxy (S.mul_mem_right hx) },
-        { exfalso, exact hxy (S.mul_mem_left hy) },
-        { simp },
-      end,
+    map_mul  := λ x y,
+      if hx : x ∈ S then by rw [if_pos hx, zero_mul, if_pos (S.mul_mem_right hx)]
+      else if hy : y ∈ S then by rw [if_pos hy, mul_zero, if_pos (S.mul_mem_left hy)]
+      else have hxy : x * y ∉ S,
+      by { assume hxy, replace hxy := prime.mem_or_mem hxy, tauto },
+      by rw [if_neg hx, if_neg hy, if_neg hxy, mul_one],
     map_add  := λ x y, begin
-        split_ifs with hxy hx hy _ hx hy; try {simp};
-        try {left; exact le_refl _};
-        try {right}; try {exact le_refl _},
-        { have hxy' : x + y ∈ S := S.add_mem hx hy,
-          exfalso, exact hxy hxy' }
+        split_ifs with hxy hx hy _ hx hy;
+        try {simp}; try {exact le_refl _},
+        { exact hxy (S.add_mem hx hy) }
       end } }
-
-@[simp] lemma trivial_val :
-(trivial S).val = (λ x, if x ∈ S then 0 else 1 : R → (with_zero Γ)) := rfl
 
 end trivial -- end of section
 
