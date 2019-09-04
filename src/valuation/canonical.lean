@@ -665,14 +665,14 @@ def val_ring_equiv_of_is_equiv (h : v₁.is_equiv v₂) : v₁.valuation_ring �
 -- we omit the proof that the diagram {r | v₁ r ≤ 1} → v₁.valuation_ring → v₂.valuation_ring
 -- commutes.
 
-lemma valfeld_le_of_le_of_equiv (h : v₁.is_equiv v₂) (a b : valuation_field v₁) :
+lemma valfield_le_of_le_of_equiv (h : v₁.is_equiv v₂) (a b : valuation_field v₁) :
   (a ≤ b) ↔ valfield_of_valfield_of_eq_supp (h.supp_eq) a ≤
     valfield_of_valfield_of_eq_supp (h.supp_eq) b :=
 is_equiv.on_valuation_field_is_equiv h a b
 
 def valfield.preorder_equiv (h : v₁.is_equiv v₂) :
   preorder_equiv (valuation_field v₁) (valuation_field v₂) :=
-{ le_map := valfeld_le_of_le_of_equiv h,
+{ le_map := valfield_le_of_le_of_equiv h,
   ..(valfield_equiv_valfield_of_eq_supp h.supp_eq).to_equiv
 }
 
