@@ -1,5 +1,4 @@
 import for_mathlib.quotient_group
-import for_mathlib.group
 
 import valuation.localization
 
@@ -344,7 +343,7 @@ the map `value_group v → Γ`. -/
 lemma to_Γ :
   (canonical_valuation v).map (value_group.to_Γ v) (value_group.to_Γ_monotone v) = v :=
 begin
-  rw valuation.ext,
+  rw valuation.ext_iff,
   intro r,
   change with_zero.map _ _ = _,
   destruct (v r),
