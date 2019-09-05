@@ -169,17 +169,8 @@ eq_inv_of_mul_right_eq_one' _ _ $ by rw [← v.map_mul, units.mul_inv, v.map_one
 -- | none := 1
 -- end
 
--- @[simp] theorem unit_map_eq (u : units R) : some (unit_map v u) = v u :=
--- begin
---   unfold unit_map,
---   have h1 := v.map_mul u.val u.inv,
---   change _ = v u * _ at h1,
---   rw [u.val_inv, v.map_one] at h1,
---   cases h : (v u),
---     rw h at h1,
---     exfalso, exact option.no_confusion h1,
---   refl,
--- end
+@[simp] theorem unit_map_eq (u : units R) :
+  (units.map v.to_monoid_hom u : Γ) = v u := rfl
 
 -- lemma unit_map.ext (x z : units R) (H : v (z.val) = v (x.val)) :
 --   valuation.unit_map v z = valuation.unit_map v x :=

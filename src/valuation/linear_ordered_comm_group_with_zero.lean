@@ -33,6 +33,19 @@ instance units.linear_ordered_comm_group : linear_ordered_comm_group (units α) 
   .. units.linear_order α,
   .. (infer_instance : comm_group (units α))}
 
+noncomputable def with_zero_units_equiv : with_zero (units α) ≃ α :=
+equiv.symm $ @equiv.of_bijective α (with_zero (units α))
+(λ a, if h : a = 0 then 0 else group_with_zero.mk₀ a h)
+begin
+  split,
+  { intros a b, dsimp,
+    split_ifs; simp [with_zero.coe_inj, units.ext_iff, *], },
+  { intros a, with_zero_cases a,
+    { exact ⟨0, dif_pos rfl⟩ },
+    { refine ⟨a, _⟩, rw [dif_neg (group_with_zero.unit_ne_zero a)],
+      simp [with_zero.coe_inj, units.ext_iff, *] } }
+end
+
 variable {α}
 
 @[simp] lemma zero_le {a : α} : 0 ≤ a := zero_le' a
@@ -50,5 +63,21 @@ le_of_le_mul_right h (by simpa [h] using hab)
 
 lemma mul_inv_le_of_le_mul (h : c ≠ 0) (hab : a ≤ b * c) : a * c⁻¹ ≤ b :=
 le_of_le_mul_right h (by simpa [h] using hab)
+
+def with_zero_adj_units {β : Type*} [linear_ordered_comm_group β] (f : β →* units α) :
+  with_zero β →* α :=
+monoid_hom.mk
+(λ x, match x with
+| 0 := 0
+| some b := f b
+end)
+(show (f 1 : α) = 1, by { rw f.map_one, refl })
+begin
+  intros x y, with_zero_cases x y,
+  { show (0 : α) = 0 * 0, exact (zero_mul _).symm },
+  { show (0 : α) = 0 * _, exact (zero_mul _).symm },
+  { show (0 : α) = _ * 0, exact (mul_zero _).symm },
+  { show (f (x*y) : α) = f x * f y, rw f.map_mul, refl },
+end
 
 end linear_ordered_comm_group_with_zero

@@ -50,9 +50,12 @@ universes u u₀ u₁ u₂ u₃
 variables {R : Type u₀} [comm_ring R]
 
 namespace valuation
+open with_zero
 
 variables {Γ : Type u} [linear_ordered_comm_group_with_zero Γ]
 variables (v : valuation R Γ)
+
+section canonical_equivalent_valuation
 
 /-- The elements of `units (valuation_field v)` with norm 1. -/
 definition valuation_field_norm_one :=
@@ -62,51 +65,14 @@ is_group_hom.ker (units.map v.on_valuation_field.to_monoid_hom)
 instance (v : valuation R Γ) : normal_subgroup (valuation_field_norm_one v) :=
 by unfold valuation_field_norm_one; apply_instance
 
-namespace value_group
-
-def quotient_rel (a b : v.valuation_field) : Prop :=
-∃ c : units v.valuation_field, c ∈ v.valuation_field_norm_one ∧ a * c = b
-
-namespace quotient_rel
-
-lemma refl (a : v.valuation_field) : quotient_rel v a a :=
-⟨1, is_submonoid.one_mem _, mul_one a⟩
-
-lemma symm (a b : v.valuation_field) : quotient_rel v a b → quotient_rel v b a :=
-by { rintro ⟨c, hc, rfl⟩, exact ⟨c⁻¹, is_subgroup.inv_mem hc, c.mul_inv_cancel_right a⟩ }
-
-lemma trans (a b c : v.valuation_field) :
-  quotient_rel v a b → quotient_rel v b c → quotient_rel v a c :=
-begin
-  rintro ⟨c, hc, rfl⟩ ⟨c', hc', rfl⟩,
-  exact ⟨c * c', is_submonoid.mul_mem hc hc', (mul_assoc _ _ _).symm⟩
-end
-
-end quotient_rel
-
-def setoid : setoid (v.valuation_field) :=
-{ r := quotient_rel v,
-  iseqv := ⟨quotient_rel.refl v, quotient_rel.symm v, quotient_rel.trans v⟩ }
-
-end value_group
-
-section canonical_equivalent_valuation
-
 /-- The value group of the canonical valuation.-/
 def value_group (v : valuation R Γ) : Type u₀ :=
-@quotient v.valuation_field (value_group.setoid v)
-
-/-- The natural quotient map from `units (valuation_field v)` to `value_group v`. -/
-def value_group.mk (v : valuation R Γ) :
-  valuation_field v → value_group v :=
-quotient.mk'
-
-def value_group_aux (v : valuation R Γ) : Type u₀ :=
 quotient_group.quotient (valuation_field_norm_one v)
 
-def value_group_aux_to_value_group : v.value_group_aux → v.value_group :=
-λ x, quotient.lift_on' x (λ u, value_group.mk v u) $
-by { intros a b h, exact quotient.sound' ⟨_, h, a.mul_inv_cancel_left b⟩ }
+/-- The natural quotient map from `units (valuation_field v)` to `value_group v`. -/
+def value_group_quotient (v : valuation R Γ) :
+units (valuation_field v) → value_group v :=
+quotient.mk'
 
 /- The priorities of the next two instances are lower than the default so that
   the `linear_ordered_comm_group` instance below is found first. If these are found first,
@@ -121,8 +87,8 @@ by dunfold value_group; apply_instance
       change a⁻¹ * c ∈ is_group_hom.ker _ at hac,
       change b⁻¹ * d ∈ is_group_hom.ker _ at hbd,
       rw [is_group_hom.mem_ker, mul_comm, ←is_group_hom.one_iff_ker_inv] at hac hbd,
-      show (on_valuation_field v) a ≤ (on_valuation_field v) b =
-    ((on_valuation_field v) c ≤ (on_valuation_field v) d),
+      show v.on_valuation_field a ≤ v.on_valuation_field b =
+        (v.on_valuation_field c ≤ v.on_valuation_field d),
       rw [←unit_map_eq, ←unit_map_eq, ←unit_map_eq, ←unit_map_eq, hbd, hac]
     end,
   le_refl := λ abar, quotient.induction_on' abar $ λ a, le_refl ((on_valuation_field v) a),
@@ -130,12 +96,10 @@ by dunfold value_group; apply_instance
     @le_trans _ _ ((on_valuation_field v) a) ((on_valuation_field v) b) ((on_valuation_field v) c),
   le_antisymm := λ abar bbar, quotient.induction_on₂' abar bbar $ λ a b hab hba, begin
     have h :=  @le_antisymm _ _ ((on_valuation_field v) a) ((on_valuation_field v) b) hab hba,
+    rw [←unit_map_eq, ←unit_map_eq, ← units.ext_iff] at h,
     apply quotient.sound,
-    change a⁻¹ * b ∈ is_group_hom.ker v.on_valuation_field.unit_map,
-    rw [is_group_hom.mem_ker, mul_comm, ←is_group_hom.one_iff_ker_inv],
-    rw [←unit_map_eq, ←unit_map_eq] at h,
-    replace h := option.injective_some _ h,
-    rw h,
+    change a⁻¹ * b ∈ is_group_hom.ker _,
+    rw [is_group_hom.mem_ker, mul_comm, ←is_group_hom.one_iff_ker_inv, h],
   end,
   le_total := λ abar bbar, quotient.induction_on₂' abar bbar $ λ a b,
     le_total ((on_valuation_field v) a) ((on_valuation_field v) b),
@@ -161,29 +125,40 @@ instance : linear_ordered_comm_group (value_group v) :=
     change v.on_valuation_field (c * a) ≤ v.on_valuation_field (c * b),
     rw v.on_valuation_field.map_mul,
     rw v.on_valuation_field.map_mul,
-    exact with_zero.mul_le_mul_left _ _ h _
+    exact linear_ordered_structure.mul_le_mul_left h _
 end,
  ..value_group.comm_group v,
  ..value_group.linear_order v }
 
 /-- The natural map `value_group v → Γ` induced by v. -/
 def value_group.to_Γ (v : valuation R Γ) :
-value_group v → Γ :=
-quotient_group.lift (valuation_field_norm_one v) v.on_valuation_field.unit_map $
-  λ x, (is_group_hom.mem_ker _).1
+value_group v →* units Γ :=
+begin
+  refine_struct
+  { to_fun := quotient_group.lift
+    (valuation_field_norm_one v) (units.map v.on_valuation_field.to_monoid_hom) $
+    λ x, (is_group_hom.mem_ker _).1,
+    .. },
+  { have := (is_group_hom.to_is_monoid_hom $
+    quotient_group.lift
+    (valuation_field_norm_one v) (units.map v.on_valuation_field.to_monoid_hom) $
+    λ x, (is_group_hom.mem_ker _).1),
+    exact this.map_one },
+  { have := (is_group_hom.to_is_monoid_hom $
+    quotient_group.lift
+    (valuation_field_norm_one v) (units.map v.on_valuation_field.to_monoid_hom) $
+    λ x, (is_group_hom.mem_ker _).1),
+    exact this.map_mul },
+end
 
-/-- The natural map `value_group v → Γ` is a group homomorphism. -/
-instance : is_group_hom (value_group.to_Γ v) :=
-by unfold value_group.to_Γ; apply_instance
+-- /-- The natural map `value_group v → Γ` is a group homomorphism. -/
+-- instance : is_group_hom (value_group.to_Γ v) :=
+-- by unfold value_group.to_Γ; apply_instance
 
 /-- The natural map `value_group v → Γ` preserves ≤ -/
 lemma value_group.to_Γ_monotone :
   monotone (value_group.to_Γ v) :=
-begin
-  rintros ⟨x⟩ ⟨y⟩,
-  erw [mk_le_mk_iff, ← unit_map_eq, ← unit_map_eq, with_bot.some_le_some],
-  exact id,
-end
+by { rintros ⟨x⟩ ⟨y⟩, exact id }
 
 /-- The natural map `value_group v → Γ` is injective. -/
 lemma value_group.to_Γ_injective :
@@ -206,18 +181,21 @@ values in {0} ∪ `value_group v` -/
 definition valuation_field.canonical_valuation_v :
 valuation_field v → with_zero (value_group v) :=
 λ k, if h : (k = 0) then 0 else
-  value_group_quotient v ⟨k,k⁻¹,mul_inv_cancel h, inv_mul_cancel h⟩
+  value_group_quotient v (units.mk0 k h)
 
-/-- The valuation Frac(R/supp(v)) → {0} ∪ `value_group v` is a valuation. -/
-lemma valuation_field.canonical_valuation_v.is_valuation :
-is_valuation (valuation_field.canonical_valuation_v v) :=
-{ map_zero := dif_pos rfl,
-  map_one := begin unfold valuation_field.canonical_valuation_v, rw dif_neg zero_ne_one.symm,
+/-- The canonical valuation on Frac(R/supp(v)), taking values in `value_group v`. -/
+def valuation_field.canonical_valuation :
+  valuation (valuation_field v) (with_zero $ value_group v) :=
+{ to_fun := valuation_field.canonical_valuation_v v,
+  map_zero' := dif_pos rfl,
+  map_one' := begin
+    unfold valuation_field.canonical_valuation_v,
+    rw dif_neg one_ne_zero,
     apply option.some_inj.2,
     convert is_group_hom.map_one (value_group_quotient v),
-    exact inv_one
+    ext, refl,
   end,
-  map_mul := λ x y, begin
+  map_mul' := λ x y, begin
     unfold valuation_field.canonical_valuation_v,
     split_ifs with hxy hx hy hy hx hy hy,
     { simp },
@@ -234,7 +212,7 @@ is_valuation (valuation_field.canonical_valuation_v v) :=
     apply units.ext,
     refl,
   end,
-  map_add := λ x y, begin
+  map_add' := λ x y, begin
     unfold valuation_field.canonical_valuation_v,
     split_ifs with hxy hx hy hy hx hy hy,
     { left, exact le_refl _ },
@@ -248,45 +226,44 @@ is_valuation (valuation_field.canonical_valuation_v v) :=
       exact v.on_valuation_field.map_add _ _ }
   end }
 
-/-- The canonical valuation on Frac(R/supp(v)), taking values in `value_group v`. -/
-def valuation_field.canonical_valuation :
-valuation (valuation_field v) (value_group v) :=
-⟨valuation_field.canonical_valuation_v v, valuation_field.canonical_valuation_v.is_valuation v⟩
+-- WARNING!!!
+-- TODO(jmc) : Fix the following lemma
+-- DON'T DELETE IT!!!
 
-lemma valuation_field.canonical_valuation_unit :
-unit_map (valuation_field.canonical_valuation v) = value_group_quotient v :=
-begin
-  -- one has to really dig to get to the `if`
-  ext x,
-  rw ←option.some_inj,
-  rw unit_map_eq,
-  show dite (x.val = 0) (λ (_x : x.val = 0), (0 : with_zero (value_group v)))
-      (λ (h : ¬x.val = 0),
-        (value_group_quotient v {val := ↑x, inv := (↑x)⁻¹, val_inv := _, inv_val := _})) =
-    some (value_group_quotient v x),
-  -- The `if` is now accessible for `split_ifs`.
-  split_ifs with h,
-  { change x.val = 0 at h,
-    have h2 := x.val_inv,
-    rw [h, zero_mul] at h2,
-    exfalso, revert h2,
-    simp },
-  { show some _ = some _,
-    congr,
-    apply units.ext,
-    refl }
-end
+-- lemma valuation_field.canonical_valuation_unit :
+-- unit_map (valuation_field.canonical_valuation v) = value_group_quotient v :=
+-- begin
+--   -- one has to really dig to get to the `if`
+--   ext x,
+--   rw ←option.some_inj,
+--   rw unit_map_eq,
+--   show dite (x.val = 0) (λ (_x : x.val = 0), (0 : with_zero (value_group v)))
+--       (λ (h : ¬x.val = 0),
+--         (value_group_quotient v {val := ↑x, inv := (↑x)⁻¹, val_inv := _, inv_val := _})) =
+--     some (value_group_quotient v x),
+--   -- The `if` is now accessible for `split_ifs`.
+--   split_ifs with h,
+--   { change x.val = 0 at h,
+--     have h2 := x.val_inv,
+--     rw [h, zero_mul] at h2,
+--     exfalso, revert h2,
+--     simp },
+--   { show some _ = some _,
+--     congr,
+--     apply units.ext,
+--     refl }
+-- end
 
 /-- The canonical valuation on R/supp(v), taking values in `value_group v`. -/
 definition quotient.canonical_valuation (v : valuation R Γ) :
-  valuation (ideal.quotient (supp v)) (value_group v) :=
-@comap _ _ _ _ (valuation_field.canonical_valuation v) _ _ (localization.of)
-  (by apply_instance)
+  valuation (ideal.quotient (supp v)) (with_zero $ value_group v) :=
+@comap _ _ _ _ _ _ (localization.of)
+  (by apply_instance) (valuation_field.canonical_valuation v)
 
 /-- The canonical valuation on R, taking values in `value_group v`. -/
 definition canonical_valuation (v : valuation R Γ) :
-  valuation R (value_group v) :=
-comap (quotient.canonical_valuation v) (ideal.quotient.mk (supp v))
+  valuation R (with_zero $ value_group v) :=
+(quotient.canonical_valuation v).comap (ideal.quotient.mk (supp v))
 
 /-- The relation between `v.canonical_valuation r` and `v r`. -/
 lemma canonical_valuation_eq (v : valuation R Γ) (r : R) : v.canonical_valuation r =
@@ -376,7 +353,9 @@ end
 /-- v can be reconstructed from `canonical_valuation v` by pushing forward along
 the map `value_group v → Γ`. -/
 lemma to_Γ :
-  (canonical_valuation v).map (value_group.to_Γ v) (value_group.to_Γ_monotone v) = v :=
+  (canonical_valuation v).map
+  (linear_ordered_comm_group_with_zero.with_zero_adj_units $ value_group.to_Γ v)
+  rfl _ = v :=
 begin
   rw valuation.ext_iff,
   intro r,
@@ -420,17 +399,17 @@ end valuation -- end of namespace
 
 namespace valuation
 
-variables {Γ : Type u}   [linear_ordered_comm_group Γ]
-variables {Γ₁ : Type u₁} [linear_ordered_comm_group Γ₁]
-variables {Γ₂ : Type u₂} [linear_ordered_comm_group Γ₂]
-variables {Γ₃ : Type u₃} [linear_ordered_comm_group Γ₃]
+variables {Γ : Type u}   [linear_ordered_comm_group_with_zero Γ]
+variables {Γ₁ : Type u₁} [linear_ordered_comm_group_with_zero Γ₁]
+variables {Γ₂ : Type u₂} [linear_ordered_comm_group_with_zero Γ₂]
+variables {Γ₃ : Type u₃} [linear_ordered_comm_group_with_zero Γ₃]
 
 /-- A valuation is equivalent to its canonical valuation -/
 lemma canonical_valuation_is_equiv (v : valuation R Γ) :
   v.canonical_valuation.is_equiv v :=
 begin
   symmetry,
-  convert is_equiv_of_map_strict_mono
+  convert is_equiv_of_map_of_strict_mono
     (value_group.to_Γ v)
     (value_group.to_Γ_strict_mono _),
   symmetry,
@@ -540,7 +519,7 @@ begin
   refine (is_equiv.trans _ (v₂.canonical_valuation_is_equiv)),
   rw H,
   symmetry,
-  exact is_equiv_of_map_strict_mono _ _
+  exact is_equiv_of_map_of_strict_mono _ _
 end
 
 -- These lemmas look slightly ridiculous to a mathematician but they are avoiding equality of

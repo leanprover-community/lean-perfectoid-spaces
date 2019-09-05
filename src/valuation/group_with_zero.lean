@@ -82,7 +82,7 @@ def mk₀ (a : α) (h : a ≠ 0) : units α :=
   val_inv := mul_inv_cancel' a h,
   inv_val := inv_mul_cancel' a h }
 
-@[simp] lemma coe_mk₀ (a : α) (h : a ≠ 0) : (mk₀ a h : α) = a := rfl
+@[simp] lemma coe_mk₀ (a : α) (h : ¬ a = 0) : (mk₀ a h : α) = a := rfl
 
 @[simp] lemma coe_unit_mul_inv (a : units α) : (a : α) * a⁻¹ = 1 :=
 mul_inv_cancel' _ $ ne_zero_of_mul_right_eq_one' _ (a⁻¹ : units α) $ by simp
