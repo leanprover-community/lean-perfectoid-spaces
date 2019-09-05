@@ -3,8 +3,9 @@ import ring_theory.ideal_operations
 import ring_theory.subring
 
 import for_mathlib.rings
-import for_mathlib.linear_ordered_comm_group
 import for_mathlib.equiv
+
+import valuation.linear_ordered_comm_group_with_zero
 
 /-! valuation.basic
 
@@ -47,23 +48,23 @@ open function with_zero ideal
 
 universes u u₀ u₁ u₂ u₃ -- v is used for valuations
 
-variables {Γ : Type u} [linear_ordered_comm_group Γ]
-variables {Γ₁ : Type u₁} [linear_ordered_comm_group Γ₁]
-variables {Γ₂ : Type u₂} [linear_ordered_comm_group Γ₂]
-variables {Γ₃ : Type u₃} [linear_ordered_comm_group Γ₃]
+variables {Γ : Type u} [linear_ordered_comm_group_Γ]
+variables {Γ₁ : Type u₁} [linear_ordered_comm_group_Γ₁]
+variables {Γ₂ : Type u₂} [linear_ordered_comm_group_Γ₂]
+variables {Γ₃ : Type u₃} [linear_ordered_comm_group_Γ₃]
 
 variables {R : Type u₀} -- This will be a ring, assumed commutative in some sections
 
 /-- Predicate for valuations on a ring R with values in {0} ∪ Γ. -/
-structure valuation.is_valuation [ring R] (v : R → with_zero Γ) : Prop :=
+structure valuation.is_valuation [ring R] (v : R → Γ) : Prop :=
 (map_zero : v 0 = 0)
 (map_one  : v 1 = 1)
 (map_mul  : ∀ x y, v (x * y) = v x * v y)
 (map_add  : ∀ x y, v (x + y) ≤ v x ∨ v (x + y) ≤ v y)
 
 /-- The type of ({0} ∪ Γ)-valued valuations on R. -/
-def valuation (R : Type u₀) [ring R] (Γ : Type u) [linear_ordered_comm_group Γ] :=
-{ v : R → with_zero Γ // valuation.is_valuation v }
+def valuation (R : Type u₀) [ring R] (Γ : Type u) [linear_ordered_comm_group_Γ] :=
+{ v : R → Γ // valuation.is_valuation v }
 
 namespace valuation
 
@@ -71,14 +72,14 @@ section basic
 variables [ring R]
 
 /-- A valuation is coerced to the underlying function R → {0} ∪ Γ. -/
-instance (R : Type u₀) [ring R] (Γ : Type u) [linear_ordered_comm_group Γ] :
-has_coe_to_fun (valuation R Γ) := { F := λ _, R → with_zero Γ, coe := subtype.val}
+instance (R : Type u₀) [ring R] (Γ : Type u) [linear_ordered_comm_group_Γ] :
+has_coe_to_fun (valuation R Γ) := { F := λ _, R → Γ, coe := subtype.val}
 
-lemma ext_iff {Γ : Type u} [linear_ordered_comm_group Γ] {v₁ v₂ : valuation R Γ} :
+lemma ext_iff {Γ : Type u} [linear_ordered_comm_group_Γ] {v₁ v₂ : valuation R Γ} :
   v₁ = v₂ ↔ ∀ r, v₁ r = v₂ r :=
 subtype.ext.trans ⟨λ h r, congr h rfl, funext⟩
 
-@[extensionality] lemma ext {Γ : Type u} [linear_ordered_comm_group Γ] {v₁ v₂ : valuation R Γ} :
+@[extensionality] lemma ext {Γ : Type u} [linear_ordered_comm_group_Γ] {v₁ v₂ : valuation R Γ} :
   (∀ r, v₁ r = v₂ r) → v₁ = v₂ :=
 valuation.ext_iff.mpr
 
@@ -128,7 +129,7 @@ begin
 end
 
 /-- If v is a valuation on a division ring then v(x)=0 iff x=0. -/
-lemma zero_iff {Γ : Type u} [linear_ordered_comm_group Γ] {K : Type u₀} [division_ring K]
+lemma zero_iff {Γ : Type u} [linear_ordered_comm_group_Γ] {K : Type u₀} [division_ring K]
   (v : valuation K Γ) {x : K} : v x = 0 ↔ x = 0 :=
 begin
   split ; intro h,
@@ -141,18 +142,18 @@ begin
   { exact h.symm ▸ v.map_zero },
 end
 
-lemma map_inv {Γ : Type u} [linear_ordered_comm_group Γ] {K : Type u₀} [division_ring K]
+lemma map_inv {Γ : Type u} [linear_ordered_comm_group_Γ] {K : Type u₀} [division_ring K]
   (v : valuation K Γ) {x : K} (h : x ≠ 0) : v x⁻¹ = (v x)⁻¹ :=
 begin
   apply with_zero.eq_inv_of_mul_eq_one_right,
   rw [← v.map_mul, mul_inv_cancel h, v.map_one]
 end
 
-lemma ne_zero_iff {Γ : Type u} [linear_ordered_comm_group Γ] {K : Type u₀} [division_ring K]
+lemma ne_zero_iff {Γ : Type u} [linear_ordered_comm_group_Γ] {K : Type u₀} [division_ring K]
   (v : valuation K Γ) {x : K} : v x ≠ 0 ↔ x ≠ 0 :=
 not_iff_not_of_iff v.zero_iff
 
-lemma coe_of_ne_zero {Γ : Type u} [linear_ordered_comm_group Γ] {K : Type u₀} [division_ring K]
+lemma coe_of_ne_zero {Γ : Type u} [linear_ordered_comm_group_Γ] {K : Type u₀} [division_ring K]
   (v : valuation K Γ) {x : K} (h : x ≠ 0) : ∃ γ : Γ, v x = γ :=
 by rwa [← v.ne_zero_iff, with_zero.ne_zero_iff_exists] at h
 
@@ -195,7 +196,7 @@ by rw ← valuation.unit_map_eq ; refl
 instance unit_map.is_group_hom : is_group_hom (unit_map v) :=
 is_group_hom.mk' $
 λ a b, option.some.inj $
-  show _ = (some _ * some _ : with_zero Γ),
+  show _ = (some _ * some _ : Γ),
   by simp
 
 @[simp] theorem map_neg_one : v (-1) = 1 :=
@@ -206,7 +207,7 @@ begin
   apply linear_ordered_structure.eq_one_of_pow_eq_one (_ : _ ^ 2 = _),
   rw pow_two,
   apply option.some.inj,
-  change (some _ * some _ : with_zero Γ) = _,
+  change (some _ * some _ : Γ) = _,
   rw [unit_map_eq, ← v.map_mul, units.coe_neg, units.coe_one, neg_one_mul, neg_neg, v.map_one],
   refl
 end
@@ -253,7 +254,7 @@ v.map_zero.symm ▸ with_zero.le_zero_iff_eq_zero.symm
 
 section change_of_group
 
-variables {v₁ : R → with_zero Γ₁} {v₂ : R → with_zero Γ₂}
+variables {v₁ : R → Γ₁} {v₂ : R → Γ₂}
 variables {ψ : Γ₁ → Γ₂}
 variables (H12 : ∀ r, with_zero.map ψ (v₁ r) = v₂ r)
 variables (Hle : ∀ g h : Γ₁, g ≤ h ↔ ψ g ≤ ψ h)
@@ -297,7 +298,7 @@ lemma comap_comp {S₁ : Type u₁} [ring S₁] {S₂ : Type u₂} [ring S₂]
 subtype.ext.mpr $ rfl
 
 /-- A ≤-preserving group homomorphism Γ → Γ₁ induces a map valuation R Γ → valuation R Γ₁. -/
-def map {Γ₁ : Type u₁} [linear_ordered_comm_group Γ₁]
+def map {Γ₁ : Type u₁} [linear_ordered_comm_group_Γ₁]
   (f : Γ → Γ₁) [is_group_hom f] (hf : monotone f) :
 valuation R Γ₁ :=
 { val := with_zero.map f ∘ v,
@@ -479,7 +480,7 @@ variable (v)
 /-- If `hJ : J ⊆ supp v` then `on_quot_val hJ` is the induced function on R/J as a function.
 Note: it's just the function; the valuation is `on_quot hJ`. -/
 definition on_quot_val {J : ideal R} (hJ : J ≤ supp v) :
-  J.quotient → with_zero Γ :=
+  J.quotient → Γ :=
 λ q, quotient.lift_on' q v $ λ a b h,
 begin
   have hsupp : a - b ∈ supp v := hJ h,
