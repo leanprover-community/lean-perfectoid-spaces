@@ -50,28 +50,63 @@ universes u u₀ u₁ u₂ u₃
 variables {R : Type u₀} [comm_ring R]
 
 namespace valuation
-open with_zero
 
-variables {Γ : Type u} [linear_ordered_comm_group Γ]
+variables {Γ : Type u} [linear_ordered_comm_group_with_zero Γ]
 variables (v : valuation R Γ)
 
-section canonical_equivalent_valuation
-
 /-- The elements of `units (valuation_field v)` with norm 1. -/
-definition valuation_field_norm_one := is_group_hom.ker v.on_valuation_field.unit_map
+definition valuation_field_norm_one :=
+is_group_hom.ker (units.map v.on_valuation_field.to_monoid_hom)
 
 /-- `valuation_field_norm_one v is a normal subgroup of `units (valuation_field v)`. -/
 instance (v : valuation R Γ) : normal_subgroup (valuation_field_norm_one v) :=
 by unfold valuation_field_norm_one; apply_instance
 
+namespace value_group
+
+def quotient_rel (a b : v.valuation_field) : Prop :=
+∃ c : units v.valuation_field, c ∈ v.valuation_field_norm_one ∧ a * c = b
+
+namespace quotient_rel
+
+lemma refl (a : v.valuation_field) : quotient_rel v a a :=
+⟨1, is_submonoid.one_mem _, mul_one a⟩
+
+lemma symm (a b : v.valuation_field) : quotient_rel v a b → quotient_rel v b a :=
+by { rintro ⟨c, hc, rfl⟩, exact ⟨c⁻¹, is_subgroup.inv_mem hc, c.mul_inv_cancel_right a⟩ }
+
+lemma trans (a b c : v.valuation_field) :
+  quotient_rel v a b → quotient_rel v b c → quotient_rel v a c :=
+begin
+  rintro ⟨c, hc, rfl⟩ ⟨c', hc', rfl⟩,
+  exact ⟨c * c', is_submonoid.mul_mem hc hc', (mul_assoc _ _ _).symm⟩
+end
+
+end quotient_rel
+
+def setoid : setoid (v.valuation_field) :=
+{ r := quotient_rel v,
+  iseqv := ⟨quotient_rel.refl v, quotient_rel.symm v, quotient_rel.trans v⟩ }
+
+end value_group
+
+section canonical_equivalent_valuation
+
 /-- The value group of the canonical valuation.-/
 def value_group (v : valuation R Γ) : Type u₀ :=
-quotient_group.quotient (valuation_field_norm_one v)
+@quotient v.valuation_field (value_group.setoid v)
 
 /-- The natural quotient map from `units (valuation_field v)` to `value_group v`. -/
-def value_group_quotient (v : valuation R Γ) :
-units (valuation_field v) → value_group v :=
+def value_group.mk (v : valuation R Γ) :
+  valuation_field v → value_group v :=
 quotient.mk'
+
+def value_group_aux (v : valuation R Γ) : Type u₀ :=
+quotient_group.quotient (valuation_field_norm_one v)
+
+def value_group_aux_to_value_group : v.value_group_aux → v.value_group :=
+λ x, quotient.lift_on' x (λ u, value_group.mk v u) $
+by { intros a b h, exact quotient.sound' ⟨_, h, a.mul_inv_cancel_left b⟩ }
 
 /- The priorities of the next two instances are lower than the default so that
   the `linear_ordered_comm_group` instance below is found first. If these are found first,
@@ -83,8 +118,8 @@ by dunfold value_group; apply_instance
 { le := λ a' b',
     quotient.lift_on₂' a' b' (λ s t, v.on_valuation_field ↑s ≤ v.on_valuation_field ↑t) $
     λ a b c d hac hbd, begin
-      change a⁻¹ * c ∈ is_group_hom.ker v.on_valuation_field.unit_map at hac,
-      change b⁻¹ * d ∈ is_group_hom.ker v.on_valuation_field.unit_map at hbd,
+      change a⁻¹ * c ∈ is_group_hom.ker _ at hac,
+      change b⁻¹ * d ∈ is_group_hom.ker _ at hbd,
       rw [is_group_hom.mem_ker, mul_comm, ←is_group_hom.one_iff_ker_inv] at hac hbd,
       show (on_valuation_field v) a ≤ (on_valuation_field v) b =
     ((on_valuation_field v) c ≤ (on_valuation_field v) d),
@@ -395,7 +430,7 @@ lemma canonical_valuation_is_equiv (v : valuation R Γ) :
   v.canonical_valuation.is_equiv v :=
 begin
   symmetry,
-  convert is_equiv_of_map_of_strict_mono
+  convert is_equiv_of_map_strict_mono
     (value_group.to_Γ v)
     (value_group.to_Γ_strict_mono _),
   symmetry,
@@ -505,7 +540,7 @@ begin
   refine (is_equiv.trans _ (v₂.canonical_valuation_is_equiv)),
   rw H,
   symmetry,
-  exact is_equiv_of_map_of_strict_mono _ _
+  exact is_equiv_of_map_strict_mono _ _
 end
 
 -- These lemmas look slightly ridiculous to a mathematician but they are avoiding equality of
