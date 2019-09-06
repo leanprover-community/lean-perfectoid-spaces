@@ -13,11 +13,10 @@ noncomputable theory
 universes u u₀
 
 variables {R : Type u₀} [comm_ring R]
-variables {Γ : Type u} [linear_ordered_comm_group Γ]
+variables {Γ : Type u} [linear_ordered_comm_group_with_zero Γ]
 variables {S : set R} [is_submonoid S]
 
 namespace valuation
-open with_zero
 
 variables (v : valuation R Γ)
 
@@ -27,72 +26,67 @@ lemma inverse_exists (s : S) : ∃ u : localization R S, u * s = 1 :=
 -- I realised later on that I could have used the UMP of rings to give
 -- a map localization R S -> K_v and then pulled back the canonical valuation.
 -- But I was 80% of the way through the proof it was a valuation when I realised this.
-def localization_v (h : ∀ s, s ∈ S → v s ≠ 0) : localization R S → with_zero Γ :=
+def localization_v (h : ∀ s, s ∈ S → v s ≠ 0) : localization R S → Γ :=
 λ (q : localization R S), quotient.lift_on' q (λ rs, v rs.1 * (v rs.2.1)⁻¹)
-  begin
-    rintros ⟨r1, s1, hs1⟩,
-    rintros ⟨r2, s2, hs2⟩,
-    intro hrs,
-    dsimp [setoid.r, localization.r] at hrs,
-    rcases hrs with ⟨t, ht, hrst⟩,
-    rw [add_mul, ←neg_mul_eq_neg_mul, add_neg_eq_zero] at hrst,
-    show v r1 * (v s1)⁻¹ = v r2 * (v s2)⁻¹,
-    apply with_zero.mul_inv_eq_of_eq_mul (h s1 hs1),
-    rw [mul_comm, ←mul_assoc],
-    apply with_zero.eq_mul_inv_of_mul_eq (h s2 hs2),
-    rw [←v.map_mul, ←v.map_mul, mul_comm],
-    apply with_zero.mul_right_cancel (h t ht),
-    rw [←v.map_mul, ←v.map_mul, hrst]
-  end
+begin
+  rintros ⟨r1, s1, hs1⟩ ⟨r2, s2, hs2⟩ ⟨t, ht, hrst⟩,
+  change (s1 * r2 + -(s2 * r1)) * t = 0 at hrst,
+  show v r1 * (v s1)⁻¹ = v r2 * (v s2)⁻¹,
+  rw [add_mul, ←neg_mul_eq_neg_mul, add_neg_eq_zero] at hrst,
+  replace hrst : v (s1 * r2 * t) = v (s2 * r1 * t) := congr_arg v hrst,
+  apply group_with_zero.mul_inv_eq_of_eq_mul (h s1 hs1),
+  rw [mul_comm, ←mul_assoc],
+  apply group_with_zero.eq_mul_inv_of_mul_eq (h s2 hs2),
+  rw [←v.map_mul, ←v.map_mul, mul_comm],
+  apply group_with_zero.mul_right_cancel (h t ht),
+  rw [←v.map_mul, ←v.map_mul, hrst]
+end
 
-lemma localization_is_valuation (h : ∀ s, s ∈ S → v s ≠ 0) : is_valuation (v.localization_v h) :=
-{ map_zero := show v 0 * (v 1)⁻¹ = 0, by rw [v.map_zero, zero_mul],
-  map_one := show v 1 * (v 1)⁻¹ = 1, by {rw [v.map_one], simp},
-  map_mul := λ x y, quotient.induction_on₂' x y begin
+/-- Extension of a valuation to a localization -/
+protected def localization (h : ∀ s, s ∈ S → v s ≠ 0) : valuation (localization R S) Γ :=
+{ to_fun := v.localization_v h,
+  map_zero' := show v 0 * (v 1)⁻¹ = 0, by rw [v.map_zero, zero_mul],
+  map_one' := show v 1 * (v 1)⁻¹ = 1, by {rw [v.map_one], simp},
+  map_mul' := λ x y, quotient.induction_on₂' x y begin
     rintro ⟨r1, s1, hs1⟩,
     rintro ⟨r2, s2, hs2⟩,
     -- TODO : I had to write the next line "blind" -- I had to be the compiler.
     -- Am I missing a trick?
     show v (r1 * r2) * (v(s1 * s2))⁻¹ = (v r1 * (v s1)⁻¹) * (v r2 * (v s2)⁻¹),
     have hs12 : s1 * s2 ∈ S := is_submonoid.mul_mem hs1 hs2,
-    apply with_zero.mul_inv_eq_of_eq_mul (h (s1 * s2) hs12),
+    apply group_with_zero.mul_inv_eq_of_eq_mul (h (s1 * s2) hs12),
     rw [mul_comm _ (v (s1 * s2)), ←mul_assoc, ←mul_assoc],
-    apply with_zero.eq_mul_inv_of_mul_eq (h s2 hs2),
+    apply group_with_zero.eq_mul_inv_of_mul_eq (h s2 hs2),
     rw [mul_comm _ (v r2), ←v.map_mul, ←mul_assoc, ←v.map_mul, ←mul_assoc, ←v.map_mul],
-    apply with_zero.eq_mul_inv_of_mul_eq (h s1 hs1),
+    apply group_with_zero.eq_mul_inv_of_mul_eq (h s1 hs1),
     rw [←v.map_mul],
     apply congr_arg, ring,
   end,
-  map_add := λ x y, quotient.induction_on₂' x y begin
+  map_add' := λ x y, quotient.induction_on₂' x y begin
     rintro ⟨r1, s1, hs1⟩,
     rintro ⟨r2, s2, hs2⟩,
     show v (s1 * r2 + s2 * r1) * (v (s1 * s2))⁻¹ ≤ v r1 * (v s1)⁻¹ ∨
       v (s1 * r2 + s2 * r1) * (v (s1 * s2))⁻¹ ≤ v r2 * (v s2)⁻¹,
     cases v.map_add (r1 * s2) (r2 * s1) with h1 h2,
     { left,
-      apply with_zero.le_mul_inv_of_mul_le (h s1 hs1),
+      apply linear_ordered_comm_group_with_zero.le_mul_inv_of_mul_le (h s1 hs1),
       rw [mul_comm, ←mul_assoc],
-      apply with_zero.mul_inv_le_of_le_mul (h (s1 * s2) (is_submonoid.mul_mem hs1 hs2)),
+      apply linear_ordered_comm_group_with_zero.mul_inv_le_of_le_mul (h (s1 * s2) (is_submonoid.mul_mem hs1 hs2)),
       replace h1 := linear_ordered_structure.mul_le_mul_right h1 (v s1),
       rw [←v.map_mul, ←v.map_mul] at h1 ⊢,
       rw (show s1 * (s1 * r2 + s2 * r1) = (r1 * s2 + r2 * s1) * s1, by ring),
       rwa (show r1 * (s1 * s2) = r1 * s2 * s1, by ring),
     },
     { right,
-      apply with_zero.le_mul_inv_of_mul_le (h s2 hs2),
+      apply linear_ordered_comm_group_with_zero.le_mul_inv_of_mul_le (h s2 hs2),
       rw [mul_comm, ←mul_assoc],
-      apply with_zero.mul_inv_le_of_le_mul (h (s1 * s2) (is_submonoid.mul_mem hs1 hs2)),
+      apply linear_ordered_comm_group_with_zero.mul_inv_le_of_le_mul (h (s1 * s2) (is_submonoid.mul_mem hs1 hs2)),
       replace h2 := linear_ordered_structure.mul_le_mul_right h2 (v s2),
       rw [←v.map_mul, ←v.map_mul] at h2 ⊢,
       rw (show s2 * (s1 * r2 + s2 * r1) = (r1 * s2 + r2 * s1) * s2, by ring),
       rwa (show r2 * (s1 * s2) = r2 * s1 * s2, by ring),
     }
   end }
-
-/-- Extension of a valuation to a localization -/
-protected def localization (h : ∀ s, s ∈ S → v s ≠ 0) : valuation (localization R S) Γ :=
-{ val := v.localization_v h,
-  property := v.localization_is_valuation h }
 
 /-- Extension of a valuation to a localization -/
 lemma localization_apply (h : ∀ s, s ∈ S → v s ≠ 0) (r : R) :
@@ -107,20 +101,16 @@ lemma eq_localization_of_comap_aux {v} (w : valuation (localization R S) Γ)
   (h : w.comap (localization.of) = v) : ∀ s, s ∈ S → v s ≠ 0 := λ s hs h0,
 begin
   cases inverse_exists ⟨s, hs⟩ with u hu,
-  let s' : units (_root_.localization R S) := ⟨localization.of s, u, mul_comm u s ▸ hu, hu⟩,
---  have hs0 : w (localization.of s) ≠ 0
-  cases unit_is_some w s' with γ hγ,
-  rw ←h at h0,
-  change w s' = 0 at h0,
-  rw hγ at h0,
-  exact option.no_confusion h0,
+  let s' : units (localization R S) := ⟨localization.of s, u, mul_comm u s ▸ hu, hu⟩,
+  refine group_with_zero.unit_ne_zero (units.map w.to_monoid_hom s') _,
+  rwa ←h at h0,
 end
 
 /-- If a valuation on a localisation pulls back to v then it's the localization of v -/
 lemma eq_localization_of_comap (w : valuation (localization R S) Γ)
-  (h : w.comap (localization.of) = v) : v.localization (eq_localization_of_comap_aux w h) = w := begin
-  rw subtype.ext,
-  funext,
+  (h : w.comap (localization.of) = v) : v.localization (eq_localization_of_comap_aux w h) = w :=
+begin
+  ext q,
   induction q,
   { rcases q with ⟨r, s, hs⟩,
     show v r * (v s)⁻¹ = w (localization.mk r ⟨s, hs⟩),
@@ -128,14 +118,8 @@ lemma eq_localization_of_comap (w : valuation (localization R S) Γ)
     show w r * _ = _,
     congr,
     show (w s)⁻¹ = _,
-    have hs0 : w s ≠ 0 := map_unit_ne_zero w  (localization.to_units ⟨s, hs⟩),
-    apply with_zero.mul_right_cancel hs0,
-    rw ←w.map_mul,
-    rw with_zero.mul_left_inv _ hs0,
-    rw ←w.map_one, apply congr_arg,
-    symmetry,
-    exact units.inv_mul _
-  },
+    rw w.map_units_inv,
+    refl, },
   refl
 end
 
@@ -230,7 +214,7 @@ lemma valuation_field_mk_ne_zero (r : R) (hr : v r ≠ 0) : valuation_field_mk v
 
 /-- The induced preorder on Frac(R/supp(v)). -/
 instance valfield_preorder : preorder (valuation_field v) :=
-  ((v.on_quot (le_refl _)).on_frac $ quot_supp_zero v).to_preorder
+  ((v.on_quot (le_refl _)).on_frac $ supp_quot_supp v).to_preorder
 
 /-- The induced map from R \ supp(v) to the units of Frac(R/supp(v)). -/
 def units_valfield_mk (r : R) (h : r ∉ supp v) : units (valuation_field v) :=
@@ -245,18 +229,11 @@ def units_valfield_mk (r : R) (h : r ∉ supp v) : units (valuation_field v) :=
 instance units_valfield_preorder :
   preorder (units (valuation_field v)) := preorder.lift (λ u, u.val) (by apply_instance)
 
--- TODO -- on_frac_quot_comap_eq got deleted; it was never used. Can we delete this instance?
-
--- on_frac_quot_comap_eq needs more class.instance_max_depth to compile if
--- this instance is not explicitly given as a hint
-instance : is_submonoid (localization.non_zero_divisors (ideal.quotient (supp v))) :=
-by apply_instance
-
 /-- The valuation on Frac(R/supp(v)) induced by v. -/
 definition on_valuation_field : valuation (valuation_field v) Γ :=
 on_frac (v.on_quot (set.subset.refl _))
 begin
-  rw [supp_quot_supp, ideal.zero_eq_bot],
+  rw [supp_quot, ideal.zero_eq_bot],
   apply ideal.map_quotient_self,
 end
 
@@ -305,26 +282,13 @@ begin
   { exact λ (H : _ < _), ne_of_lt H (map_one _) },
   { rintros J ⟨x,hx⟩ hJ hxni hxinJ,
     have vx : v.on_valuation_field x = 1 :=
-    begin
-      rw eq_iff_le_not_lt,
-      split; assumption
-    end,
-    have xinv_mul_x : (x : valuation_field v)⁻¹ * x = 1 :=
-    begin
-      apply inv_mul_cancel,
-      intro hxeq0,
-      simpa [hxeq0] using vx
-    end,
-    have hxinv : v.on_valuation_field x⁻¹ ≤ 1 :=
-    begin
-      refine le_of_eq _,
-      symmetry,
-      simpa [xinv_mul_x, vx] using v.on_valuation_field.map_mul x⁻¹ x
-    end,
+    by { rw eq_iff_le_not_lt, split; assumption },
+    have hxinv : v.on_valuation_field x⁻¹ ≤ 1 := by simp [vx],
     convert J.smul_mem ⟨x⁻¹, hxinv⟩ hxinJ,
-    symmetry,
-    apply subtype.val_injective,
-    exact xinv_mul_x }
+    symmetry, apply subtype.val_injective,
+    apply inv_mul_cancel,
+    show x ≠ 0,
+    assume hxeq0, simpa [hxeq0] using vx }
 end
 
 set_option class.instance_max_depth 32

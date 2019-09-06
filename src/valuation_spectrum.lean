@@ -43,7 +43,7 @@ universes u u₀ u₁ u₂ u₃
 -- Note that the valuation takes values in a group in the same universe as R.
 -- This is to avoid "set-theoretic issues".
 definition Spv (R : Type u₀) [comm_ring R] :=
-{ineq : R → R → Prop // ∃ {Γ₀ : Type u₀} [linear_ordered_comm_group Γ₀],
+{ineq : R → R → Prop // ∃ {Γ₀ : Type u₀} [linear_ordered_comm_group_with_zero Γ₀],
  by exactI ∃ (v : valuation R Γ₀), ∀ r s : R, v r ≤ v s ↔ ineq r s}
 
 variables {R : Type u₀} [comm_ring R] {v : Spv R}
@@ -54,23 +54,23 @@ local notation r `≤[`v`]` s := v.1 r s
 namespace Spv
 open valuation
 
-variables {Γ  : Type u}  [linear_ordered_comm_group Γ]
-variables {Γ₁ : Type u₁} [linear_ordered_comm_group Γ₁]
-variables {Γ₂ : Type u₂} [linear_ordered_comm_group Γ₂]
+variables {Γ  : Type u}  [linear_ordered_comm_group_with_zero Γ]
+variables {Γ₁ : Type u₁} [linear_ordered_comm_group_with_zero Γ₁]
+variables {Γ₂ : Type u₂} [linear_ordered_comm_group_with_zero Γ₂]
 
 -- The work is embedded here with `canonical_valuation_is_equiv v` etc.
 -- The canonical valuation attached to v lives in R's universe.
 /-- The equivalence class of a valuation. -/
 definition mk (v : valuation R Γ) : Spv R :=
 ⟨λ r s, v r ≤ v s,
-  ⟨value_group v, by apply_instance, canonical_valuation v, canonical_valuation_is_equiv v⟩⟩
+  ⟨value_monoid v, by apply_instance, canonical_valuation v, canonical_valuation_is_equiv v⟩⟩
 
 @[simp] lemma mk_val (v : valuation R Γ) : (mk v).val = λ r s, v r ≤ v s := rfl
 
 /-- The value group attached to a term of type Spv R -/
 definition out_Γ (v : Spv R) : Type u₀ := classical.some v.2
 
-noncomputable instance (v : Spv R) : linear_ordered_comm_group (out_Γ v) :=
+noncomputable instance (v : Spv R) : linear_ordered_comm_group_with_zero (out_Γ v) :=
 classical.some $ classical.some_spec v.2
 
 /-- An explicit representative of an equivalence class of valuations (a term of type Spv R). -/
@@ -91,17 +91,17 @@ classical.some_spec (classical.some_spec (classical.some_spec (mk v).2))
 
 /-- A function defined on all valuations of R descends to Spv R. -/
 noncomputable def lift {X}
-  (f : Π ⦃Γ₀ : Type u₀⦄ [linear_ordered_comm_group Γ₀], valuation R Γ₀ → X) (v : Spv R) : X :=
+  (f : Π ⦃Γ₀ : Type u₀⦄ [linear_ordered_comm_group_with_zero Γ₀], valuation R Γ₀ → X) (v : Spv R) : X :=
 f (out v)
 
 /-- The computation principle for Spv:
 If a function is constant on equivalence classes of valuations,
 then it descends to a well-defined function on Spv R.-/
 theorem lift_eq {X}
-  (f₀ : Π ⦃Γ₀ : Type u₀⦄ [linear_ordered_comm_group Γ₀], valuation R Γ₀ → X)
-  (f : Π ⦃Γ : Type u⦄ [linear_ordered_comm_group Γ], valuation R Γ → X)
+  (f₀ : Π ⦃Γ₀ : Type u₀⦄ [linear_ordered_comm_group_with_zero Γ₀], valuation R Γ₀ → X)
+  (f : Π ⦃Γ : Type u⦄ [linear_ordered_comm_group_with_zero Γ], valuation R Γ → X)
   (v : valuation R Γ)
-  (h : ∀ ⦃Γ₀ : Type u₀⦄ [linear_ordered_comm_group Γ₀] (v₀ : valuation R Γ₀),
+  (h : ∀ ⦃Γ₀ : Type u₀⦄ [linear_ordered_comm_group_with_zero Γ₀] (v₀ : valuation R Γ₀),
     v₀.is_equiv v → f₀ v₀ = f v) :
   lift f₀ (mk v) = f v :=
 h _ (out_mk v)
@@ -110,17 +110,17 @@ h _ (out_mk v)
 If a predicate is constant on equivalence classes of valuations,
 then it descends to a well-defined predicate on Spv R.-/
 theorem lift_eq'
-  (f₀ : Π ⦃Γ₀ : Type u₀⦄ [linear_ordered_comm_group Γ₀], valuation R Γ₀ → Prop)
-  (f : Π ⦃Γ : Type u⦄ [linear_ordered_comm_group Γ], valuation R Γ → Prop)
+  (f₀ : Π ⦃Γ₀ : Type u₀⦄ [linear_ordered_comm_group_with_zero Γ₀], valuation R Γ₀ → Prop)
+  (f : Π ⦃Γ : Type u⦄ [linear_ordered_comm_group_with_zero Γ], valuation R Γ → Prop)
   (v : valuation R Γ)
-  (h : ∀ ⦃Γ₀ : Type u₀⦄ [linear_ordered_comm_group Γ₀] (v₀ : valuation R Γ₀),
+  (h : ∀ ⦃Γ₀ : Type u₀⦄ [linear_ordered_comm_group_with_zero Γ₀] (v₀ : valuation R Γ₀),
     v₀.is_equiv v → (f₀ v₀ ↔ f v)) :
   lift f₀ (mk v) ↔ f v :=
 h _ (out_mk v)
 
 /-- For every term of Spv R, there exists a valuation representing it.-/
 lemma exists_rep (v : Spv R) :
-  ∃ {Γ₀ : Type u₀} [linear_ordered_comm_group Γ₀], by exactI ∃ (v₀ : valuation R Γ₀),
+  ∃ {Γ₀ : Type u₀} [linear_ordered_comm_group_with_zero Γ₀], by exactI ∃ (v₀ : valuation R Γ₀),
   mk v₀ = v :=
 ⟨out_Γ v, infer_instance, out v, mk_out⟩
 
@@ -146,8 +146,8 @@ begin
 end
 
 noncomputable instance : has_coe_to_fun (Spv R) :=
-{ F := λ v, R → with_zero (out_Γ v),
-  coe := λ v, ((out v) : R → with_zero (out_Γ v)) }
+{ F := λ v, R → out_Γ v,
+  coe := λ v, (out v : R → out_Γ v) }
 
 section
 
@@ -174,4 +174,3 @@ begin
 end
 
 end Spv
-
