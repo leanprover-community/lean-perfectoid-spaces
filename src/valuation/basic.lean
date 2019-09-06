@@ -97,33 +97,6 @@ end
 /-- A valuation gives a preorder on the underlying ring. -/
 def to_preorder : preorder R := preorder.lift v (by apply_instance)
 
--- /-- If x ∈ R is a unit then v x is non-zero. -/
--- theorem map_unit (h : x * y = 1) : (v x).is_some :=
--- begin
---   have h1 := v.map_mul x y,
---   rw [h, map_one v] at h1,
---   cases (v x),
---   { exfalso,
---     exact option.no_confusion h1 },
---   { constructor }
--- end
-
--- /-- If x is a unit of R then there exists γ∈Γ with v(x)=γ. -/
--- lemma unit_is_some (x : units R) : ∃ γ : Γ, v x = γ :=
--- begin
---   have h1 := v.map_mul x.val x.inv,
---   rw [x.val_inv, valuation.map_one] at h1,
---   exact with_zero.eq_coe_of_mul_eq_coe_left h1.symm
--- end
-
--- /-- If x is a unit of R then v x is non-zero. -/
--- lemma map_unit_ne_zero (x : units R) : v x ≠ 0 :=
--- begin
---   cases unit_is_some v x with γ Hγ,
---   rw Hγ,
---   apply option.no_confusion,
--- end
-
 /-- If v is a valuation on a division ring then v(x)=0 iff x=0. -/
 lemma zero_iff {K : Type u₀} [division_ring K]
   (v : valuation K Γ) {x : K} : v x = 0 ↔ x = 0 :=
@@ -153,38 +126,11 @@ lemma ne_zero_iff {Γ : Type u} [linear_ordered_comm_group_with_zero Γ] {K : Ty
   (v : valuation K Γ) {x : K} : v x ≠ 0 ↔ x ≠ 0 :=
 not_iff_not_of_iff v.zero_iff
 
--- lemma coe_of_ne_zero {Γ : Type u} [linear_ordered_comm_group_with_zero Γ] {K : Type u₀} [division_ring K]
---   (v : valuation K Γ) {x : K} (h : x ≠ 0) : ∃ γ : Γ, v x = γ :=
--- by rwa [← v.ne_zero_iff, with_zero.ne_zero_iff_exists] at h
-
 lemma map_units_inv (x : units R) : v (x⁻¹ : units R) = (v x)⁻¹ :=
 eq_inv_of_mul_right_eq_one' _ _ $ by rw [← v.map_mul, units.mul_inv, v.map_one]
 
--- lemma map_unit' (x : units R) : (v x).is_some := map_unit v x.val_inv
-
--- /-- `unit_map v` is the map R^× → Γ associated to a valuation v : R → {0} ∪ Γ.-/
--- definition unit_map : units R → Γ :=
--- λ u, match v u with
--- | some x := x
--- | none := 1
--- end
-
 @[simp] theorem unit_map_eq (u : units R) :
   (units.map v.to_monoid_hom u : Γ) = v u := rfl
-
--- lemma unit_map.ext (x z : units R) (H : v (z.val) = v (x.val)) :
---   valuation.unit_map v z = valuation.unit_map v x :=
--- by rwa [←option.some_inj, valuation.unit_map_eq, valuation.unit_map_eq]
-
--- @[simp] lemma coe_unit_map (x : units R)  : ↑(v.unit_map x) = v x :=
--- by rw ← valuation.unit_map_eq ; refl
-
--- /-- The unit_map associated to a valuation is a group homomorphism. -/
--- instance unit_map.is_group_hom : is_group_hom (unit_map v) :=
--- is_group_hom.mk' $
--- λ a b, option.some.inj $
---   show _ = (some _ * some _ : Γ),
---   by simp
 
 @[simp] theorem map_neg_one : v (-1) = 1 :=
 begin
@@ -232,41 +178,6 @@ begin
   rw max_eq_right (le_of_lt h) at this,
   simpa using this
 end
-
--- @[simp] theorem eq_zero_iff_le_zero {r : R} : v r = 0 ↔ v r ≤ v 0 :=
--- by simpa using
--- linear_ordered_comm_group_with_zero.le_zero_iff.symm
-
--- section change_of_group
-
--- variables {v₁ : R → Γ₁} {v₂ : R → Γ₂}
--- variables {ψ : Γ₁ →* Γ₂}
--- variables (H12 : ∀ r, ψ (v₁ r) = v₂ r)
--- variables (Hle : ∀ g h : Γ₁, g ≤ h ↔ ψ g ≤ ψ h)
--- -- This include statement means that we have an underlying assumption
--- -- that ψ : Γ₁ → Γ₂ is order-preserving, and that v₁ and v₂ are functions with ψ ∘ v₁ = v₂.
--- include H12 Hle
-
--- theorem le_of_le (r s : R) : v₁ r ≤ v₁ s ↔ v₂ r ≤ v₂ s :=
--- by { rw ←H12 r, rw ←H12 s, exact Hle _ _ }
-
--- /-- Restriction of a Γ₂-valued valuation to a subgroup Γ₁ is still a valuation. -/
--- theorem valuation_of_valuation (Hiψ : function.injective ψ) (H : is_valuation v₂) :
--- is_valuation v₁ :=
--- { map_zero := with_zero.injective_map Hiψ $
---     by erw [H12, H.map_zero, ← with_zero.map_zero],
---   map_one := with_zero.injective_map Hiψ $
---     by erw [H12, H.map_one, with_zero.map_coe, is_group_hom.map_one ψ]; refl,
---   map_mul := λ r s, with_zero.injective_map Hiψ $
---     by rw [H12, H.map_mul, ←H12 r, ←H12 s]; exact (with_zero.map_mul _ _ _).symm,
---   map_add := λ r s,
---   begin
---     apply (H.map_add r s).imp _ _;
---     erw [with_zero.map_le Hle, ←H12, ←H12];
---     exact id
---   end }
-
--- end change_of_group -- section
 
 /-- A ring homomorphism S → R induces a map valuation R Γ → valuation S Γ -/
 def comap {S : Type u₁} [ring S] (f : S → R) [is_ring_hom f] (v : valuation R Γ) :
@@ -397,28 +308,6 @@ from calc 1 = v 1 : v.map_one.symm
     rw [v.map_mul x y] at hxy,
     exact group_with_zero.mul_eq_zero _ _ hxy
   end⟩
-
--- lemma v_nonzero_of_not_in_supp (a : R) (h : a ∉ supp v) : v a ≠ 0 := λ h2, h h2
-
--- /-- A Γ-valued variant v_to_Γ of a valuation v, with v_to_Γ(x)=1 if v(x)=0. -/
--- def v_to_Γ (a : R) : Γ :=
--- option.rec_on (v a) 1 id
-
--- variable {v}
-
--- lemma v_to_Γ_is_v {a : R} (h : a ∉ supp v) : v a = ↑(v_to_Γ v a) :=
--- begin
---   destruct (v a),
---   { intro h2,
---     exfalso,
---     apply v_nonzero_of_not_in_supp v a h,
---     exact h2
---   },
---   { intros g hg,
---     unfold v_to_Γ,
---     rw hg, refl,
---   }
--- end
 
 /-- v(a)=v(a+s) if s ∈ supp(v). -/
 lemma val_add_supp (a s : R) (h : s ∈ supp v) : v (a + s) = v a :=

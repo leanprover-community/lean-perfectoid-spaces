@@ -131,9 +131,6 @@ end
 section
 -- until the end of this section, all linearly ordered commutative groups will be endowed with
 -- the discrete topology
---local attribute [instance] discrete_ordered_comm_group
-
---local attribute [instance] ordered_comm_group_is_discrete
 
 -- In the next lemma, K will be endowed with its left uniformity coming from the valuation topology
 local attribute [instance] valued.uniform_space
@@ -167,7 +164,6 @@ local notation `Γ₀` R := with_zero (Γ R)
 
 -- until the end of this section, all linearly ordered commutative groups will be endowed with
 -- the discrete topology
---local attribute [instance] discrete_ordered_comm_group ordered_comm_group_is_discrete
 
 local attribute [instance, priority 0] valued.uniform_space valued.uniform_add_group
 

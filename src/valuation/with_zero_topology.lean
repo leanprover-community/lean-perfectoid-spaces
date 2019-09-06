@@ -183,16 +183,6 @@ def coe_filter_basis (x : Γ) (h : x ≠ 0) : filter_basis Γ :=
   ne_empty := by simp,
   directed := by finish }
 
--- def value : {x : Γ // ¬ x = 0} → Γ :
--- | ⟨some x, h⟩ := x
--- | ⟨0, h⟩ := false.rec Γ (ne.irrefl h)
-
--- lemma with_zero.value_eq (γ : Γ) : with_zero.value ⟨(γ : with_zero Γ), with_zero.coe_ne_zero⟩ = γ :=
--- rfl
-
--- lemma with_zero.coe_value {x : with_zero Γ} (h : x ≠ 0) : x = coe (with_zero.value ⟨x, h⟩) :=
--- by with_zero_cases x
-
 variable (Γ)
 
 def nhds_basis : nhds_basis Γ :=

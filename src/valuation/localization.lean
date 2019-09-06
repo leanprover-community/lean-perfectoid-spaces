@@ -230,13 +230,6 @@ def units_valfield_mk (r : R) (h : r ∉ supp v) : units (valuation_field v) :=
 instance units_valfield_preorder :
   preorder (units (valuation_field v)) := preorder.lift (λ u, u.val) (by apply_instance)
 
--- TODO -- on_frac_quot_comap_eq got deleted; it was never used. Can we delete this instance?
-
--- on_frac_quot_comap_eq needs more class.instance_max_depth to compile if
--- this instance is not explicitly given as a hint
-instance : is_submonoid (localization.non_zero_divisors (ideal.quotient (supp v))) :=
-by apply_instance
-
 /-- The valuation on Frac(R/supp(v)) induced by v. -/
 definition on_valuation_field : valuation (valuation_field v) Γ :=
 on_frac (v.on_quot (set.subset.refl _))
