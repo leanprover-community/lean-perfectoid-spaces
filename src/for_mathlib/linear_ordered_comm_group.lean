@@ -386,7 +386,7 @@ namespace with_zero
 open linear_ordered_structure
 
 lemma coe_of_gt {x y : with_zero Γ} (h : x < y) : ∃ γ : Γ, y = (γ : with_zero Γ) :=
-by { with_zero_cases y, use y }
+by { with_zero_cases y }
 
 lemma eq_coe_of_mul_eq_coe_right {x y : with_zero Γ} {γ : Γ} (h : x*y = γ) :
   ∃ γ' : Γ, y = γ' :=

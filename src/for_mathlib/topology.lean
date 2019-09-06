@@ -341,7 +341,8 @@ begin
   rw show g a = f a, from (mem_of_nhds h).symm at U_in,
   let V := {x : α | g x ∈ U} ∩ {x | f x = g x},
   suffices : V ∈ 𝓝 a,
-    from mem_sets_of_superset this (inter_subset_left _ _),
+  { rw mem_map,
+    exact mem_sets_of_superset this (inter_subset_left _ _) },
   have : V = {x : α | f x ∈ U} ∩ {x | f x = g x},
   { ext x,
     split ; rintros ⟨hl, hr⟩ ; rw mem_set_of_eq at hr hl ;
