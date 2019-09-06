@@ -87,13 +87,6 @@ lemma ext_iff {Γ : Type u} [linear_ordered_comm_group_with_zero Γ] {v₁ v₂ 
   v₁ = v₂ ↔ ∀ r, v₁ r = v₂ r :=
 ⟨λ h r, congr_arg _ h, ext⟩
 
--- lemma map_add_le_max (x y) : v (x + y) ≤ max (v x) (v y) :=
--- begin
---   cases map_add v x y with h,
---   apply le_max_left_of_le h,
---   apply le_max_right_of_le h,
--- end
-
 -- The following definition is not an instance, because we have more than one v on a given R.
 /-- A valuation gives a preorder on the underlying ring. -/
 def to_preorder : preorder R := preorder.lift v (by apply_instance)
