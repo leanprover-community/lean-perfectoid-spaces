@@ -80,4 +80,18 @@ begin
   { show (f (x*y) : α) = f x * f y, rw f.map_mul, refl },
 end
 
+open group_with_zero
+
+lemma div_le_div (a b c d : α) (hb : b ≠ 0) (hd : d ≠ 0) :
+  a * b⁻¹ ≤ c * d⁻¹ ↔ a * d ≤ c * b :=
+begin
+  by_cases ha : a = 0,
+  { simp [ha] },
+  by_cases hc : c = 0,
+  { replace hb := inv_ne_zero' _ hb,
+    simp [hb, hc, hd], },
+  exact (linear_ordered_structure.div_le_div
+    (mk₀ a ha) (mk₀ b hb) (mk₀ c hc) (mk₀ d hd)),
+end
+
 end linear_ordered_comm_group_with_zero

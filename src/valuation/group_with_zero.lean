@@ -104,6 +104,9 @@ begin
   exact unit_ne_zero ((mk₀ a h.1) * (mk₀ b h.2))
 end
 
+@[simp] lemma mul_eq_zero_iff {a b : α} : a * b = 0 ↔ a = 0 ∨ b = 0 :=
+⟨mul_eq_zero a b, by rintro (H|H); simp [H]⟩
+
 lemma mul_left_cancel {x : α} (hx : x ≠ 0) {y z : α} (h : x * y = x * z) : y = z :=
 calc y = x⁻¹ * (x * y) : by rw inv_mul_cancel_assoc_right _ _ hx
    ... = x⁻¹ * (x * z) : by rw h

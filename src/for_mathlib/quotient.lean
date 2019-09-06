@@ -1,6 +1,15 @@
 import data.set.basic
 import data.quot
+import order.order_iso
+
 variables {α : Type*} {β : Type*} [s : setoid α]
+
+namespace setoid
+
+def comap (t : setoid β) (f : α → β) : setoid α :=
+{ r := _, iseqv := preimage_equivalence f t.iseqv }
+
+end setoid
 
 namespace quotient
 lemma prod_preimage_eq_image (g : quotient s → β) {h : α → β} (Hh : h = g ∘ quotient.mk) (r : set (β × β)) :
@@ -12,6 +21,7 @@ lemma prod_preimage_eq_image (g : quotient s → β) {h : α → β} (Hh : h = g
     λ ⟨⟨b₁, b₂⟩, h₁, h₂⟩, show (g a₁, g a₂) ∈ r, from
     have h₃ : ⟦b₁⟧ = a₁ ∧ ⟦b₂⟧ = a₂ := prod.ext_iff.1 h₂,
      h₃.1 ▸ h₃.2 ▸ h₁⟩)
+
 end quotient
 
 lemma quot_mk_quotient_mk {α :Type*} [setoid α] (a : α) : quot.mk setoid.r a = ⟦a⟧ :=

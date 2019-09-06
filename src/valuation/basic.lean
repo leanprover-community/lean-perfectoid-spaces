@@ -134,14 +134,14 @@ begin
   { exact h.symm ▸ v.map_zero },
 end
 
-lemma map_inv' {K : Type u₀} [division_ring K]
+@[simp] lemma map_inv' {K : Type u₀} [division_ring K]
   (v : valuation K Γ) {x : K} (h : x ≠ 0) : v x⁻¹ = (v x)⁻¹ :=
 begin
   apply eq_inv_of_mul_right_eq_one',
   rw [← v.map_mul, mul_inv_cancel h, v.map_one]
 end
 
-lemma map_inv {K : Type u₀} [discrete_field K]
+@[simp] lemma map_inv {K : Type u₀} [discrete_field K]
   (v : valuation K Γ) {x : K} : v x⁻¹ = (v x)⁻¹ :=
 begin
   by_cases h : x = 0,
