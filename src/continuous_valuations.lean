@@ -8,14 +8,14 @@ universes u u₀ u₁ u₂ u₃
 
 namespace valuation
 variables {R : Type u₀} [comm_ring R] [topological_space R] [topological_ring R]
-variables {Γ : Type u} [linear_ordered_comm_group Γ]
-variables {Γ₁ : Type u₁} [linear_ordered_comm_group Γ₁]
-variables {Γ₂ : Type u₂} [linear_ordered_comm_group Γ₂]
+variables {Γ : Type u} [linear_ordered_comm_group_with_zero Γ]
+variables {Γ₁ : Type u₁} [linear_ordered_comm_group_with_zero Γ₁]
+variables {Γ₂ : Type u₂} [linear_ordered_comm_group_with_zero Γ₂]
 variables {v₁ : valuation R Γ₁} {v₂ : valuation R Γ₂}
 
 /-- Continuity of a valuation [Wedhorn 7.7]. -/
 def is_continuous (v : valuation R Γ) : Prop :=
-∀ g : value_group v, is_open {r : R | canonical_valuation v r < g}
+∀ g : value_monoid v, is_open {r : R | canonical_valuation v r < g}
 
 /-- Continuity of a valuation only depends on its equivalence class. -/
 lemma is_equiv.is_continuous_iff (h : v₁.is_equiv v₂) :
@@ -28,9 +28,10 @@ begin
   convert iff.rfl,
   funext r,
   apply propext,
-  rw h.with_zero_value_group_lt_equiv.lt_map,
-  convert iff.rfl,
-  exact h.with_zero_value_mul_equiv_mk_eq_mk r,
+  rw ← h.with_zero_value_mul_equiv_mk_eq_mk,
+  symmetry,
+  rw (preorder_equiv.to_lt_equiv h.value_monoid_le_equiv).lt_map,
+  exact iff.rfl
 end
 
 local attribute [instance] valued.subgroups_basis valued.uniform_space
@@ -59,7 +60,7 @@ begin
   have H0V : (0 : R) ∈ V,
   { show (canonical_valuation v) 0 < γ,
     rw (canonical_valuation v).map_zero,
-    exact with_zero.zero_lt_coe },
+    exact linear_ordered_structure.zero_lt_unit _ },
   refine filter.mem_sets_of_superset (mem_nhds_sets HV H0V) _,
   intros u Hu,
   apply set.mem_of_mem_of_subset _ Hγ,
@@ -80,7 +81,7 @@ end Spv
 namespace Spv
 
 variables {R : Type u₁} [comm_ring R] [topological_space R] [topological_ring R]
-variables {Γ : Type u} [linear_ordered_comm_group Γ]
+variables {Γ : Type u} [linear_ordered_comm_group_with_zero Γ]
 
 variable (R)
 
