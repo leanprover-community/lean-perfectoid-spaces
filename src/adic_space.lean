@@ -286,19 +286,17 @@ by { cases f, cases g, tidy }
 
 def id (X : PreValuedRingedSpace.{u}) : hom X X :=
 { fmap := presheaf_of_topological_rings.f_map_id,
-  stalk := λ x, begin
+  stalk := λ x,
+  begin
     show valuation.is_equiv
-    (valuation.comap (Spv.out (X.valuation x))
+    ((Spv.out (X.valuation x)).comap
        (stalk_map
           (presheaf_of_rings.f_map_id X.presheaf.to_presheaf_of_rings)
           x))
     (Spv.out (X.valuation ((λ (x : X), x) x))),
     simp only [stalk_map_id' X.presheaf.to_presheaf_of_rings x],
     convert valuation.is_equiv.refl,
-    unfold valuation.comap,
-    dsimp,
-    unfold_coes,
-    rw subtype.ext,
+    ext, refl,
   end }
 
 def comp {X Y Z : PreValuedRingedSpace.{u}} (f : hom X Y) (g : hom Y Z) : hom X Z :=
@@ -307,7 +305,7 @@ def comp {X Y Z : PreValuedRingedSpace.{u}} (f : hom X Y) (g : hom Y Z) : hom X 
     let XXX := f.stalk x,
     let YYY := valuation.is_equiv.comap (stalk_map (presheaf_of_topological_rings.f_map.to_presheaf_of_rings_f_map (g.fmap))
           ((presheaf_of_topological_rings.f_map.to_presheaf_of_rings_f_map (f.fmap)).f x)) XXX,
-    show valuation.is_equiv _ (valuation.comap (Spv.out (Y.valuation ((f.fmap).f x))) _),
+    show valuation.is_equiv _ ((Spv.out (Y.valuation ((f.fmap).f x))).comap _),
     refine valuation.is_equiv.trans _ YYY,
     rw ←valuation.comap_comp,
     suffices : (stalk_map
@@ -407,7 +405,7 @@ noncomputable instance PreValuedRingedSpace.restrict {X : PreValuedRingedSpace.{
     top := by apply_instance,
     presheaf := presheaf_of_topological_rings.restrict U X.presheaf,
     valuation :=
-      λ u, Spv.mk (valuation.comap (X.valuation u).out (presheaf_of_rings.restrict_stalk_map _ _)) } }
+      λ u, Spv.mk (valuation.comap (presheaf_of_rings.restrict_stalk_map _ _) (X.valuation u).out) } }
 
 section
 local attribute [instance] sheaf_of_topological_rings.uniform_space

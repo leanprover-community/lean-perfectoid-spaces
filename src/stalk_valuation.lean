@@ -33,7 +33,7 @@ instance stalk_to_valuation_field.is_ring_hom (x : spa A) :
 /--The valuation on the stalk of the structure sheaf of the adic spectrum.-/
 noncomputable def stalk_valuation (x : spa A) :
 valuation (stalk_of_rings (spa.presheaf_of_topological_rings A).to_presheaf_of_rings x)
-  (value_group (out x.1)) :=
-valuation.comap (valuation_on_completion (out x.1)) (stalk_to_valuation_field x)
+  (value_monoid (out x.1)) :=
+(valuation_on_completion (out x.1)).comap (stalk_to_valuation_field x)
 
 end spa.presheaf
