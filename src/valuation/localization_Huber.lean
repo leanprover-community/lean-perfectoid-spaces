@@ -14,7 +14,7 @@ noncomputable theory
 local attribute [instance] valued.subgroups_basis valued.uniform_space
 
 variables {A : Huber_pair}
-{Γ : Type*} [linear_ordered_comm_group Γ] {v : valuation A Γ}
+{Γ : Type*} [linear_ordered_comm_group_with_zero Γ] {v : valuation A Γ}
 {rd : spa.rational_open_data A} (hv : valuation.is_continuous v)
 
 namespace Huber_pair
@@ -61,8 +61,10 @@ begin
   rcases Hl with ⟨t, ht, rfl⟩,
   change v' (↑(unit_s hs)⁻¹) * _ ≤ _,
   rw mul_comm,
-  apply with_zero.le_of_le_mul_right (map_unit_ne_zero v' u),
-  rw [mul_assoc, one_mul, ←v'.map_mul, units.inv_mul, v'.map_one, mul_one],
+  apply linear_ordered_comm_group_with_zero.le_of_le_mul_right
+    (group_with_zero.unit_ne_zero $ units.map v'.to_monoid_hom u),
+  show v' _ * v' _ * v' u ≤ _,
+  rw [mul_assoc, one_mul, ← v'.map_mul, units.inv_mul, v'.map_one, mul_one],
   change canonical_valuation v t ≤ v' u.val,
   rw remember_this,
   change _ ≤ canonical_valuation v s,
@@ -100,14 +102,9 @@ begin
   intros x hx,
   induction hx with a ha a b ha' hb' ha hb,
   { assumption },
-  { show v' 1 ≤ 1,
-    rw v'.map_one,
-    exact le_refl _
-  },
-  { show v' (a * b) ≤ 1,
-    rw v'.map_mul,
-    exact actual_ordered_comm_monoid.mul_nongt_one' ha hb,
-  }
+  { show v' 1 ≤ 1, rw v'.map_one, },
+  { show v' (a * b) ≤ 1, rw v'.map_mul,
+    exact actual_ordered_comm_monoid.mul_nongt_one' ha hb, }
 end
 
 lemma v_T_over_s_is_power_bounded (hs : v s ≠ 0) (hT2 : ∀ t : A, t ∈ T → v t ≤ v s) :
