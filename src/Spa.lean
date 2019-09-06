@@ -17,14 +17,14 @@ local attribute [instance] set.pointwise_mul_action
 
 open set function Spv valuation
 
-variables {Γ : Type*} [linear_ordered_comm_group Γ]
+variables {Γ : Type*} [linear_ordered_comm_group_with_zero Γ]
 
 -- Wedhorn def 7.23.
 definition spa (A : Huber_pair) : set (Spv A) :=
 {v | v.is_continuous ∧ ∀ r ∈ A⁺, v r ≤ 1}
 
 lemma mk_mem_spa {A : Huber_pair} {v : valuation A Γ} :
-  mk v ∈ spa A ↔ v.is_continuous ∧ ∀ r ∈ A⁺, v r ≤ 1 :=
+  Spv.mk v ∈ spa A ↔ v.is_continuous ∧ ∀ r ∈ A⁺, v r ≤ 1 :=
 begin
   apply and_congr,
   { apply is_equiv.is_continuous_iff,
@@ -46,7 +46,7 @@ instance : has_coe (spa A) (Spv A) := ⟨subtype.val⟩
 definition basic_open (r s : A) : set (spa A) :=
 {v | v r ≤ v s ∧ v s ≠ 0 }
 
-lemma mk_mem_basic_open {r s : A} {v : valuation A Γ} {hv : mk v ∈ spa A} :
+lemma mk_mem_basic_open {r s : A} {v : valuation A Γ} {hv : Spv.mk v ∈ spa A} :
 (⟨mk v, hv⟩ : spa A) ∈ basic_open r s ↔ v r ≤ v s ∧ v s ≠ 0 :=
 begin
   apply and_congr,
@@ -293,7 +293,7 @@ noncomputable def insert_s (r : rational_open_data A) : rational_open_data A :=
 
 end rational_open_data -- namespace
 
-lemma mk_mem_rational_open {s : A} {T : set A} {v : valuation A Γ} {hv : mk v ∈ spa A} :
+lemma mk_mem_rational_open {s : A} {T : set A} {v : valuation A Γ} {hv : Spv.mk v ∈ spa A} :
   (⟨mk v, hv⟩ : spa A) ∈ rational_open s T ↔ (∀ t ∈ T, (v t ≤ v s)) ∧ (v s ≠ 0) :=
 begin
   apply and_congr,
@@ -326,7 +326,7 @@ begin
   ext v,
   split; rintros ⟨h₁, h₂⟩; split; try { exact h₂ }; intros t ht,
   { cases ht,
-    { rw ht, exact le_refl _ },
+    { rw ht },
     { exact h₁ t ht } },
   { apply h₁ t,
     exact mem_insert_of_mem _ ht }
@@ -357,11 +357,7 @@ begin
       (linear_ordered_structure.mul_le_mul_right (hv₁ t₁ ht₁) _)
       (linear_ordered_structure.mul_le_mul_left  (hv₂ t₂ ht₂) _);
     apply valuation.map_mul },
-  { rw with_zero.ne_zero_iff_exists at hs₁ hs₂,
-    cases hs₁ with γ₁ hγ₁,
-    cases hs₂ with γ₂ hγ₂,
-    erw [valuation.map_mul, hγ₁, hγ₂],
-    exact with_zero.coe_ne_zero },
+  { assume eq_zero, simp at eq_zero, tauto },
 end
 
 lemma rational_open_inter.aux₂ {s₁ s₂ : A} {T₁ T₂ : set A}
@@ -373,29 +369,16 @@ begin
   have vmuls : v (s₁ * s₂) = v s₁ * v s₂ := valuation.map_mul _ _ _,
   have hs₁ : v s₁ ≠ 0 := λ H, by simpa [-coe_fn_coe_base, vmuls, H] using hs,
   have hs₂ : v s₂ ≠ 0 := λ H, by simpa [-coe_fn_coe_base, vmuls, H] using hs,
-  split; split;
-  try { assumption };
-  intros t ht;
-  rw with_zero.ne_zero_iff_exists at hs₁ hs₂,
+  split; split; try { assumption };
+  intros t ht,
   { suffices H : v t * v s₂ ≤ v s₁ * v s₂,
-    { cases hs₂ with γ hγ,
-      rw hγ at H,
-      have := linear_ordered_structure.mul_le_mul_right H γ⁻¹,
-      simp [mul_assoc, -coe_fn_coe_base] at this,
-      erw [mul_one, mul_one] at this,
-      exact this },
-    { erw [← valuation.map_mul, ← valuation.map_mul],
-      exact hv (t * s₂) ⟨t, ht, s₂, h₂, rfl⟩, } },
+    { simpa [hs₂, mul_assoc, -coe_fn_coe_base] using
+        linear_ordered_structure.mul_le_mul_right H (group_with_zero.mk₀ _ hs₂)⁻¹, },
+    { simpa using hv (t * s₂) ⟨t, ht, s₂, h₂, rfl⟩, } },
   { suffices H : v s₁ * v t ≤ v s₁ * v s₂,
-    { cases hs₁ with γ hγ,
-      rw hγ at H,
-      have := linear_ordered_structure.mul_le_mul_left H γ⁻¹,
-      erw [← mul_assoc, ← mul_assoc] at this,
-      simp [-coe_fn_coe_base] at this,
-      erw [one_mul, one_mul] at this,
-      exact this },
-    { erw [← valuation.map_mul, ← valuation.map_mul],
-      exact hv _ ⟨s₁, h₁, t, ht, rfl⟩ } },
+    { simpa [hs₁, mul_assoc, -coe_fn_coe_base] using
+        linear_ordered_structure.mul_le_mul_left H (group_with_zero.mk₀ _ hs₁)⁻¹, },
+    { simpa using hv (s₁ * t) ⟨s₁, h₁, t, ht, rfl⟩, } }
 end
 
 lemma rational_open_inter {s₁ s₂ : A} {T₁ T₂ : set A} (h₁ : s₁ ∈ T₁) (h₂ : s₂ ∈ T₂) :
