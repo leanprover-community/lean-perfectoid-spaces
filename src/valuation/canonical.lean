@@ -706,10 +706,6 @@ def is_equiv.value_mul_equiv (h : is_equiv v₁ v₂) :
     exact is_ring_hom.map_mul _,
   end }
 
-def is_equiv.with_zero_value_mul_equiv (h : is_equiv v₁ v₂) :
-  (with_zero (value_monoid v₁)) ≃* (with_zero (value_monoid v₂)) :=
- h.value_mul_equiv.to_with_zero_mul_equiv
-
 -- ordering part of 1.27 (iii) -> (i)
 def is_equiv.value_monoid_order_equiv_aux (h : is_equiv v₁ v₂) (x y : value_monoid v₁) (h2 : x ≤ y) :
   h.value_mul_equiv x ≤ h.value_mul_equiv y :=

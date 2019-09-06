@@ -160,7 +160,6 @@ include vK
 open valued
 
 local notation `v` := valued.value
-local notation `Γ₀` R := with_zero (Γ R)
 
 -- until the end of this section, all linearly ordered commutative groups will be endowed with
 -- the discrete topology

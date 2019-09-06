@@ -38,8 +38,8 @@ local attribute [instance] valued.subgroups_basis valued.uniform_space
 
 /-
 Mathematical warning:
-It is *not true* that v is continuous iff the map R -> with_zero Γ is continuous
-where with_zero Γ gets the usual topology where {γ} and {x < γ} are open.
+It is *not true* that v is continuous iff the map R -> Γ is continuous
+where Γ gets the usual topology where {γ} and {x < γ} are open, for γ ≠ 0.
 What is true is that the valuation is continuous iff the associated map
 from R to the valuation field is continuous.
 -/

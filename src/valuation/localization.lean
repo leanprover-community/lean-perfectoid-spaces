@@ -17,7 +17,6 @@ variables {Γ : Type u} [linear_ordered_comm_group_with_zero Γ]
 variables {S : set R} [is_submonoid S]
 
 namespace valuation
-open with_zero
 
 variables (v : valuation R Γ)
 

@@ -56,7 +56,6 @@ variables {R : Type*} [ring R] [valued R]
 def value : R → (valued.Γ R) := (valued.v R)
 
 local notation `v` := valued.value
-local notation `Γ₀` R := with_zero (Γ R)
 
 -- The following four lemmas are restatements that seem to be unfortunately needed
 
