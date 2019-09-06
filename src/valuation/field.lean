@@ -341,6 +341,7 @@ valuation (hat K) (Γ K) :=
       exact valuation.map_mul _ _ _ },
   end,
   map_add' := λ x y, begin
+    rw le_max_iff,
     apply completion.induction_on₂ x y,
     { exact is_closed_union
         (is_closed_le ((valued.continuous_extension).comp continuous_add')
@@ -349,6 +350,7 @@ valuation (hat K) (Γ K) :=
         ((valued.continuous_extension).comp continuous_snd)) },
     { intros x y,
       norm_cast,
+      rw ← le_max_iff,
       exact valuation.map_add _ _ _ },
   end }
 

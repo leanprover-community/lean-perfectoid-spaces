@@ -43,9 +43,12 @@ it's easier for us because it's in a smaller universe).
 -/
 
 local attribute [instance] classical.prop_decidable
+local attribute [instance, priority 0] classical.decidable_linear_order
 noncomputable theory
 
 universes u u₀ u₁ u₂ u₃
+
+open linear_ordered_structure
 
 variables {R : Type u₀} [comm_ring R]
 
@@ -211,7 +214,7 @@ valuation (valuation_field v) (value_monoid v) :=
   map_add' := λ a b,
   begin
     rw ← (value_monoid.to_Γ_strict_mono v).le_iff_le,
-    rw ← (value_monoid.to_Γ_strict_mono v).le_iff_le,
+    rw (value_monoid.to_Γ_strict_mono v).monotone.map_max,
     exact v.on_valuation_field.map_add a b
   end }
 -- ⟨valuation_field.canonical_valuation_v v, valuation_field.canonical_valuation_v.is_valuation v⟩
@@ -358,8 +361,7 @@ lemma comap_on_frac {R : Type u₀} [integral_domain R]
     rintros h ⟨x⟩ ⟨y⟩,
     erw [← comap_on_frac_eq v₁, ← comap_on_frac_eq v₂],
     show _ * _ ≤ _ * _ ↔ _ * _ ≤ _ * _,
-    erw linear_ordered_comm_group_with_zero.div_le_div,
-    erw linear_ordered_comm_group_with_zero.div_le_div,
+    erw div_le_div', erw div_le_div',
     { repeat {erw ← valuation.map_mul},
       exact h _ _ },
     all_goals { intro H,

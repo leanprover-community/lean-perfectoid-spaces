@@ -26,13 +26,13 @@ def valuation.subgroup (v : valuation R Γ) (γ : units Γ) : set R := {x | v x 
 lemma valuation.lt_is_add_subgroup (v : valuation R Γ) (γ : units Γ) :
   is_add_subgroup {x | v x < γ} :=
 { zero_mem := by { have h := group_with_zero.unit_ne_zero γ, contrapose! h, simpa using h },
-  add_mem := λ x y x_in y_in, lt_of_le_of_lt (map_add_le_max v x y) (max_lt x_in y_in),
+  add_mem := λ x y x_in y_in, lt_of_le_of_lt (v.map_add x y) (max_lt x_in y_in),
   neg_mem := λ x x_in, by rwa [mem_set_of_eq, map_neg] }
 
 -- is this an OK place to put this?
 lemma valuation.le_is_add_subgroup (v : valuation R Γ) (γ : units Γ) : is_add_subgroup {x | v x ≤ γ} :=
 { zero_mem := by simp,
-  add_mem := λ x y x_in y_in, le_trans (map_add_le_max v x y) (max_le x_in y_in),
+  add_mem := λ x y x_in y_in, le_trans (v.map_add x y) (max_le x_in y_in),
   neg_mem := λ x x_in, by rwa [mem_set_of_eq, map_neg] }
 
 end
@@ -60,28 +60,16 @@ local notation `v` := valued.value
 -- The following four lemmas are restatements that seem to be unfortunately needed
 
 lemma map_zero : v (0 : R) = 0 :=
-begin
-  change valued.v R (0 : R) = 0,
-  apply valuation.map_zero
-end
+valuation.map_zero _
 
 lemma map_one : v (1 : R) = 1 :=
-begin
-  change valued.v R _ = _,
-  apply valuation.map_one
-end
+valuation.map_one _
 
 lemma map_mul (x y : R) : v (x*y) = v x * v y :=
-begin
-  change valued.v R _ = _,
-  apply valuation.map_mul
-end
+valuation.map_mul _ _ _
 
-lemma map_add (x y : R) : v (x+y) ≤ v x ∨ v (x+y) ≤ v y :=
-begin
-  change valued.v R _ ≤ _ ∨ valued.v R _ ≤ _,
-  apply valuation.map_add
-end
+lemma map_add (x y : R) : v (x+y) ≤ max (v x) (v y) :=
+valuation.map_add _ _ _
 
 def subgroups_basis : subgroups_basis R :=
 { sets := range (valued.v R).subgroup,

@@ -49,75 +49,7 @@ begin
       simp [with_zero.coe_inj, units.ext_iff, *] } }
 end
 
-variable {α}
-
-@[simp] lemma zero_le {a : α} : 0 ≤ a := zero_le' a
-
-@[simp] lemma le_zero_iff {a : α} : a ≤ 0 ↔ a = 0 :=
-⟨λ h, _root_.le_antisymm h zero_le, λ h, h ▸ le_refl _⟩
-
-variables {a b c : α}
-
-lemma le_of_le_mul_right (h : c ≠ 0) (hab : a * c ≤ b * c) : a ≤ b :=
-by simpa [h] using linear_ordered_structure.mul_le_mul_right hab c⁻¹
-
-lemma le_mul_inv_of_mul_le (h : c ≠ 0) (hab : a * c ≤ b) : a ≤ b * c⁻¹ :=
-le_of_le_mul_right h (by simpa [h] using hab)
-
-lemma mul_inv_le_of_le_mul (h : c ≠ 0) (hab : a ≤ b * c) : a * c⁻¹ ≤ b :=
-le_of_le_mul_right h (by simpa [h] using hab)
-
-def with_zero_adj_units {β : Type*} [linear_ordered_comm_group β] (f : β →* units α) :
-  with_zero β →* α :=
-monoid_hom.mk
-(λ x, match x with
-| 0 := 0
-| some b := f b
-end)
-(show (f 1 : α) = 1, by { rw f.map_one, refl })
-begin
-  intros x y, with_zero_cases x y,
-  { show (0 : α) = 0 * 0, exact (zero_mul _).symm },
-  { show (0 : α) = 0 * _, exact (zero_mul _).symm },
-  { show (0 : α) = _ * 0, exact (mul_zero _).symm },
-  { show (f (x*y) : α) = f x * f y, rw f.map_mul, refl },
-end
-
-open group_with_zero
-
-lemma div_le_div (a b c d : α) (hb : b ≠ 0) (hd : d ≠ 0) :
-  a * b⁻¹ ≤ c * d⁻¹ ↔ a * d ≤ c * b :=
-begin
-  by_cases ha : a = 0,
-  { simp [ha] },
-  by_cases hc : c = 0,
-  { replace hb := inv_ne_zero' _ hb,
-    simp [hb, hc, hd], },
-  exact (linear_ordered_structure.div_le_div
-    (mk₀ a ha) (mk₀ b hb) (mk₀ c hc) (mk₀ d hd)),
-end
-
-section
-
-local attribute [instance] classical.prop_decidable
-local attribute [instance, priority 0] classical.decidable_linear_order
-
-lemma lt_of_mul_lt_mul_left {a b c : α} (h : a * b < a * c) : b < c :=
-begin
-  by_cases ha : a = 0, { contrapose! h, simp [ha] },
-  by_cases hc : c = 0, { contrapose! h, simp [hc] },
-  by_cases hb : b = 0, { contrapose! hc, simpa [hb] using hc },
-  exact linear_ordered_structure.lt_of_mul_lt_mul_left (mk₀ a ha) (mk₀ b hb) (mk₀ c hc) h
-end
-
-instance : actual_ordered_comm_monoid α :=
-{ lt_of_mul_lt_mul_left := λ a b c, lt_of_mul_lt_mul_left,
-  .. ‹linear_ordered_comm_group_with_zero α› }
-
-end
-
 end linear_ordered_comm_group_with_zero
-
 
 namespace linear_ordered_structure
 variables {α : Type*} [group_with_zero α]
@@ -136,8 +68,48 @@ namespace linear_ordered_structure
 variables {α : Type*} [linear_ordered_comm_group_with_zero α]
 variables {a b c d : α}
 
+open group_with_zero
+
 local attribute [instance] classical.prop_decidable
 local attribute [instance, priority 0] classical.decidable_linear_order
+
+@[simp] lemma zero_le {a : α} : 0 ≤ a :=
+linear_ordered_comm_group_with_zero.zero_le' a
+
+@[simp] lemma le_zero_iff : a ≤ 0 ↔ a = 0 :=
+⟨λ h, le_antisymm h zero_le, λ h, h ▸ le_refl _⟩
+
+lemma le_of_le_mul_right (h : c ≠ 0) (hab : a * c ≤ b * c) : a ≤ b :=
+by simpa [h] using linear_ordered_structure.mul_le_mul_right hab c⁻¹
+
+lemma le_mul_inv_of_mul_le (h : c ≠ 0) (hab : a * c ≤ b) : a ≤ b * c⁻¹ :=
+le_of_le_mul_right h (by simpa [h] using hab)
+
+lemma mul_inv_le_of_le_mul (h : c ≠ 0) (hab : a ≤ b * c) : a * c⁻¹ ≤ b :=
+le_of_le_mul_right h (by simpa [h] using hab)
+
+lemma div_le_div' (a b c d : α) (hb : b ≠ 0) (hd : d ≠ 0) :
+  a * b⁻¹ ≤ c * d⁻¹ ↔ a * d ≤ c * b :=
+begin
+  by_cases ha : a = 0,
+  { simp [ha] },
+  by_cases hc : c = 0,
+  { replace hb := inv_ne_zero' _ hb,
+    simp [hb, hc, hd], },
+  exact (div_le_div (mk₀ a ha) (mk₀ b hb) (mk₀ c hc) (mk₀ d hd)),
+end
+
+lemma lt_of_mul_lt_mul_left' {a b c : α} (h : a * b < a * c) : b < c :=
+begin
+  by_cases ha : a = 0, { contrapose! h, simp [ha] },
+  by_cases hc : c = 0, { contrapose! h, simp [hc] },
+  by_cases hb : b = 0, { contrapose! hc, simpa [hb] using hc },
+  exact linear_ordered_structure.lt_of_mul_lt_mul_left (mk₀ a ha) (mk₀ b hb) (mk₀ c hc) h
+end
+
+instance : actual_ordered_comm_monoid α :=
+{ lt_of_mul_lt_mul_left := λ a b c, lt_of_mul_lt_mul_left',
+  .. ‹linear_ordered_comm_group_with_zero α› }
 
 @[move_cast] lemma coe_min (x y : units α) :
   ((min x y : units α) : α) = min (x : α) (y : α) :=

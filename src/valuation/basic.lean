@@ -4,6 +4,7 @@ import ring_theory.subring
 
 import for_mathlib.rings
 import for_mathlib.equiv
+import for_mathlib.order
 
 import valuation.linear_ordered_comm_group_with_zero
 
@@ -44,7 +45,7 @@ noncomputable theory
 
 local attribute [instance, priority 0] classical.decidable_linear_order
 
-open function ideal
+open function ideal linear_ordered_structure
 
 universes u u₀ u₁ u₂ u₃ -- v is used for valuations
 
@@ -61,7 +62,7 @@ set_option old_structure_cmd true
 structure valuation (R : Type u₀) [ring R] (Γ : Type u) [linear_ordered_comm_group_with_zero Γ]
   extends R →* Γ :=
 (map_zero' : to_fun 0 = 0)
-(map_add' : ∀ x y, to_fun (x + y) ≤ to_fun x ∨ to_fun (x + y) ≤ to_fun y)
+(map_add' : ∀ x y, to_fun (x + y) ≤ max (to_fun x) (to_fun y))
 
 namespace valuation
 
@@ -77,7 +78,7 @@ variables (v : valuation R Γ) {x y z : R}
 @[simp] lemma map_zero : v 0 = 0 := v.map_zero'
 @[simp] lemma map_one  : v 1 = 1 := v.map_one'
 @[simp] lemma map_mul  : ∀ x y, v (x * y) = v x * v y := v.map_mul'
-@[simp] lemma map_add  : ∀ x y, v (x + y) ≤ v x ∨ v (x + y) ≤ v y := v.map_add'
+@[simp] lemma map_add  : ∀ x y, v (x + y) ≤ max (v x) (v y) := v.map_add'
 
 @[extensionality] lemma ext {v₁ v₂ : valuation R Γ} (h : ∀ r, v₁ r = v₂ r) : v₁ = v₂ :=
 by { cases v₁, cases v₂, congr, funext r, exact h r }
@@ -86,12 +87,12 @@ lemma ext_iff {Γ : Type u} [linear_ordered_comm_group_with_zero Γ] {v₁ v₂ 
   v₁ = v₂ ↔ ∀ r, v₁ r = v₂ r :=
 ⟨λ h r, congr_arg _ h, ext⟩
 
-lemma map_add_le_max (x y) : v (x + y) ≤ max (v x) (v y) :=
-begin
-  cases map_add v x y with h,
-  apply le_max_left_of_le h,
-  apply le_max_right_of_le h,
-end
+-- lemma map_add_le_max (x y) : v (x + y) ≤ max (v x) (v y) :=
+-- begin
+--   cases map_add v x y with h,
+--   apply le_max_left_of_le h,
+--   apply le_max_right_of_le h,
+-- end
 
 -- The following definition is not an instance, because we have more than one v on a given R.
 /-- A valuation gives a preorder on the underlying ring. -/
@@ -153,13 +154,13 @@ calc v (x - y) = v (-(y - x)) : by rw show x - y = -(y-x), by abel
 
 lemma map_sub_le_max (x y : R) : v (x - y) ≤ max (v x) (v y) :=
 calc v (x-y) = v (x + -y)   : by simp
-        ... ≤ max (v x) (v $ -y) : map_add_le_max _ _ _
+        ... ≤ max (v x) (v $ -y) : v.map_add _ _
         ... = max (v x) (v y)    : by rw map_neg
 
 lemma map_add_of_distinct_val (h : v x ≠ v y) : v (x + y) = max (v x) (v y) :=
 begin
   suffices : ¬v (x + y) < max (v x) (v y),
-    from or_iff_not_imp_right.1 (le_iff_eq_or_lt.1 (map_add_le_max v x y)) this,
+    from or_iff_not_imp_right.1 (le_iff_eq_or_lt.1 (v.map_add x y)) this,
   intro h',
   wlog vyx : v y < v x using x y,
   { apply lt_or_gt_of_ne h.symm },
@@ -196,7 +197,9 @@ ext $ λ r, rfl
 def map (f : Γ₁ →* Γ₂) (h₀ : f 0 = 0) (hf : monotone f) (v : valuation R Γ₁) : valuation R Γ₂ :=
 { to_fun := f ∘ v,
   map_zero' := show f (v 0) = 0, by rw [v.map_zero, h₀],
-  map_add' := λ r s, by { refine (v.map_add r s).imp _ _; exact λ h, hf h },
+  map_add' := λ r s,
+    calc f (v (r + s)) ≤ f (max (v r) (v s))     : hf (v.map_add r s)
+                   ... = max (f (v r)) (f (v s)) : hf.map_max,
   .. monoid_hom.comp f v.to_monoid_hom }
 
 /-- Two valuations on R are defined to be equivalent if they induce the same preorder on R. -/
@@ -286,9 +289,9 @@ variables (v : valuation R Γ)
 def supp : ideal R :=
 { carrier := {x | v x = 0},
   zero := map_zero v,
-  add  := λ x y hx hy, or.cases_on (map_add v x y)
-    (λ hxy, le_antisymm (hx ▸ hxy) linear_ordered_comm_group_with_zero.zero_le)
-    (λ hxy, le_antisymm (hy ▸ hxy) linear_ordered_comm_group_with_zero.zero_le),
+  add  := λ x y hx hy, le_zero_iff.mp $
+    calc v (x + y) ≤ max (v x) (v y) : v.map_add x y
+               ... ≤ 0               : max_le (le_zero_iff.mpr hx) (le_zero_iff.mpr hy),
   smul  := λ c x hx, calc v (c * x)
                         = v c * v x : map_mul v c x
                     ... = v c * 0 : congr_arg _ hx
@@ -313,7 +316,7 @@ from calc 1 = v 1 : v.map_one.symm
 lemma val_add_supp (a s : R) (h : s ∈ supp v) : v (a + s) = v a :=
 begin
   have aux : ∀ a s, v s = 0 → v (a + s) ≤ v a,
-  { intros a' s' h', cases v.map_add a' s' with H H; simp * at * },
+  { intros a' s' h', refine le_trans (v.map_add a' s') (max_le (le_refl _) _), simp [h'], },
   apply le_antisymm (aux a s h),
   calc v a = v (a + s + -s) : by simp
        ... ≤ v (a + s)      : aux (a + s) (-s) (by rwa ←ideal.neg_mem_iff at h)

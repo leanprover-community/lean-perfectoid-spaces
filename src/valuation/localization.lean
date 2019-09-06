@@ -8,6 +8,7 @@ import valuation.basic
 -/
 
 local attribute [instance] classical.prop_decidable
+local attribute [instance] classical.decidable_linear_order
 noncomputable theory
 
 universes u u₀
@@ -17,6 +18,7 @@ variables {Γ : Type u} [linear_ordered_comm_group_with_zero Γ]
 variables {S : set R} [is_submonoid S]
 
 namespace valuation
+open linear_ordered_structure
 
 variables (v : valuation R Γ)
 
@@ -65,22 +67,24 @@ protected def localization (h : ∀ s, s ∈ S → v s ≠ 0) : valuation (local
   map_add' := λ x y, quotient.induction_on₂' x y begin
     rintro ⟨r1, s1, hs1⟩,
     rintro ⟨r2, s2, hs2⟩,
+    have := v.map_add (r1 * s2) (r2 * s1),
+    rw le_max_iff at this ⊢,
     show v (s1 * r2 + s2 * r1) * (v (s1 * s2))⁻¹ ≤ v r1 * (v s1)⁻¹ ∨
       v (s1 * r2 + s2 * r1) * (v (s1 * s2))⁻¹ ≤ v r2 * (v s2)⁻¹,
-    cases v.map_add (r1 * s2) (r2 * s1) with h1 h2,
+    cases this with h1 h2,
     { left,
-      apply linear_ordered_comm_group_with_zero.le_mul_inv_of_mul_le (h s1 hs1),
+      apply le_mul_inv_of_mul_le (h s1 hs1),
       rw [mul_comm, ←mul_assoc],
-      apply linear_ordered_comm_group_with_zero.mul_inv_le_of_le_mul (h (s1 * s2) (is_submonoid.mul_mem hs1 hs2)),
+      apply mul_inv_le_of_le_mul (h (s1 * s2) (is_submonoid.mul_mem hs1 hs2)),
       replace h1 := linear_ordered_structure.mul_le_mul_right h1 (v s1),
       rw [←v.map_mul, ←v.map_mul] at h1 ⊢,
       rw (show s1 * (s1 * r2 + s2 * r1) = (r1 * s2 + r2 * s1) * s1, by ring),
       rwa (show r1 * (s1 * s2) = r1 * s2 * s1, by ring),
     },
     { right,
-      apply linear_ordered_comm_group_with_zero.le_mul_inv_of_mul_le (h s2 hs2),
+      apply le_mul_inv_of_mul_le (h s2 hs2),
       rw [mul_comm, ←mul_assoc],
-      apply linear_ordered_comm_group_with_zero.mul_inv_le_of_le_mul (h (s1 * s2) (is_submonoid.mul_mem hs1 hs2)),
+      apply mul_inv_le_of_le_mul (h (s1 * s2) (is_submonoid.mul_mem hs1 hs2)),
       replace h2 := linear_ordered_structure.mul_le_mul_right h2 (v s2),
       rw [←v.map_mul, ←v.map_mul] at h2 ⊢,
       rw (show s2 * (s1 * r2 + s2 * r1) = (r1 * s2 + r2 * s1) * s2, by ring),
@@ -244,8 +248,9 @@ definition valuation_ring := {x | v.on_valuation_field x ≤ 1}
 instance : is_subring (valuation_ring v) :=
 { zero_mem := show v.on_valuation_field 0 ≤ 1, by simp,
   add_mem := λ x y hx hy,
-  by cases (v.on_valuation_field.map_add x y) with h h;
-    exact le_trans h (by assumption),
+  calc v.on_valuation_field (x + y) ≤ max (v.on_valuation_field x) (v.on_valuation_field y) :
+    v.on_valuation_field.map_add x y
+    ... ≤ 1 : max_le hx hy,
   neg_mem := by simp [valuation_ring],
   one_mem := by simp [valuation_ring, le_refl],
   mul_mem := λ x y (hx : _ ≤ _) (hy : _ ≤ _), show v.on_valuation_field _ ≤ 1,
@@ -257,9 +262,9 @@ definition max_ideal : ideal (valuation_ring v) :=
 { carrier := { r | v.on_valuation_field r < 1 },
   zero := show v.on_valuation_field 0 < 1, by apply lt_of_le_of_ne; simp,
   add := λ x y (hx : _ < 1) (hy : _ < 1),
-  show v.on_valuation_field _ < 1,
-    by cases (v.on_valuation_field.map_add x y) with h h;
-      exact lt_of_le_of_lt h (by assumption),
+  calc v.on_valuation_field (x + y) ≤ max (v.on_valuation_field x) (v.on_valuation_field y) :
+    v.on_valuation_field.map_add x y
+    ... < 1 : max_lt hx hy,
   smul := λ c x (hx : _ < 1),
   show v.on_valuation_field _ < 1,
   begin

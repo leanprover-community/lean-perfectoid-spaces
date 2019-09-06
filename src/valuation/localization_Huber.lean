@@ -18,7 +18,7 @@ variables {A : Huber_pair}
 {rd : spa.rational_open_data A} (hv : valuation.is_continuous v)
 
 namespace Huber_pair
-open valuation
+open valuation linear_ordered_structure
 
 local attribute [instance] set.pointwise_mul_action
 
@@ -61,7 +61,7 @@ begin
   rcases Hl with ⟨t, ht, rfl⟩,
   change v' (↑(unit_s hs)⁻¹) * _ ≤ _,
   rw mul_comm,
-  apply linear_ordered_comm_group_with_zero.le_of_le_mul_right
+  apply le_of_le_mul_right
     (group_with_zero.unit_ne_zero $ units.map v'.to_monoid_hom u),
   show v' _ * v' _ * v' u ≤ _,
   rw [mul_assoc, one_mul, ← v'.map_mul, units.inv_mul, v'.map_one, mul_one],

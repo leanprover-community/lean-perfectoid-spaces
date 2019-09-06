@@ -39,6 +39,8 @@ are satisfied.
 
 universes u u₀ u₁ u₂ u₃
 
+local attribute [instance, priority 0] classical.decidable_linear_order
+
 /-- Valuation spectrum of a ring. -/
 -- Note that the valuation takes values in a group in the same universe as R.
 -- This is to avoid "set-theoretic issues".
@@ -154,7 +156,7 @@ section
 @[simp] lemma map_zero : v 0 = 0 := valuation.map_zero _
 @[simp] lemma map_one  : v 1 = 1 := valuation.map_one _
 @[simp] lemma map_mul  : ∀ x y, v (x * y) = v x * v y := valuation.map_mul _
-@[simp] lemma map_add  : ∀ x y, v (x + y) ≤ v x ∨ v (x + y) ≤ v y := valuation.map_add _
+@[simp] lemma map_add  : ∀ x y, v (x + y) ≤ max (v x) (v y) := valuation.map_add _
 
 end
 
