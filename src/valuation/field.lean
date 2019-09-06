@@ -23,7 +23,7 @@ separated, so the map from `K` to `hat K` is injective.
 Then we extend the valuation given on `K` to a valuation on `hat K`.
 -/
 
-open filter set
+open filter set linear_ordered_structure
 
 local attribute [instance, priority 0] classical.decidable_linear_order
 
@@ -37,19 +37,20 @@ variables {K : Type*} [division_ring K]
 section valuation_topological_division_ring
 
 section inversion_estimate
-variables {Γ : Type*} [linear_ordered_comm_group Γ] (v : valuation K Γ)
+variables {Γ : Type*} [linear_ordered_comm_group_with_zero Γ] (v : valuation K Γ)
 
 -- The following is the main technical lemma ensuring that inversion is continuous
 -- in the topology induced by a valuation on a division ring (ie the next instance)
 -- and the fact that a valued field is completable
 -- [BouAC, VI.5.1 Lemme 1]
-lemma valuation.inversion_estimate {x y : K} {γ : Γ} (y_ne : y ≠ 0) (h : v (x - y) < min (γ * ((v y) * (v y))) (v y)) :
+lemma valuation.inversion_estimate {x y : K} {γ : units Γ} (y_ne : y ≠ 0)
+  (h : v (x - y) < min (γ * ((v y) * (v y))) (v y)) :
   v (x⁻¹ - y⁻¹) < γ :=
 begin
   have hyp1 : v (x - y) < γ * ((v y) * (v y)),
     from lt_of_lt_of_le h (min_le_left _ _),
   have hyp1' : v (x - y) * ((v y) * (v y))⁻¹ < γ,
-    from with_zero.mul_inv_lt_of_lt_mul hyp1,
+    from mul_inv_lt_of_lt_mul' hyp1,
   have hyp2 : v (x - y) < v y,
     from lt_of_lt_of_le h (min_le_right _ _),
   have key : v x = v y, from valuation.map_eq_of_sub_lt v hyp2,
@@ -65,9 +66,9 @@ begin
   calc
     v (x⁻¹ - y⁻¹) = v (x⁻¹ * (y - x) * y⁻¹) : by rw decomp
     ... = (v x⁻¹) * (v $ y - x) * (v y⁻¹) : by repeat { rw valuation.map_mul }
-    ... = (v x)⁻¹ * (v $ y - x) * (v y)⁻¹ : by rw [v.map_inv x_ne, v.map_inv y_ne]
+    ... = (v x)⁻¹ * (v $ y - x) * (v y)⁻¹ : by rw [v.map_inv' x_ne, v.map_inv' y_ne]
     ... = (v $ y - x) * ((v y) * (v y))⁻¹ : by
-      rw [mul_assoc, mul_comm, key, mul_assoc, ← with_zero.mul_inv_rev]
+      rw [mul_assoc, mul_comm, key, mul_assoc, ← group_with_zero.mul_inv_rev]
     ... = (v $ y - x) * ((v y) * (v y))⁻¹ : rfl
     ... = (v $ x - y) * ((v y) * (v y))⁻¹ : by rw valuation.map_sub_swap
     ... < γ : hyp1',
@@ -87,16 +88,18 @@ instance valued.topological_division_ring [valued K] : topological_division_ring
       intros x x_ne s s_in,
       cases valued.mem_nhds.mp s_in with γ hs, clear s_in,
       rw [mem_map, valued.mem_nhds],
-      change ∃ (γ : valued.Γ K), {y : K | v (y - x) < ↑γ} ⊆ {x : K | x⁻¹ ∈ s},
-      have : ∃ γ' : valued.Γ K, v x = γ', from valuation.unit_is_some (valued.v K) (units.mk0 _ x_ne),
-      cases this with γ' H,
+      change ∃ (γ : units (valued.Γ K)), {y : K | v (y - x) < γ} ⊆ {x : K | x⁻¹ ∈ s},
+      have vx_ne := (valuation.ne_zero_iff $ valued.v K).mpr x_ne,
+      let γ' := group_with_zero.mk₀ _ vx_ne,
+      -- have : ∃ γ' : units (valued.Γ K), v x = γ', from valuation.unit_is_some (valued.v K) (units.mk0 _ x_ne),
+      -- cases this with γ' H,
       use min (γ * (γ'*γ')) γ',
       intros y y_in,
       apply hs,
       change v (y⁻¹ - x⁻¹) < γ,
       simp only [mem_set_of_eq] at y_in,
 -- and the fact that a valued field is completable
-      rw [with_zero.coe_min, ← with_zero.mul_coe, ← with_zero.mul_coe, ← H] at y_in,
+      rw [coe_min, units.coe_mul, units.coe_mul] at y_in,
       exact valuation.inversion_estimate _ x_ne y_in
     end,
   ..(by apply_instance : topological_ring K) }
@@ -104,7 +107,7 @@ instance valued.topological_division_ring [valued K] : topological_division_ring
 section
 local attribute [instance] with_zero.topological_space with_zero.regular_space with_zero.nhds_basis
 
-lemma valued.continuous_valuation [valued K] : continuous (v : K → with_zero (valued.Γ K)) :=
+lemma valued.continuous_valuation [valued K] : continuous (v : K → valued.Γ K) :=
 begin
   rw continuous_iff_continuous_at,
   intro x,

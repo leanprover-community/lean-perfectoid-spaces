@@ -168,4 +168,23 @@ begin
   exact linear_ordered_structure.mul_lt_mul hab hcd
 end
 
+lemma mul_inv_lt_of_lt_mul' {x y z : α} (h : x < y*z) : x*z⁻¹ < y :=
+begin
+  by_cases hx : x = 0, { contrapose! h, simp * at *, },
+  by_cases hy : y = 0, { contrapose! h, simp [hy] },
+  by_cases hz : z = 0, { contrapose! h, simp [hz] },
+  change (group_with_zero.mk₀ _ hx) < (group_with_zero.mk₀ _ hy) * (group_with_zero.mk₀ _ hz) at h,
+  exact mul_inv_lt_of_lt_mul h
+end
+.
+
+lemma mul_lt_right' (γ : α) (h : a < b) (hγ : γ ≠ 0) : a*γ < b*γ :=
+begin
+  have hb : b ≠ 0 := ne_zero_of_gt h,
+  by_cases ha : a = 0,
+  { by_contra H, simp [ha] at H, tauto, },
+  change (group_with_zero.mk₀ _ ha) < (group_with_zero.mk₀ _ hb) at h,
+  exact linear_ordered_structure.mul_lt_right (group_with_zero.mk₀ _ hγ) h
+end
+
 end linear_ordered_structure

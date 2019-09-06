@@ -123,6 +123,13 @@ h.symm ▸ (mul_inv_cancel_assoc_left z x hx)
 lemma eq_mul_inv_of_mul_eq {x : α} (hx : x ≠ 0) {y z : α} (h : z * x = y) : z = y * x⁻¹ :=
 eq.symm $ mul_inv_eq_of_eq_mul hx h.symm
 
+lemma mul_inv_rev (x y : α) : (x * y)⁻¹ = y⁻¹ * x⁻¹ :=
+begin
+  by_cases hx : x = 0, { simp [hx] },
+  by_cases hy : y = 0, { simp [hy] },
+  symmetry, apply eq_inv_of_mul_left_eq_one', simp [_root_.mul_assoc, hx, hy],
+end
+
 end group_with_zero
 
 class comm_group_with_zero (α : Type*) extends comm_monoid α, group_with_zero α.
