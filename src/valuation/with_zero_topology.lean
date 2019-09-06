@@ -251,7 +251,7 @@ begin
   rw ← nhds_coe γ,
 end
 
-lemma with_zero.tendsto_zero {α : Type*} {F : filter α} {f : α → Γ} :
+lemma tendsto_zero {α : Type*} {F : filter α} {f : α → Γ} :
   tendsto f F (nhds (0 : Γ)) ↔ ∀ γ₀ : units Γ, { x : α | f x < γ₀ } ∈ F :=
 begin
   rw nhds_basis.tendsto_into,

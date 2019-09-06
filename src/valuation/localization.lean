@@ -290,26 +290,13 @@ begin
   { exact λ (H : _ < _), ne_of_lt H (map_one _) },
   { rintros J ⟨x,hx⟩ hJ hxni hxinJ,
     have vx : v.on_valuation_field x = 1 :=
-    begin
-      rw eq_iff_le_not_lt,
-      split; assumption
-    end,
-    have xinv_mul_x : (x : valuation_field v)⁻¹ * x = 1 :=
-    begin
-      apply inv_mul_cancel,
-      intro hxeq0,
-      simpa [hxeq0] using vx
-    end,
-    have hxinv : v.on_valuation_field x⁻¹ ≤ 1 :=
-    begin
-      refine le_of_eq _,
-      symmetry,
-      simpa [xinv_mul_x, vx] using v.on_valuation_field.map_mul x⁻¹ x
-    end,
+    by { rw eq_iff_le_not_lt, split; assumption },
+    have hxinv : v.on_valuation_field x⁻¹ ≤ 1 := by simp [vx],
     convert J.smul_mem ⟨x⁻¹, hxinv⟩ hxinJ,
-    symmetry,
-    apply subtype.val_injective,
-    exact xinv_mul_x }
+    symmetry, apply subtype.val_injective,
+    apply inv_mul_cancel,
+    show x ≠ 0,
+    assume hxeq0, simpa [hxeq0] using vx }
 end
 
 set_option class.instance_max_depth 32
