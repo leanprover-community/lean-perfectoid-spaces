@@ -5,7 +5,13 @@ import valuation.basic
 /-!
 # Extending valuations to localizations
 
+In this file we extend valuations on a ring R to localizations of R.
+We use this to define the valuation field, the valuation ring,
+and the residue field of a valued ring.
+
 -/
+
+-- TODO: this file could use a general cleanup and some extra comments
 
 local attribute [instance] classical.prop_decidable
 local attribute [instance] classical.decidable_linear_order
@@ -25,9 +31,6 @@ variables (v : valuation R Γ)
 lemma inverse_exists (s : S) : ∃ u : localization R S, u * s = 1 :=
 ⟨(localization.to_units s).inv, units.inv_val _⟩
 
--- I realised later on that I could have used the UMP of rings to give
--- a map localization R S -> K_v and then pulled back the canonical valuation.
--- But I was 80% of the way through the proof it was a valuation when I realised this.
 def localization_v (h : ∀ s, s ∈ S → v s ≠ 0) : localization R S → Γ :=
 λ (q : localization R S), quotient.lift_on' q (λ rs, v rs.1 * (v rs.2.1)⁻¹)
 begin
