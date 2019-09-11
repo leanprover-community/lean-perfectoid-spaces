@@ -5,22 +5,39 @@ import for_mathlib.topology
 
 import valuation.linear_ordered_comm_group_with_zero
 
+/-!
+# The topology on linearly ordered commutative groups with zero
+
+Let Γ be a linearly ordered commutative group to which we have adjoined a zero element.
+Then Γ may naturally be endowed with a topology that turns Γ into a topological monoid.
+The topology is the following:
+A subset U ⊆ Γ is open if 0 ∉ U or if there is an invertible γ₀ ∈ Γ such that {γ | γ < γ₀} ⊆ U.
+
+-/
+
 local attribute [instance, priority 0] classical.decidable_linear_order
+
 local notation `𝓝` x: 70 := nhds x
-variables {Γ : Type*} [linear_ordered_comm_group_with_zero Γ]
 
 namespace linear_ordered_comm_group_with_zero
 open topological_space filter set linear_ordered_structure
+variables (Γ : Type*) [linear_ordered_comm_group_with_zero Γ]
 
-variables (Γ)
+/--The neighbourhoods around γ ∈ Γ, used in the definition of the topology on Γ.
+These neighbourhoods are defined as follows:
+A set s is a neighbourhood of 0 if there is an invertible γ₀ ∈ Γ such that {γ | γ < γ₀} ⊆ s.
+If γ ≠ 0, then every set that contains γ is a neighbourhood of γ. -/
 def nhds_fun : Γ → filter Γ :=
   (λ x : Γ, if x = 0 then ⨅ (γ₀ : units Γ), principal {γ | γ < γ₀} else pure x)
 
+/--The topology on a linearly ordered commutative group with a zero element adjoined.
+A subset U is open if 0 ∉ U or if there is an invertible element γ₀ such that {γ | γ < γ₀} ⊆ U. -/
 protected def topological_space : topological_space Γ :=
 topological_space.mk_of_nhds (nhds_fun Γ)
 
 local attribute [instance] linear_ordered_comm_group_with_zero.topological_space
 
+/--The neighbourhoods {γ | γ < γ₀} of 0 form a directed set indexed by the invertible elements γ₀.-/
 lemma directed_lt : directed (≥) (λ (γ₀ : units Γ), principal {γ : Γ | γ < ↑γ₀}) :=
 begin
   intros γ₁ γ₂,
@@ -38,13 +55,17 @@ begin
         ... ≤ γ₂ : min_le_right _ _ }
 end
 
-lemma pure_le_nhds_fun : pure ≤ nhds_fun Γ :=
-begin
-  intro x,
-  by_cases hx : x = 0; simp [hx, nhds_fun],
-end
+-- We need two auxilliary lemmas to show that nhds_fun accurately describes the neighbourhoods
+-- coming from the topology (that is defined in terms of nhds_fun).
 
-lemma nhds_fun_ok : ∀ (x : Γ) (s ∈ nhds_fun Γ x),
+/--At all points of a linearly ordered commutative group with a zero element adjoined,
+the pure filter is smaller than the filter given by nhds_fun.-/
+private lemma pure_le_nhds_fun : pure ≤ nhds_fun Γ :=
+λ x, by { by_cases hx : x = 0; simp [hx, nhds_fun] }
+
+/--For every point Γ, and every “neighbourhood” s of it (described by nhds_fun), there is a
+smaller “neighbourhood” t ⊆ s, such that s is a “neighbourhood“ of all the points in t.-/
+private lemma nhds_fun_ok : ∀ (x : Γ) (s ∈ nhds_fun Γ x),
   (∃ t ∈ nhds_fun Γ x, t ⊆ s ∧ ∀ y ∈ t, s ∈ nhds_fun Γ y) :=
 begin
   intros x U U_in,
@@ -59,10 +80,9 @@ begin
       rw mem_principal_sets},
     { refine ⟨h, _⟩,
       intros y y_in,
-      by_cases hy : y = 0 ; simp [hy],
+      by_cases hy : y = 0 ; simp [hy, h y_in],
       { apply mem_infi_sets γ₀,
-        rwa mem_principal_sets },
-      { exact h y_in } } },
+        rwa mem_principal_sets } } },
   { simp [hx, nhds_fun] at U_in ⊢,
     use {x},
     refine ⟨mem_singleton _, singleton_subset_iff.2 U_in, _⟩,
@@ -73,18 +93,30 @@ begin
 end
 
 variables  {Γ}
-lemma nhds_coe (γ : units Γ) : nhds (γ : Γ) = pure (γ : Γ) :=
-calc nhds (γ : Γ) = nhds_fun Γ γ : nhds_mk_of_nhds (nhds_fun Γ) γ (pure_le_nhds_fun Γ) (nhds_fun_ok Γ)
+/--The neighbourhood filter of an invertible element consists of all sets containing that element.-/
+@[simp] lemma nhds_coe (γ : units Γ) : 𝓝 (γ : Γ) = pure (γ : Γ) :=
+calc 𝓝 (γ : Γ) = nhds_fun Γ γ : nhds_mk_of_nhds (nhds_fun Γ) γ (pure_le_nhds_fun Γ) (nhds_fun_ok Γ)
               ... = pure (γ : Γ) : if_neg (group_with_zero.unit_ne_zero γ)
 
+/--The neighbourhood filter of a nonzero element consists of all sets containing that element.-/
 @[simp] lemma nhds_of_ne_zero (γ : Γ) (h : γ ≠ 0) :
-  nhds γ = pure γ :=
+  𝓝 γ = pure γ :=
 nhds_coe (group_with_zero.mk₀ _ h)
 
-lemma singleton_nhds (γ : units Γ) : ({γ} : set Γ) ∈ nhds (γ : Γ) :=
-by simp [nhds_coe γ]
+/--If γ is an invertible element of a linearly ordered group with zero element adjoined,
+then {γ} is a neighbourhood of γ.-/
+lemma singleton_nhds_of_units (γ : units Γ) : ({γ} : set Γ) ∈ 𝓝 (γ : Γ) :=
+by simp
 
-lemma nhds_zero_mem (U : set Γ) : U ∈ nhds (0 : Γ) ↔ ∃ γ₀ : units Γ, {x : Γ | x < γ₀} ⊆ U :=
+/--If γ is a nonzero element of a linearly ordered group with zero element adjoined,
+then {γ} is a neighbourhood of γ.-/
+lemma singleton_nhds_of_ne_zero (γ : Γ) (h : γ ≠ 0) : ({γ} : set Γ) ∈ 𝓝 (γ : Γ) :=
+by simp [h]
+
+/--If U is a neighbourhood of 0 in a linearly ordered group with zero element adjoined,
+then there exists an invertible element γ₀ such that {γ | γ < γ₀} ⊆ U.
+-/
+lemma nhds_zero_mem (U : set Γ) : U ∈ 𝓝 (0 : Γ) ↔ ∃ γ₀ : units Γ, {γ : Γ | γ < γ₀} ⊆ U :=
 begin
   rw nhds_mk_of_nhds (nhds_fun Γ) 0 (pure_le_nhds_fun Γ) (nhds_fun_ok Γ),
   simp [nhds_fun],
@@ -99,11 +131,20 @@ begin
       rwa mem_principal_sets } }
 end
 
-lemma nhds_zero (γ : units Γ) : {x : Γ | x < γ} ∈ nhds (0 : Γ) :=
+/--If γ is an invertible element of a linearly ordered group with zero element adjoined,
+then {x | x < γ} is a neighbourhood of 0.-/
+lemma nhds_zero_of_units (γ : units Γ) : {x : Γ | x < γ} ∈ 𝓝 (0 : Γ) :=
 by { rw nhds_zero_mem, use γ }
+
+/--If γ is a nonzero element of a linearly ordered group with zero element adjoined,
+then {x | x < γ} is a neighbourhood of 0.-/
+lemma nhds_zero_of_ne_zero (γ : Γ) (h : γ ≠ 0) : {x : Γ | x < γ} ∈ 𝓝 (0 : Γ) :=
+nhds_zero_of_units (group_with_zero.mk₀ _ h)
 
 variable (Γ)
 
+/--The topology on a linearly ordered group with zero element adjoined
+is compatible with the order structure.-/
 def ordered_topology : ordered_topology Γ :=
 { is_closed_le' :=
   begin
@@ -112,18 +153,17 @@ def ordered_topology : ordered_topology Γ :=
     rw is_open_iff_mem_nhds,
     rintros ⟨a,b⟩ hab,
     change b < a at hab,
-    let γ := group_with_zero.mk₀ _ (ne_zero_of_gt hab),
+    have ha : a ≠ 0 := ne_zero_of_gt hab,
     rw [nhds_prod_eq, mem_prod_iff],
     by_cases hb : b = 0,
     { subst b,
-      use [{γ}, singleton_nhds γ, {x : Γ | x < γ}, nhds_zero γ],
+      use [{a}, singleton_nhds_of_ne_zero _ ha, {x : Γ | x < a}, nhds_zero_of_ne_zero _ ha],
       intros p p_in,
       cases mem_prod.1 p_in with h1 h2,
       rw mem_singleton_iff at h1,
       change p.2 < p.1,
       rwa h1 },
-    { let b' := group_with_zero.mk₀ _ hb,
-      use [{γ}, singleton_nhds γ, {b'}, singleton_nhds b'],
+    { use [{a}, singleton_nhds_of_ne_zero _ ha, {b}, singleton_nhds_of_ne_zero _ hb],
       intros p p_in,
       cases mem_prod.1 p_in with h1 h2,
       rw mem_singleton_iff at h1 h2,
@@ -133,9 +173,12 @@ def ordered_topology : ordered_topology Γ :=
 
 local attribute [instance] ordered_topology
 
+/--The topology on a linearly ordered group with zero element adjoined is T₂ (aka Hausdorff).-/
 lemma t2_space : t2_space Γ := ordered_topology.to_t2_space
+
 local attribute [instance] t2_space
 
+/--The topology on a linearly ordered group with zero element adjoined is T₃ (aka regular).-/
 lemma regular_space : regular_space Γ :=
 begin
   haveI : t1_space Γ := t2_space.t1_space,
@@ -154,12 +197,12 @@ begin
       split,
       exact mem_nhds_sets (by rwa is_open_compl_iff) (by rwa mem_compl_iff),
       exact ⟨s, subset.refl s, by simp⟩ } },
-  { let x' := group_with_zero.mk₀ _ hx,
-    simp only [inf_eq_bot_iff, exists_prop, mem_principal_sets],
-    exact ⟨-{x'}, is_open_compl_iff.mpr is_closed_singleton, by rwa subset_compl_singleton_iff,
-          {x'}, singleton_nhds x', -{x'}, by simp [subset.refl]⟩ }
+  { simp only [inf_eq_bot_iff, exists_prop, mem_principal_sets],
+    exact ⟨-{x}, is_open_compl_iff.mpr is_closed_singleton, by rwa subset_compl_singleton_iff,
+          {x}, singleton_nhds_of_ne_zero x hx, -{x}, by simp [subset.refl]⟩ }
 end
 
+/--The filter basis around the 0 element of a linearly ordered group with zero element adjoined.-/
 def zero_filter_basis : filter_basis Γ :=
 { sets := range (λ γ : units Γ, {x : Γ | x < γ}),
   ne_empty := range_ne_empty.mpr ⟨1⟩,
@@ -178,16 +221,18 @@ def zero_filter_basis : filter_basis Γ :=
 
 variable {Γ}
 
-def coe_filter_basis (x : Γ) (h : x ≠ 0) : filter_basis Γ :=
+/--The filter basis around nonzero elements of
+a linearly ordered group with zero element adjoined.-/
+def ne_zero_filter_basis (x : Γ) (h : x ≠ 0) : filter_basis Γ :=
 { sets := ({({x} : set Γ)} : set (set Γ)),
   ne_empty := by simp,
   directed := by finish }
 
 variable (Γ)
 
+/--The neighbourhood basis of a linearly ordered group with zero element adjoined.-/
 def nhds_basis : nhds_basis Γ :=
-{ B := λ x, if h : x = 0 then zero_filter_basis Γ
-                     else coe_filter_basis x h,
+{ B := λ x, if h : x = 0 then zero_filter_basis Γ else ne_zero_filter_basis x h,
   is_nhds := begin
     intro x,
     ext s,
@@ -200,7 +245,7 @@ def nhds_basis : nhds_basis Γ :=
         use [{x : Γ | x < ↑γ₀}, γ₀, h] },
       { rintros ⟨_, ⟨γ₀, rfl⟩, h⟩,
         exact ⟨γ₀, h⟩ } },
-    { simp [hx, filter_basis.mem_filter, filter_basis.mem_iff, coe_filter_basis], }
+    { simp [hx, filter_basis.mem_filter, filter_basis.mem_iff, ne_zero_filter_basis], }
   end }
 
 local attribute [instance] nhds_basis
@@ -214,12 +259,12 @@ begin
   simp [eq_comm]
 end
 
-lemma mem_nhds_basis_nonzero {U : set Γ} {γ₀ : Γ} (h : γ₀ ≠ 0) :
+lemma mem_nhds_basis_ne_zero {U : set Γ} {γ₀ : Γ} (h : γ₀ ≠ 0) :
   U ∈ nhds_basis.B γ₀ ↔ U = {γ₀} :=
 begin
   dsimp [nhds_basis],
   simp only [dif_neg h],
-  dsimp [filter_basis.has_mem, coe_filter_basis γ₀ h],
+  dsimp [filter_basis.has_mem, ne_zero_filter_basis γ₀ h],
   exact set.mem_singleton_iff
 end
 
@@ -234,15 +279,15 @@ local attribute [instance] discrete_ordered_comm_group
 def ordered_comm_group_is_discrete : discrete_topology α := ⟨rfl⟩
 local attribute [instance] ordered_comm_group_is_discrete
 
-lemma comap_coe_nhds (γ : units Γ) : nhds γ = comap coe (nhds (γ : Γ)) :=
+lemma comap_coe_nhds (γ : units Γ) : 𝓝 γ = comap coe (𝓝 (γ : Γ)) :=
 begin
   rw [nhds_discrete, filter.comap_pure (λ _ _ h, units.ext h) γ],
-  change comap coe (pure (γ : Γ)) = comap coe (nhds ↑γ),
+  change comap coe (pure (γ : Γ)) = comap coe (𝓝 ↑γ),
   rw ← nhds_coe γ,
 end
 
 lemma tendsto_zero {α : Type*} {F : filter α} {f : α → Γ} :
-  tendsto f F (nhds (0 : Γ)) ↔ ∀ γ₀ : units Γ, { x : α | f x < γ₀ } ∈ F :=
+  tendsto f F (𝓝 (0 : Γ)) ↔ ∀ γ₀ : units Γ, { x : α | f x < γ₀ } ∈ F :=
 begin
   rw nhds_basis.tendsto_into,
   simp only [mem_nhds_basis_zero, exists_imp_distrib],
@@ -269,7 +314,7 @@ lemma mem_nhds_coe {s} {γ : Γ} (h : γ ≠ 0) :
   s ∈ 𝓝 γ ↔ γ ∈ s :=
 begin
   rw nhds_basis.mem_nhds_iff,
-  simp only [exists_prop, mem_nhds_basis_nonzero _ h, h],
+  simp only [exists_prop, mem_nhds_basis_ne_zero _ h, h],
   split,
   { rintros ⟨_, rfl, h₂⟩,
     rwa singleton_subset_iff at h₂ },
@@ -279,10 +324,10 @@ begin
 end
 
 lemma tendsto_nonzero {α : Type*} {F : filter α} {f : α → Γ} {γ₀ : Γ} (h : γ₀ ≠ 0) :
-  tendsto f F (nhds (γ₀ : Γ)) ↔ { x : α | f x = γ₀ } ∈ F :=
+  tendsto f F (𝓝 (γ₀ : Γ)) ↔ { x : α | f x = γ₀ } ∈ F :=
 begin
   rw nhds_basis.tendsto_into,
-  simp only [mem_nhds_basis_nonzero _ h, forall_eq],
+  simp only [mem_nhds_basis_ne_zero _ h, forall_eq],
   convert iff.rfl,
   ext s,
   exact mem_singleton_iff.symm
