@@ -71,7 +71,7 @@ variables [ring R]
 
 /-- A valuation is coerced to the underlying function R → {0} ∪ Γ. -/
 instance (R : Type u₀) [ring R] (Γ : Type u) [linear_ordered_comm_group_with_zero Γ] :
-has_coe_to_fun (valuation R Γ) := { F := λ _, R → Γ, coe := valuation.to_fun}
+has_coe_to_fun (valuation R Γ) := { F := λ _, R → Γ, coe := valuation.to_fun }
 
 variables (v : valuation R Γ) {x y z : R}
 
