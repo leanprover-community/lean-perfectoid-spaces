@@ -8,13 +8,13 @@ universes u u₀ u₁ u₂ u₃
 
 namespace valuation
 variables {R : Type u₀} [comm_ring R] [topological_space R] [topological_ring R]
-variables {Γ : Type u} [linear_ordered_comm_group_with_zero Γ]
-variables {Γ₁ : Type u₁} [linear_ordered_comm_group_with_zero Γ₁]
-variables {Γ₂ : Type u₂} [linear_ordered_comm_group_with_zero Γ₂]
-variables {v₁ : valuation R Γ₁} {v₂ : valuation R Γ₂}
+variables {Γ₀ : Type u} [linear_ordered_comm_group_with_zero Γ₀]
+variables {Γ'₀ : Type u₁} [linear_ordered_comm_group_with_zero Γ'₀]
+variables {Γ''₀ : Type u₂} [linear_ordered_comm_group_with_zero Γ''₀]
+variables {v₁ : valuation R Γ'₀} {v₂ : valuation R Γ''₀}
 
 /-- Continuity of a valuation [Wedhorn 7.7]. -/
-def is_continuous (v : valuation R Γ) : Prop :=
+def is_continuous (v : valuation R Γ₀) : Prop :=
 ∀ g : value_monoid v, is_open {r : R | canonical_valuation v r < g}
 
 /-- Continuity of a valuation only depends on its equivalence class. -/
@@ -38,8 +38,8 @@ local attribute [instance] valued.subgroups_basis valued.uniform_space
 
 /-
 Mathematical warning:
-It is *not true* that v is continuous iff the map R -> Γ is continuous
-where Γ gets the usual topology where {γ} and {x < γ} are open, for γ ≠ 0.
+It is *not true* that v is continuous iff the map R -> Γ₀ is continuous
+where Γ₀ gets the usual topology where {γ} and {x < γ} are open, for γ ≠ 0.
 What is true is that the valuation is continuous iff the associated map
 from R to the valuation field is continuous.
 -/
@@ -47,7 +47,7 @@ from R to the valuation field is continuous.
 
 /--If R is a topological ring with continuous valuation v, then the natural map from R
 to the valuation field of v is continuous.-/
-theorem continuous_valuation_field_mk_of_continuous (v : valuation R Γ) (hv : is_continuous v) :
+theorem continuous_valuation_field_mk_of_continuous (v : valuation R Γ₀) (hv : is_continuous v) :
   continuous (valuation_field_mk v) :=
 topological_add_group.continuous_of_continuous_at_zero (valuation_field_mk v) $
 begin
@@ -81,7 +81,7 @@ end Spv
 namespace Spv
 
 variables {R : Type u₁} [comm_ring R] [topological_space R] [topological_ring R]
-variables {Γ : Type u} [linear_ordered_comm_group_with_zero Γ]
+variables {Γ₀ : Type u} [linear_ordered_comm_group_with_zero Γ₀]
 
 variable (R)
 
@@ -91,7 +91,7 @@ def Cont := {v : Spv R | v.is_continuous}
 variable {R}
 
 /--A valuation v is continuous if and only if its equivalence class is continuous.-/
-lemma mk_mem_Cont {v : valuation R Γ} : mk v ∈ Cont R ↔ v.is_continuous :=
+lemma mk_mem_Cont {v : valuation R Γ₀} : mk v ∈ Cont R ↔ v.is_continuous :=
 begin
   show Spv.lift (by exactI (λ _ _, by exactI valuation.is_continuous)) (Spv.mk v)
     ↔ valuation.is_continuous v,
@@ -107,7 +107,7 @@ end Spv
 
 /-
 Wedhorn, p.59 contains the following typo:
-  A valuation v on A is continuous if and only if for all γ ∈ Γ_v (the value group),
+  A valuation v on A is continuous if and only if for all γ ∈ Γ₀_v (the value group),
   the set A_{≤γ} := { a ∈ A ; v(a) ≥ γ } is open in A.
 
   This is a typo, it should be v(a) ≤ γ.

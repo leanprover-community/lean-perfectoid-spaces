@@ -2,36 +2,48 @@ import for_mathlib.quotient_group
 
 import valuation.localization
 
-/-! valuation.canonical
+/-!
+# The canonical valuation
 
-The purpose of this file is to define a "canonical" valuation equivalent to
+The purpose of this file is to define a “canonical” valuation equivalent to
 a given valuation. The whole raison d'etre for this is that there are set-theoretic
-issues with the equivalence "relation" on valuations, because the target group
-Gamma can be arbitrary.
+issues with the equivalence “relation” on valuations, because the target group Γ
+can be arbitrary.
 
-The main idea is this. If v : R → Γ ∪ {0} is an arbitrary valuation,
-then v extends to a valuation on K = Frac(R/supp(v)) and hence to a group
-homomorphism K^* → Γ, whose kernel is A^*, the units in the valuation ring
+## Idea
+
+The main idea is this. If v : R → Γ₀ is an arbitrary valuation,
+then v extends to a valuation on K = Frac(R/supp(v)) and hence to a monoid
+homomorphism K^* → units Γ₀, whose kernel is A^*, the units in the valuation ring
 (or equivalently the things in K^* of norm at most 1). This embeds K^*/A^*
-into Γ and hence gives K^*/A^* the structure of a linearly ordered commutative group.
-There is an induced map R → (K^*/A^*) ∪ {0}, and we call this the
+into Γ₀ and hence gives K^*/A^* the structure of a linearly ordered commutative group.
+There is an induced map R → (K^*/A^*), and we call this the
 _canonical valuation_ associated to v; this valuation is equivalent to v.
 A technical advantage that this valuation has from the point of view
-of Lean's type theory is that if R is in universe u₁ and Γ in universe u₂,
-then v : valuation R Γ will be in universe `max u₁ u₂` but the canonical
+of Lean's type theory is that if R is in universe u₁ and Γ₀ in universe u₂,
+then v : valuation R Γ₀ will be in universe `max u₁ u₂` but the canonical
 valuation will just be in universe u₁. In particular, if v and v' are equivalent
 then their associated canonical valuations are isomorphic and furthermore in the
 same universe.
 
+## Implementation details
+
 All of the below names are in the `valuation` namespace.
 
-`value_monoid v` is the totally ordered group K^*/A^* (note that it is
-isomorphic to the subgroup of Γ which Wedhorn calls the value group in [W; 1.22]), and
-`value_monoid.to_Γ` is the group homomorphism to \Gamma.
+The canonical valuation takes values in `value_monoid v`. Technically
+this is not defined exactly in the way explained above.
+So `value_monoid v` is not defined as `with_zero (K^* / A^*)`.
+Instead, we take the equivalence relation on K^* given by A^*,
+and extend it in the obvious way to K. The resulting quotient is naturally a monoid,
+with an order and a zero element. Indeed, it is a linear_ordered_comm_group_with_zero.
+Its unit group is canonically isomorphic to K^*/A^*. (Note that it is also
+isomorphic to the subgroup of Γ₀ which Wedhorn calls the value group in [Wedhorn; 1.22]).
+
+`value_monoid.to_Γ₀` is the monoid homomorphism to Γ₀.
 `canonical_valuation v` is the canonical valuation.
-`canonical_valuation.to_Γ v` is the lemma that says that we can
-recover v from `canonical_valuation v` using the group homomorphism
-from K^*/A^* to Γ.
+`canonical_valuation.to_Γ₀ v` is the lemma that says that we can
+recover v from `canonical_valuation v` using the monoid homomorphism
+from (value_monoid v) to Γ₀.
 
 -- TODO -- rewrite this when I've remembered what we proved.
 We then prove some of Proposition-and-Definition 1.27 of Wedhorn,
@@ -54,15 +66,15 @@ variables {R : Type u₀} [comm_ring R]
 
 namespace valuation
 
-variables {Γ : Type u} [linear_ordered_comm_group_with_zero Γ]
-variables (v : valuation R Γ)
+variables {Γ₀ : Type u} [linear_ordered_comm_group_with_zero Γ₀]
+variables (v : valuation R Γ₀)
 
 /-- The elements of `units (valuation_field v)` with norm 1. -/
 definition valuation_field_norm_one :=
-is_group_hom.ker (units.map v.on_valuation_field.to_monoid_hom)
+is_group_hom.ker (units.map (v.on_valuation_field : v.valuation_field →* Γ₀))
 
 /-- `valuation_field_norm_one v is a normal subgroup of `units (valuation_field v)`. -/
-instance (v : valuation R Γ) : normal_subgroup (valuation_field_norm_one v) :=
+instance (v : valuation R Γ₀) : normal_subgroup (valuation_field_norm_one v) :=
 by unfold valuation_field_norm_one; apply_instance
 
 namespace value_monoid
@@ -94,25 +106,13 @@ def setoid : setoid (v.valuation_field) :=
 end value_monoid
 
 /-- The value group of the canonical valuation.-/
-def value_monoid (v : valuation R Γ) : Type u₀ :=
+def value_monoid (v : valuation R Γ₀) : Type u₀ :=
 @quotient v.valuation_field (value_monoid.setoid v)
-
--- def value_monoid (v : valuation R Γ) : Type u₀ :=
--- quotient_group.quotient (valuation_field_norm_one v)
-
--- def value_monoid_to_value_monoid : v.value_monoid → v.value_monoid :=
--- λ x, quotient.lift_on' x (λ u, value_monoid.mk v u) $
--- by { intros a b h, exact quotient.sound' ⟨_, h, a.mul_inv_cancel_left b⟩ }
 
 namespace value_monoid
 open function
 
-/-- The natural quotient map from `units (valuation_field v)` to `value_monoid v`. -/
-def mk (v : valuation R Γ) :
-  valuation_field v → value_monoid v :=
-quotient.mk'
-
-def to_Γ : v.value_monoid → Γ :=
+def to_Γ₀ : v.value_monoid → Γ₀ :=
 λ x, quotient.lift_on' x v.on_valuation_field $
 begin
   rintros a b ⟨c, hc, rfl⟩,
@@ -120,7 +120,7 @@ begin
   rw [v.on_valuation_field.map_mul, hc, mul_one],
 end
 
-lemma to_Γ_inj : injective (to_Γ v) :=
+lemma to_Γ₀_inj : injective (to_Γ₀ v) :=
 begin
   rintros ⟨a⟩ ⟨b⟩ h,
   change v.on_valuation_field a = v.on_valuation_field b at h,
@@ -135,44 +135,44 @@ begin
 end
 
 instance : linear_order (v.value_monoid) :=
-linear_order.lift (to_Γ v) (to_Γ_inj v) infer_instance
+linear_order.lift (to_Γ₀ v) (to_Γ₀_inj v) infer_instance
 
-lemma to_Γ_strict_mono : strict_mono (to_Γ v) := λ a b, id
+lemma to_Γ₀_strict_mono : strict_mono (to_Γ₀ v) := λ a b, id
 
 @[simp] lemma triangle (a : v.valuation_field) :
-  to_Γ v (mk v a) = v.on_valuation_field a := rfl
+  to_Γ₀ v (quotient.mk' a) = v.on_valuation_field a := rfl
 
-instance : has_zero (v.value_monoid) := ⟨mk v 0⟩
+instance : has_zero (v.value_monoid) := ⟨quotient.mk' 0⟩
 
-instance : has_one  (v.value_monoid) := ⟨mk v 1⟩
+instance : has_one  (v.value_monoid) := ⟨quotient.mk' 1⟩
 
 instance : has_inv  (v.value_monoid) :=
-⟨λ x, quotient.lift_on' x (λ a, mk v a⁻¹)
+⟨λ x, quotient.lift_on' x (λ a, quotient.mk' a⁻¹)
 begin
   rintros a b ⟨c, hc, rfl⟩,
   replace hc : v.on_valuation_field c = 1 := units.ext_iff.mp (is_subgroup.mem_trivial.mp hc),
-  apply to_Γ_inj,
+  apply to_Γ₀_inj,
   simp [hc],
 end⟩
 
 instance : has_mul  (v.value_monoid) :=
-⟨λ x y, quotient.lift_on₂' x y (λ a b, mk v (a*b))
+⟨λ x y, quotient.lift_on₂' x y (λ a b, quotient.mk' (a*b))
 begin
   rintros a₁ b₁ a₂ b₂ ⟨c₁, hc₁, rfl⟩ ⟨c₂, hc₂, rfl⟩,
   replace hc₁ : v.on_valuation_field c₁ = 1 := units.ext_iff.mp (is_subgroup.mem_trivial.mp hc₁),
   replace hc₂ : v.on_valuation_field c₂ = 1 := units.ext_iff.mp (is_subgroup.mem_trivial.mp hc₂),
-  apply to_Γ_inj,
+  apply to_Γ₀_inj,
   simp [hc₁, hc₂],
 end⟩
 
-@[simp] lemma to_Γ_zero : to_Γ v 0 = 0 := v.on_valuation_field.map_zero
+@[simp] lemma to_Γ₀_zero : to_Γ₀ v 0 = 0 := v.on_valuation_field.map_zero
 
-@[simp] lemma to_Γ_one  : to_Γ v 1 = 1 := v.on_valuation_field.map_one
+@[simp] lemma to_Γ₀_one  : to_Γ₀ v 1 = 1 := v.on_valuation_field.map_one
 
-@[simp] lemma to_Γ_inv (a) : to_Γ v a⁻¹ = (to_Γ v a)⁻¹ :=
+@[simp] lemma to_Γ₀_inv (a) : to_Γ₀ v a⁻¹ = (to_Γ₀ v a)⁻¹ :=
 quotient.induction_on' a $ λ x, v.on_valuation_field.map_inv
 
-@[simp] lemma to_Γ_mul (a b) : to_Γ v (a*b) = (to_Γ v a) * (to_Γ v b) :=
+@[simp] lemma to_Γ₀_mul (a b) : to_Γ₀ v (a*b) = (to_Γ₀ v a) * (to_Γ₀ v b) :=
 quotient.induction_on₂' a b $ λ x y, v.on_valuation_field.map_mul x y
 
 instance : group_with_zero (v.value_monoid) :=
@@ -185,125 +185,92 @@ begin
   show decidable_eq (value_monoid v),
   { apply_instance },
   show (0 : v.value_monoid) ≠ 1,
-  { assume this, replace := congr_arg (to_Γ v) this, simpa using this, },
-  all_goals { intros, apply to_Γ_inj, simp },
+  { assume this, replace := congr_arg (to_Γ₀ v) this, simpa using this, },
+  all_goals { intros, apply to_Γ₀_inj, simp },
   { exact mul_assoc _ _ _ },
-  { apply mul_inv_cancel', intro this, apply_assumption, apply to_Γ_inj, simpa }
+  { apply mul_inv_cancel', intro this, apply_assumption, apply to_Γ₀_inj, simpa }
 end
 
 instance : linear_ordered_comm_group_with_zero (v.value_monoid) :=
-{ mul_comm := λ a b, to_Γ_inj v $ by simpa using mul_comm _ _,
+{ mul_comm := λ a b, to_Γ₀_inj v $ by simpa using mul_comm _ _,
   mul_le_mul_left := λ a b h c,
   begin
-    rw ← (to_Γ_strict_mono v).le_iff_le at h ⊢,
+    rw ← (to_Γ₀_strict_mono v).le_iff_le at h ⊢,
     simpa using linear_ordered_structure.mul_le_mul_left h _
   end,
-  zero_le' := λ a, by { rw ← (to_Γ_strict_mono v).le_iff_le, simp },
+  zero_le' := λ a, by { rw ← (to_Γ₀_strict_mono v).le_iff_le, simp },
   .. value_monoid.group_with_zero v,
   .. value_monoid.linear_order v }
+
+/-- The natural quotient map from `units (valuation_field v)` to `value_monoid v`. -/
+def mk (v : valuation R Γ₀) :
+  valuation_field v →* value_monoid v :=
+{ to_fun := quotient.mk',
+  map_one' := rfl,
+  map_mul' := λ a b, rfl, }
 
 end value_monoid
 
 /-- The canonical valuation on Frac(R/supp(v)), taking values in `value_monoid v`. -/
 def valuation_field.canonical_valuation :
 valuation (valuation_field v) (value_monoid v) :=
-{ to_fun := value_monoid.mk v,
-  map_one' := rfl,
-  map_mul' := λ a b, rfl,
-  map_zero' := rfl,
+{ map_zero' := rfl,
   map_add' := λ a b,
   begin
-    rw ← (value_monoid.to_Γ_strict_mono v).le_iff_le,
-    rw (value_monoid.to_Γ_strict_mono v).monotone.map_max,
+    rw ← (value_monoid.to_Γ₀_strict_mono v).le_iff_le,
+    rw (value_monoid.to_Γ₀_strict_mono v).monotone.map_max,
     exact v.on_valuation_field.map_add a b
-  end }
+  end,
+  .. value_monoid.mk v }
 -- ⟨valuation_field.canonical_valuation_v v, valuation_field.canonical_valuation_v.is_valuation v⟩
 
 /-- The canonical valuation on R/supp(v), taking values in `value_monoid v`. -/
-definition quotient.canonical_valuation (v : valuation R Γ) :
+definition quotient.canonical_valuation :
   valuation (ideal.quotient (supp v)) (value_monoid v) :=
 @comap _ _ _ _ _ _ (localization.of)
   (by apply_instance) (valuation_field.canonical_valuation v)
 
 /-- The canonical valuation on R, taking values in `value_monoid v`. -/
-definition canonical_valuation (v : valuation R Γ) :
+definition canonical_valuation :
   valuation R (value_monoid v) :=
 (quotient.canonical_valuation v).comap (ideal.quotient.mk (supp v))
 
 /-- The relation between `v.canonical_valuation r` and `v r`. -/
-lemma canonical_valuation_eq (v : valuation R Γ) (r : R) :
+lemma canonical_valuation_eq (r : R) :
   v.canonical_valuation r = value_monoid.mk v (v.valuation_field_mk r) := rfl
 
 namespace canonical_valuation
 
--- WARNING!!! Maybe don't delete this
-
--- -- This looks handy to know but we never actually use it.
--- /-- Every element of `value_monoid v` is a ratio of things in the image of `canonical_valuation v`.-/
--- lemma value_monoid.is_ratio (v : valuation R Γ) (g : value_monoid v) :
--- ∃ r s : R, r ∉ supp v ∧ s ∉ supp v ∧ canonical_valuation v s * g = canonical_valuation v r :=
--- begin
---   rcases g with ⟨u, u', huu', hu'u⟩,
---   rcases u with ⟨⟨r⟩, ⟨s⟩, h⟩,
---   change ideal.quotient.mk _ s ∈ _ at h,
---   use r, use s,
---   have hs : s ∉ supp v,
---   { intro h2,
---     rw @localization.fraction_ring.mem_non_zero_divisors_iff_ne_zero
---       (valuation_ID v) at h,
---     rw (ideal.quotient.eq_zero_iff_mem).2 h2 at h,
---     apply h, refl,
---   },
---   have hr : r ∉ supp v,
---   {
---     change (localization.mk (submodule.quotient.mk r) (⟨submodule.quotient.mk s, h⟩) *
---       u' : valuation_field v) = 1 at huu',
---     intro hr,
---     rw (submodule.quotient.mk_eq_zero _).2 hr at huu',
---     have : (localization.of (ideal.quotient.mk (supp v) 0) : valuation_field v) / (localization.of (ideal.quotient.mk (supp v) s) : valuation_field v) * u' = 1,
---       simpa using huu',
---     rw ideal.quotient.mk_zero at this,
---     change ((0 : valuation_field v) / localization.of (ideal.quotient.mk (supp v) s) * u' = 1) at this,
---     rw _root_.zero_div at this,
---     rw zero_mul at this,
---     revert this, simp,
---   },
---   split, exact hr, split, exact hs,
---   let rq := ideal.quotient.mk (supp v) r,
---   let sq := ideal.quotient.mk (supp v) s,
---   have hr' : rq ≠ 0,
---     intro h2, apply hr, exact ideal.quotient.eq_zero_iff_mem.1 h2,
---   have hs' : sq ≠ 0,
---     intro h2, apply hs, exact ideal.quotient.eq_zero_iff_mem.1 h2,
--- show (valuation_field.canonical_valuation_v v (localization.of sq)) *
---   ↑(value_monoid_quotient v _)
---  = (valuation_field.canonical_valuation_v v (localization.of rq)),
---   unfold valuation_field.canonical_valuation_v,
---   split_ifs,
---     exfalso, exact hs' (localization.fraction_ring.eq_zero_of _ h_1),
---     exfalso, exact hs' (localization.fraction_ring.eq_zero_of _ h_1),
---     exfalso, exact hr' (localization.fraction_ring.eq_zero_of _ h_2),
---   show some _ = some _,
---   congr,
---   show value_monoid_quotient v _ * value_monoid_quotient v _ = value_monoid_quotient v _,
---   rw ←(value_monoid_quotient.is_group_hom v).map_mul,
---   congr,
---   apply units.ext,
---   show localization.of sq * _ = localization.of rq,
---   suffices : (localization.of sq : valuation_field v) * (localization.mk rq ⟨sq, h⟩ : valuation_field v) = localization.of rq,
---     convert this,
---   rw localization.mk_eq,
---   rw mul_comm,
---   rw mul_assoc,
---   convert mul_one _,
---   convert units.inv_val _,
--- end
+-- This looks handy to know but we never actually use it.
+/-- Every element of `value_monoid v` is a ratio of things in the image of `canonical_valuation v`.-/
+lemma value_monoid.is_ratio (v : valuation R Γ₀) (g : value_monoid v) :
+∃ r s : R, s ∉ v.supp ∧ v.canonical_valuation s * g = v.canonical_valuation r :=
+begin
+  apply quotient.induction_on' g, clear g,
+  rintros ⟨⟨r⟩, ⟨s⟩, h⟩,
+  change ideal.quotient.mk _ s ∈ _ at h,
+  use [r, s],
+  split,
+  { show s ∉ supp v,
+    assume mem_supp,
+    erw [localization.fraction_ring.mem_non_zero_divisors_iff_ne_zero,
+      (ideal.quotient.eq_zero_iff_mem).2 mem_supp] at h,
+    contradiction },
+  show value_monoid.mk v _ * value_monoid.mk v _ = value_monoid.mk v _,
+  rw ← monoid_hom.map_mul,
+  refine congr_arg _ _,
+  let rq := ideal.quotient.mk (supp v) r,
+  let sq := ideal.quotient.mk (supp v) s,
+  show (localization.of sq : valuation_field v) * (localization.mk rq ⟨sq, h⟩) = localization.of rq,
+  erw [localization.mk_eq, mul_comm, mul_assoc, units.inv_val _, mul_one],
+  refl
+end
 
 /-- v can be reconstructed from `canonical_valuation v` by pushing forward along
-the map `value_monoid v → Γ`. -/
-lemma to_Γ :
-  (canonical_valuation v).map (monoid_hom.mk (value_monoid.to_Γ v) (value_monoid.to_Γ_one v) (value_monoid.to_Γ_mul v))
-  (value_monoid.to_Γ_zero v) (value_monoid.to_Γ_strict_mono v).monotone = v :=
+the map `value_monoid v → Γ₀`. -/
+lemma to_Γ₀ :
+  (canonical_valuation v).map (monoid_hom.mk (value_monoid.to_Γ₀ v) (value_monoid.to_Γ₀_one v) (value_monoid.to_Γ₀_mul v))
+  (value_monoid.to_Γ₀_zero v) (value_monoid.to_Γ₀_strict_mono v).monotone = v :=
 ext $ λ r, show v r * (v 1)⁻¹ = v r, by simp
 
 end canonical_valuation -- end of namespace
@@ -312,16 +279,16 @@ end valuation -- end of namespace
 
 namespace valuation
 
-variables {Γ : Type u}   [linear_ordered_comm_group_with_zero Γ]
-variables {Γ₁ : Type u₁} [linear_ordered_comm_group_with_zero Γ₁]
-variables {Γ₂ : Type u₂} [linear_ordered_comm_group_with_zero Γ₂]
-variables {Γ₃ : Type u₃} [linear_ordered_comm_group_with_zero Γ₃]
+variables {Γ₀ : Type u}   [linear_ordered_comm_group_with_zero Γ₀]
+variables {Γ'₀ : Type u₁} [linear_ordered_comm_group_with_zero Γ'₀]
+variables {Γ''₀ : Type u₂} [linear_ordered_comm_group_with_zero Γ''₀]
+variables {Γ₀₃ : Type u₃} [linear_ordered_comm_group_with_zero Γ₀₃]
 
 /-- A valuation is equivalent to its canonical valuation -/
-lemma canonical_valuation_is_equiv (v : valuation R Γ) :
+lemma canonical_valuation_is_equiv (v : valuation R Γ₀) :
   v.canonical_valuation.is_equiv v :=
 begin
-  have h := is_equiv.of_eq (canonical_valuation.to_Γ v),
+  have h := is_equiv.of_eq (canonical_valuation.to_Γ₀ v),
   symmetry,
   refine h.symm.trans _,
   exact is_equiv_of_map_strict_mono _ _ _,
@@ -331,7 +298,7 @@ namespace is_equiv
 
 -- Various lemmas about valuations being equivalent.
 
-variables {v : valuation R Γ} {v₁ : valuation R Γ₁} {v₂ : valuation R Γ₂} {v₃ : valuation R Γ₃}
+variables {v : valuation R Γ₀} {v₁ : valuation R Γ'₀} {v₂ : valuation R Γ''₀} {v₃ : valuation R Γ₀₃}
 
 /-- If J ⊆ supp(v) then pulling back the induced valuation on R / J back to R gives a
 valuation equivalent to v. -/
@@ -340,7 +307,7 @@ lemma on_quot_comap_self {J : ideal R} (hJ : J ≤ supp v) :
 of_eq (on_quot_comap_eq _ _)
 
 /-- Two valuations on R/J are equivalent iff their pullbacks to R are equivalent. -/
-lemma comap_on_quot (J : ideal R) (v₁ : valuation J.quotient Γ₁) (v₂ : valuation J.quotient Γ₂) :
+lemma comap_on_quot (J : ideal R) (v₁ : valuation J.quotient Γ'₀) (v₂ : valuation J.quotient Γ''₀) :
   (v₁.comap (ideal.quotient.mk J)).is_equiv (v₂.comap (ideal.quotient.mk J)) ↔ v₁.is_equiv v₂ :=
 { mp  := begin rintros h ⟨x⟩ ⟨y⟩, exact h x y end,
   mpr := λ h, comap _ h }
@@ -348,14 +315,14 @@ lemma comap_on_quot (J : ideal R) (v₁ : valuation J.quotient Γ₁) (v₂ : va
 open localization
 
 /-- If supp(v)=0 then v is equivalent to the pullback of the extension of v to Frac(R). -/
-lemma on_frac_comap_self {R : Type u₀} [integral_domain R] (v : valuation R Γ) (hv : supp v = 0) :
+lemma on_frac_comap_self {R : Type u₀} [integral_domain R] (v : valuation R Γ₀) (hv : supp v = 0) :
   is_equiv ((v.on_frac hv).comap of) v :=
 of_eq (on_frac_comap_eq v hv)
 
 /-- If R is an ID then two valuations on R are equivalent iff their extensions to Frac(R) are
 equivalent. -/
 lemma comap_on_frac {R : Type u₀} [integral_domain R]
-(v₁ : valuation (fraction_ring R) Γ₁) (v₂ : valuation (fraction_ring R) Γ₂) :
+(v₁ : valuation (fraction_ring R) Γ'₀) (v₂ : valuation (fraction_ring R) Γ''₀) :
   (v₁.comap of).is_equiv (v₂.comap of) ↔ is_equiv v₁ v₂ :=
 { mp  := begin
     rintros h ⟨x⟩ ⟨y⟩,
@@ -408,12 +375,12 @@ end
 end is_equiv -- end of namespace
 
 /-- The supports of v and v.canonical_valuation are equal. -/
-lemma canonical_valuation_supp (v : valuation R Γ) :
+lemma canonical_valuation_supp (v : valuation R Γ₀) :
   supp (v.canonical_valuation) = supp v := (canonical_valuation_is_equiv v).supp_eq
 
 section Wedhorn1_27_equivalences
 
-variables {v : valuation R Γ} {v₁ : valuation R Γ₁} {v₂ : valuation R Γ₂} {v₃ : valuation R Γ₃}
+variables {v : valuation R Γ₀} {v₁ : valuation R Γ'₀} {v₂ : valuation R Γ''₀} {v₃ : valuation R Γ₀₃}
 
 open is_group_hom quotient_group function
 
@@ -651,9 +618,9 @@ quotient_group.group
 
 lemma val_one_iff_unit_val_one (x : units (valuation_field v)) :
   x ∈ valuation_field_norm_one v ↔ v.on_valuation_field x = 1 :=
-calc x ∈ valuation_field_norm_one v ↔ (units.map v.on_valuation_field.to_monoid_hom x = 1) :
-    is_subgroup.mem_trivial
-   ... ↔ v.on_valuation_field x = 1 : units.ext_iff
+calc x ∈ valuation_field_norm_one v ↔
+  (units.map (v.on_valuation_field : v.valuation_field →* Γ₀) x = 1) : is_subgroup.mem_trivial
+  ... ↔ v.on_valuation_field x = 1 : units.ext_iff
 
 lemma is_equiv.norm_one_eq_norm_one (h : is_equiv v₁ v₂) :
   valfield_units_of_valfield_units_of_eq_supp (is_equiv.supp_eq h) ⁻¹' valuation_field_norm_one v₂

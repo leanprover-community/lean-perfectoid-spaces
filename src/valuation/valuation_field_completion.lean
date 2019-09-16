@@ -13,8 +13,8 @@ noncomputable theory
 open valuation uniform_space
 local attribute [instance] valued.subgroups_basis valued.uniform_space
 
-variables {Γ : Type*} [linear_ordered_comm_group_with_zero Γ]
-variables {R : Type*} [comm_ring R] (v : valuation R Γ)
+variables {Γ₀ : Type*} [linear_ordered_comm_group_with_zero Γ₀]
+variables {R : Type*} [comm_ring R] (v : valuation R Γ₀)
 
 local notation `hat` K := completion K
 
@@ -41,7 +41,7 @@ comm_ring.to_ring _
 end valuation_field
 
 /--The valuation on the completion of the valuation field of a valued ring.-/
-def valuation_on_completion (v : valuation R Γ) :
+def valuation_on_completion (v : valuation R Γ₀) :
   valuation (hat v.valuation_field) (value_monoid v) :=
 valued.extension_valuation
 

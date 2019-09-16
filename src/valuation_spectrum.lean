@@ -56,27 +56,27 @@ local notation r `≤[`v`]` s := v.1 r s
 namespace Spv
 open valuation
 
-variables {Γ  : Type u}  [linear_ordered_comm_group_with_zero Γ]
-variables {Γ₁ : Type u₁} [linear_ordered_comm_group_with_zero Γ₁]
-variables {Γ₂ : Type u₂} [linear_ordered_comm_group_with_zero Γ₂]
+variables {Γ₀  : Type u}  [linear_ordered_comm_group_with_zero Γ₀]
+variables {Γ'₀ : Type u₁} [linear_ordered_comm_group_with_zero Γ'₀]
+variables {Γ''₀ : Type u₂} [linear_ordered_comm_group_with_zero Γ''₀]
 
 -- The work is embedded here with `canonical_valuation_is_equiv v` etc.
 -- The canonical valuation attached to v lives in R's universe.
 /-- The equivalence class of a valuation. -/
-definition mk (v : valuation R Γ) : Spv R :=
+definition mk (v : valuation R Γ₀) : Spv R :=
 ⟨λ r s, v r ≤ v s,
   ⟨value_monoid v, by apply_instance, canonical_valuation v, canonical_valuation_is_equiv v⟩⟩
 
-@[simp] lemma mk_val (v : valuation R Γ) : (mk v).val = λ r s, v r ≤ v s := rfl
+@[simp] lemma mk_val (v : valuation R Γ₀) : (mk v).val = λ r s, v r ≤ v s := rfl
 
 /-- The value group attached to a term of type Spv R -/
-definition out_Γ (v : Spv R) : Type u₀ := classical.some v.2
+definition out_Γ₀ (v : Spv R) : Type u₀ := classical.some v.2
 
-noncomputable instance (v : Spv R) : linear_ordered_comm_group_with_zero (out_Γ v) :=
+noncomputable instance (v : Spv R) : linear_ordered_comm_group_with_zero (out_Γ₀ v) :=
 classical.some $ classical.some_spec v.2
 
 /-- An explicit representative of an equivalence class of valuations (a term of type Spv R). -/
-noncomputable definition out (v : Spv R) : valuation R (out_Γ v) :=
+noncomputable definition out (v : Spv R) : valuation R (out_Γ₀ v) :=
 classical.some $ classical.some_spec $ classical.some_spec v.2
 
 @[simp] lemma mk_out {v : Spv R} : mk (out v) = v :=
@@ -88,7 +88,7 @@ begin
 end
 
 /-- The explicit representative of the equivalence class of a valuation v is equivalent to v. -/
-lemma out_mk (v : valuation R Γ) : (out (mk v)).is_equiv v :=
+lemma out_mk (v : valuation R Γ₀) : (out (mk v)).is_equiv v :=
 classical.some_spec (classical.some_spec (classical.some_spec (mk v).2))
 
 /-- A function defined on all valuations of R descends to Spv R. -/
@@ -101,8 +101,8 @@ If a function is constant on equivalence classes of valuations,
 then it descends to a well-defined function on Spv R.-/
 theorem lift_eq {X}
   (f₀ : Π ⦃Γ₀ : Type u₀⦄ [linear_ordered_comm_group_with_zero Γ₀], valuation R Γ₀ → X)
-  (f : Π ⦃Γ : Type u⦄ [linear_ordered_comm_group_with_zero Γ], valuation R Γ → X)
-  (v : valuation R Γ)
+  (f : Π ⦃Γ₀ : Type u⦄ [linear_ordered_comm_group_with_zero Γ₀], valuation R Γ₀ → X)
+  (v : valuation R Γ₀)
   (h : ∀ ⦃Γ₀ : Type u₀⦄ [linear_ordered_comm_group_with_zero Γ₀] (v₀ : valuation R Γ₀),
     v₀.is_equiv v → f₀ v₀ = f v) :
   lift f₀ (mk v) = f v :=
@@ -113,8 +113,8 @@ If a predicate is constant on equivalence classes of valuations,
 then it descends to a well-defined predicate on Spv R.-/
 theorem lift_eq'
   (f₀ : Π ⦃Γ₀ : Type u₀⦄ [linear_ordered_comm_group_with_zero Γ₀], valuation R Γ₀ → Prop)
-  (f : Π ⦃Γ : Type u⦄ [linear_ordered_comm_group_with_zero Γ], valuation R Γ → Prop)
-  (v : valuation R Γ)
+  (f : Π ⦃Γ₀ : Type u⦄ [linear_ordered_comm_group_with_zero Γ₀], valuation R Γ₀ → Prop)
+  (v : valuation R Γ₀)
   (h : ∀ ⦃Γ₀ : Type u₀⦄ [linear_ordered_comm_group_with_zero Γ₀] (v₀ : valuation R Γ₀),
     v₀.is_equiv v → (f₀ v₀ ↔ f v)) :
   lift f₀ (mk v) ↔ f v :=
@@ -124,11 +124,11 @@ h _ (out_mk v)
 lemma exists_rep (v : Spv R) :
   ∃ {Γ₀ : Type u₀} [linear_ordered_comm_group_with_zero Γ₀], by exactI ∃ (v₀ : valuation R Γ₀),
   mk v₀ = v :=
-⟨out_Γ v, infer_instance, out v, mk_out⟩
+⟨out_Γ₀ v, infer_instance, out v, mk_out⟩
 
 /-- The quotient map that sends a valuation to its equivalence class is sound:
 it sends equivalent valuations to the same class. -/
-lemma sound {v₁ : valuation R Γ₁} {v₂ : valuation R Γ₂} (h : v₁.is_equiv v₂) : mk v₁ = mk v₂ :=
+lemma sound {v₁ : valuation R Γ'₀} {v₂ : valuation R Γ''₀} (h : v₁.is_equiv v₂) : mk v₁ = mk v₂ :=
 begin
   apply subtype.val_injective,
   ext r s,
@@ -136,7 +136,7 @@ begin
 end
 
 /-- If two valuations are mapped to the same term of Spv R, then they are equivalent. -/
-lemma is_equiv_of_eq_mk {v₁ : valuation R Γ₁} {v₂ : valuation R Γ₂} (h : mk v₁ = mk v₂) :
+lemma is_equiv_of_eq_mk {v₁ : valuation R Γ'₀} {v₂ : valuation R Γ''₀} (h : mk v₁ = mk v₂) :
   v₁.is_equiv v₂ :=
 begin
   intros r s,
@@ -148,8 +148,8 @@ begin
 end
 
 noncomputable instance : has_coe_to_fun (Spv R) :=
-{ F := λ v, R → out_Γ v,
-  coe := λ v, (out v : R → out_Γ v) }
+{ F := λ v, R → out_Γ₀ v,
+  coe := λ v, (out v : R → out_Γ₀ v) }
 
 section
 
@@ -167,7 +167,7 @@ definition basic_open (r s : R) : set (Spv R) :=
 instance : topological_space (Spv R) :=
 topological_space.generate_from {U : set (Spv R) | ∃ r s : R, U = basic_open r s}
 
-lemma mk_mem_basic_open {r s : R} (v : valuation R Γ) :
+lemma mk_mem_basic_open {r s : R} (v : valuation R Γ₀) :
   mk v ∈ basic_open r s ↔ v r ≤ v s ∧ v s ≠ 0 :=
 begin
   apply and_congr,

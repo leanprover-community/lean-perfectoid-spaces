@@ -1,8 +1,8 @@
 /-
 In this file, we define the topology induced by a valuation on a ring
 
-valuation.topology {Γ : Type*} [linear_ordered_comm_group Γ] {R : Type*} [ring R] :
-    valuation R Γ → topological_space R
+valuation.topology {Γ₀ : Type*} [linear_ordered_comm_group Γ₀] {R : Type*} [ring R] :
+    valuation R Γ₀ → topological_space R
 -/
 import for_mathlib.nonarchimedean.is_subgroups_basis
 import for_mathlib.uniform_space.group_basis
@@ -18,19 +18,19 @@ open set valuation linear_ordered_structure
 local notation `𝓝` x: 70 := nhds x
 
 section
-variables {Γ : Type*} [linear_ordered_comm_group_with_zero Γ]
+variables {Γ₀ : Type*} [linear_ordered_comm_group_with_zero Γ₀]
 variables {R : Type*} [ring R]
 
-def valuation.subgroup (v : valuation R Γ) (γ : units Γ) : set R := {x | v x < γ}
+def valuation.subgroup (v : valuation R Γ₀) (γ : units Γ₀) : set R := {x | v x < γ}
 
-lemma valuation.lt_is_add_subgroup (v : valuation R Γ) (γ : units Γ) :
+lemma valuation.lt_is_add_subgroup (v : valuation R Γ₀) (γ : units Γ₀) :
   is_add_subgroup {x | v x < γ} :=
 { zero_mem := by { have h := group_with_zero.unit_ne_zero γ, contrapose! h, simpa using h },
   add_mem := λ x y x_in y_in, lt_of_le_of_lt (v.map_add x y) (max_lt x_in y_in),
   neg_mem := λ x x_in, by rwa [mem_set_of_eq, map_neg] }
 
 -- is this an OK place to put this?
-lemma valuation.le_is_add_subgroup (v : valuation R Γ) (γ : units Γ) : is_add_subgroup {x | v x ≤ γ} :=
+lemma valuation.le_is_add_subgroup (v : valuation R Γ₀) (γ : units Γ₀) : is_add_subgroup {x | v x ≤ γ} :=
 { zero_mem := by simp,
   add_mem := λ x y x_in y_in, le_trans (v.map_add x y) (max_le x_in y_in),
   neg_mem := λ x x_in, by rwa [mem_set_of_eq, map_neg] }
@@ -42,9 +42,9 @@ local attribute [instance] valuation.lt_is_add_subgroup
 universe u
 
 class valued (R : Type u) [ring R] :=
-(Γ : Type u)
-[grp : linear_ordered_comm_group_with_zero Γ]
-(v : valuation R Γ)
+(Γ₀ : Type u)
+[grp : linear_ordered_comm_group_with_zero Γ₀]
+(v : valuation R Γ₀)
 
 attribute [instance] valued.grp
 
@@ -53,7 +53,7 @@ open valued
 namespace valued
 variables {R : Type*} [ring R] [valued R]
 
-def value : R → (valued.Γ R) := (valued.v R)
+def value : R → (valued.Γ₀ R) := (valued.v R)
 
 local notation `v` := valued.value
 
@@ -88,7 +88,7 @@ def subgroups_basis : subgroups_basis R :=
     rintros _ ⟨γ, rfl⟩,
     rw set.exists_mem_range',
     cases linear_ordered_structure.exists_square_le γ with γ₀ h,
-    replace h : (γ₀*γ₀ : valued.Γ R) ≤ γ, exact_mod_cast h,
+    replace h : (γ₀*γ₀ : valued.Γ₀ R) ≤ γ, exact_mod_cast h,
     use γ₀,
     rintro x ⟨r, r_in, s, s_in, rfl⟩,
     refine lt_of_lt_of_le _ h,
@@ -99,7 +99,7 @@ def subgroups_basis : subgroups_basis R :=
       rintros x _ ⟨γ, rfl⟩,
       rw exists_mem_range',
      dsimp [valuation.subgroup],
-      by_cases Hx : ∃ γx : units (Γ R), v x = (γx : Γ R),
+      by_cases Hx : ∃ γx : units (Γ₀ R), v x = (γx : Γ₀ R),
       { cases Hx with γx Hx,
         simp only [image_subset_iff, set_of_subset_set_of, preimage_set_of_eq, valuation.map_mul],
         use γx⁻¹*γ,
@@ -108,7 +108,7 @@ def subgroups_basis : subgroups_basis R :=
         change v x * v y < ↑γ,
         rw Hx,
         rw units.coe_mul at vy_lt,
-        apply actual_ordered_comm_monoid.lt_of_mul_lt_mul_left (γx⁻¹ : Γ R),
+        apply actual_ordered_comm_monoid.lt_of_mul_lt_mul_left (γx⁻¹ : Γ₀ R),
         rwa [← mul_assoc, inv_mul_cancel' _ (group_with_zero.unit_ne_zero _), one_mul,
           ← group_with_zero.coe_inv_unit] },
       { rw [← ne_zero_iff_exists, not_not] at Hx,
@@ -123,14 +123,14 @@ def subgroups_basis : subgroups_basis R :=
     rintros x _ ⟨γ, rfl⟩,
     rw exists_mem_range',
     dsimp [valuation.subgroup],
-    by_cases Hx : ∃ γx : units (Γ R), v x = γx,
+    by_cases Hx : ∃ γx : units (Γ₀ R), v x = γx,
     { cases Hx with γx Hx,
       simp only [image_subset_iff, set_of_subset_set_of, preimage_set_of_eq, valuation.map_mul],
       use γ * γx⁻¹,
       intros y vy_lt,
       change v y * v x < _,
       rw Hx,
-      apply actual_ordered_comm_monoid.lt_of_mul_lt_mul_right' (γx⁻¹ : Γ R),
+      apply actual_ordered_comm_monoid.lt_of_mul_lt_mul_right' (γx⁻¹ : Γ₀ R),
       rwa [mul_assoc, mul_inv_cancel' _ (group_with_zero.unit_ne_zero _), mul_one,
         ← group_with_zero.coe_inv_unit], },
     { rw [← ne_zero_iff_exists, not_not] at Hx,
@@ -145,19 +145,19 @@ def subgroups_basis : subgroups_basis R :=
 local attribute [instance] valued.subgroups_basis subgroups_basis.topology ring_filter_basis.topological_ring
 
 lemma mem_basis_zero [valued R] {s : set R} :
-  s ∈ filter_basis.sets R ↔ ∃ γ : units (valued.Γ R), {x | valued.v R x < (γ : valued.Γ R)} = s :=
+  s ∈ filter_basis.sets R ↔ ∃ γ : units (valued.Γ₀ R), {x | valued.v R x < (γ : valued.Γ₀ R)} = s :=
 iff.rfl
 
 
 lemma mem_nhds [valued R] {s : set R} {x : R} :
-  (s ∈ 𝓝 x) ↔ ∃ γ : units (valued.Γ R), {y | v (y - x) < γ } ⊆ s :=
+  (s ∈ 𝓝 x) ↔ ∃ γ : units (valued.Γ₀ R), {y | v (y - x) < γ } ⊆ s :=
 begin
   erw [subgroups_basis.mem_nhds, exists_mem_range],
   exact iff.rfl,
 end
 
 lemma mem_nhds_zero [valued R] {s : set R} :
-  (s ∈ 𝓝 (0 : R)) ↔ ∃ γ : units (Γ R), {x | v x < (γ : Γ R) } ⊆ s :=
+  (s ∈ 𝓝 (0 : R)) ↔ ∃ γ : units (Γ₀ R), {x | v x < (γ : Γ₀ R) } ⊆ s :=
 by simp [valued.mem_nhds, sub_zero]
 
 lemma loc_const [valued R] {x : R} (h : v x ≠ 0) : {y : R | v y = v x} ∈ 𝓝 x :=
@@ -181,7 +181,7 @@ topological_add_group_is_uniform
 local attribute [instance] valued.uniform_add_group
 
 lemma cauchy_iff [valued R] {F : filter R} :
-  cauchy F ↔ F ≠ ⊥ ∧ ∀ γ : units (valued.Γ R), ∃ M ∈ F,
+  cauchy F ↔ F ≠ ⊥ ∧ ∀ γ : units (valued.Γ₀ R), ∃ M ∈ F,
     ∀ x y, x ∈ M → y ∈ M → y - x ∈ {x : R | valued.v R x < ↑γ} :=
 begin
     rw add_group_filter_basis.cauchy_iff R rfl,

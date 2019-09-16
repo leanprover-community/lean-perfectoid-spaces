@@ -17,13 +17,13 @@ local attribute [instance] set.pointwise_mul_action
 
 open set function Spv valuation
 
-variables {Γ : Type*} [linear_ordered_comm_group_with_zero Γ]
+variables {Γ₀ : Type*} [linear_ordered_comm_group_with_zero Γ₀]
 
 -- Wedhorn def 7.23.
 definition spa (A : Huber_pair) : set (Spv A) :=
 {v | v.is_continuous ∧ ∀ r ∈ A⁺, v r ≤ 1}
 
-lemma mk_mem_spa {A : Huber_pair} {v : valuation A Γ} :
+lemma mk_mem_spa {A : Huber_pair} {v : valuation A Γ₀} :
   Spv.mk v ∈ spa A ↔ v.is_continuous ∧ ∀ r ∈ A⁺, v r ≤ 1 :=
 begin
   apply and_congr,
@@ -46,7 +46,7 @@ instance : has_coe (spa A) (Spv A) := ⟨subtype.val⟩
 definition basic_open (r s : A) : set (spa A) :=
 {v | v r ≤ v s ∧ v s ≠ 0 }
 
-lemma mk_mem_basic_open {r s : A} {v : valuation A Γ} {hv : Spv.mk v ∈ spa A} :
+lemma mk_mem_basic_open {r s : A} {v : valuation A Γ₀} {hv : Spv.mk v ∈ spa A} :
 (⟨mk v, hv⟩ : spa A) ∈ basic_open r s ↔ v r ≤ v s ∧ v s ≠ 0 :=
 begin
   apply and_congr,
@@ -293,7 +293,7 @@ noncomputable def insert_s (r : rational_open_data A) : rational_open_data A :=
 
 end rational_open_data -- namespace
 
-lemma mk_mem_rational_open {s : A} {T : set A} {v : valuation A Γ} {hv : Spv.mk v ∈ spa A} :
+lemma mk_mem_rational_open {s : A} {T : set A} {v : valuation A Γ₀} {hv : Spv.mk v ∈ spa A} :
   (⟨mk v, hv⟩ : spa A) ∈ rational_open s T ↔ (∀ t ∈ T, (v t ≤ v s)) ∧ (v s ≠ 0) :=
 begin
   apply and_congr,

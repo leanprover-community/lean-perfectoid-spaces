@@ -14,7 +14,7 @@ noncomputable theory
 local attribute [instance] valued.subgroups_basis valued.uniform_space
 
 variables {A : Huber_pair}
-{Γ : Type*} [linear_ordered_comm_group_with_zero Γ] {v : valuation A Γ}
+{Γ₀ : Type*} [linear_ordered_comm_group_with_zero Γ₀] {v : valuation A Γ₀}
 {rd : spa.rational_open_data A} (hv : valuation.is_continuous v)
 
 namespace Huber_pair
@@ -27,7 +27,7 @@ local notation `s` := rd.s
 local notation `T` := rd.T
 
 --noncomputable instance valuation_field.ring_with_zero_nhd : ring_with_zero_nhd (valuation_field v) :=
---valuation.ring_with_zero_nhd (on_valuation_field v : valuation (valuation_field v) Γ)
+--valuation.ring_with_zero_nhd (on_valuation_field v : valuation (valuation_field v) Γ₀)
 
 def unit_lemma (hs : v s ≠ 0) : is_unit (valuation_field_mk v s) :=
 is_unit_of_mul_one _ (valuation_field_mk v s)⁻¹ $ mul_inv_cancel $
@@ -62,7 +62,7 @@ begin
   change v' (↑(unit_s hs)⁻¹) * _ ≤ _,
   rw mul_comm,
   apply le_of_le_mul_right
-    (group_with_zero.unit_ne_zero $ units.map v'.to_monoid_hom u),
+    (group_with_zero.unit_ne_zero $ units.map (v' : v.valuation_field →* (value_monoid v)) u),
   show v' _ * v' _ * v' u ≤ _,
   rw [mul_assoc, one_mul, ← v'.map_mul, units.inv_mul, v'.map_one, mul_one],
   change canonical_valuation v t ≤ v' u.val,
@@ -72,8 +72,7 @@ begin
   exact hT2 _ ht,
 end
 
-
-lemma v_le_one_is_bounded {R : Type*} [comm_ring R] (v : valuation R Γ) :
+lemma v_le_one_is_bounded {R : Type*} [comm_ring R] (v : valuation R Γ₀) :
   is_bounded {x : valuation_field v | valuation_field.canonical_valuation v x ≤ 1} :=
 begin
   let v' := valuation_field.canonical_valuation v,
@@ -94,7 +93,7 @@ begin
   exact actual_ordered_comm_monoid.mul_lt_of_lt_of_nongt_one' Hw Hb,
 end
 
-lemma v_le_one_is_power_bounded {R : Type*} [comm_ring R] (v : valuation R Γ) :
+lemma v_le_one_is_power_bounded {R : Type*} [comm_ring R] (v : valuation R Γ₀) :
   is_power_bounded_subset {x : valuation_field v | valuation_field.canonical_valuation v x ≤ 1} :=
 begin
   let v' := valuation_field.canonical_valuation v,

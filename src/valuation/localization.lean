@@ -9,6 +9,14 @@ In this file we extend valuations on a ring R to localizations of R.
 We use this to define the valuation field, the valuation ring,
 and the residue field of a valued ring.
 
+If v is a valuation on an integral domain R and `hv : supp v = 0`, then
+`on_frac v hv` is the extension of v to fraction_ring R, the field of
+fractions of R.
+
+`valuation_field v`, `valuation_ring v`, `max_ideal v` and `residue_field v`
+are the valuation field, valuation ring, maximal ideal and residue field
+of v. See [Wedhorn; 1.26].
+
 -/
 
 -- TODO: this file could use a general cleanup and some extra comments
@@ -20,18 +28,18 @@ noncomputable theory
 universes u u₀
 
 variables {R : Type u₀} [comm_ring R]
-variables {Γ : Type u} [linear_ordered_comm_group_with_zero Γ]
+variables {Γ₀ : Type u} [linear_ordered_comm_group_with_zero Γ₀]
 variables {S : set R} [is_submonoid S]
 
 namespace valuation
 open linear_ordered_structure
 
-variables (v : valuation R Γ)
+variables (v : valuation R Γ₀)
 
 lemma inverse_exists (s : S) : ∃ u : localization R S, u * s = 1 :=
 ⟨(localization.to_units s).inv, units.inv_val _⟩
 
-def localization_v (h : ∀ s, s ∈ S → v s ≠ 0) : localization R S → Γ :=
+def localization_v (h : ∀ s, s ∈ S → v s ≠ 0) : localization R S → Γ₀ :=
 λ (q : localization R S), quotient.lift_on' q (λ rs, v rs.1 * (v rs.2.1)⁻¹)
 begin
   rintros ⟨r1, s1, hs1⟩ ⟨r2, s2, hs2⟩ ⟨t, ht, hrst⟩,
@@ -48,7 +56,7 @@ begin
 end
 
 /-- Extension of a valuation to a localization -/
-protected def localization (h : ∀ s, s ∈ S → v s ≠ 0) : valuation (localization R S) Γ :=
+protected def localization (h : ∀ s, s ∈ S → v s ≠ 0) : valuation (localization R S) Γ₀ :=
 { to_fun := v.localization_v h,
   map_zero' := show v 0 * (v 1)⁻¹ = 0, by rw [v.map_zero, zero_mul],
   map_one' := show v 1 * (v 1)⁻¹ = 1, by {rw [v.map_one], simp},
@@ -97,24 +105,24 @@ protected def localization (h : ∀ s, s ∈ S → v s ≠ 0) : valuation (local
 
 /-- Extension of a valuation to a localization -/
 lemma localization_apply (h : ∀ s, s ∈ S → v s ≠ 0) (r : R) :
-  (v.localization h : valuation (localization R S) Γ) r = v r :=
+  (v.localization h : valuation (localization R S) Γ₀) r = v r :=
 show v r * (v 1)⁻¹ = v r, by simp
 
 /-- the extension of a valuation pulls back to the valuation -/
 lemma localization_comap (h : ∀ s, s ∈ S → v s ≠ 0) : (v.localization h).comap (localization.of) = v :=
 valuation.ext $ λ r, localization_apply v h r
 
-lemma eq_localization_of_comap_aux {v} (w : valuation (localization R S) Γ)
+lemma eq_localization_of_comap_aux {v} (w : valuation (localization R S) Γ₀)
   (h : w.comap (localization.of) = v) : ∀ s, s ∈ S → v s ≠ 0 := λ s hs h0,
 begin
   cases inverse_exists ⟨s, hs⟩ with u hu,
   let s' : units (localization R S) := ⟨localization.of s, u, mul_comm u s ▸ hu, hu⟩,
-  refine group_with_zero.unit_ne_zero (units.map w.to_monoid_hom s') _,
+  refine group_with_zero.unit_ne_zero (units.map (w : (localization R S) →* Γ₀) s') _,
   rwa ←h at h0,
 end
 
 /-- If a valuation on a localisation pulls back to v then it's the localization of v -/
-lemma eq_localization_of_comap (w : valuation (localization R S) Γ)
+lemma eq_localization_of_comap (w : valuation (localization R S) Γ₀)
   (h : w.comap (localization.of) = v) : v.localization (eq_localization_of_comap_aux w h) = w :=
 begin
   ext q,
@@ -145,7 +153,7 @@ integral_domain_of_prime_bot $
 by { rw [← ideal.zero_eq_bot, ← hv], exact valuation.ideal.is_prime v }
 
 /-- The extension of valuation on R with support 0 to a valuation on the field of fractions. -/
-def on_frac (hv : v.supp = 0) : valuation (fraction_ring R) Γ :=
+def on_frac (hv : v.supp = 0) : valuation (fraction_ring R) Γ₀ :=
 v.localization $ λ r hr hnz,
 begin
   letI := v.integral_domain_of_supp_zero hv,
@@ -158,11 +166,11 @@ end
 v.localization_comap _
 
 lemma on_frac_comap_eq_apply (hv : supp v = 0) (r : R) :
-  ((v.on_frac hv).comap of : valuation R Γ) r = v r := by rw on_frac_comap_eq
+  ((v.on_frac hv).comap of : valuation R Γ₀) r = v r := by rw on_frac_comap_eq
 
 /-- Pulling back a valuation on `fraction_ring R` to R and then applying `on_frac` is the
 identity function. -/
-@[simp] lemma comap_on_frac_eq {R : Type*} [integral_domain R] (v : valuation (fraction_ring R) Γ) :
+@[simp] lemma comap_on_frac_eq {R : Type*} [integral_domain R] (v : valuation (fraction_ring R) Γ₀) :
   (v.comap of).on_frac
   (by {rw [comap_supp, ideal.zero_eq_bot, v.supp.eq_bot_of_prime],
     apply ideal.comap_bot_of_inj, apply fraction_ring.of.injective })
@@ -185,7 +193,7 @@ definition valuation_ID := (supp v).quotient
 instance integral_domain' : integral_domain (valuation_ID v) :=
 by delta valuation_ID; apply_instance
 
-/-- The preorder on R/supp(v) induced by Γ via `v.on_quot` -/
+/-- The preorder on R/supp(v) induced by Γ₀ via `v.on_quot` -/
 instance : preorder (valuation_ID v) := (v.on_quot (le_refl _)).to_preorder
 
 /-- The function R → R/supp(v). -/
@@ -237,7 +245,7 @@ instance units_valfield_preorder :
   preorder (units (valuation_field v)) := preorder.lift (λ u, u.val) (by apply_instance)
 
 /-- The valuation on Frac(R/supp(v)) induced by v. -/
-definition on_valuation_field : valuation (valuation_field v) Γ :=
+definition on_valuation_field : valuation (valuation_field v) Γ₀ :=
 on_frac (v.on_quot (set.subset.refl _))
 begin
   rw [supp_quot, ideal.zero_eq_bot],

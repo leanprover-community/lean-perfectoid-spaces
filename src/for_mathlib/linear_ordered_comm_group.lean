@@ -380,16 +380,16 @@ lemma square_gt_one {a : α} (h : 1 < a) : 1 < a*a :=
 mul_gt_one' h h
 end actual_ordered_comm_monoid
 
-variables {Γ : Type*} [linear_ordered_comm_group Γ]
+variables {Γ₀ : Type*} [linear_ordered_comm_group Γ₀]
 
 namespace with_zero
 open linear_ordered_structure
 
-lemma coe_of_gt {x y : with_zero Γ} (h : x < y) : ∃ γ : Γ, y = (γ : with_zero Γ) :=
+lemma coe_of_gt {x y : with_zero Γ₀} (h : x < y) : ∃ γ : Γ₀, y = (γ : with_zero Γ₀) :=
 by { with_zero_cases y }
 
-lemma eq_coe_of_mul_eq_coe_right {x y : with_zero Γ} {γ : Γ} (h : x*y = γ) :
-  ∃ γ' : Γ, y = γ' :=
+lemma eq_coe_of_mul_eq_coe_right {x y : with_zero Γ₀} {γ : Γ₀} (h : x*y = γ) :
+  ∃ γ' : Γ₀, y = γ' :=
 begin
   rw ←with_zero.ne_zero_iff_exists,
   intro hy,
@@ -397,15 +397,15 @@ begin
   exact zero_ne_coe h
 end
 
-lemma eq_coe_of_mul_eq_coe_left {x y : with_zero Γ} {γ : Γ} (h : x*y = γ) :
-  ∃ γ' : Γ, x = γ' :=
+lemma eq_coe_of_mul_eq_coe_left {x y : with_zero Γ₀} {γ : Γ₀} (h : x*y = γ) :
+  ∃ γ' : Γ₀, x = γ' :=
 by rw mul_comm at h ; exact eq_coe_of_mul_eq_coe_right h
 
-lemma eq_coe_of_mul_eq_coe {x y : with_zero Γ} {γ : Γ} (h : x*y = γ) :
-  (∃ γ' : Γ, x = γ') ∧ ∃ γ'' : Γ, y = γ'' :=
+lemma eq_coe_of_mul_eq_coe {x y : with_zero Γ₀} {γ : Γ₀} (h : x*y = γ) :
+  (∃ γ' : Γ₀, x = γ') ∧ ∃ γ'' : Γ₀, y = γ'' :=
 ⟨eq_coe_of_mul_eq_coe_left h, eq_coe_of_mul_eq_coe_right h⟩
 
-lemma mul_inv_lt_of_lt_mul {x y z : with_zero Γ} (h : x < y*z) : x*z⁻¹ < y :=
+lemma mul_inv_lt_of_lt_mul {x y z : with_zero Γ₀} (h : x < y*z) : x*z⁻¹ < y :=
 begin
   cases coe_of_gt h with γ h',
   rcases eq_coe_of_mul_eq_coe h' with ⟨⟨γ', hy⟩, γ'', hz⟩,
@@ -414,7 +414,7 @@ begin
   exact mul_inv_lt_of_lt_mul h
 end
 
-lemma eq_inv_of_mul_eq_one_right {x y : with_zero Γ} (h : x*y = 1) : y = x⁻¹ :=
+lemma eq_inv_of_mul_eq_one_right {x y : with_zero Γ₀} (h : x*y = 1) : y = x⁻¹ :=
 begin
   rcases eq_coe_of_mul_eq_coe h with ⟨⟨γ', hx⟩, γ'', hy⟩,
   rw [hx, hy] at *,
@@ -422,22 +422,22 @@ begin
   rwa [mul_eq_one_iff_inv_eq, eq_comm] at h,
 end
 
-lemma eq_inv_of_mul_eq_one_left {x y : with_zero Γ} (h : x*y = 1) : x = y⁻¹ :=
+lemma eq_inv_of_mul_eq_one_left {x y : with_zero Γ₀} (h : x*y = 1) : x = y⁻¹ :=
 begin
   rw mul_comm at h,
   exact eq_inv_of_mul_eq_one_right h,
 end
 
-instance : actual_ordered_comm_monoid (with_zero Γ) :=
+instance : actual_ordered_comm_monoid (with_zero Γ₀) :=
 { mul_le_mul_left := λ x y x_le_y z,
     by { with_zero_cases x y z, exact linear_ordered_structure.mul_le_mul_left x_le_y z },
   lt_of_mul_lt_mul_left := λ x y z hlt,
     by { with_zero_cases x y z, exact linear_ordered_structure.lt_of_mul_lt_mul_left _ _ _ hlt },
-  ..(by apply_instance : comm_monoid (with_zero Γ)),
-  ..(by apply_instance : partial_order (with_zero Γ)),
+  ..(by apply_instance : comm_monoid (with_zero Γ₀)),
+  ..(by apply_instance : partial_order (with_zero Γ₀)),
 }
 
-variables {a b c d : with_zero Γ}
+variables {a b c d : with_zero Γ₀}
 
 lemma mul_lt_mul : a < b → c < d → a*c < b*d :=
 begin
@@ -448,16 +448,16 @@ begin
   exact linear_ordered_structure.mul_lt_mul hab hcd
 end
 
-lemma mul_lt_right (γ : Γ) (h : a < b) : a*γ < b*γ :=
+lemma mul_lt_right (γ : Γ₀) (h : a < b) : a*γ < b*γ :=
 begin
   rcases coe_of_gt h with ⟨γ', rfl⟩,
   with_zero_cases a,
   exact linear_ordered_structure.mul_lt_right _ h
 end
 
-lemma mul_lt_left (γ : Γ) (h : a < b) : (γ : with_zero Γ)*a < γ*b :=
+lemma mul_lt_left (γ : Γ₀) (h : a < b) : (γ : with_zero Γ₀)*a < γ*b :=
 begin
-  repeat { rw mul_comm (γ : with_zero Γ) },
+  repeat { rw mul_comm (γ : with_zero Γ₀) },
   exact mul_lt_right γ h
 end
 
@@ -479,7 +479,7 @@ le_of_le_mul_right h (by rwa [mul_assoc, mul_left_inv _ h, mul_one])
 
 end with_zero
 
-example (Γ : Type*) [linear_ordered_comm_group Γ] : (1 : with_zero Γ) ≠ 0 := by simp
+example (Γ₀ : Type*) [linear_ordered_comm_group Γ₀] : (1 : with_zero Γ₀) ≠ 0 := by simp
 
 class linear_ordered_cancel_comm_monoid_with_zero (α : Type*)
   extends linear_ordered_comm_monoid α, zero_ne_one_class α :=
