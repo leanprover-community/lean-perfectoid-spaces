@@ -417,7 +417,7 @@ begin
   cases top.2 (algebra_map A ⁻¹' ↑(ideal.span T₂)) _ with n hn,
   { apply submodule.is_open_of_open_submodule,
     use ideal.map (of_id A₀ A) (I^(n+1)),
-    refine ⟨is_open_ideal_map_open_embedding emb.emb emb.open_range _ (top.1 (n+1)), _⟩,
+    refine ⟨is_open_ideal_map_open_embedding emb _ (top.1 (n+1)), _⟩,
     delta ideal.span,
     erw [pow_succ, ideal.map_mul, ← submodule.span_mul_span],
     apply submodule.mul_le_mul,

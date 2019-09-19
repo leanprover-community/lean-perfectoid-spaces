@@ -28,7 +28,7 @@ namespace linear_ordered_comm_group_with_zero
 variables (α : Type*) [linear_ordered_comm_group_with_zero α]
 
 instance units.linear_order : linear_order (units α) :=
-linear_order.lift (coe : units α → α) (λ a b, units.ext) infer_instance
+linear_order.lift (coe : units α → α) units.ext infer_instance
 
 instance units.linear_ordered_comm_group : linear_ordered_comm_group (units α) :=
 { mul_le_mul_left := λ a b h c, mul_le_mul_left h _,

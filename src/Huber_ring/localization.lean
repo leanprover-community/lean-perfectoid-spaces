@@ -232,7 +232,7 @@ begin
   refine ⟨⟨to_fun A '' ↑(I^(m+1)), _, _⟩, _⟩,
   work_on_goal 2 {assumption},
   all_goals { try {apply_instance} },
-  { exact emb.op _ (H₁ _) },
+  { exact emb.is_open_map _ (H₁ _) },
   -- What remains is the following calculation: I^(m+1) ⊆ T • span U.
   -- Unfortunately it seems to be hard to express in calc mode
   -- First observe: I^(m+1) = L • I^m as A₀-ideal, but also as ℤ-submodule

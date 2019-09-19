@@ -46,10 +46,10 @@ end
 -- continuous_mul continuous_id continuous_const
 
 lemma is_open_ideal_map_open_embedding {f : A → B} [is_ring_hom f]
-  (emb : embedding f) (hf : is_open (range f)) (I : ideal A) (hI : is_open (↑I : set A)) :
+  (emb : open_embedding f) (I : ideal A) (hI : is_open (↑I : set A)) :
   is_open (↑(I.map f) : set B) :=
 open_add_subgroup.is_open_of_open_add_subgroup
-  ⟨⟨f '' I, embedding_open emb hf hI, by apply_instance⟩, ideal.subset_span⟩
+  ⟨⟨f '' I, emb.is_open_map _ hI, by apply_instance⟩, ideal.subset_span⟩
 
 instance pi_topological_ring {I : Type*} {R : I → Type*} [∀ i, comm_ring (R i)] [∀ i, topological_space (R i)]
   [h : ∀ i, topological_ring (R i)] : topological_ring (Π (i : I), R i) :=
