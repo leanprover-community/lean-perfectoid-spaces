@@ -188,7 +188,7 @@ set_option class.instance_max_depth 80
 /-- If T ⊆ A generates an open ideal, and U is an open subgroup of A,
 then T * U generates an open subgroup.
 (This lemma is the case n = 1 of [Wedhorn, Lem 6.20].)-/
-lemma mul_T_open (hT : is_open (↑(ideal.span T) : set A)) (U : open_add_subgroup A) :
+lemma mul_T_open (hT : is_open ((ideal.span T) : set A)) (U : open_add_subgroup A) :
   is_open (↑(T • span ℤ (U : set A)) : set A) :=
 begin
   -- Choose an ideal of definition I ⊆ span T
