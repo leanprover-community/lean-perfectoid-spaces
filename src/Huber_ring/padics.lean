@@ -92,6 +92,8 @@ end padic_int
 
 namespace padic_rat
 open local_ring padic_int
+lemma num (p : ℕ) (n : ℤ) (hp : 1 < p) (h : (p : ℚ) ^ -n < p) : (p : ℚ)^-n ≤ 1 :=
+sorry
 
 noncomputable def Huber_ring : Huber_ring ℚ_[p] :=
 { pod := ⟨ℤ_[p], infer_instance, infer_instance, by apply_instance,
@@ -100,12 +102,18 @@ noncomputable def Huber_ring : Huber_ring ℚ_[p] :=
       show is_open (set.range subtype.val),
       rw subtype.val_range,
       rw show {x : ℚ_[p] | ∥x∥ ≤ 1} = {x : ℚ_[p] | ∥x∥ < p},
-      { ext x, split; intro h,
-        { show _ < _, apply lt_of_le_of_lt, exact h,
-          exact_mod_cast (nat.prime.one_lt ‹_›) },
-        { sorry } },
-      convert @metric.is_open_ball _ _ (0:ℚ_[p]) (p:ℝ),
-      simp,
+      { ext x, split; intro h ; rw set.mem_set_of_eq at h ⊢,
+        { calc  ∥x∥ ≤ 1 : h
+               ... < _ : by exact_mod_cast (nat.prime.one_lt ‹_›) },
+        { by_cases hx : x = 0,
+          { simp [hx, zero_le_one] },
+          { rcases padic_norm_e.image hx with ⟨n, hn⟩,
+            have hp : 1 < p, from nat.prime.one_lt ‹_›,
+            rw hn at h ⊢,
+            norm_cast at h ⊢,
+            apply num ; assumption } } },
+      rw ← ball_0_eq,
+      exact metric.is_open_ball
     end },
     J := (nonunits_ideal _),
     fin := nonunits_ideal_fg p,
