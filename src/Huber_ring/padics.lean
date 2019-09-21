@@ -87,11 +87,15 @@ by rw [norm_fpow, norm_p, fpow_neg, one_div_eq_inv,
   ← fpow_inv, ← fpow_inv, ← fpow_mul, ← fpow_mul, mul_comm]
 
 def valuation : ℚ_[p] → ℤ :=
-quotient.lift (padic_seq.valuation) $ λ f g h,
+quotient.lift (@padic_seq.valuation p _) (λ f g h,
 begin
-  sorry
-  -- by_cases hf : f ≈ 0,
-end
+  by_cases hf : f ≈ 0,
+  { have hg : g ≈ 0, from setoid.trans (setoid.symm h) hf,
+    simp [hf, hg, padic_seq.valuation] },
+  { have hg : ¬ g ≈ 0, from (λ hg, hf (setoid.trans h hg)),
+    rw padic_seq.val_eq_iff_norm_eq hf hg,
+    exact padic_seq.norm_equiv h },
+end)
 
 end padic_rat
 
