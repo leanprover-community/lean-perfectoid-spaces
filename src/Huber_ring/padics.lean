@@ -129,14 +129,34 @@ begin
   simp,
 end
 
+@[simp, move_cast] theorem cast_fpow {α : Type*} [discrete_field α] [char_zero α] (q) (k : ℤ) :
+  ((q ^ k : ℚ) : α) = q ^ k :=
+begin
+  cases k,
+  { erw fpow_of_nat,
+    rw rat.cast_pow,
+    erw fpow_of_nat },
+  { rw fpow_neg_succ_of_nat,
+    rw fpow_neg_succ_of_nat,
+    norm_cast }
+end
+
+lemma num_aux (p : ℕ) (n : ℤ) :  (coe : ℚ → ℝ) ((p : ℚ) ^ n) = (p : ℝ) ^ n :=
+begin
+  rw cast_fpow,
+  congr' 1,
+  norm_cast
+end
+
 lemma norm_eq_pow_val {x : ℚ_[p]} (hx : x ≠ 0) :
   ∥x∥ = p^(-x.valuation) :=
 begin
   revert hx, apply quotient.induction_on' x, clear x,
   intros f hf,
-  change ↑(padic_seq.norm _) = ↑p ^ -padic_seq.valuation _,
+  change (padic_seq.norm _ : ℝ) = (p : ℝ) ^ -padic_seq.valuation _,
   rw padic_seq.norm_eq_pow_val,
-  { sorry },
+  change ↑((p : ℚ) ^ -padic_seq.valuation f) = (p : ℝ) ^ -padic_seq.valuation f,
+  { apply num_aux },
   { apply cau_seq.not_lim_zero_of_not_congr_zero,
     contrapose! hf, apply quotient.sound, simpa using hf, }
 end
