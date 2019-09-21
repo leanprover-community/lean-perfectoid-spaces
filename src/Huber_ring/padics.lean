@@ -216,6 +216,13 @@ begin
   simpa using x.property,
 end
 
+@[simp] theorem fpow_neg_mul_fpow_self {α : Type*} [discrete_field α] (n : ℕ) {x : α} (h : x ≠ 0) :
+x^-(n:ℤ) * x^n = 1 :=
+begin
+  convert inv_mul_cancel (pow_ne_zero n h),
+  rw [fpow_neg, one_div_eq_inv, fpow_of_nat]
+end
+
 lemma exists_repr {x : ℤ_[p]} (hx : x ≠ 0) :
   ∃ (u : units ℤ_[p]) (n : ℕ), x = u*p^n :=
 begin
@@ -226,9 +233,17 @@ begin
   { simp [hx, hp (x.valuation), norm_eq_pow_val, fpow_neg, inv_mul_cancel], },
   let u' : ℤ_[p] := ⟨u, le_of_eq hu⟩,
   obtain ⟨u₀, h⟩ : is_unit u', { rwa is_unit_iff },
-  -- lift x.valuation to ℕ using valuation_nonneg,
-  -- use [u₀, n,]
-  sorry
+  obtain ⟨n, hn⟩ : ∃ n : ℕ, valuation x = n,
+    from int.eq_coe_of_zero_le (valuation_nonneg x),
+  use [u₀, n],
+  rw ← h,
+  apply subtype.val_injective,
+  suffices : ↑x = ↑x * ↑p ^ -↑n * ↑p ^ n,
+    by simpa [u, u', hn] using this,
+  rw mul_assoc,
+  convert (mul_one _).symm,
+  apply fpow_neg_mul_fpow_self,
+  exact_mod_cast nat.prime.ne_zero ‹_›
 end
 
 variable (p)
