@@ -118,11 +118,7 @@ begin
 end)
 
 @[simp] lemma valuation_zero : valuation (0 : ℚ_[p]) = 0 :=
-begin
-  refine dif_pos _,
-  sorry
-  -- if_pos rfl,
-end
+dif_pos ((const_equiv p).2 rfl)
 
 lemma norm_eq_pow_val {x : ℚ_[p]} (hx : x ≠ 0) :
   ∥x∥ = p^(-x.valuation) :=
