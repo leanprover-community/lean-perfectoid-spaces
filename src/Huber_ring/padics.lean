@@ -9,6 +9,21 @@ variables {p : ℕ} [nat.prime p]
 local attribute [-simp] padic.cast_eq_of_rat_of_nat
 
 -- This should be generalised in 10 directions
+lemma real.fpow_strict_mono {x : ℝ} (hx : 1 < x) :
+  strict_mono (λ n:ℤ, x ^ n) :=
+λ m n h, show x ^ m < x ^ n,
+begin
+  have xpos : 0 < x := by linarith,
+  have h₀ : x ≠ 0 := by linarith,
+  have hxm : 0 < x^m := fpow_pos_of_pos xpos m,
+  have hxm₀ : x^m ≠ 0 := ne_of_gt hxm,
+  suffices : 1 < x^(n-m),
+  { replace := mul_lt_mul_of_pos_right this hxm,
+    simpa [*, fpow_add, mul_assoc, fpow_neg, inv_mul_cancel], },
+  apply one_lt_fpow hx, linarith,
+end
+
+-- This should be generalised in 10 directions
 lemma rat.fpow_strict_mono {x : ℚ} (hx : 1 < x) :
   strict_mono (λ n:ℤ, x ^ n) :=
 λ m n h, show x ^ m < x ^ n,
@@ -22,6 +37,11 @@ begin
     simpa [*, fpow_add, mul_assoc, fpow_neg, inv_mul_cancel], },
   apply one_lt_fpow hx, linarith,
 end
+
+-- This should be generalised in 10 directions
+@[simp] lemma real.fpow_mono {x : ℝ} (hx : 1 < x) {m n : ℤ} :
+  x ^ m < x ^ n ↔ m < n :=
+(real.fpow_strict_mono hx).lt_iff_lt
 
 -- This should be generalised in 10 directions
 @[simp] lemma rat.fpow_mono {x : ℚ} (hx : 1 < x) {m n : ℤ} :
@@ -71,7 +91,7 @@ end
 
 end padic_seq
 
-namespace padic_rat
+namespace padic
 
 variable {p}
 
@@ -97,7 +117,26 @@ begin
     exact padic_seq.norm_equiv h },
 end)
 
-end padic_rat
+@[simp] lemma valuation_zero : valuation (0 : ℚ_[p]) = 0 :=
+begin
+  refine dif_pos _,
+  sorry
+  -- if_pos rfl,
+end
+
+lemma norm_eq_pow_val {x : ℚ_[p]} (hx : x ≠ 0) :
+  ∥x∥ = p^(-x.valuation) :=
+begin
+  revert hx, apply quotient.induction_on' x, clear x,
+  intros f hf,
+  change ↑(padic_seq.norm _) = ↑p ^ -padic_seq.valuation _,
+  rw padic_seq.norm_eq_pow_val,
+  { sorry },
+  { apply cau_seq.not_lim_zero_of_not_congr_zero,
+    contrapose! hf, apply quotient.sound, simpa using hf, }
+end
+
+end padic
 
 namespace padic_int
 open local_ring
@@ -105,11 +144,30 @@ open local_ring
 variable {p}
 
 @[simp] lemma norm_p : ∥(p : ℤ_[p])∥ = p⁻¹ :=
-show ∥((p : ℤ_[p]) : ℚ_[p])∥ = p⁻¹, by exact_mod_cast padic_rat.norm_p
+show ∥((p : ℤ_[p]) : ℚ_[p])∥ = p⁻¹, by exact_mod_cast padic.norm_p
 
 @[simp] lemma norm_p_pow (n : ℕ) : ∥(p : ℤ_[p])^n∥ = p^(-n:ℤ) :=
 show ∥((p^n : ℤ_[p]) : ℚ_[p])∥ = p^(-n:ℤ),
-by { convert padic_rat.norm_p_pow n, simp, }
+by { convert padic.norm_p_pow n, simp, }
+
+def valuation (x : ℤ_[p]) := padic.valuation (x : ℚ_[p])
+
+lemma norm_eq_pow_val {x : ℤ_[p]} (hx : x ≠ 0) :
+  ∥x∥ = p^(-x.valuation) :=
+begin
+  convert padic.norm_eq_pow_val _,
+  contrapose! hx,
+  exact subtype.val_injective hx
+end
+
+lemma valuation_nonneg (x : ℤ_[p]) : 0 ≤ x.valuation :=
+begin
+  by_cases hx : x = 0,
+  { subst x, show 0 ≤ ite _ _ _, },
+  have h : (1 : ℝ) < p := by exact_mod_cast nat.prime.one_lt ‹_›,
+  rw [← neg_nonpos, ← (real.fpow_strict_mono h).le_iff_le, norm_eq_pow_val hx],
+  dsimp,
+end
 
 variable (p)
 
@@ -196,7 +254,7 @@ def Huber_ring : Huber_ring ℤ_[p] :=
 
 end padic_int
 
-namespace padic_rat
+namespace padic
 open local_ring padic_int
 
 def Huber_ring : Huber_ring ℚ_[p] :=
@@ -207,4 +265,4 @@ def Huber_ring : Huber_ring ℚ_[p] :=
     top := is_adic p,
     .. padic_int.algebra }⟩⟩ }
 
-end padic_rat
+end padic
