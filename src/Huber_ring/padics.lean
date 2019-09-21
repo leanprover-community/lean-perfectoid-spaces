@@ -74,10 +74,39 @@ begin
 end
 
 variable {p}
+
 instance coe_is_ring_hom : is_ring_hom (coe : ℤ_[p] → ℚ_[p]) :=
 { map_one := rfl,
   map_mul := coe_mul,
   map_add := coe_add }
+
+noncomputable def algebra : algebra ℤ_[p] ℚ_[p] :=
+@algebra.of_ring_hom ℤ_[p] _ _ _ (coe) padic_int.coe_is_ring_hom
+
+lemma aux (p : ℚ) (n : ℤ) (hp : 1 ≤ p) (h : p ^ n < p) : p ^ n ≤ 1 :=
+by simpa using fpow_le_of_le hp (le_of_not_lt $ λ h' : 0 < n, not_le_of_lt h $
+  by simpa using fpow_le_of_le hp (int.add_one_le_iff.2 h'))
+
+lemma coe_open_embedding : open_embedding (coe : ℤ_[p] → ℚ_[p]) :=
+{ induced := rfl, inj := subtype.val_injective, open_range :=
+    begin
+      show is_open (set.range subtype.val),
+      rw subtype.val_range,
+      rw show {x : ℚ_[p] | ∥x∥ ≤ 1} = {x : ℚ_[p] | ∥x∥ < p},
+      { ext x, split; intro h ; rw set.mem_set_of_eq at h ⊢,
+        { calc  ∥x∥ ≤ 1 : h
+               ... < _ : by exact_mod_cast (nat.prime.one_lt ‹_›) },
+        { by_cases hx : x = 0,
+          { simp [hx, zero_le_one] },
+          { rcases padic_norm_e.image hx with ⟨n, hn⟩,
+            have hp : 1 < p, from nat.prime.one_lt ‹_›,
+            rw hn at h ⊢,
+            norm_cast at h ⊢,
+            apply aux, {exact_mod_cast le_of_lt hp}, {exact h} } } },
+      rw ← ball_0_eq,
+      exact metric.is_open_ball
+    end }
+
 variable (p)
 
 noncomputable def Huber_ring : Huber_ring ℤ_[p] :=
@@ -92,32 +121,13 @@ end padic_int
 
 namespace padic_rat
 open local_ring padic_int
-lemma num (p : ℕ) (n : ℤ) (hp : 1 < p) (h : (p : ℚ) ^ -n < p) : (p : ℚ)^-n ≤ 1 :=
-sorry
 
 noncomputable def Huber_ring : Huber_ring ℚ_[p] :=
 { pod := ⟨ℤ_[p], infer_instance, infer_instance, by apply_instance,
-  ⟨{ emb := { induced := rfl, inj := subtype.val_injective, open_range :=
-    begin
-      show is_open (set.range subtype.val),
-      rw subtype.val_range,
-      rw show {x : ℚ_[p] | ∥x∥ ≤ 1} = {x : ℚ_[p] | ∥x∥ < p},
-      { ext x, split; intro h ; rw set.mem_set_of_eq at h ⊢,
-        { calc  ∥x∥ ≤ 1 : h
-               ... < _ : by exact_mod_cast (nat.prime.one_lt ‹_›) },
-        { by_cases hx : x = 0,
-          { simp [hx, zero_le_one] },
-          { rcases padic_norm_e.image hx with ⟨n, hn⟩,
-            have hp : 1 < p, from nat.prime.one_lt ‹_›,
-            rw hn at h ⊢,
-            norm_cast at h ⊢,
-            apply num ; assumption } } },
-      rw ← ball_0_eq,
-      exact metric.is_open_ball
-    end },
+  ⟨{ emb := padic_int.coe_open_embedding,
     J := (nonunits_ideal _),
     fin := nonunits_ideal_fg p,
     top := is_adic p,
-    .. @algebra.of_ring_hom ℤ_[p] _ _ _ (coe) padic_int.coe_is_ring_hom }⟩⟩ }
+    .. padic_int.algebra }⟩⟩ }
 
 end padic_rat
