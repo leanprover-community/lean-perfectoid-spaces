@@ -120,6 +120,15 @@ end)
 @[simp] lemma valuation_zero : valuation (0 : ℚ_[p]) = 0 :=
 dif_pos ((const_equiv p).2 rfl)
 
+@[simp] lemma valuation_one : valuation (1 : ℚ_[p]) = 0 :=
+begin
+  change dite (cau_seq.const (padic_norm p) 1 ≈ _) _ _ = _,
+  have h : ¬ cau_seq.const (padic_norm p) 1 ≈ 0,
+  { assume H, erw const_equiv p at H, exact one_ne_zero H },
+  rw dif_neg h,
+  simp,
+end
+
 lemma norm_eq_pow_val {x : ℚ_[p]} (hx : x ≠ 0) :
   ∥x∥ = p^(-x.valuation) :=
 begin
@@ -130,6 +139,17 @@ begin
   { sorry },
   { apply cau_seq.not_lim_zero_of_not_congr_zero,
     contrapose! hf, apply quotient.sound, simpa using hf, }
+end
+
+@[simp] lemma valuation_p : valuation (p : ℚ_[p]) = 1 :=
+begin
+  have h : (1 : ℝ) < p := by exact_mod_cast nat.prime.one_lt ‹_›,
+  apply neg_inj,
+  apply (real.fpow_strict_mono h).injective,
+  dsimp only,
+  rw ← norm_eq_pow_val,
+  { simp [fpow_inv], },
+  { exact_mod_cast nat.prime.ne_zero ‹_›, }
 end
 
 end padic
@@ -156,13 +176,39 @@ begin
   exact subtype.val_injective hx
 end
 
+@[simp] lemma valuation_zero : valuation (0 : ℤ_[p]) = 0 :=
+padic.valuation_zero
+
+@[simp] lemma valuation_one : valuation (1 : ℤ_[p]) = 0 :=
+padic.valuation_one
+
+@[simp] lemma valuation_p : valuation (p : ℤ_[p]) = 1 :=
+by { delta valuation, exact_mod_cast padic.valuation_p }
+
 lemma valuation_nonneg (x : ℤ_[p]) : 0 ≤ x.valuation :=
 begin
   by_cases hx : x = 0,
-  { subst x, show 0 ≤ ite _ _ _, },
+  { simp [hx] },
   have h : (1 : ℝ) < p := by exact_mod_cast nat.prime.one_lt ‹_›,
-  rw [← neg_nonpos, ← (real.fpow_strict_mono h).le_iff_le, norm_eq_pow_val hx],
-  dsimp,
+  rw [← neg_nonpos, ← (real.fpow_strict_mono h).le_iff_le],
+  show ↑p ^ -valuation x ≤ ↑p ^ 0,
+  rw [← norm_eq_pow_val hx],
+  simpa using x.property,
+end
+
+lemma exists_repr {x : ℤ_[p]} (hx : x ≠ 0) :
+  ∃ (u : units ℤ_[p]) (n : ℕ), x = u*p^n :=
+begin
+  have hp : ∀ (n:ℤ), (p:ℝ)^n ≠ 0,
+  { intro n, apply ne_of_gt, apply fpow_pos_of_pos, exact_mod_cast nat.prime.pos ‹_› },
+  let u : ℚ_[p] := x*p^(-x.valuation),
+  have hu : ∥u∥ = 1,
+  { simp [hx, hp (x.valuation), norm_eq_pow_val, fpow_neg, inv_mul_cancel], },
+  let u' : ℤ_[p] := ⟨u, le_of_eq hu⟩,
+  obtain ⟨u₀, h⟩ : is_unit u', { rwa is_unit_iff },
+  -- lift x.valuation to ℕ using valuation_nonneg,
+  -- use [u₀, n,]
+  sorry
 end
 
 variable (p)
