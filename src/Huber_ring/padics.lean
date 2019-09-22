@@ -8,6 +8,13 @@ variables {p : ℕ} [nat.prime p]
 
 local attribute [-simp] padic.cast_eq_of_rat_of_nat
 
+lemma ideal.one_mem_of_unit_mem {R : Type*} [comm_ring R] {I : ideal R} {u : units R} (h : (u : R) ∈ I) :
+(1 : R) ∈ I :=
+begin
+  have : (u : R)*(u⁻¹ : units R) ∈ I, from I.mul_mem_right h,
+  rwa u.mul_inv at this
+end
+
 lemma nat.prime_fpow_ne_zero {α : Type*} [discrete_linear_ordered_field α] (n:ℤ) : (p:α)^n ≠ 0 :=
 by { apply ne_of_gt, apply fpow_pos_of_pos, exact_mod_cast nat.prime.pos ‹_› }
 
@@ -266,7 +273,18 @@ begin
     simpa using mul_lt_mul' x.property norm_p_lt_one (norm_nonneg _) zero_lt_one, },
   { intros I x hI hx_ne hx_mem,
     rw ideal.mem_span_singleton' at hx_ne, push_neg at hx_ne,
-    sorry }
+    have x_ne_zero : x ≠ 0,
+    { intro h,
+      apply hx_ne 0,
+      simp [h] },
+    rcases exists_repr x_ne_zero with ⟨u, n, rep⟩,
+    cases n,
+    { rw [show x = u, by simpa using rep] at hx_mem,
+      exact ideal.one_mem_of_unit_mem hx_mem },
+    { exfalso,
+      apply hx_ne (u*p^n),
+      rw [rep],
+      ring }, }
 end
 
 lemma nonunits_ideal_eq_span :
