@@ -15,8 +15,26 @@ begin
   rwa u.mul_inv at this
 end
 
+lemma ideal.span_singleton_mul {R : Type*} [comm_ring R] (x y : R) :
+(ideal.span ({x} : set R)) * (ideal.span {y}) = ideal.span {x*y} :=
+by simp [ideal.span_mul_span]
+
+lemma ideal.span_singleton_pow {R : Type*} [comm_ring R] (x : R) (n : ℕ) :
+(ideal.span ({x} : set R))^n = ideal.span {x^n} :=
+begin
+  induction n with n ih,
+  { simp },
+  { rw [pow_succ, ih, ideal.span_singleton_mul, pow_succ] }
+end
+
+variables (p)
+lemma nat.prime_fpow_pos {α : Type*} [discrete_linear_ordered_field α] (n:ℤ) : (p:α)^n > 0 :=
+by { apply fpow_pos_of_pos, exact_mod_cast nat.prime.pos ‹_› }
+
 lemma nat.prime_fpow_ne_zero {α : Type*} [discrete_linear_ordered_field α] (n:ℤ) : (p:α)^n ≠ 0 :=
-by { apply ne_of_gt, apply fpow_pos_of_pos, exact_mod_cast nat.prime.pos ‹_› }
+ne_of_gt (nat.prime_fpow_pos p n)
+
+variables {p}
 
 @[simp] theorem fpow_neg_mul_fpow_self {α : Type*} [discrete_field α] (n : ℕ) {x : α} (h : x ≠ 0) :
 x^-(n:ℤ) * x^n = 1 :=
@@ -196,6 +214,9 @@ open local_ring
 
 variable {p}
 
+lemma norm_mul (x y : ℤ_[p]) : ∥x*y∥ = ∥x∥*∥y∥ :=
+sorry
+
 @[simp] lemma norm_p : ∥(p : ℤ_[p])∥ = p⁻¹ :=
 show ∥((p : ℤ_[p]) : ℚ_[p])∥ = p⁻¹, by exact_mod_cast padic.norm_p
 
@@ -249,7 +270,7 @@ begin
     { simp },
     { exact_mod_cast nat.prime.ne_zero ‹_› } },
   have hu : ∥u∥ = 1,
-    by simp [hx, nat.prime_fpow_ne_zero x.valuation, norm_eq_pow_val, fpow_neg, inv_mul_cancel],
+    by simp [hx, nat.prime_fpow_ne_zero p x.valuation, norm_eq_pow_val, fpow_neg, inv_mul_cancel],
   obtain ⟨n, hn⟩ : ∃ n : ℕ, valuation x = n,
     from int.eq_coe_of_zero_le (valuation_nonneg x),
   use [mk_units hu, n],
@@ -296,9 +317,33 @@ lemma nonunits_ideal_fg :
   (nonunits_ideal ℤ_[p]).fg :=
 by { rw nonunits_ideal_eq_span, exact ⟨{p}, rfl⟩, }
 
+lemma power_nonunits_ideal_carrier (n : ℕ) : ((nonunits_ideal ℤ_[p])^n).carrier = {x | ∥x∥ ≤ p^-(n:ℤ) } :=
+begin
+  rw nonunits_ideal_eq_span p,
+  rw ideal.span_singleton_pow,
+  ext x,
+  erw [ideal.mem_span_singleton', set.mem_set_of_eq],
+  split,
+  { rintros ⟨y, h⟩,
+    rw [← h, padic_int.norm_mul, norm_p_pow],
+    apply le_of_mul_le_mul_right _ (_ : (p : ℝ)^n > 0),
+    rw [mul_assoc, fpow_neg_mul_fpow_self, mul_one],
+    { exact y.property },
+    { exact_mod_cast ne_of_gt (nat.prime.pos ‹_›) },
+    { exact nat.prime_fpow_pos p (n : ℤ) } },
+  { intro h,
+    by_cases hx : x = 0,
+    { use 0,
+      simp [hx] },
+    { rcases exists_repr hx with ⟨u, n', h⟩,
+      rw h,
+      sorry } },
+end
+
 lemma is_adic : is_ideal_adic (nonunits_ideal ℤ_[p]) :=
 begin
-  rw is_ideal_adic_iff, split,
+  rw is_ideal_adic_iff,
+  split,
   { intro n,
     sorry },
   { intros s hs,
