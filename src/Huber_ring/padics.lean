@@ -8,6 +8,16 @@ variables {p : ℕ} [nat.prime p]
 
 local attribute [-simp] padic.cast_eq_of_rat_of_nat
 
+lemma nat.prime_fpow_ne_zero {α : Type*} [discrete_linear_ordered_field α] (n:ℤ) : (p:α)^n ≠ 0 :=
+by { apply ne_of_gt, apply fpow_pos_of_pos, exact_mod_cast nat.prime.pos ‹_› }
+
+@[simp] theorem fpow_neg_mul_fpow_self {α : Type*} [discrete_field α] (n : ℕ) {x : α} (h : x ≠ 0) :
+x^-(n:ℤ) * x^n = 1 :=
+begin
+  convert inv_mul_cancel (pow_ne_zero n h),
+  rw [fpow_neg, one_div_eq_inv, fpow_of_nat]
+end
+
 -- This should be generalised in 10 directions
 lemma real.fpow_strict_mono {x : ℝ} (hx : 1 < x) :
   strict_mono (λ n:ℤ, x ^ n) :=
@@ -216,34 +226,28 @@ begin
   simpa using x.property,
 end
 
-@[simp] theorem fpow_neg_mul_fpow_self {α : Type*} [discrete_field α] (n : ℕ) {x : α} (h : x ≠ 0) :
-x^-(n:ℤ) * x^n = 1 :=
-begin
-  convert inv_mul_cancel (pow_ne_zero n h),
-  rw [fpow_neg, one_div_eq_inv, fpow_of_nat]
-end
+def mk_units {u : ℚ_[p]} (h : ∥u∥ = 1) : units ℤ_[p] :=
+let z : ℤ_[p] := ⟨u, le_of_eq h⟩ in ⟨z, z.inv, mul_inv h, inv_mul h⟩
+
+@[simp]
+lemma mk_units_eq {u : ℚ_[p]} (h : ∥u∥ = 1) : ((mk_units h : ℤ_[p]) : ℚ_[p]) = u :=
+rfl
 
 lemma exists_repr {x : ℤ_[p]} (hx : x ≠ 0) :
   ∃ (u : units ℤ_[p]) (n : ℕ), x = u*p^n :=
 begin
-  have hp : ∀ (n:ℤ), (p:ℝ)^n ≠ 0,
-  { intro n, apply ne_of_gt, apply fpow_pos_of_pos, exact_mod_cast nat.prime.pos ‹_› },
   let u : ℚ_[p] := x*p^(-x.valuation),
+  have repr : (x : ℚ_[p]) = u*p^x.valuation,
+  { rw [mul_assoc, ← fpow_add],
+    { simp },
+    { exact_mod_cast nat.prime.ne_zero ‹_› } },
   have hu : ∥u∥ = 1,
-  { simp [hx, hp (x.valuation), norm_eq_pow_val, fpow_neg, inv_mul_cancel], },
-  let u' : ℤ_[p] := ⟨u, le_of_eq hu⟩,
-  obtain ⟨u₀, h⟩ : is_unit u', { rwa is_unit_iff },
+    by simp [hx, nat.prime_fpow_ne_zero x.valuation, norm_eq_pow_val, fpow_neg, inv_mul_cancel],
   obtain ⟨n, hn⟩ : ∃ n : ℕ, valuation x = n,
     from int.eq_coe_of_zero_le (valuation_nonneg x),
-  use [u₀, n],
-  rw ← h,
+  use [mk_units hu, n],
   apply subtype.val_injective,
-  suffices : ↑x = ↑x * ↑p ^ -↑n * ↑p ^ n,
-    by simpa [u, u', hn] using this,
-  rw mul_assoc,
-  convert (mul_one _).symm,
-  apply fpow_neg_mul_fpow_self,
-  exact_mod_cast nat.prime.ne_zero ‹_›
+  simp [hn, repr]
 end
 
 variable (p)
