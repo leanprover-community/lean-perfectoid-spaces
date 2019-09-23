@@ -99,7 +99,17 @@ lemma is_integrally_closed : is_integrally_closed ℤ_[p] ℚ_[p] :=
       { rw [finset.range_zero, finset.fold_empty, pow_zero, norm_one],
         exact zero_lt_one, },
       { rw [finset.range_succ, finset.fold_insert finset.not_mem_range_self],
-        sorry }
+        -- rw [eval₂_mul, eval₂_C, eval₂_pow, eval₂_X],
+    --     suffices : max (∥eval₂ (algebra_map ℚ_[p]) x (C (coeff f n) * X ^ n)∥)
+    --   (finset.fold max 0 (λ (a : ℕ), ∥eval₂ (algebra_map ℚ_[p]) x (C (coeff f a) * X ^ a)∥)
+    --      (finset.range n)) <
+    -- ∥x ^ nat.succ n∥,
+    --     by simpa,
+        squeeze_simp,
+        split,
+        { sorry },
+        { -- use lt_trans and ih
+          sorry } }
       }
   end }
 
