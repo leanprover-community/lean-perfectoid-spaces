@@ -1,6 +1,7 @@
 import data.padics
 import Huber_ring.basic
 import for_mathlib.field_power
+import for_mathlib.ideal_operations
 
 noncomputable theory
 open_locale classical
@@ -8,27 +9,6 @@ open_locale classical
 variables {p : ℕ} [nat.prime p]
 
 local attribute [-simp] padic.cast_eq_of_rat_of_nat
-
-lemma ideal.one_mem_of_unit_mem {R : Type*} [comm_ring R] {I : ideal R} {u : units R} (h : (u : R) ∈ I) :
-(1 : R) ∈ I :=
-begin
-  have : (u : R)*(u⁻¹ : units R) ∈ I, from I.mul_mem_right h,
-  rwa u.mul_inv at this
-end
-
-lemma ideal.span_singleton_mul {R : Type*} [comm_ring R] (x y : R) :
-(ideal.span ({x} : set R)) * (ideal.span {y}) = ideal.span {x*y} :=
-by simp [ideal.span_mul_span]
-
-lemma ideal.span_singleton_pow {R : Type*} [comm_ring R] (x : R) (n : ℕ) :
-(ideal.span ({x} : set R))^n = ideal.span {x^n} :=
-begin
-  induction n with n ih,
-  { simp },
-  { rw [pow_succ, ih, ideal.span_singleton_mul, pow_succ] }
-end
-
--- This should be generalised in 10 directions
 
 namespace padic_seq
 
