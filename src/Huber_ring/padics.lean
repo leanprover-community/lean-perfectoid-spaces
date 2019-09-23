@@ -82,6 +82,7 @@ lemma is_integrally_closed : is_integrally_closed ℤ_[p] ℚ_[p] :=
     by_contra H, push_neg at H,
     rw f_monic.as_sum at hf,
     simp [aeval_def] at hf,
+    sorry
   end }
 
 end

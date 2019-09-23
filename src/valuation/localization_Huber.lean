@@ -99,7 +99,7 @@ lemma v_le_one_is_power_bounded {R : Type*} [comm_ring R] (v : valuation R Γ₀
   is_power_bounded_subset {x : valuation_field v | valuation_field.canonical_valuation v x ≤ 1} :=
 begin
   let v' := valuation_field.canonical_valuation v,
-  refine is_bounded_subset _ _ _ (v_le_one_is_bounded v),
+  refine is_bounded.subset _ (v_le_one_is_bounded v),
   intros x hx,
   induction hx with a ha a b ha' hb' ha hb,
   { assumption },
