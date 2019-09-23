@@ -4,12 +4,21 @@ import for_mathlib.field_power
 import for_mathlib.ideal_operations
 import for_mathlib.padics
 
+/-!
+# The p-adics form a Huber ring
+
+In this file we show that ℤ_[p] and ℚ_[p] are Huber rings. They are the fundamental examples
+of Huber rings.
+-/
+
 noncomputable theory
 
 open local_ring
 
 variables (p : ℕ) [nat.prime p]
 namespace padic_int
+
+/-- The topology on ℤ_[p] is adic with respect to the maximal ideal.-/
 lemma is_adic : is_ideal_adic (nonunits_ideal ℤ_[p]) :=
 begin
   rw is_ideal_adic_iff,
@@ -39,6 +48,7 @@ begin
     exact lt_of_le_of_lt hx hn }
 end
 
+/-- The p-adic integers (ℤ_[p])form a Huber ring.-/
 def Huber_ring : Huber_ring ℤ_[p] :=
 { pod := ⟨ℤ_[p], infer_instance, infer_instance, by apply_instance,
   ⟨{ emb := open_embedding_id,
@@ -52,6 +62,7 @@ end padic_int
 namespace padic
 open local_ring padic_int
 
+/-- The p-adic numbers (ℚ_[p]) form a Huber ring.-/
 def Huber_ring : Huber_ring ℚ_[p] :=
 { pod := ⟨ℤ_[p], infer_instance, infer_instance, by apply_instance,
   ⟨{ emb := padic_int.coe_open_embedding,
