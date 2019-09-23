@@ -258,6 +258,10 @@ begin
   simpa using x.property,
 end
 
+lemma norm_le_pow_iff_norm_lt_pow_succ (x : ℤ_[p]) (n : ℤ) :
+  ∥x∥ ≤ p^n ↔ ∥x∥ < p^(n+1) :=
+sorry
+
 def mk_units {u : ℚ_[p]} (h : ∥u∥ = 1) : units ℤ_[p] :=
 let z : ℤ_[p] := ⟨u, le_of_eq h⟩ in ⟨z, z.inv, mul_inv h, inv_mul h⟩
 
@@ -319,7 +323,7 @@ lemma nonunits_ideal_fg :
   (nonunits_ideal ℤ_[p]).fg :=
 by { rw nonunits_ideal_eq_span, exact ⟨{p}, rfl⟩, }
 
-lemma power_nonunits_ideal_carrier (n : ℕ) : (↑((nonunits_ideal ℤ_[p])^n) : set ℤ_[p]) = {x | ∥x∥ ≤ p^-(n:ℤ) } :=
+lemma power_nonunits_ideal_eq_norm_le_pow (n : ℕ) : (↑((nonunits_ideal ℤ_[p])^n) : set ℤ_[p]) = {x | ∥x∥ ≤ p^-(n:ℤ) } :=
 begin
   rw nonunits_ideal_eq_span p,
   rw ideal.span_singleton_pow,
@@ -352,8 +356,10 @@ begin
   split,
   { intro n,
     show is_open (↑(_ : ideal ℤ_[p]) : set ℤ_[p]),
-    rw power_nonunits_ideal_carrier,
-    sorry },
+    rw power_nonunits_ideal_eq_norm_le_pow,
+    simp only [norm_le_pow_iff_norm_lt_pow_succ],
+    rw ← ball_0_eq,
+    exact metric.is_open_ball },
   { intros s hs,
     rw mem_nhds_sets_iff at hs,
     rcases hs with ⟨U, hU, x, hx⟩,
