@@ -60,8 +60,8 @@ end
 
 -- This should be generalised in 10 directions
 lemma rat.fpow_strict_mono {x : ℚ} (hx : 1 < x) :
-  strict_mono (λ n:ℤ, x ^ n) :=
-λ m n h, show x ^ m < x ^ n,
+  strict_mono (@has_pow.pow ℚ ℤ _ x) := -- we need this ugly form here to actually get a clean statement that is useful for rewrites.
+λ m n h,
 begin
   have xpos : 0 < x := by linarith,
   have h₀ : x ≠ 0 := by linarith,
@@ -215,7 +215,11 @@ open local_ring
 variable {p}
 
 lemma norm_mul (x y : ℤ_[p]) : ∥x*y∥ = ∥x∥*∥y∥ :=
-sorry
+by exact_mod_cast norm_mul (x:ℚ_[p]) (y:ℚ_[p])
+
+lemma norm_pow (x : ℤ_[p]) : ∀ (n : ℕ), ∥x^n∥ = ∥x∥^n
+| 0     := by simp
+| (n+1) := by simp
 
 @[simp] lemma norm_p : ∥(p : ℤ_[p])∥ = p⁻¹ :=
 show ∥((p : ℤ_[p]) : ℚ_[p])∥ = p⁻¹, by exact_mod_cast padic.norm_p
@@ -295,17 +299,15 @@ begin
   { intros I x hI hx_ne hx_mem,
     rw ideal.mem_span_singleton' at hx_ne, push_neg at hx_ne,
     have x_ne_zero : x ≠ 0,
-    { intro h,
-      apply hx_ne 0,
-      simp [h] },
-    rcases exists_repr x_ne_zero with ⟨u, n, rep⟩,
+    { specialize hx_ne 0,
+      contrapose! hx_ne with x_eq_zero,
+      simpa using x_eq_zero.symm, },
+    rcases exists_repr x_ne_zero with ⟨u, n, rfl⟩,
     cases n,
-    { rw [show x = u, by simpa using rep] at hx_mem,
-      exact ideal.one_mem_of_unit_mem hx_mem },
+    { apply ideal.one_mem_of_unit_mem, simpa using hx_mem, },
     { exfalso,
       apply hx_ne (u*p^n),
-      rw [rep],
-      ring }, }
+      simp [pow_succ', mul_assoc] }, }
 end
 
 lemma nonunits_ideal_eq_span :
@@ -317,27 +319,31 @@ lemma nonunits_ideal_fg :
   (nonunits_ideal ℤ_[p]).fg :=
 by { rw nonunits_ideal_eq_span, exact ⟨{p}, rfl⟩, }
 
-lemma power_nonunits_ideal_carrier (n : ℕ) : ((nonunits_ideal ℤ_[p])^n).carrier = {x | ∥x∥ ≤ p^-(n:ℤ) } :=
+lemma power_nonunits_ideal_carrier (n : ℕ) : (↑((nonunits_ideal ℤ_[p])^n) : set ℤ_[p]) = {x | ∥x∥ ≤ p^-(n:ℤ) } :=
 begin
   rw nonunits_ideal_eq_span p,
   rw ideal.span_singleton_pow,
   ext x,
   erw [ideal.mem_span_singleton', set.mem_set_of_eq],
   split,
-  { rintros ⟨y, h⟩,
-    rw [← h, padic_int.norm_mul, norm_p_pow],
+  { rintros ⟨y, rfl⟩,
+    rw [padic_int.norm_mul, norm_p_pow],
     apply le_of_mul_le_mul_right _ (_ : (p : ℝ)^n > 0),
     rw [mul_assoc, fpow_neg_mul_fpow_self, mul_one],
     { exact y.property },
     { exact_mod_cast ne_of_gt (nat.prime.pos ‹_›) },
     { exact nat.prime_fpow_pos p (n : ℤ) } },
   { intro h,
-    by_cases hx : x = 0,
-    { use 0,
-      simp [hx] },
-    { rcases exists_repr hx with ⟨u, n', h⟩,
-      rw h,
-      sorry } },
+    by_cases hx : x = 0, { use 0, simp [hx] },
+    { rcases exists_repr hx with ⟨u, n', rfl⟩,
+      suffices : n ≤ n',
+      { use [u * p^(n' - n)],
+        rw [mul_assoc, ← pow_add, nat.sub_add_cancel this], },
+      have hp : (1:ℝ) < p, { exact_mod_cast nat.prime.one_lt ‹_› },
+      rw [padic_int.norm_mul, is_unit_iff.1 (is_unit_unit u), one_mul, padic_int.norm_pow,
+        norm_p, ← fpow_of_nat, ← fpow_inv, ← fpow_mul, (real.fpow_strict_mono hp).le_iff_le,
+        neg_one_mul, neg_le_neg_iff] at h,
+      exact_mod_cast h, } },
 end
 
 lemma is_adic : is_ideal_adic (nonunits_ideal ℤ_[p]) :=
@@ -345,6 +351,8 @@ begin
   rw is_ideal_adic_iff,
   split,
   { intro n,
+    show is_open (↑(_ : ideal ℤ_[p]) : set ℤ_[p]),
+    rw power_nonunits_ideal_carrier,
     sorry },
   { intros s hs,
     rw mem_nhds_sets_iff at hs,
