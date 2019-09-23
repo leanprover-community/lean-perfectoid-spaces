@@ -358,6 +358,10 @@ begin
       exact_mod_cast h, } },
 end
 
+/- This is the same as above, but we have an annoying mismatch -/
+lemma power_nonunits_ideal_carrier (n : ℕ) : ((nonunits_ideal ℤ_[p])^n).carrier = {x | ∥x∥ ≤ p^-(n:ℤ) } :=
+sorry
+
 lemma is_adic : is_ideal_adic (nonunits_ideal ℤ_[p]) :=
 begin
   rw is_ideal_adic_iff,
@@ -369,9 +373,17 @@ begin
     rw ← ball_0_eq,
     exact metric.is_open_ball },
   { intros s hs,
-    rw mem_nhds_sets_iff at hs,
-    rcases hs with ⟨U, hU, x, hx⟩,
-    sorry }
+    rcases metric.mem_nhds_iff.mp hs with ⟨ε, ε_pos, hε⟩,
+    obtain ⟨n, hn⟩ : ∃ n : ℕ, (p : ℝ)^-(n:ℤ) < ε,
+    {
+      sorry },
+    use n,
+    refine set.subset.trans _ hε,
+    rw power_nonunits_ideal_carrier p n,
+    rw ball_0_eq,
+    intros x hx,
+    rw set.mem_set_of_eq at *,
+    exact lt_of_le_of_lt hx hn }
 end
 
 variable {p}
