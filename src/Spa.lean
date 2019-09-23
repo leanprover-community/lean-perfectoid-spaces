@@ -208,7 +208,7 @@ theorem localization.power_bounded (r : rational_open_data A) :
   is_power_bounded_subset (localization.power_bounded_data r) :=
 begin
   --haveI := Huber_ring.away.is_basis r.T r.s r.Hopen,
-  apply bounded.subset,
+  apply is_bounded.subset,
   work_on_goal 0 { apply add_group.subset_closure },
   show is_bounded (ring.closure (localization.power_bounded_data r)),
   intros U hU,

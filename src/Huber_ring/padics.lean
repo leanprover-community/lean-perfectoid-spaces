@@ -15,6 +15,22 @@ of Huber rings.
 
 noncomputable theory
 
+namespace polynomial
+
+lemma monic.as_sum {R : Type*} [comm_ring R] {f : polynomial R} (hf : f.monic) :
+  f = X^(f.nat_degree) + ((finset.range f.nat_degree).sum $ λ i, C (f.coeff i) * X^i) :=
+begin
+  rw polynomial.ext, intro n,
+  rw [coeff_add, coeff_X_pow],
+  sorry
+  -- split_ifs with h,
+  -- { subst h, convert (add_zero _).symm,
+  --   { symmetry, exact hf },
+  --   { sorry } },
+end
+
+end polynomial
+
 open local_ring
 
 local attribute [instance] padic_int.algebra
@@ -53,13 +69,22 @@ begin
     exact lt_of_le_of_lt hx hn }
 end
 
+section
+open polynomial
+
 lemma is_integrally_closed : is_integrally_closed ℤ_[p] ℚ_[p] :=
 { inj := subtype.val_injective,
   closed :=
   begin
-    intros x hx,
-    sorry
+    rintros x ⟨f, f_monic, hf⟩,
+    erw subtype.val_range,
+    show ∥x∥ ≤ 1,
+    by_contra H, push_neg at H,
+    rw f_monic.as_sum at hf,
+    simp [aeval_def] at hf,
   end }
+
+end
 
 /-- The p-adic integers (ℤ_[p])form a Huber ring.-/
 instance : Huber_ring ℤ_[p] :=
