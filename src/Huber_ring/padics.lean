@@ -260,7 +260,15 @@ end
 
 lemma norm_le_pow_iff_norm_lt_pow_succ (x : ℤ_[p]) (n : ℤ) :
   ∥x∥ ≤ p^n ↔ ∥x∥ < p^(n+1) :=
-sorry
+begin
+  by_cases hx : x = 0,
+  { have hp_pos : (0:ℝ) < p := by exact_mod_cast nat.prime.pos ‹_›,
+    have hp_nonneg : (0:ℝ) ≤ p := le_of_lt hp_pos,
+    simp [hx, fpow_pos_of_pos hp_pos, fpow_nonneg_of_nonneg hp_nonneg], },
+  have hp : (1:ℝ) < p, { exact_mod_cast nat.prime.one_lt ‹_› },
+  rw [norm_eq_pow_val hx, (real.fpow_strict_mono hp).le_iff_le,
+    (real.fpow_strict_mono hp).lt_iff_lt, int.lt_add_one_iff],
+end
 
 def mk_units {u : ℚ_[p]} (h : ∥u∥ = 1) : units ℤ_[p] :=
 let z : ℤ_[p] := ⟨u, le_of_eq h⟩ in ⟨z, z.inv, mul_inv h, inv_mul h⟩
