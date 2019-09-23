@@ -98,19 +98,30 @@ instance : Huber_ring ℤ_[p] :=
 
 end padic_int
 
-namespace padic
-open local_ring
+section
+variables {α : Type*} {β : Type*} [topological_space α] [topological_space β]
+lemma is_open_map.image_nhds {f : α → β} (hf : is_open_map f)
+  {x : α} {U : set α} (hU : U ∈ nhds x) : f '' U ∈ nhds (f x) :=
+begin
+  apply (is_open_map_iff_nhds_le f).mp hf x,
+  change f ⁻¹' (f '' U) ∈ nhds x,
+  filter_upwards [hU],
+  exact set.subset_preimage_image f U
+end
+end
+
+open local_ring set padic_int
 
 /-- The p-adic numbers (ℚ_[p]) form a Huber ring.-/
-instance : Huber_ring ℚ_[p] :=
+instance padic.Huber_ring : Huber_ring ℚ_[p] :=
 { pod := ⟨ℤ_[p], infer_instance, infer_instance, by apply_instance,
-  ⟨{ emb := padic_int.coe_open_embedding,
+  ⟨{ emb := coe_open_embedding,
     J := (nonunits_ideal _),
-    fin := padic_int.nonunits_ideal_fg p,
-    top := padic_int.is_adic p,
+    fin := nonunits_ideal_fg p,
+    top := is_adic p,
     .. padic_int.algebra }⟩⟩ }
 
-def Huber_pair : Huber_pair :=
+def padic.Huber_pair : Huber_pair :=
 { plus := ℤ_[p],
   carrier := ℚ_[p],
   intel :=
@@ -124,16 +135,18 @@ def Huber_pair : Huber_pair :=
         refine is_bounded.subset _ this,
         rintro y ⟨n, rfl⟩,
         show ∥(x:ℚ_[p])^n∥ ≤ 1,
-        rw norm_pow,
+        rw _root_.norm_pow, -- TODO: put this in norm_field namespace in mathlib
         exact pow_le_one _ (norm_nonneg _) x.property, },
-      have bnd := is_adic.is_bounded ⟨_, (padic_int.is_adic p)⟩,
+      have bnd := is_adic.is_bounded ⟨_, is_adic p⟩,
       intros U hU,
       rcases bnd ((coe : ℤ_[p] → ℚ_[p]) ⁻¹' U) _ with ⟨V, hV, H⟩,
-      { use ((coe : ℤ_[p] → ℚ_[p]) '' V),
-        sorry, },
-      { sorry }
+      { use [(coe : ℤ_[p] → ℚ_[p]) '' V,
+             coe_open_embedding.is_open_map.image_nhds hV],
+        rintros _ ⟨v, v_in, rfl⟩ b hb,
+        specialize H v v_in ⟨b, hb⟩ (mem_univ _),
+        rwa [mem_preimage, coe_mul] at H },
+      { rw ← padic_int.coe_zero at hU, -- TODO: put coe_zero from mathlib group_completion in a ns
+        exact continuous_coe.continuous_at hU }
     end
-    .. padic_int.coe_open_embedding,
-    .. padic_int.is_integrally_closed p } }
-
-end padic
+    .. coe_open_embedding,
+    .. is_integrally_closed p } }

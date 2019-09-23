@@ -286,4 +286,8 @@ lemma coe_open_embedding : open_embedding (coe : ℤ_[p] → ℚ_[p]) :=
       rw ← ball_0_eq,
       exact metric.is_open_ball
     end }
+
+lemma continuous_coe : continuous (coe : ℤ_[p] → ℚ_[p]) :=
+ coe_open_embedding.to_embedding.continuous
+
 end padic_int
