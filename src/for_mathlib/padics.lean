@@ -42,6 +42,19 @@ end padic_seq
 
 namespace padic
 
+-- generalize to nonarchimedean fields
+lemma norm_sum {α : Type*} (s : finset α) (f : α → ℚ_[p]) :
+  ∥s.sum f∥ ≤ s.fold max 0 (λ a, ∥f a∥) :=
+begin
+  apply finset.induction_on s, { simp, },
+  clear s,
+  intros a s ha IH,
+  rw [finset.sum_insert ha, finset.fold_insert ha],
+  refine le_trans (padic_norm_e.nonarchimedean _ _) (max_le _ _),
+  { apply le_max_left, },
+  { refine le_trans IH (le_max_right _ _), }
+end
+
 @[simp] lemma norm_p : ∥(p : ℚ_[p])∥ = p⁻¹ :=
 begin
   have p₀ : p ≠ 0 := nat.prime.ne_zero ‹_›,

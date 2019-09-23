@@ -77,12 +77,30 @@ lemma is_integrally_closed : is_integrally_closed ℤ_[p] ℚ_[p] :=
   closed :=
   begin
     rintros x ⟨f, f_monic, hf⟩,
+    have bleh : eval₂ (algebra_map ℚ_[p]) x ((finset.range (nat_degree f)).sum (λ (i : ℕ), C (coeff f i) * X^i)) =
+      ((finset.range (nat_degree f)).sum (λ (i : ℕ), eval₂ (algebra_map ℚ_[p]) x $ C (coeff f i) * X^i)),
+    { exact (finset.sum_hom _).symm },
     erw subtype.val_range,
     show ∥x∥ ≤ 1,
-    by_contra H, push_neg at H,
-    rw f_monic.as_sum at hf,
-    simp [aeval_def] at hf,
-    sorry
+    rw [f_monic.as_sum, aeval_def, eval₂_add, eval₂_pow, eval₂_X] at hf,
+    rw [bleh] at hf,
+    replace hf := congr_arg (@has_norm.norm ℚ_[p] _) hf,
+    contrapose! hf with H,
+    apply ne_of_gt,
+    rw [norm_zero, padic_norm_e.add_eq_max_of_ne],
+    { apply lt_of_lt_of_le _ (le_max_left _ _),
+      rw [← fpow_of_nat, norm_fpow],
+      apply fpow_pos_of_pos,
+      exact lt_trans zero_lt_one H, },
+    { apply ne_of_gt,
+      apply lt_of_le_of_lt (padic.norm_sum _ _),
+      generalize : f.nat_degree = n,
+      induction n with n ih,
+      { rw [finset.range_zero, finset.fold_empty, pow_zero, norm_one],
+        exact zero_lt_one, },
+      { rw [finset.range_succ, finset.fold_insert finset.not_mem_range_self],
+        sorry }
+      }
   end }
 
 end
