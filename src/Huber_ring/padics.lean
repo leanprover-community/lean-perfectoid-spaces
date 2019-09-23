@@ -49,7 +49,7 @@ begin
 end
 
 /-- The p-adic integers (ℤ_[p])form a Huber ring.-/
-def Huber_ring : Huber_ring ℤ_[p] :=
+instance : Huber_ring ℤ_[p] :=
 { pod := ⟨ℤ_[p], infer_instance, infer_instance, by apply_instance,
   ⟨{ emb := open_embedding_id,
     J := (nonunits_ideal _),
@@ -63,7 +63,7 @@ namespace padic
 open local_ring padic_int
 
 /-- The p-adic numbers (ℚ_[p]) form a Huber ring.-/
-def Huber_ring : Huber_ring ℚ_[p] :=
+instance : Huber_ring ℚ_[p] :=
 { pod := ⟨ℤ_[p], infer_instance, infer_instance, by apply_instance,
   ⟨{ emb := padic_int.coe_open_embedding,
     J := (nonunits_ideal _),
