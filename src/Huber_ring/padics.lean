@@ -17,7 +17,10 @@ noncomputable theory
 
 open local_ring
 
+local attribute [instance] padic_int.algebra
+
 variables (p : ℕ) [nat.prime p]
+
 namespace padic_int
 
 /-- The topology on ℤ_[p] is adic with respect to the maximal ideal.-/
@@ -50,6 +53,14 @@ begin
     exact lt_of_le_of_lt hx hn }
 end
 
+lemma is_integrally_closed : is_integrally_closed ℤ_[p] ℚ_[p] :=
+{ inj := subtype.val_injective,
+  closed :=
+  begin
+    intros x hx,
+    sorry
+  end }
+
 /-- The p-adic integers (ℤ_[p])form a Huber ring.-/
 instance : Huber_ring ℤ_[p] :=
 { pod := ⟨ℤ_[p], infer_instance, infer_instance, by apply_instance,
@@ -62,15 +73,41 @@ instance : Huber_ring ℤ_[p] :=
 end padic_int
 
 namespace padic
-open local_ring padic_int
+open local_ring
 
 /-- The p-adic numbers (ℚ_[p]) form a Huber ring.-/
 instance : Huber_ring ℚ_[p] :=
 { pod := ⟨ℤ_[p], infer_instance, infer_instance, by apply_instance,
   ⟨{ emb := padic_int.coe_open_embedding,
     J := (nonunits_ideal _),
-    fin := nonunits_ideal_fg p,
-    top := is_adic p,
+    fin := padic_int.nonunits_ideal_fg p,
+    top := padic_int.is_adic p,
     .. padic_int.algebra }⟩⟩ }
+
+def Huber_pair : Huber_pair :=
+{ plus := ℤ_[p],
+  carrier := ℚ_[p],
+  intel :=
+  { is_power_bounded :=
+    begin
+      -- this entire goal ought to follow from some is_bounded.map lemma
+      -- but we didn't prove that.
+      suffices : is_bounded {x : ℚ_[p] | ∥x∥ ≤ 1},
+      { rintro _ ⟨x, rfl⟩,
+        show is_power_bounded (x:ℚ_[p]),
+        refine is_bounded.subset _ this,
+        rintro y ⟨n, rfl⟩,
+        show ∥(x:ℚ_[p])^n∥ ≤ 1,
+        rw norm_pow,
+        exact pow_le_one _ (norm_nonneg _) x.property, },
+      have bnd := is_adic.is_bounded ⟨_, (padic_int.is_adic p)⟩,
+      intros U hU,
+      rcases bnd ((coe : ℤ_[p] → ℚ_[p]) ⁻¹' U) _ with ⟨V, hV, H⟩,
+      { use ((coe : ℤ_[p] → ℚ_[p]) '' V),
+        sorry, },
+      { sorry }
+    end
+    .. padic_int.coe_open_embedding,
+    .. padic_int.is_integrally_closed p } }
 
 end padic
