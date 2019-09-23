@@ -37,7 +37,7 @@ ne_of_gt (nat.prime_fpow_pos p n)
 variables {p}
 
 @[simp] theorem fpow_neg_mul_fpow_self {α : Type*} [discrete_field α] (n : ℕ) {x : α} (h : x ≠ 0) :
-x^-(n:ℤ) * x^n = 1 :=
+  x^-(n:ℤ) * x^n = 1 :=
 begin
   convert inv_mul_cancel (pow_ne_zero n h),
   rw [fpow_neg, one_div_eq_inv, fpow_of_nat]
@@ -376,8 +376,8 @@ begin
       use n,
       have hp' : (0:ℝ) < p^n,
       { rw ← fpow_of_nat, apply fpow_pos_of_pos, exact_mod_cast nat.prime.pos ‹_› },
-      rw inv_lt ε_pos hp' at hn,
-      sorry },
+      rw [inv_lt ε_pos hp', inv_eq_one_div] at hn,
+      rwa [fpow_neg, fpow_of_nat], },
     use n, show (↑(_ : ideal ℤ_[p]) : set ℤ_[p]) ⊆ _,
     refine set.subset.trans _ hε,
     rw power_nonunits_ideal_eq_norm_le_pow,
