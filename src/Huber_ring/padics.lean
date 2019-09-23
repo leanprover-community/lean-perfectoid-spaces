@@ -1,5 +1,6 @@
 import data.padics
 import Huber_ring.basic
+import for_mathlib.field_power
 
 noncomputable theory
 open_locale classical
@@ -27,74 +28,7 @@ begin
   { rw [pow_succ, ih, ideal.span_singleton_mul, pow_succ] }
 end
 
-variables (p)
-lemma nat.prime_fpow_pos {α : Type*} [discrete_linear_ordered_field α] (n:ℤ) : (p:α)^n > 0 :=
-by { apply fpow_pos_of_pos, exact_mod_cast nat.prime.pos ‹_› }
-
-lemma nat.prime_fpow_ne_zero {α : Type*} [discrete_linear_ordered_field α] (n:ℤ) : (p:α)^n ≠ 0 :=
-ne_of_gt (nat.prime_fpow_pos p n)
-
-variables {p}
-
-@[simp] theorem fpow_neg_mul_fpow_self {α : Type*} [discrete_field α] (n : ℕ) {x : α} (h : x ≠ 0) :
-  x^-(n:ℤ) * x^n = 1 :=
-begin
-  convert inv_mul_cancel (pow_ne_zero n h),
-  rw [fpow_neg, one_div_eq_inv, fpow_of_nat]
-end
-
 -- This should be generalised in 10 directions
-lemma real.fpow_strict_mono {x : ℝ} (hx : 1 < x) :
-  strict_mono (λ n:ℤ, x ^ n) :=
-λ m n h, show x ^ m < x ^ n,
-begin
-  have xpos : 0 < x := by linarith,
-  have h₀ : x ≠ 0 := by linarith,
-  have hxm : 0 < x^m := fpow_pos_of_pos xpos m,
-  have hxm₀ : x^m ≠ 0 := ne_of_gt hxm,
-  suffices : 1 < x^(n-m),
-  { replace := mul_lt_mul_of_pos_right this hxm,
-    simpa [*, fpow_add, mul_assoc, fpow_neg, inv_mul_cancel], },
-  apply one_lt_fpow hx, linarith,
-end
-
--- This should be generalised in 10 directions
-lemma rat.fpow_strict_mono {x : ℚ} (hx : 1 < x) :
-  strict_mono (@has_pow.pow ℚ ℤ _ x) := -- we need this ugly form here to actually get a clean statement that is useful for rewrites.
-λ m n h,
-begin
-  have xpos : 0 < x := by linarith,
-  have h₀ : x ≠ 0 := by linarith,
-  have hxm : 0 < x^m := fpow_pos_of_pos xpos m,
-  have hxm₀ : x^m ≠ 0 := ne_of_gt hxm,
-  suffices : 1 < x^(n-m),
-  { replace := mul_lt_mul_of_pos_right this hxm,
-    simpa [*, fpow_add, mul_assoc, fpow_neg, inv_mul_cancel], },
-  apply one_lt_fpow hx, linarith,
-end
-
--- This should be generalised in 10 directions
-@[simp] lemma real.fpow_mono {x : ℝ} (hx : 1 < x) {m n : ℤ} :
-  x ^ m < x ^ n ↔ m < n :=
-(real.fpow_strict_mono hx).lt_iff_lt
-
--- This should be generalised in 10 directions
-@[simp] lemma rat.fpow_mono {x : ℚ} (hx : 1 < x) {m n : ℤ} :
-  x ^ m < x ^ n ↔ m < n :=
-(rat.fpow_strict_mono hx).lt_iff_lt
-
--- This should be generalised in 10 directions
-@[simp] lemma rat.fpow_inj'' {x : ℚ} (h₀ : 0 < x) (h₁ : x ≠ 1) {m n : ℤ} :
-  x ^ m = x ^ n ↔ m = n :=
-begin
-  split; intro h, swap, {simp [h]},
-  rcases lt_trichotomy x 1 with H|rfl|H,
-  { apply (rat.fpow_strict_mono (one_lt_inv h₀ H)).injective,
-    show x⁻¹ ^ m = x⁻¹ ^ n,
-    rw [← fpow_inv, ← fpow_mul, ← fpow_mul, mul_comm _ m, mul_comm _ n, fpow_mul, fpow_mul, h], },
-  { contradiction },
-  { exact (rat.fpow_strict_mono H).injective h, },
-end
 
 namespace padic_seq
 
@@ -119,7 +53,7 @@ end
 lemma val_eq_iff_norm_eq {f g : padic_seq p} (hf : ¬ f ≈ 0) (hg : ¬ g ≈ 0) :
   f.valuation = g.valuation ↔ f.norm = g.norm :=
 begin
-  rw [norm_eq_pow_val hf, norm_eq_pow_val hg, ← neg_inj', rat.fpow_inj''],
+  rw [norm_eq_pow_val hf, norm_eq_pow_val hg, ← neg_inj', fpow_inj],
   { exact_mod_cast nat.prime.pos ‹_› },
   { exact_mod_cast nat.prime.ne_one ‹_› },
 end
@@ -127,8 +61,6 @@ end
 end padic_seq
 
 namespace padic
-
-variable {p}
 
 @[simp] lemma norm_p : ∥(p : ℚ_[p])∥ = p⁻¹ :=
 begin
@@ -164,25 +96,6 @@ begin
   simp,
 end
 
-@[simp, move_cast] theorem cast_fpow {α : Type*} [discrete_field α] [char_zero α] (q) (k : ℤ) :
-  ((q ^ k : ℚ) : α) = q ^ k :=
-begin
-  cases k,
-  { erw fpow_of_nat,
-    rw rat.cast_pow,
-    erw fpow_of_nat },
-  { rw fpow_neg_succ_of_nat,
-    rw fpow_neg_succ_of_nat,
-    norm_cast }
-end
-
-lemma num_aux (p : ℕ) (n : ℤ) :  (coe : ℚ → ℝ) ((p : ℚ) ^ n) = (p : ℝ) ^ n :=
-begin
-  rw cast_fpow,
-  congr' 1,
-  norm_cast
-end
-
 lemma norm_eq_pow_val {x : ℚ_[p]} (hx : x ≠ 0) :
   ∥x∥ = p^(-x.valuation) :=
 begin
@@ -191,7 +104,9 @@ begin
   change (padic_seq.norm _ : ℝ) = (p : ℝ) ^ -padic_seq.valuation _,
   rw padic_seq.norm_eq_pow_val,
   change ↑((p : ℚ) ^ -padic_seq.valuation f) = (p : ℝ) ^ -padic_seq.valuation f,
-  { apply num_aux },
+  { rw cast_fpow,
+    congr' 1,
+    norm_cast },
   { apply cau_seq.not_lim_zero_of_not_congr_zero,
     contrapose! hf, apply quotient.sound, simpa using hf, }
 end
@@ -200,7 +115,7 @@ end
 begin
   have h : (1 : ℝ) < p := by exact_mod_cast nat.prime.one_lt ‹_›,
   apply neg_inj,
-  apply (real.fpow_strict_mono h).injective,
+  apply (fpow_strict_mono h).injective,
   dsimp only,
   rw ← norm_eq_pow_val,
   { simp [fpow_inv], },
@@ -211,8 +126,6 @@ end padic
 
 namespace padic_int
 open local_ring
-
-variable {p}
 
 lemma norm_mul (x y : ℤ_[p]) : ∥x*y∥ = ∥x∥*∥y∥ :=
 by exact_mod_cast norm_mul (x:ℚ_[p]) (y:ℚ_[p])
@@ -252,7 +165,7 @@ begin
   by_cases hx : x = 0,
   { simp [hx] },
   have h : (1 : ℝ) < p := by exact_mod_cast nat.prime.one_lt ‹_›,
-  rw [← neg_nonpos, ← (real.fpow_strict_mono h).le_iff_le],
+  rw [← neg_nonpos, ← (fpow_strict_mono h).le_iff_le],
   show ↑p ^ -valuation x ≤ ↑p ^ 0,
   rw [← norm_eq_pow_val hx],
   simpa using x.property,
@@ -266,8 +179,8 @@ begin
     have hp_nonneg : (0:ℝ) ≤ p := le_of_lt hp_pos,
     simp [hx, fpow_pos_of_pos hp_pos, fpow_nonneg_of_nonneg hp_nonneg], },
   have hp : (1:ℝ) < p, { exact_mod_cast nat.prime.one_lt ‹_› },
-  rw [norm_eq_pow_val hx, (real.fpow_strict_mono hp).le_iff_le,
-    (real.fpow_strict_mono hp).lt_iff_lt, int.lt_add_one_iff],
+  rw [norm_eq_pow_val hx, (fpow_strict_mono hp).le_iff_le,
+    (fpow_strict_mono hp).lt_iff_lt, int.lt_add_one_iff],
 end
 
 def mk_units {u : ℚ_[p]} (h : ∥u∥ = 1) : units ℤ_[p] :=
@@ -286,7 +199,8 @@ begin
     { simp },
     { exact_mod_cast nat.prime.ne_zero ‹_› } },
   have hu : ∥u∥ = 1,
-    by simp [hx, nat.prime_fpow_ne_zero p x.valuation, norm_eq_pow_val, fpow_neg, inv_mul_cancel],
+    by simp [hx, nat.fpow_ne_zero_of_pos (by exact_mod_cast nat.prime.pos ‹_›) x.valuation,
+             norm_eq_pow_val, fpow_neg, inv_mul_cancel],
   obtain ⟨n, hn⟩ : ∃ n : ℕ, valuation x = n,
     from int.eq_coe_of_zero_le (valuation_nonneg x),
   use [mk_units hu, n],
@@ -331,7 +245,8 @@ lemma nonunits_ideal_fg :
   (nonunits_ideal ℤ_[p]).fg :=
 by { rw nonunits_ideal_eq_span, exact ⟨{p}, rfl⟩, }
 
-lemma power_nonunits_ideal_eq_norm_le_pow (n : ℕ) : (↑((nonunits_ideal ℤ_[p])^n) : set ℤ_[p]) = {x | ∥x∥ ≤ p^-(n:ℤ) } :=
+lemma power_nonunits_ideal_eq_norm_le_pow (n : ℕ) :
+  (↑((nonunits_ideal ℤ_[p])^n) : set ℤ_[p]) = {x | ∥x∥ ≤ p^-(n:ℤ) } :=
 begin
   rw nonunits_ideal_eq_span p,
   rw ideal.span_singleton_pow,
@@ -344,7 +259,7 @@ begin
     rw [mul_assoc, fpow_neg_mul_fpow_self, mul_one],
     { exact y.property },
     { exact_mod_cast ne_of_gt (nat.prime.pos ‹_›) },
-    { exact nat.prime_fpow_pos p (n : ℤ) } },
+    { exact nat.fpow_pos_of_pos (by exact_mod_cast nat.prime.pos ‹_›) (n : ℤ) } },
   { intro h,
     by_cases hx : x = 0, { use 0, simp [hx] },
     { rcases exists_repr hx with ⟨u, n', rfl⟩,
@@ -353,7 +268,7 @@ begin
         rw [mul_assoc, ← pow_add, nat.sub_add_cancel this], },
       have hp : (1:ℝ) < p, { exact_mod_cast nat.prime.one_lt ‹_› },
       rw [padic_int.norm_mul, is_unit_iff.1 (is_unit_unit u), one_mul, padic_int.norm_pow,
-        norm_p, ← fpow_of_nat, ← fpow_inv, ← fpow_mul, (real.fpow_strict_mono hp).le_iff_le,
+        norm_p, ← fpow_of_nat, ← fpow_inv, ← fpow_mul, (fpow_strict_mono hp).le_iff_le,
         neg_one_mul, neg_le_neg_iff] at h,
       exact_mod_cast h, } },
 end
@@ -397,7 +312,7 @@ instance coe_is_ring_hom : is_ring_hom (coe : ℤ_[p] → ℚ_[p]) :=
 def algebra : algebra ℤ_[p] ℚ_[p] :=
 @algebra.of_ring_hom ℤ_[p] _ _ _ (coe) padic_int.coe_is_ring_hom
 
-lemma aux (p : ℚ) (n : ℤ) (hp : 1 ≤ p) (h : p ^ n < p) : p ^ n ≤ 1 :=
+private lemma aux (p : ℚ) (n : ℤ) (hp : 1 ≤ p) (h : p ^ n < p) : p ^ n ≤ 1 :=
 by simpa using fpow_le_of_le hp (le_of_not_lt $ λ h' : 0 < n, not_le_of_lt h $
   by simpa using fpow_le_of_le hp (int.add_one_le_iff.2 h'))
 
