@@ -229,22 +229,81 @@ def padic.bundled_valuation : valuation ℚ_[p] nnreal :=
       congr, },
   end }
 
+namespace valuation
+variables {K : Type*} [discrete_field K]
+variables {L : Type*} [discrete_field L] [topological_space L] [topological_ring L]
+variables {Γ₀ : Type*} [linear_ordered_comm_group_with_zero Γ₀]
+variables {Γ'₀ : Type*} [linear_ordered_comm_group_with_zero Γ'₀]
+
+lemma is_equiv_of_val_le_one (v : valuation K Γ₀) (v' : valuation K Γ'₀)
+  (h : ∀ {x:K}, v x ≤ 1 ↔ v' x ≤ 1) :
+  v.is_equiv v' :=
+begin
+  intros x y,
+  by_cases hy : y = 0, { simp [hy, zero_iff], },
+  rw show y = 1 * y, by rw one_mul,
+  rw show x = (x * y⁻¹) * y, { rw [mul_assoc, inv_mul_cancel hy, mul_one], },
+  iterate 2 {rw [v.map_mul _ y, v'.map_mul _ y]},
+  rw [v.map_one, v'.map_one],
+  split; intro H,
+  { apply actual_ordered_comm_monoid.mul_le_mul_right',
+    replace hy := v.ne_zero_iff.mpr hy,
+    replace H := linear_ordered_structure.le_of_le_mul_right hy H,
+    rwa h at H, },
+  { apply actual_ordered_comm_monoid.mul_le_mul_right',
+    replace hy := v'.ne_zero_iff.mpr hy,
+    replace H := linear_ordered_structure.le_of_le_mul_right hy H,
+    rwa h, },
+end
+
+lemma canonical_valuation.surjective (v : valuation K Γ₀) :
+  function.surjective (v.canonical_valuation) :=
+begin
+  rintro ⟨⟨⟨r⟩,⟨⟨s⟩,h⟩⟩⟩,
+  refine ⟨s⁻¹ * r, _⟩,
+  apply quotient.sound,
+  refine ⟨1, is_submonoid.one_mem _, _⟩,
+  rw [units.coe_one, mul_one],
+  apply quotient.sound,
+  refine ⟨_, h, _⟩,
+  dsimp only [-sub_eq_add_neg],
+  convert zero_mul _, rw [sub_eq_zero],
+  dsimp, rw ← mul_assoc,
+  congr, symmetry,
+  show ideal.quotient.mk (supp v) _ * ideal.quotient.mk (supp v) _ = 1,
+  rw ← is_ring_hom.map_mul (ideal.quotient.mk (supp v)),
+  convert is_ring_hom.map_one (ideal.quotient.mk (supp v)),
+  apply mul_inv_cancel,
+  contrapose! h, subst s,
+  classical,
+  refine (not_iff_not_of_iff localization.fraction_ring.mem_non_zero_divisors_iff_ne_zero).mpr _,
+  exact not_not.mpr rfl
+end
+
+lemma is_continuous_iff (v : valuation L Γ₀) :
+  v.is_continuous ↔ ∀ x:L, is_open {y:L | v y < v x} :=
+begin
+  have help : ∀ x:L, value_monoid.to_Γ₀ v (v.canonical_valuation x) = v x,
+  { intro x, show v x * (v 1)⁻¹ = v x, by simp },
+  split,
+  { intros h x,
+    specialize h (v.canonical_valuation x),
+    simpa only [(value_monoid.to_Γ₀_strict_mono v).lt_iff_lt.symm, help] using h, },
+  { intros h x,
+    rcases canonical_valuation.surjective v x with ⟨x, rfl⟩,
+    simpa only [(value_monoid.to_Γ₀_strict_mono v).lt_iff_lt.symm, help] using h x, }
+end
+
+end valuation
+
 def padic.Spa_inhabited : inhabited (Spa $ padic.Huber_pair p) :=
 { default := ⟨Spv.mk (padic.bundled_valuation p),
   begin
     refine mk_mem_spa.mpr _,
     split,
-    { rintro r,
-      change is_open {x : ℚ_[p] | _ },
-      have := valuation.value_monoid.to_Γ₀_strict_mono (padic.bundled_valuation p),
-      simp only [this.lt_iff_lt.symm],
-      suffices : is_open {x : ℚ_[p] | ∥x∥ < ↑(valuation.value_monoid.to_Γ₀ (padic.bundled_valuation p) r)},
-      { convert this, ext x, convert iff.rfl,
-        have tmp := (valuation.canonical_valuation.to_Γ₀ (padic.bundled_valuation p)),
-        rw show valuation.value_monoid.to_Γ₀ (padic.bundled_valuation p)
-         ((valuation.canonical_valuation (padic.bundled_valuation p)) x) = padic.bundled_valuation p x,
-        { sorry },
-        refl, },
+    { rw valuation.is_continuous_iff,
+      rintro y,
+      change is_open {x : ℚ_[p] | ∥x∥ < ∥y∥ },
       rw ← ball_0_eq,
       exact metric.is_open_ball },
     { intro x, change ℤ_[p] at x, exact x.property },
@@ -267,33 +326,6 @@ subtype.val_injective $ Spv.ext _ _ h
 lemma spa.ext_iff {A : Huber_pair} {v₁ v₂ : spa A} :
   v₁ = v₂ ↔ ((Spv.out ↑v₁).is_equiv (Spv.out (↑v₂ : Spv A))) :=
 by rw [subtype.coe_ext, Spv.ext_iff]
-
-namespace valuation
-variables {K : Type*} [discrete_field K]
-variables {Γ₀ : Type*} [linear_ordered_comm_group_with_zero Γ₀]
-variables {Γ'₀ : Type*} [linear_ordered_comm_group_with_zero Γ'₀]
-variables (v : valuation K Γ₀) (v' : valuation K Γ'₀)
-
-lemma is_equiv_of_val_le_one (h : ∀ {x:K}, v x ≤ 1 ↔ v' x ≤ 1) : v.is_equiv v' :=
-begin
-  intros x y,
-  by_cases hy : y = 0, { simp [hy, zero_iff], },
-  rw show y = 1 * y, by rw one_mul,
-  rw show x = (x * y⁻¹) * y, { rw [mul_assoc, inv_mul_cancel hy, mul_one], },
-  iterate 2 {rw [v.map_mul _ y, v'.map_mul _ y]},
-  rw [v.map_one, v'.map_one],
-  split; intro H,
-  { apply actual_ordered_comm_monoid.mul_le_mul_right',
-    replace hy := v.ne_zero_iff.mpr hy,
-    replace H := linear_ordered_structure.le_of_le_mul_right hy H,
-    rwa h at H, },
-  { apply actual_ordered_comm_monoid.mul_le_mul_right',
-    replace hy := v'.ne_zero_iff.mpr hy,
-    replace H := linear_ordered_structure.le_of_le_mul_right hy H,
-    rwa h, },
-end
-
-end valuation
 
 namespace linear_ordered_comm_group_with_zero
 variables {Γ₀ : Type*} [linear_ordered_comm_group_with_zero Γ₀]
