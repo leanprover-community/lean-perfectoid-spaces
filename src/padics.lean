@@ -230,6 +230,7 @@ def padic.bundled_valuation : valuation ℚ_[p] nnreal :=
   end }
 
 namespace valuation
+variables {R : Type*} [discrete_field R] [topological_space R] [topological_ring R]
 variables {K : Type*} [discrete_field K]
 variables {L : Type*} [discrete_field L] [topological_space L] [topological_ring L]
 variables {Γ₀ : Type*} [linear_ordered_comm_group_with_zero Γ₀]
@@ -292,6 +293,39 @@ begin
   { intros h x,
     rcases canonical_valuation.surjective v x with ⟨x, rfl⟩,
     simpa only [(value_monoid.to_Γ₀_strict_mono v).lt_iff_lt.symm, help] using h x, }
+end
+
+def is_trivial (v : valuation R Γ₀) : Prop :=
+∀ r:R, v r = 0 ∨ v r = 1
+
+lemma trivial_is_trivial (I : ideal R) [hI : I.is_prime] :
+  (trivial I : valuation R Γ₀).is_trivial :=
+begin
+  intro r,
+  classical,
+  by_cases hr : r ∈ I; [left, right],
+  all_goals
+  { show ite _ _ _ = _,
+    simp [hr] }
+end
+
+lemma is_trivial_is_continuous_iff_discrete (v : valuation L Γ₀) (hv : v.is_trivial) :
+  v.is_continuous ↔ discrete_topology L :=
+begin
+  split; intro h,
+  { rw valuation.is_continuous_iff at h,
+    suffices : is_open ({(0:L)} : set L), by sorry,
+    specialize h 1,
+    rw v.map_one at h,
+    suffices : {y : L | v y < 1} = {0}, by rwa this at h,
+    ext x,
+    rw [set.mem_singleton_iff, ← v.zero_iff],
+    show v x < 1 ↔ v x = 0,
+    split; intro hx,
+    { cases hv x with H H, {assumption},
+      { exfalso, rw H at hx, exact lt_irrefl _ hx }, },
+    { rw hx, apply lt_of_le_of_ne linear_ordered_structure.zero_le zero_ne_one } },
+  { resetI, intro g, exact is_open_discrete _ }
 end
 
 end valuation
