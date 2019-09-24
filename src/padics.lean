@@ -4,7 +4,7 @@ import for_mathlib.field_power
 import for_mathlib.ideal_operations
 import for_mathlib.padics
 
-import Huber_pair
+import adic_space
 
 /-!
 # The p-adics form a Huber ring
