@@ -234,7 +234,19 @@ def padic.Spa_inhabited : inhabited (Spa $ padic.Huber_pair p) :=
   begin
     refine mk_mem_spa.mpr _,
     split,
-    { sorry },
+    { rintro r,
+      change is_open {x : ℚ_[p] | _ },
+      have := valuation.value_monoid.to_Γ₀_strict_mono (padic.bundled_valuation p),
+      simp only [this.lt_iff_lt.symm],
+      suffices : is_open {x : ℚ_[p] | ∥x∥ < ↑(valuation.value_monoid.to_Γ₀ (padic.bundled_valuation p) r)},
+      { convert this, ext x, convert iff.rfl,
+        have tmp := (valuation.canonical_valuation.to_Γ₀ (padic.bundled_valuation p)),
+        rw show valuation.value_monoid.to_Γ₀ (padic.bundled_valuation p)
+         ((valuation.canonical_valuation (padic.bundled_valuation p)) x) = padic.bundled_valuation p x,
+        { sorry },
+        refl, },
+      rw ← ball_0_eq,
+      exact metric.is_open_ball },
     { intro x, change ℤ_[p] at x, exact x.property },
   end⟩ }
 
