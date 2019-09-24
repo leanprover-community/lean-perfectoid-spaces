@@ -323,7 +323,8 @@ lemma is_trivial_is_continuous_iff_discrete (v : valuation L Γ₀) (hv : v.is_t
 begin
   split; intro h,
   { rw valuation.is_continuous_iff at h,
-    rw @discrete_iff_singleton_zero_open L _,
+    suffices : is_open ({(0:L)} : set L),
+      from topological_add_group.discrete_of_open_zero.mpr this,
     specialize h 1,
     rw v.map_one at h,
     suffices : {y : L | v y < 1} = {0}, by rwa this at h,
