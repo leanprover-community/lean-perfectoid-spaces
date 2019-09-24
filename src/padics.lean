@@ -174,7 +174,7 @@ instance padic.Huber_ring : Huber_ring ℚ_[p] :=
     top := is_adic p,
     .. padic_int.algebra }⟩⟩ }
 
-def padic.Huber_pair : Huber_pair :=
+@[reducible] def padic.Huber_pair : Huber_pair :=
 { plus := ℤ_[p],
   carrier := ℚ_[p],
   intel :=
@@ -203,3 +203,49 @@ def padic.Huber_pair : Huber_pair :=
     end
     .. coe_open_embedding,
     .. is_integrally_closed p } }
+.
+
+@[simp] lemma nnreal.coe_max (x y : nnreal) : ((max x y : nnreal) : ℝ) = max (x : ℝ) (y : ℝ) :=
+by { delta max, split_ifs; refl }
+
+def padic.bundled_valuation : valuation ℚ_[p] nnreal :=
+{ to_fun := λ x, ⟨∥x∥, norm_nonneg _⟩,
+  map_zero' := subtype.val_injective norm_zero,
+  map_one' := subtype.val_injective norm_one,
+  map_mul' := λ x y, subtype.val_injective $ norm_mul _ _,
+  map_add' := λ x y,
+  begin
+    apply le_trans (padic_norm_e.nonarchimedean x y),
+    rw max_le_iff,
+    simp [nnreal.coe_max],
+    split,
+    { apply le_trans (le_max_left ∥x∥ ∥y∥),
+      apply le_of_eq, symmetry, convert nnreal.coe_max _ _,
+      delta classical.decidable_linear_order nnreal.decidable_linear_order real.decidable_linear_order,
+      congr, },
+    { apply le_trans (le_max_right ∥x∥ ∥y∥),
+      apply le_of_eq, symmetry, convert nnreal.coe_max _ _,
+      delta classical.decidable_linear_order nnreal.decidable_linear_order real.decidable_linear_order,
+      congr, },
+  end }
+
+def padic.Spa_inhabited : inhabited (Spa $ padic.Huber_pair p) :=
+{ default := ⟨Spv.mk (padic.bundled_valuation p),
+  begin
+    refine mk_mem_spa.mpr _,
+    split,
+    { sorry },
+    { intro x, change ℤ_[p] at x, exact x.property },
+  end⟩ }
+
+def padic.Spa_unique : unique (Spa $ padic.Huber_pair p) :=
+{ uniq :=
+  begin
+    rintro ⟨⟨rel, Γ₀, _inst, v, hv⟩, v_cont, v_le⟩,
+    resetI,
+    rw [subtype.ext, subtype.ext],
+    funext x y, change ℚ_[p] at x, change ℚ_[p] at y, apply propext,
+    change rel x y ↔ ∥x∥ ≤ ∥y∥, rw [← hv],
+    sorry,
+  end,
+  .. padic.Spa_inhabited p }
