@@ -22,14 +22,45 @@ lemma monic.as_sum {R : Type*} [comm_ring R] {f : polynomial R} (hf : f.monic) :
 begin
   rw polynomial.ext, intro n,
   rw [coeff_add, coeff_X_pow],
-  sorry
-  -- split_ifs with h,
-  -- { subst h, convert (add_zero _).symm,
-  --   { symmetry, exact hf },
-  --   { sorry } },
+  rw show coeff (finset.sum (finset.range (nat_degree f)) (λ (i : ℕ), C (coeff f i) * X ^ i)) n =
+    (finset.sum (finset.range (nat_degree f)) (λ (i : ℕ), coeff (C (coeff f i) * X ^ i) n)),
+  { symmetry,
+    let tmp : _ := _,
+    refine @finset.sum_hom _ _ _ _ _ _ _ (λ f, coeff f n) tmp,
+    exact { map_add := λ f g, coeff_add f g n, map_zero := rfl }, },
+  split_ifs with h,
+  { subst h, convert (add_zero _).symm, { symmetry, exact hf },
+    apply finset.sum_eq_zero,
+    intros i hi, rw finset.mem_range at hi, replace hi := ne_of_gt hi,
+    simp [hi], },
+  { rw zero_add,
+    by_cases hn : n < nat_degree f,
+    { rw finset.sum_eq_single n, { simp, },
+      { intros i hi hin, simp [hin.symm], },
+      { rw finset.mem_range, intro H, contradiction, } },
+    { push_neg at hn, replace hn := lt_of_le_of_ne hn h.symm,
+      rw [finset.sum_eq_zero, coeff_eq_zero_of_degree_lt],
+      { refine lt_of_le_of_lt degree_le_nat_degree _, rwa with_bot.coe_lt_coe },
+      { intros i hi, rw finset.mem_range at hi, have : n ≠ i, by linarith, simp [this], } } }
 end
 
 end polynomial
+
+lemma finset.fold_max_lt {α : Type*} {β : Type*} [decidable_eq α] [decidable_linear_order β]
+  (s : finset α) (f : α → β) (b x : β) :
+  s.fold max b f < x ↔ (b < x ∧ ∀ a∈s, f a < x) :=
+begin
+  apply finset.induction_on s, { simp, },
+  clear s, intros a s ha IH,
+  rw [finset.fold_insert ha, max_lt_iff, IH, ← and_assoc, and_comm (f a < x), and_assoc],
+  apply and_congr iff.rfl,
+  split,
+  { rintro ⟨h₁, h₂⟩, intros b hb, rw finset.mem_insert at hb,
+    rcases hb with rfl|hb; solve_by_elim },
+  { intro h, split,
+    { exact h a (finset.mem_insert_self _ _), },
+    { intros b hb, apply h b, rw finset.mem_insert, right, exact hb } }
+end
 
 open local_ring
 
@@ -94,23 +125,17 @@ lemma is_integrally_closed : is_integrally_closed ℤ_[p] ℚ_[p] :=
       exact lt_trans zero_lt_one H, },
     { apply ne_of_gt,
       apply lt_of_le_of_lt (padic.norm_sum _ _),
-      generalize : f.nat_degree = n,
-      induction n with n ih,
-      { rw [finset.range_zero, finset.fold_empty, pow_zero, norm_one],
-        exact zero_lt_one, },
-      { rw [finset.range_succ, finset.fold_insert finset.not_mem_range_self],
-        -- rw [eval₂_mul, eval₂_C, eval₂_pow, eval₂_X],
-    --     suffices : max (∥eval₂ (algebra_map ℚ_[p]) x (C (coeff f n) * X ^ n)∥)
-    --   (finset.fold max 0 (λ (a : ℕ), ∥eval₂ (algebra_map ℚ_[p]) x (C (coeff f a) * X ^ a)∥)
-    --      (finset.range n)) <
-    -- ∥x ^ nat.succ n∥,
-    --     by simpa,
-        squeeze_simp,
-        split,
-        { sorry },
-        { -- use lt_trans and ih
-          sorry } }
-      }
+      rw finset.fold_max_lt,
+      split,
+      { rw [← fpow_of_nat, norm_fpow], apply fpow_pos_of_pos, exact lt_trans zero_lt_one H },
+      { intros i hi,
+        suffices : ∥algebra_map ℚ_[p] (coeff f i)∥ * ∥x∥ ^ i < ∥x∥ ^ nat_degree f,
+        by simpa [eval₂_pow],
+        refine lt_of_le_of_lt (mul_le_of_le_one_left _ _ : _ ≤ ∥x∥ ^ i) _,
+        { rw [← fpow_of_nat], apply fpow_nonneg_of_nonneg, exact norm_nonneg _ },
+        { exact (coeff f i).property },
+        { rw [← fpow_of_nat, ← fpow_of_nat, (fpow_strict_mono H).lt_iff_lt],
+          rw finset.mem_range at hi, exact_mod_cast hi, } } }
   end }
 
 end
