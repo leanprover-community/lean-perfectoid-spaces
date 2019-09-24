@@ -238,14 +238,99 @@ def padic.Spa_inhabited : inhabited (Spa $ padic.Huber_pair p) :=
     { intro x, change ℤ_[p] at x, exact x.property },
   end⟩ }
 
+@[extensionality]
+lemma Spv.ext {R : Type*} [comm_ring R] (v₁ v₂ : Spv R) (h : (Spv.out v₁).is_equiv (Spv.out v₂)) :
+  v₁ = v₂ :=
+by simpa only [Spv.mk_out] using Spv.sound h
+
+lemma Spv.ext_iff {R : Type*} [comm_ring R] {v₁ v₂ : Spv R} :
+  v₁ = v₂ ↔ ((Spv.out v₁).is_equiv (Spv.out v₂)) :=
+⟨λ h, Spv.is_equiv_of_eq_mk (by simpa only [Spv.mk_out] using h), Spv.ext _ _⟩
+
+@[extensionality]
+lemma spa.ext {A : Huber_pair} (v₁ v₂ : spa A) (h : (Spv.out ↑v₁).is_equiv (Spv.out (↑v₂ : Spv A))) :
+  v₁ = v₂ :=
+subtype.val_injective $ Spv.ext _ _ h
+
+lemma spa.ext_iff {A : Huber_pair} {v₁ v₂ : spa A} :
+  v₁ = v₂ ↔ ((Spv.out ↑v₁).is_equiv (Spv.out (↑v₂ : Spv A))) :=
+by rw [subtype.coe_ext, Spv.ext_iff]
+
+namespace valuation
+variables {K : Type*} [discrete_field K]
+variables {Γ₀ : Type*} [linear_ordered_comm_group_with_zero Γ₀]
+variables {Γ'₀ : Type*} [linear_ordered_comm_group_with_zero Γ'₀]
+variables (v : valuation K Γ₀) (v' : valuation K Γ'₀)
+
+lemma is_equiv_of_val_le_one (h : ∀ {x:K}, v x ≤ 1 ↔ v' x ≤ 1) : v.is_equiv v' :=
+begin
+  intros x y,
+  by_cases hy : y = 0, { simp [hy, zero_iff], },
+  rw show y = 1 * y, by rw one_mul,
+  rw show x = (x * y⁻¹) * y, { rw [mul_assoc, inv_mul_cancel hy, mul_one], },
+  iterate 2 {rw [v.map_mul _ y, v'.map_mul _ y]},
+  rw [v.map_one, v'.map_one],
+  split; intro H,
+  { apply actual_ordered_comm_monoid.mul_le_mul_right',
+    replace hy := v.ne_zero_iff.mpr hy,
+    replace H := linear_ordered_structure.le_of_le_mul_right hy H,
+    rwa h at H, },
+  { apply actual_ordered_comm_monoid.mul_le_mul_right',
+    replace hy := v'.ne_zero_iff.mpr hy,
+    replace H := linear_ordered_structure.le_of_le_mul_right hy H,
+    rwa h, },
+end
+
+end valuation
+
+namespace linear_ordered_comm_group_with_zero
+variables {Γ₀ : Type*} [linear_ordered_comm_group_with_zero Γ₀]
+
+lemma inv_lt_inv {x y : Γ₀} (hx : x ≠ 0) (hy : y ≠ 0) :
+  y⁻¹ < x⁻¹ ↔ x < y :=
+begin
+  suffices : ∀ {x y : Γ₀}, x ≠ 0 → y ≠ 0 → x < y → y⁻¹ < x⁻¹,
+  { refine ⟨_, this hx hy⟩, intro h, rw [← inv_inv'' x, ← inv_inv'' y],
+    apply this _ _ h; solve_by_elim [inv_ne_zero'], },
+  clear hx hy x y,
+  intros x y hx hy h,
+  have hx' : x⁻¹ ≠ 0 := by solve_by_elim [inv_ne_zero'],
+  have hy' : y⁻¹ ≠ 0 := by solve_by_elim [inv_ne_zero'],
+  replace h := linear_ordered_structure.mul_lt_right' _ h hx',
+  replace h := linear_ordered_structure.mul_lt_right' _ h hy',
+  rw [mul_inv_cancel' _ hx, one_mul] at h,
+  erw [mul_comm y x⁻¹, mul_assoc, mul_inv_cancel' _ hy, mul_one] at h,
+  exact h
+end
+
+end linear_ordered_comm_group_with_zero
+
 def padic.Spa_unique : unique (Spa $ padic.Huber_pair p) :=
 { uniq :=
   begin
-    rintro ⟨⟨rel, Γ₀, _inst, v, hv⟩, v_cont, v_le⟩,
-    resetI,
-    rw [subtype.ext, subtype.ext],
-    funext x y, change ℚ_[p] at x, change ℚ_[p] at y, apply propext,
-    change rel x y ↔ ∥x∥ ≤ ∥y∥, rw [← hv],
-    sorry,
+    intros v,
+    ext,
+    refine valuation.is_equiv.trans _ (Spv.out_mk _).symm,
+    apply valuation.is_equiv_of_val_le_one,
+    intros x, change ℚ_[p] at x,
+    split; intro h,
+    { classical,
+      by_cases hx : ∃ y : ℤ_[p], x = y,
+      { rcases hx with ⟨x, rfl⟩, exact x.property },
+      { push_neg at hx,
+        contrapose! h,
+        obtain ⟨y, hy⟩ : ∃ y : ℤ_[p], x⁻¹ = y,
+        { refine ⟨⟨x⁻¹, _⟩, rfl⟩, rw norm_inv, apply inv_le_one, apply le_of_lt, exact h },
+        refine (linear_ordered_comm_group_with_zero.inv_lt_inv _ _).mp _,
+        { exact one_ne_zero },
+        { rw valuation.ne_zero_iff, contrapose! hx, use [0, hx] },
+        { rw [inv_one', ← valuation.map_inv, hy],
+          refine lt_of_le_of_ne (v.property.right y) _,
+          -- the valuation can't map everything to 1
+          -- because of continuity
+          sorry
+           },
+         } },
+    { exact v.property.right ⟨x, h⟩, }
   end,
   .. padic.Spa_inhabited p }
