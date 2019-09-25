@@ -439,25 +439,19 @@ end
 instance padic_int.char_zero : char_zero ℤ_[p] :=
 { cast_inj := λ m n, by { rw subtype.coe_ext, norm_cast, exact char_zero.cast_inj _, } }
 
-lemma padic_int.not_discrete : ¬ discrete_topology ℤ_[p] :=
-begin
-  rw @topological_add_group.discrete_iff_open_zero ℤ_[p] _,
-  assume h,
-  have adic := padic_int.is_adic p,
-  rw is_ideal_adic_iff at adic,
-  cases adic.2 _ (mem_nhds_sets h (set.mem_singleton _)) with n hn,
-  change (↑(nonunits_ideal ℤ_[p] ^ n) : set ℤ_[p]) ⊆ {0} at hn,
-  erw padic_int.power_nonunits_ideal_eq_norm_le_pow at hn,
-  change ∀ x:ℤ_[p], _ → _ at hn,
-  specialize hn (p^n) _,
-  { rw set.mem_singleton_iff at hn,
-    apply nat.prime.ne_zero ‹_›,
-    exact_mod_cast pow_eq_zero hn, },
-  { change ∥(p^n : ℤ_[p])∥ ≤ _, simp, }
-end
-
 lemma padic.not_discrete : ¬ discrete_topology ℚ_[p] :=
 nondiscrete_normed_field.nondiscrete
+
+lemma padic_int.not_discrete : ¬ discrete_topology ℤ_[p] :=
+begin
+  assume h,
+  replace h := topological_add_group.discrete_iff_open_zero.mp h,
+  apply padic.not_discrete p,
+  refine topological_add_group.discrete_iff_open_zero.mpr _,
+  have := coe_open_embedding.is_open_map _ h,
+  rw image_singleton at this,
+  exact_mod_cast this
+end
 
 def padic.Spa_inhabited : inhabited (Spa $ padic.Huber_pair p) :=
 { default := ⟨Spv.mk (padic.bundled_valuation p),
