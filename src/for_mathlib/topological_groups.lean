@@ -504,6 +504,18 @@ begin
   exact xU (UW h)
 end
 
+lemma topological_add_group.discrete_iff_open_zero {G : Type*} [add_group G] [topological_space G]
+  [topological_add_group G] : discrete_topology G ↔ is_open ({0} : set G) :=
+begin
+  rw discrete_iff_open_singletons,
+  split ; intro h,
+  { exact h 0 },
+  { intro x,
+    convert (continuous_add_right (-x) : continuous (λ y, y - x)) _ h,
+    ext z,
+    erw [mem_singleton_iff, mem_preimage, mem_singleton_iff, sub_eq_zero_iff_eq] },
+end
+
 -- Wedhorn Definition 5.31 page 38
 definition is_complete_hausdorff : Prop := is_complete (univ : set G) ∧ is_hausdorff G
 end

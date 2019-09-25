@@ -13,6 +13,8 @@ noncomputable theory
 
 local attribute [instance] valued.subgroups_basis valued.uniform_space
 
+local postfix `⁺` : 66 := λ A : Huber_pair, A.plus
+
 variables {A : Huber_pair}
 {Γ₀ : Type*} [linear_ordered_comm_group_with_zero Γ₀] {v : valuation A Γ₀}
 {rd : spa.rational_open_data A} (hv : valuation.is_continuous v)
@@ -97,7 +99,7 @@ lemma v_le_one_is_power_bounded {R : Type*} [comm_ring R] (v : valuation R Γ₀
   is_power_bounded_subset {x : valuation_field v | valuation_field.canonical_valuation v x ≤ 1} :=
 begin
   let v' := valuation_field.canonical_valuation v,
-  refine is_bounded_subset _ _ _ (v_le_one_is_bounded v),
+  refine is_bounded.subset _ (v_le_one_is_bounded v),
   intros x hx,
   induction hx with a ha a b ha' hb' ha hb,
   { assumption },
@@ -134,9 +136,9 @@ theorem to_valuation_field_commutes (r1 r2 : spa.rational_open_data A) (h : r1 �
 to_valuation_field hs1 = (to_valuation_field hs2) ∘ (spa.rational_open_data.localization_map h) :=
 begin
   refine localization.funext
-    (to_valuation_field hs1 : localization A.R (powers r1.s) → valuation_field v)
+    (to_valuation_field hs1 : localization A (powers r1.s) → valuation_field v)
     ((to_valuation_field hs2) ∘ (spa.rational_open_data.localization_map h) :
-      localization A.R (powers r1.s) → valuation_field v) _,
+      localization A (powers r1.s) → valuation_field v) _,
   intro r,
   change Huber_ring.away.lift (r1.T) (r1.s) _ (localization.of r) =
     Huber_ring.away.lift (r2.T) (r2.s) _ (spa.rational_open_data.localization_map h (localization.of r)),

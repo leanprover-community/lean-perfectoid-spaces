@@ -17,23 +17,23 @@ local attribute [instance] set.pointwise_mul_action
 
 open set function Spv valuation
 
+local postfix `⁺` : 66 := λ A : Huber_pair, A.plus
+
 variables {Γ₀ : Type*} [linear_ordered_comm_group_with_zero Γ₀]
 
 -- Wedhorn def 7.23.
 definition spa (A : Huber_pair) : set (Spv A) :=
-{v | v.is_continuous ∧ ∀ r ∈ A⁺, v r ≤ 1}
+{v | v.is_continuous ∧ ∀ r : A⁺, v (algebra_map A r) ≤ 1}
 
 lemma mk_mem_spa {A : Huber_pair} {v : valuation A Γ₀} :
-  Spv.mk v ∈ spa A ↔ v.is_continuous ∧ ∀ r ∈ A⁺, v r ≤ 1 :=
+  Spv.mk v ∈ spa A ↔ v.is_continuous ∧ ∀ r : A⁺, v (algebra_map A r) ≤ 1 :=
 begin
   apply and_congr,
   { apply is_equiv.is_continuous_iff,
     apply out_mk, },
   { apply forall_congr,
     intro r,
-    apply forall_congr,
-    intro hr,
-    convert (out_mk v) r 1;
+    convert (out_mk v) (algebra_map A r) 1;
     rw [valuation.map_one] }
 end
 
@@ -208,7 +208,7 @@ theorem localization.power_bounded (r : rational_open_data A) :
   is_power_bounded_subset (localization.power_bounded_data r) :=
 begin
   --haveI := Huber_ring.away.is_basis r.T r.s r.Hopen,
-  apply bounded.subset,
+  apply is_bounded.subset,
   work_on_goal 0 { apply add_group.subset_closure },
   show is_bounded (ring.closure (localization.power_bounded_data r)),
   intros U hU,

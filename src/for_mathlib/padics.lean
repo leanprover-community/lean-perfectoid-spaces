@@ -40,7 +40,56 @@ end
 
 end padic_seq
 
+@[simp] lemma real.supr_empty {α : Type*} (f : α → ℝ) :
+  (⨆ (a ∈ (∅:set α)), f a) = 0 :=
+begin
+  suffices : lattice.Sup {x : ℝ | ∃ (y : α), 0 = x} = 0,
+  by simpa [lattice.supr, set.range, real.Sup_empty],
+  by_cases hα : nonempty α,
+  { rcases hα with a,
+    apply le_antisymm,
+    { apply (real.Sup_le _ _ _).mpr,
+      { rintros r ⟨_, rfl⟩, refl },
+      { use [0, ⟨a, rfl⟩], },
+      { use 0, rintros r ⟨_, rfl⟩, refl } },
+    { apply real.le_Sup,
+      { use 0, rintros r ⟨_, rfl⟩, refl },
+      { use ⟨a, rfl⟩ } } },
+  { convert real.Sup_empty,
+    rw set.eq_empty_iff_forall_not_mem,
+    rintros r ⟨a, rfl⟩, exact hα ⟨a⟩ }
+end
+
 namespace padic
+
+-- generalize to nonarchimedean fields
+lemma norm_sum {α : Type*} (s : finset α) (f : α → ℚ_[p]) :
+  ∥s.sum f∥ ≤ s.fold max 0 (λ a, ∥f a∥) :=
+begin
+  apply finset.induction_on s, { simp, },
+  clear s,
+  intros a s ha IH,
+  rw [finset.sum_insert ha, finset.fold_insert ha],
+  refine le_trans (padic_norm_e.nonarchimedean _ _) (max_le _ _),
+  { apply le_max_left, },
+  { refine le_trans IH (le_max_right _ _), }
+end
+.
+
+-- -- generalize to nonarchimedean fields
+-- lemma norm_sum {α : Type*} (s : finset α) (f : α → ℚ_[p]) :
+--   ∥s.sum f∥ ≤ ⨆ a∈s, ∥f a∥ :=
+-- begin
+--   apply finset.induction_on s,
+--   { erw real.supr_empty, simp },
+--   clear s,
+--   intros a s ha IH,
+--   rw [finset.sum_insert ha],
+--   have := @lattice.supr_insert,
+--   refine le_trans (padic_norm_e.nonarchimedean _ _) (max_le _ _),
+--   { apply le_max_left, },
+--   { refine le_trans IH (le_max_right _ _), }
+-- end
 
 @[simp] lemma norm_p : ∥(p : ℚ_[p])∥ = p⁻¹ :=
 begin
@@ -286,4 +335,8 @@ lemma coe_open_embedding : open_embedding (coe : ℤ_[p] → ℚ_[p]) :=
       rw ← ball_0_eq,
       exact metric.is_open_ball
     end }
+
+lemma continuous_coe : continuous (coe : ℤ_[p] → ℚ_[p]) :=
+ coe_open_embedding.to_embedding.continuous
+
 end padic_int

@@ -214,6 +214,9 @@ begin
     calc map f (nhds x) ≤ pure (f x) : (tendsto_pure f (nhds x) (f x)).2 key
         ... ≤ nhds (f x) : pure_le_nhds _ }
 end
+
+lemma discrete_iff_open_singletons : discrete_topology α ↔ ∀ x, is_open ({x} : set α) :=
+⟨by introsI ; exact is_open_discrete _, λ h, ⟨eq_bot_of_singletons_open h⟩⟩
 end
 
 -- tools for proving that a product of top rings is a top ring
