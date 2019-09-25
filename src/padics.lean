@@ -3,6 +3,7 @@ import data.padics
 import for_mathlib.field_power
 import for_mathlib.ideal_operations
 import for_mathlib.padics
+import for_mathlib.topology
 
 import adic_space
 
@@ -77,7 +78,7 @@ begin
   simpa [lt_irrefl, hε] using this
 end
 end
-#exit
+
 namespace polynomial
 
 lemma monic.as_sum {R : Type*} [comm_ring R] {f : polynomial R} (hf : f.monic) :
@@ -627,7 +628,7 @@ def padic.Spa_unique : unique (Spa $ padic.Huber_pair p) :=
           by_cases hz : z = 0, { simp [hz], },
           rcases padic.exists_repr p z hz with ⟨v, n, rfl⟩, clear hz,
           erw [← hy, valuation.map_inv, valuation.map_mul, spa.map_unit, one_mul, ← inv_one',
-            inv_inj'] at H,
+            group_with_zero.inv_inj] at H,
           -- the valuation can't map everything to 1
           sorry
            },
