@@ -6,9 +6,9 @@
     Author: Ramon Fernandez Mir
 -/
 
-import for_mathlib.sheaves.opens
 import topology.basic
-import for_mathlib.sheaves.presheaf
+import sheaves.opens
+import sheaves.presheaf
 
 universe u
 

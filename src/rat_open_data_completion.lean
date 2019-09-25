@@ -1,6 +1,6 @@
 -- rational open data completion stuff.
 
--- In this file we show that r_o_d_completion r := A<T/s>
+-- In this file we show that rat_open_data_completion r := A<T/s>
 -- satisfies the property that if v in D(T1,s1) ⊂ D(T2,s2) then
 -- the maps A<Ti/si> - > K_v-hat commute with the restriction map.
 
@@ -9,14 +9,14 @@
 -- we need this for the valuations on the stalks.
 
 import valuation.localization_Huber
-import for_mathlib.sheaves.stalk_of_rings -- for defining valuations on stalks
+import sheaves.stalk_of_rings -- for defining valuations on stalks
 --import valuation.field -- where KB just dumped valuation_on_completion
 
 variable {A : Huber_pair}
 
 open topological_space valuation Spv spa uniform_space
 
-namespace spa.r_o_d_completion
+namespace spa.rat_open_data_completion
 
 section scary_uniform_space_instance
 
@@ -32,7 +32,7 @@ topological_add_group_is_uniform
 
 noncomputable def to_complete_valuation_field {r : rational_open_data A} {v : spa A}
   (hv : v ∈ r.rational_open) :
-  r_o_d_completion r → completion (valuation_field (Spv.out v.1)) :=
+  rat_open_data_completion r → completion (valuation_field (Spv.out v.1)) :=
 completion.map (Huber_pair.rational_open_data.to_valuation_field hv)
 
 example {r : rational_open_data A} {v : spa A} (hv : v ∈ r.rational_open) :
@@ -51,10 +51,10 @@ completion.is_ring_hom_map (Huber_pair.rational_open_data.to_valuation_field_cts
 theorem to_valuation_field_commutes {r1 r2 : spa.rational_open_data A} {v : spa A}
   (hv1 : v ∈ r1.rational_open) (hv2 : v ∈ r2.rational_open) (h : r1 ≤ r2) :
 (to_complete_valuation_field hv1) = (to_complete_valuation_field hv2) ∘
-  (r_o_d_completion.restriction h) :=
+  (rat_open_data_completion.restriction h) :=
 begin
   delta to_complete_valuation_field,
-  delta r_o_d_completion.restriction,
+  delta rat_open_data_completion.restriction,
   have uc1 : uniform_continuous (rational_open_data.localization_map h),
     from localization_map_is_uniform_continuous h,
   have uc2 : uniform_continuous (Huber_pair.rational_open_data.to_valuation_field hv2),
@@ -64,7 +64,7 @@ end
 
 end scary_uniform_space_instance
 
-end spa.r_o_d_completion
+end spa.rat_open_data_completion
 
 -- Now we need to show that for any O_X(U) with v in U we have a map
 -- to K_v-hat. We do this under the additional assumption that D(T,s) is a basis.
@@ -106,7 +106,7 @@ local attribute [instance] uniform_space'
 /-- The map from F(U) to K_v for v ∈ U -/
 noncomputable def to_valuation_field_completion {v : spa A} {U : opens (spa A)} (hv : v ∈ U)
   (f : spa.presheaf_value U) : completion (valuation_field (Spv.out v.1)) :=
-spa.r_o_d_completion.to_complete_valuation_field (spa.mem_rational_open_subset_nhd hv) $
+spa.rat_open_data_completion.to_complete_valuation_field (spa.mem_rational_open_subset_nhd hv) $
   f.1 $ spa.rational_open_subset_nhd hv
 
 instance {v : spa A}
@@ -114,11 +114,11 @@ instance {v : spa A}
   is_ring_hom (to_valuation_field_completion hv) := begin
   delta to_valuation_field_completion,
   let F := (λ (f : presheaf_value U),
-       spa.r_o_d_completion.to_complete_valuation_field (spa.mem_rational_open_subset_nhd hv)
+       spa.rat_open_data_completion.to_complete_valuation_field (spa.mem_rational_open_subset_nhd hv)
        (f.val (spa.rational_open_subset_nhd hv))),
   show is_ring_hom F,
   have H : F =
-    ((spa.r_o_d_completion.to_complete_valuation_field (spa.mem_rational_open_subset_nhd hv))
+    ((spa.rat_open_data_completion.to_complete_valuation_field (spa.mem_rational_open_subset_nhd hv))
     ∘ (λ (f : presheaf_value U), (f.val (spa.rational_open_subset_nhd hv)))),
     refl,
   rw H,
@@ -130,19 +130,19 @@ end scary_uniform_space_instance
 -- I need now to prove that if V ⊆ U then to_valuation_field_completion commutes with res
 
 -- before we even start with this terrifying noncomputable spa.rational_open_subset_nhd
--- let's check that spa.r_o_d_completion.to_complete_valuation_field commutes with ≤
+-- let's check that spa.rat_open_data_completion.to_complete_valuation_field commutes with ≤
 lemma to_valuation_field_completion_well_defined_aux₁ {v : spa A} {U : opens (spa A)} (hv : v ∈ U)
   (f : spa.presheaf_value U) {r1 r2 : rational_open_data_subsets U}
   (h1 : v ∈ r1.1.rational_open) (h2 : v ∈ r2.1.rational_open) :
-spa.r_o_d_completion.to_complete_valuation_field h1 (f.1 r1) =
-  spa.r_o_d_completion.to_complete_valuation_field (begin
+spa.rat_open_data_completion.to_complete_valuation_field h1 (f.1 r1) =
+  spa.rat_open_data_completion.to_complete_valuation_field (begin
     show v ∈ (rational_open_data.inter r1.1 r2.1).rational_open,
     rw rational_open_data.rational_open_data_inter,
     exact ⟨h1, h2⟩
   end)
   (f.1 (rational_open_data_subsets_inter r1 r2)) :=
 begin
-  rw spa.r_o_d_completion.to_valuation_field_commutes h1 _
+  rw spa.rat_open_data_completion.to_valuation_field_commutes h1 _
     (rational_open_data.rational_open_data_le_inter_left r1.1 r2.1),
     swap,
     rw rational_open_data.rational_open_data_inter,
@@ -157,15 +157,15 @@ end
 lemma to_valuation_field_completion_well_defined_aux₂ {v : spa A} {U : opens (spa A)} (hv : v ∈ U)
   (f : spa.presheaf_value U) {r1 r2 : rational_open_data_subsets U}
   (h1 : v ∈ r1.1.rational_open) (h2 : v ∈ r2.1.rational_open) :
-spa.r_o_d_completion.to_complete_valuation_field h2 (f.1 r2) =
-  spa.r_o_d_completion.to_complete_valuation_field (begin
+spa.rat_open_data_completion.to_complete_valuation_field h2 (f.1 r2) =
+  spa.rat_open_data_completion.to_complete_valuation_field (begin
     show v ∈ (rational_open_data.inter r1.1 r2.1).rational_open,
     rw rational_open_data.rational_open_data_inter,
     exact ⟨h1, h2⟩
   end)
   (f.1 (rational_open_data_subsets_inter r1 r2)) :=
 begin
-  rw spa.r_o_d_completion.to_valuation_field_commutes h2 _
+  rw spa.rat_open_data_completion.to_valuation_field_commutes h2 _
     (rational_open_data.rational_open_data_le_inter_right r1.1 r2.1),
     swap,
     rw rational_open_data.rational_open_data_inter,
@@ -180,8 +180,8 @@ end
 lemma to_valuation_field_completion_well_defined_aux₃ {v : spa A} {U : opens (spa A)} (hv : v ∈ U)
   (f : spa.presheaf_value U) {r1 r2 : rational_open_data_subsets U}
   (h1 : v ∈ r1.1.rational_open) (h2 : v ∈ r2.1.rational_open) :
-  spa.r_o_d_completion.to_complete_valuation_field h1 (f.1 r1) =
-  spa.r_o_d_completion.to_complete_valuation_field h2 (f.1 r2) :=
+  spa.rat_open_data_completion.to_complete_valuation_field h1 (f.1 r1) =
+  spa.rat_open_data_completion.to_complete_valuation_field h2 (f.1 r2) :=
 begin
   rw to_valuation_field_completion_well_defined_aux₁ hv f h1 h2,
   rw to_valuation_field_completion_well_defined_aux₂ hv f h1 h2,
@@ -192,7 +192,7 @@ end
 lemma to_valuation_field_completion_well_defined {v : spa A} {U : opens (spa A)} (hv : v ∈ U)
   (f : spa.presheaf_value U) (r : rational_open_data_subsets U) (hr : v ∈ r.1.rational_open):
 to_valuation_field_completion hv f =
-  spa.r_o_d_completion.to_complete_valuation_field hr (f.1 r) :=
+  spa.rat_open_data_completion.to_complete_valuation_field hr (f.1 r) :=
 to_valuation_field_completion_well_defined_aux₃ hv f _ hr
 
 -- now the main goal

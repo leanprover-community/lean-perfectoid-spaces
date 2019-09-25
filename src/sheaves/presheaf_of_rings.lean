@@ -6,7 +6,7 @@
   Author: Ramon Fernandez Mir
 -/
 
-import for_mathlib.sheaves.presheaf
+import sheaves.presheaf
 
 universes u v
 

@@ -4,12 +4,13 @@ import topology.opens
 import category_theory.category
 import category_theory.full_subcategory
 
-import for_mathlib.sheaves.sheaf_of_topological_rings
+import sheaves.sheaf_of_topological_rings
 import for_mathlib.open_embeddings
 import for_mathlib.topological_groups
 
 import continuous_valuations
-import r_o_d_completion stalk_valuation
+import rat_open_data_completion
+import stalk_valuation
 import Huber_pair
 
 /-!

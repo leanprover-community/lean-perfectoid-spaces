@@ -8,8 +8,8 @@
 -/
 
 import topology.basic
-import for_mathlib.sheaves.stalk
-import for_mathlib.sheaves.presheaf_of_rings
+import sheaves.stalk
+import sheaves.presheaf_of_rings
 
 universes u v w
 

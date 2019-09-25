@@ -6,7 +6,7 @@
 
 import topology.basic
 import topology.opens
-import for_mathlib.sheaves.opens
+import sheaves.opens
 
 universes u
 

@@ -3,8 +3,8 @@
 -/
 import algebra.pi_instances
 
-import for_mathlib.sheaves.sheaf_of_rings
-import for_mathlib.sheaves.presheaf_of_topological_rings
+import sheaves.sheaf_of_rings
+import sheaves.presheaf_of_topological_rings
 
 universes u
 

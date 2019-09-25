@@ -4,7 +4,7 @@
 -/
 
 import topology.algebra.ring
-import for_mathlib.sheaves.presheaf_of_rings
+import sheaves.presheaf_of_rings
 
 universes u v
 

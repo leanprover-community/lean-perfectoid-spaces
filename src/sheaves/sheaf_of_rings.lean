@@ -6,8 +6,8 @@
   Author: Ramon Fernandez Mir
 -/
 
-import for_mathlib.sheaves.sheaf
-import for_mathlib.sheaves.presheaf_of_rings
+import sheaves.sheaf
+import sheaves.presheaf_of_rings
 
 universes u
 

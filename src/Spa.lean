@@ -3,10 +3,10 @@ import ring_theory.subring
 import continuous_valuations
 import Huber_pair
 import Huber_ring.localization
+import sheaves.presheaf_of_topological_rings
 
 import for_mathlib.nonarchimedean.basic
 import for_mathlib.group -- some stupid lemma about units
-import for_mathlib.sheaves.presheaf_of_topological_rings
 import for_mathlib.topological_rings -- subring of a top ring
 
 universes u₁ u₂ u₃
@@ -593,26 +593,26 @@ end -- section
 
 open uniform_space
 
--- r_o_d is short for "rational open data". KB needs to think more clearly
+-- rat_open_data is short for "rational open data". KB needs to think more clearly
 -- about namespaces etc.
 /-- A<T/s>, the functions on D(T,s). A topological ring -/
-def r_o_d_completion (r : rational_open_data A) :=
+def rat_open_data_completion (r : rational_open_data A) :=
 completion (rational_open_data.localization r)
 
-namespace r_o_d_completion
+namespace rat_open_data_completion
 open topological_space
 
-noncomputable instance (r : rational_open_data A) : comm_ring (r_o_d_completion r) :=
-by dunfold r_o_d_completion; apply_instance
+noncomputable instance (r : rational_open_data A) : comm_ring (rat_open_data_completion r) :=
+by dunfold rat_open_data_completion; apply_instance
 
-instance uniform_space (r : rational_open_data A) : uniform_space (r_o_d_completion r) :=
-by dunfold r_o_d_completion; apply_instance
+instance uniform_space (r : rational_open_data A) : uniform_space (rat_open_data_completion r) :=
+by dunfold rat_open_data_completion; apply_instance
 
-instance (r : rational_open_data A) : topological_ring (r_o_d_completion r) :=
-by dunfold r_o_d_completion; apply_instance
+instance (r : rational_open_data A) : topological_ring (rat_open_data_completion r) :=
+by dunfold rat_open_data_completion; apply_instance
 
 noncomputable def restriction {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
-r_o_d_completion r1 → r_o_d_completion r2 :=
+rat_open_data_completion r1 → rat_open_data_completion r2 :=
 completion.map (rational_open_data.localization_map h)
 
 instance restriction_is_ring_hom {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
@@ -620,23 +620,23 @@ instance restriction_is_ring_hom {r1 r2 : rational_open_data A} (h : r1 ≤ r2) 
 completion.is_ring_hom_map (rational_open_data.localization_map_is_cts h)
 
 lemma restriction_is_uniform_continuous {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
-uniform_continuous (r_o_d_completion.restriction h) :=
+uniform_continuous (rat_open_data_completion.restriction h) :=
 completion.uniform_continuous_map
 
-end r_o_d_completion -- namespace
+end rat_open_data_completion -- namespace
 
 open topological_space
 
 /-- The underlying type of 𝒪_X(U), the structure presheaf on Spa(A) -/
 def presheaf_value (U : opens (spa A)) :=
-{f : Π (rd : rational_open_data_subsets U), r_o_d_completion rd.1 //
+{f : Π (rd : rational_open_data_subsets U), rat_open_data_completion rd.1 //
    ∀ (rd1 rd2 : rational_open_data_subsets U) (h : rd1.1 ≤ rd2.1),
-     r_o_d_completion.restriction h (f rd1) = (f rd2)} -- agrees on overlaps
+     rat_open_data_completion.restriction h (f rd1) = (f rd2)} -- agrees on overlaps
 
 def presheaf_value_set (U : opens (spa A)) :=
-{f : Π (rd : rational_open_data_subsets U), r_o_d_completion rd.1 |
+{f : Π (rd : rational_open_data_subsets U), rat_open_data_completion rd.1 |
    ∀ (rd1 rd2 : rational_open_data_subsets U) (h : rd1.1 ≤ rd2.1),
-     r_o_d_completion.restriction h (f rd1) = (f rd2)}
+     rat_open_data_completion.restriction h (f rd1) = (f rd2)}
 
 -- We need to check it's a ring
 
@@ -649,21 +649,21 @@ refine {..},
     exact is_ring_hom.map_zero _ },
   { -- add_mem
     intros a b ha hb rd₁ rd₂ h,
-    change r_o_d_completion.restriction h (a rd₁ + b rd₁) = a rd₂ + b rd₂,
-    rw is_ring_hom.map_add (r_o_d_completion.restriction h),
+    change rat_open_data_completion.restriction h (a rd₁ + b rd₁) = a rd₂ + b rd₂,
+    rw is_ring_hom.map_add (rat_open_data_completion.restriction h),
     rw [ha _ _ h, hb _ _ h] },
   { -- neg_mem
     intros a ha rd₁ rd₂ h,
-    change r_o_d_completion.restriction h (-(a rd₁)) = -(a rd₂),
-    rw is_ring_hom.map_neg (r_o_d_completion.restriction h),
+    change rat_open_data_completion.restriction h (-(a rd₁)) = -(a rd₂),
+    rw is_ring_hom.map_neg (rat_open_data_completion.restriction h),
     rw ha _ _ h },
   { -- one_mem
     intros rd₁ rd₂ h,
     exact is_ring_hom.map_one _ },
   { -- mul_mem
     intros a b ha hb rd₁ rd₂ h,
-    change r_o_d_completion.restriction h (a rd₁ * b rd₁) = a rd₂ * b rd₂,
-    rw is_ring_hom.map_mul (r_o_d_completion.restriction h),
+    change rat_open_data_completion.restriction h (a rd₁ * b rd₁) = a rd₂ * b rd₂,
+    rw is_ring_hom.map_mul (rat_open_data_completion.restriction h),
     rw [ha _ _ h, hb _ _ h] }
 end
 
@@ -677,7 +677,7 @@ instance presheaf_top_space (U : opens (spa A)) : topological_space (presheaf_va
 by unfold presheaf_value; apply_instance
 
 example (U : opens (spa A)) :
-  topological_ring (Π (rd : rational_open_data_subsets U), r_o_d_completion (rd.1)) :=
+  topological_ring (Π (rd : rational_open_data_subsets U), rat_open_data_completion (rd.1)) :=
 by apply_instance
 
 -- tactic mode because I can't get Lean to behave. Note: switching to tactic
@@ -686,7 +686,7 @@ by apply_instance
 instance presheaf_top_ring (U : opens (spa A)) : topological_ring (presheaf_value U) :=
 begin
   haveI := spa.presheaf_subring U,
-  letI : topological_ring (Π (rd : rational_open_data_subsets U), r_o_d_completion (rd.1)) :=
+  letI : topological_ring (Π (rd : rational_open_data_subsets U), rat_open_data_completion (rd.1)) :=
     by apply_instance,
   apply topological_subring (presheaf_value_set U),
 end
