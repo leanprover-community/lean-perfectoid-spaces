@@ -504,7 +504,7 @@ begin
   exact xU (UW h)
 end
 
-lemma topological_add_group.discrete_of_open_zero {G : Type*} [add_group G] [topological_space G]
+lemma topological_add_group.discrete_iff_open_zero {G : Type*} [add_group G] [topological_space G]
   [topological_add_group G] : discrete_topology G ↔ is_open ({0} : set G) :=
 begin
   rw discrete_iff_open_singletons,

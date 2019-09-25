@@ -23,60 +23,61 @@ section
 open set metric function
 open_locale rat
 variables  {k  : Type*} [normed_field k]
-lemma normed_field.norm_nat_cast {k  : Type*} [normed_field k] (n : ℕ) : ∥(n : k)∥ = abs (n : ℝ) :=
-sorry
 
-lemma normed_field.norm_int_cast {k  : Type*} [normed_field k] (n : ℤ) : ∥(n : k)∥ = abs (n : ℝ) :=
-sorry
+-- lemma normed_field.norm_nat_cast {k  : Type*} [normed_field k] (n : ℕ) : ∥(n : k)∥ = abs (n : ℝ) :=
+-- sorry
 
-lemma normed_field.norm_rat_cast {k  : Type*} [normed_field k] (q : ℚ) : ∥(q : k)∥ = abs q :=
-begin
-  induction q using rat.num_denom_cases_on with n d d_pos coprime,
-  have : injective (λ x : ℝ, (d : ℝ)*x),
-  {
-    sorry },
-  apply this,
-  change (d : ℝ) * ∥↑(n /. d)∥ = d * abs (n /. d),
-  have dR_pos : (0 : ℝ) < (d : ℝ), by exact_mod_cast d_pos,
-  have come_on: (d : ℚ) * (n /. d) = n,
-  { sorry },
-  exact_mod_cast calc
-     (d : ℝ) * ∥↑(n /. d)∥ = ∥(d : k)∥ * ∥(n /. d : k)∥ :
-        by rw [normed_field.norm_nat_cast d,  abs_of_pos dR_pos]
-      ... = ∥(d : k) * (n /. d : k)∥ : (norm_mul _ _).symm
-      ... = ∥(((d : ℚ) * (n /. d) : ℚ) : k)∥ : sorry
-      ... = ∥(n : k)∥ : by { rw_mod_cast come_on, refl }
-      ... = abs (n : ℝ) : normed_field.norm_int_cast n
-      ... = abs ((d : ℚ) * (n /. d) : ℝ) : by { rw_mod_cast come_on, refl }
-      ... = _ : abs_mul _ _,
-end
+-- lemma normed_field.norm_int_cast {k  : Type*} [normed_field k] (n : ℤ) : ∥(n : k)∥ = abs (n : ℝ) :=
+-- sorry
 
-instance normed_field.char_zero : char_zero k :=
-begin
+-- lemma normed_field.norm_rat_cast {k  : Type*} [normed_field k] (q : ℚ) : ∥(q : k)∥ = abs q :=
+-- begin
+--   induction q using rat.num_denom_cases_on with n d d_pos coprime,
+--   have : injective (λ x : ℝ, (d : ℝ)*x),
+--   {
+--     sorry },
+--   apply this,
+--   change (d : ℝ) * ∥↑(n /. d)∥ = d * abs (n /. d),
+--   have dR_pos : (0 : ℝ) < (d : ℝ), by exact_mod_cast d_pos,
+--   have come_on: (d : ℚ) * (n /. d) = n,
+--   { sorry },
+--   exact_mod_cast calc
+--      (d : ℝ) * ∥↑(n /. d)∥ = ∥(d : k)∥ * ∥(n /. d : k)∥ :
+--         by rw [normed_field.norm_nat_cast d,  abs_of_pos dR_pos]
+--       ... = ∥(d : k) * (n /. d : k)∥ : (norm_mul _ _).symm
+--       ... = ∥(((d : ℚ) * (n /. d) : ℚ) : k)∥ : sorry
+--       ... = ∥(n : k)∥ : by { rw_mod_cast come_on, refl }
+--       ... = abs (n : ℝ) : normed_field.norm_int_cast n
+--       ... = abs ((d : ℚ) * (n /. d) : ℝ) : by { rw_mod_cast come_on, refl }
+--       ... = _ : abs_mul _ _,
+-- end
 
-  sorry
-end
+-- instance normed_field.char_zero : char_zero k :=
+-- begin
 
+--   sorry
+-- end
 
-lemma nondiscrete_normed_field.nondiscrete {k  : Type*} [nondiscrete_normed_field k] : ¬ discrete_topology k :=
-begin
-  intro h,
-  replace h := discrete_iff_open_singletons.mp h 0,
-  rw is_open_iff at h,
-  rcases h 0 (mem_singleton 0) with ⟨ε, ε_pos, hε⟩,
-  rcases exists_norm_lt_one k with ⟨x₀, x₀_ne, hx₀⟩,
-  obtain ⟨q, hq, hq'⟩ : ∃ q : ℚ, 0 < q ∧ (q : ℝ) < ε,
-    from exists_pos_rat_lt ε_pos,
-  have norm_q : ∥(q : k)∥ = q,
-    by rw_mod_cast [normed_field.norm_rat_cast, abs_of_pos hq],
-  have : (q : k) * x₀ ∈ ball (0 : k) ε,
-  { rw [ball_0_eq, mem_set_of_eq, norm_mul, norm_q],
-    simpa using mul_lt_mul' (le_of_lt hq') hx₀ (norm_nonneg _) ε_pos },
-  specialize hε this,
-  rw [mem_singleton_iff, ← norm_eq_zero, norm_mul, norm_q] at hε,
-  have := mul_pos (by exact_mod_cast hq : (0 : ℝ) < q) x₀_ne,
-  simpa [lt_irrefl, hε] using this
-end
+-- lemma nondiscrete_normed_field.nondiscrete {k  : Type*} [nondiscrete_normed_field k] : ¬ discrete_topology k :=
+-- begin
+--   intro h,
+--   replace h := discrete_iff_open_singletons.mp h 0,
+--   rw is_open_iff at h,
+--   rcases h 0 (mem_singleton 0) with ⟨ε, ε_pos, hε⟩,
+--   rcases exists_norm_lt_one k with ⟨x₀, x₀_ne, hx₀⟩,
+--   obtain ⟨q, hq, hq'⟩ : ∃ q : ℚ, 0 < q ∧ (q : ℝ) < ε,
+--     from exists_pos_rat_lt ε_pos,
+--   have norm_q : ∥(q : k)∥ = q,
+--     by rw_mod_cast [normed_field.norm_rat_cast, abs_of_pos hq],
+--   have : (q : k) * x₀ ∈ ball (0 : k) ε,
+--   { rw [ball_0_eq, mem_set_of_eq, norm_mul, norm_q],
+--     simpa using mul_lt_mul' (le_of_lt hq') hx₀ (norm_nonneg _) ε_pos },
+--   specialize hε this,
+--   rw [mem_singleton_iff, ← norm_eq_zero, norm_mul, norm_q] at hε,
+--   have := mul_pos (by exact_mod_cast hq : (0 : ℝ) < q) x₀_ne,
+--   simpa [lt_irrefl, hε] using this
+-- end
+
 end
 
 namespace polynomial
@@ -323,15 +324,6 @@ def padic.bundled_valuation : valuation ℚ_[p] nnreal :=
       congr, },
   end }
 
-lemma discrete_iff_singleton_zero_open
-  {G : Type*} [add_group G] [topological_space G] [topological_add_group G] :
-  discrete_topology G ↔ is_open ({0} : set G) :=
-begin
-  split; intro h,
-  { resetI, exact is_open_discrete _ },
-  { sorry }
-end
-
 namespace valuation
 variables {R : Type*} [comm_ring R]
 variables {K : Type*} [discrete_field K]
@@ -417,7 +409,7 @@ begin
   split; intro h,
   { rw valuation.is_continuous_iff at h,
     suffices : is_open ({(0:L)} : set L),
-      from topological_add_group.discrete_of_open_zero.mpr this,
+      from topological_add_group.discrete_iff_open_zero.mpr this,
     specialize h 1,
     rw v.map_one at h,
     suffices : {y : L | v y < 1} = {0}, by rwa this at h,
@@ -467,7 +459,7 @@ instance padic_int.char_zero : char_zero ℤ_[p] :=
 
 lemma padic_int.not_discrete : ¬ discrete_topology ℤ_[p] :=
 begin
-  rw @discrete_iff_singleton_zero_open ℤ_[p] _,
+  rw @topological_add_group.discrete_iff_open_zero ℤ_[p] _,
   assume h,
   have adic := padic_int.is_adic p,
   rw is_ideal_adic_iff at adic,
@@ -485,7 +477,7 @@ end
 lemma padic.not_discrete : ¬ discrete_topology ℚ_[p] :=
 begin
   -- there is probably a shorter proof than where this is heading
-  rw @discrete_iff_singleton_zero_open ℚ_[p] _,
+  rw @topological_add_group.discrete_iff_open_zero ℚ_[p] _,
   assume h,
   have := padic_int.coe_open_embedding.continuous _ h,
   sorry
