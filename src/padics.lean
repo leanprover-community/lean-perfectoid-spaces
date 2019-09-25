@@ -229,6 +229,15 @@ def padic.bundled_valuation : valuation ℚ_[p] nnreal :=
       congr, },
   end }
 
+lemma discrete_iff_singleton_zero_open
+  {G : Type*} [add_group G] [topological_space G] [topological_add_group G] :
+  discrete_topology G ↔ is_open ({0} : set G) :=
+begin
+  split; intro h,
+  { resetI, exact is_open_discrete _ },
+  { sorry }
+end
+
 namespace valuation
 variables {R : Type*} [discrete_field R] [topological_space R] [topological_ring R]
 variables {K : Type*} [discrete_field K]
@@ -314,7 +323,7 @@ lemma is_trivial_is_continuous_iff_discrete (v : valuation L Γ₀) (hv : v.is_t
 begin
   split; intro h,
   { rw valuation.is_continuous_iff at h,
-    suffices : is_open ({(0:L)} : set L), by sorry,
+    rw @discrete_iff_singleton_zero_open L _,
     specialize h 1,
     rw v.map_one at h,
     suffices : {y : L | v y < 1} = {0}, by rwa this at h,
@@ -329,6 +338,43 @@ begin
 end
 
 end valuation
+
+lemma eq_zero_of_pow_eq_zero {R : Type*} [integral_domain R] {x : R} {n : ℕ} (h : x^n = 0) :
+  x = 0 :=
+begin
+  induction n with n ih, {simpa using h},
+  rw [pow_succ] at h,
+  cases eq_zero_or_eq_zero_of_mul_eq_zero h with h h,
+  { exact h },
+  { exact ih h }
+end
+
+lemma padic_int.not_discrete : ¬ discrete_topology ℤ_[p] :=
+begin
+  rw @discrete_iff_singleton_zero_open ℤ_[p] _,
+  assume h,
+  have adic := padic_int.is_adic p,
+  rw is_ideal_adic_iff at adic,
+  cases adic.2 _ (mem_nhds_sets h (set.mem_singleton _)) with n hn,
+  change (↑(nonunits_ideal ℤ_[p] ^ n) : set ℤ_[p]) ⊆ {0} at hn,
+  erw padic_int.power_nonunits_ideal_eq_norm_le_pow at hn,
+  change ∀ x:ℤ_[p], _ → _ at hn,
+  specialize hn (p^n) _,
+  { rw set.mem_singleton_iff at hn,
+    have := eq_zero_of_pow_eq_zero hn,
+    apply nat.prime.ne_zero ‹_›,
+    sorry },
+  { change ∥(p^n : ℤ_[p])∥ ≤ _, simp, }
+end
+
+lemma padic.not_discrete : ¬ discrete_topology ℚ_[p] :=
+begin
+  -- there is probably a shorter proof than where this is heading
+  rw @discrete_iff_singleton_zero_open ℚ_[p] _,
+  assume h,
+  have := padic_int.coe_open_embedding.continuous _ h,
+  sorry
+end
 
 def padic.Spa_inhabited : inhabited (Spa $ padic.Huber_pair p) :=
 { default := ⟨Spv.mk (padic.bundled_valuation p),
