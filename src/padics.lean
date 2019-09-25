@@ -14,6 +14,9 @@ of Huber rings.
 -/
 
 noncomputable theory
+open_locale classical
+
+local postfix `⁺` : 66 := λ A : Huber_pair, A.plus
 
 section
 open set metric function
@@ -121,6 +124,36 @@ begin
     { exact h a (finset.mem_insert_self _ _), },
     { intros b hb, apply h b, rw finset.mem_insert, right, exact hb } }
 end
+
+namespace linear_ordered_comm_group_with_zero
+variables {Γ₀ : Type*} [linear_ordered_comm_group_with_zero Γ₀]
+
+lemma inv_lt_inv {x y : Γ₀} (hx : x ≠ 0) (hy : y ≠ 0) :
+  y⁻¹ < x⁻¹ ↔ x < y :=
+begin
+  suffices : ∀ {x y : Γ₀}, x ≠ 0 → y ≠ 0 → x < y → y⁻¹ < x⁻¹,
+  { refine ⟨_, this hx hy⟩, intro h, rw [← inv_inv'' x, ← inv_inv'' y],
+    apply this _ _ h; solve_by_elim [inv_ne_zero'], },
+  clear hx hy x y,
+  intros x y hx hy h,
+  have hx' : x⁻¹ ≠ 0 := by solve_by_elim [inv_ne_zero'],
+  have hy' : y⁻¹ ≠ 0 := by solve_by_elim [inv_ne_zero'],
+  replace h := linear_ordered_structure.mul_lt_right' _ h hx',
+  replace h := linear_ordered_structure.mul_lt_right' _ h hy',
+  rw [mul_inv_cancel' _ hx, one_mul] at h,
+  erw [mul_comm y x⁻¹, mul_assoc, mul_inv_cancel' _ hy, mul_one] at h,
+  exact h
+end
+
+lemma inv_le_inv {x y : Γ₀} (hx : x ≠ 0) (hy : y ≠ 0) :
+  y⁻¹ ≤ x⁻¹ ↔ x ≤ y :=
+begin
+  have := not_iff_not_of_iff (inv_lt_inv hy hx),
+  push_neg at this,
+  exact this
+end
+
+end linear_ordered_comm_group_with_zero
 
 open local_ring
 
@@ -299,7 +332,7 @@ begin
 end
 
 namespace valuation
-variables {R : Type*} [discrete_field R] [topological_space R] [topological_ring R]
+variables {R : Type*} [comm_ring R]
 variables {K : Type*} [discrete_field K]
 variables {L : Type*} [discrete_field L] [topological_space L] [topological_ring L]
 variables {Γ₀ : Type*} [linear_ordered_comm_group_with_zero Γ₀]
@@ -345,12 +378,11 @@ begin
   convert is_ring_hom.map_one (ideal.quotient.mk (supp v)),
   apply mul_inv_cancel,
   contrapose! h, subst s,
-  classical,
   refine (not_iff_not_of_iff localization.fraction_ring.mem_non_zero_divisors_iff_ne_zero).mpr _,
   exact not_not.mpr rfl
 end
 
-lemma is_continuous_iff (v : valuation L Γ₀) :
+lemma is_continuous_iff {v : valuation L Γ₀} :
   v.is_continuous ↔ ∀ x:L, is_open {y:L | v y < v x} :=
 begin
   have help : ∀ x:L, value_monoid.to_Γ₀ v (v.canonical_valuation x) = v x,
@@ -371,10 +403,10 @@ lemma trivial_is_trivial (I : ideal R) [hI : I.is_prime] :
   (trivial I : valuation R Γ₀).is_trivial :=
 begin
   intro r,
-  classical,
   by_cases hr : r ∈ I; [left, right],
   all_goals
   { show ite _ _ _ = _,
+    rw submodule.mem_coe at hr,
     simp [hr] }
 end
 
@@ -398,17 +430,39 @@ begin
   { resetI, intro g, exact is_open_discrete _ }
 end
 
+lemma is_trivial_iff {v : valuation K Γ₀} :
+  v.is_trivial ↔ ∀ x:K, v x ≤ 1 :=
+begin
+  split; intros h x,
+  { cases h x; simp *, },
+  { contrapose! h, cases h with h₁ h₂,
+    by_cases hx : v x ≤ 1,
+    { refine ⟨x⁻¹, _⟩,
+      rw [v.map_inv, ← linear_ordered_comm_group_with_zero.inv_lt_inv one_ne_zero,
+        inv_inv'', inv_one'],
+      { exact lt_of_le_of_ne hx h₂ },
+      { exact inv_ne_zero' _ h₁ } },
+    { push_neg at hx, exact ⟨_, hx⟩ } }
+end
+
 end valuation
 
-lemma eq_zero_of_pow_eq_zero {R : Type*} [integral_domain R] {x : R} {n : ℕ} (h : x^n = 0) :
+lemma fpow_eq_zero {K : Type*} [discrete_field K] {x : K} {n : ℤ} (h : x^n = 0) :
   x = 0 :=
 begin
-  induction n with n ih, {simpa using h},
-  rw [pow_succ] at h,
-  cases eq_zero_or_eq_zero_of_mul_eq_zero h with h h,
-  { exact h },
-  { exact ih h }
+  by_cases hn : 0 ≤ n,
+  { lift n to ℕ using hn, rw fpow_of_nat at h, exact pow_eq_zero h, },
+  { by_cases hx : x = 0, { exact hx },
+    push_neg at hn, rw ← neg_pos at hn, replace hn := le_of_lt hn,
+    lift (-n) to ℕ using hn with m hm,
+    rw [← neg_neg n, fpow_neg, ← hm, fpow_of_nat] at h,
+    rw ← inv_eq_zero,
+    apply pow_eq_zero (_ : _^m = _),
+    rwa [inv_eq_one_div, one_div_pow hx], }
 end
+
+instance padic_int.char_zero : char_zero ℤ_[p] :=
+{ cast_inj := λ m n, by { rw subtype.coe_ext, norm_cast, exact char_zero.cast_inj _, } }
 
 lemma padic_int.not_discrete : ¬ discrete_topology ℤ_[p] :=
 begin
@@ -422,9 +476,8 @@ begin
   change ∀ x:ℤ_[p], _ → _ at hn,
   specialize hn (p^n) _,
   { rw set.mem_singleton_iff at hn,
-    have := eq_zero_of_pow_eq_zero hn,
     apply nat.prime.ne_zero ‹_›,
-    sorry },
+    exact_mod_cast pow_eq_zero hn, },
   { change ∥(p^n : ℤ_[p])∥ ≤ _, simp, }
 end
 
@@ -459,36 +512,90 @@ lemma Spv.ext_iff {R : Type*} [comm_ring R] {v₁ v₂ : Spv R} :
   v₁ = v₂ ↔ ((Spv.out v₁).is_equiv (Spv.out v₂)) :=
 ⟨λ h, Spv.is_equiv_of_eq_mk (by simpa only [Spv.mk_out] using h), Spv.ext _ _⟩
 
+namespace spa
+variables {A : Huber_pair}
+
 @[extensionality]
-lemma spa.ext {A : Huber_pair} (v₁ v₂ : spa A) (h : (Spv.out ↑v₁).is_equiv (Spv.out (↑v₂ : Spv A))) :
+lemma spa.ext (v₁ v₂ : spa A) (h : (Spv.out ↑v₁).is_equiv (Spv.out (↑v₂ : Spv A))) :
   v₁ = v₂ :=
 subtype.val_injective $ Spv.ext _ _ h
 
-lemma spa.ext_iff {A : Huber_pair} {v₁ v₂ : spa A} :
+lemma spa.ext_iff {v₁ v₂ : spa A} :
   v₁ = v₂ ↔ ((Spv.out ↑v₁).is_equiv (Spv.out (↑v₂ : Spv A))) :=
 by rw [subtype.coe_ext, Spv.ext_iff]
 
-namespace linear_ordered_comm_group_with_zero
-variables {Γ₀ : Type*} [linear_ordered_comm_group_with_zero Γ₀]
+abbreviation spa.out_Γ₀ (v  : spa A) := Spv.out_Γ₀ (v : Spv A)
 
-lemma inv_lt_inv {x y : Γ₀} (hx : x ≠ 0) (hy : y ≠ 0) :
-  y⁻¹ < x⁻¹ ↔ x < y :=
+lemma map_plus (v : spa A) (a : (A⁺)) : v (algebra_map A a) ≤ 1 := v.property.right a
+
+@[simp] lemma map_unit (v : spa A) (u : units (A⁺)) :
+  v ((algebra_map A : (A⁺) → A) u) = 1 :=
 begin
-  suffices : ∀ {x y : Γ₀}, x ≠ 0 → y ≠ 0 → x < y → y⁻¹ < x⁻¹,
-  { refine ⟨_, this hx hy⟩, intro h, rw [← inv_inv'' x, ← inv_inv'' y],
-    apply this _ _ h; solve_by_elim [inv_ne_zero'], },
-  clear hx hy x y,
-  intros x y hx hy h,
-  have hx' : x⁻¹ ≠ 0 := by solve_by_elim [inv_ne_zero'],
-  have hy' : y⁻¹ ≠ 0 := by solve_by_elim [inv_ne_zero'],
-  replace h := linear_ordered_structure.mul_lt_right' _ h hx',
-  replace h := linear_ordered_structure.mul_lt_right' _ h hy',
-  rw [mul_inv_cancel' _ hx, one_mul] at h,
-  erw [mul_comm y x⁻¹, mul_assoc, mul_inv_cancel' _ hy, mul_one] at h,
-  exact h
+  apply le_antisymm,
+  { exact spa.map_plus _ _ },
+  { let u' : units A :=
+    (@units.map' (A⁺) A _ _ (algebra_map A : (A⁺) → A) (by apply_instance) : units (A⁺) → units A) u,
+    change (1:_) ≤ v (u' : A),
+    rw [← linear_ordered_comm_group_with_zero.inv_le_inv one_ne_zero, inv_one'],
+    { convert map_plus v (u⁻¹ : units (A⁺)),
+      calc (v (u' : A))⁻¹ = v ((u'⁻¹ : units A) : A) : (valuation.map_units_inv _ _).symm
+        ... = v (algebra_map A ((u⁻¹ : units (A⁺)) : A⁺)) : rfl },
+    { convert group_with_zero.unit_ne_zero _,
+      swap,
+      { let tmp : _ := _,
+        refine (@units.map' A _ _ _ v tmp : units A → units _) u',
+        convert monoid_hom.is_monoid_hom _ using 1,
+        swap,
+        { apply valuation.to_monoid_hom, refine Spv.out _, },
+        refl },
+      refl } }
 end
 
-end linear_ordered_comm_group_with_zero
+end spa
+
+lemma padic.exists_repr (x : ℚ_[p]) (hx : x ≠ 0) :
+  ∃ (u : units ℤ_[p]) (n : ℤ), x = (u : ℤ_[p])*p^n :=
+begin
+  have : ∥x * (p : ℚ_[p])^(-x.valuation)∥ ≤ 1,
+  { rw [_root_.norm_mul, padic.norm_eq_pow_val hx, norm_fpow, padic.norm_p,
+      ← mul_fpow, mul_inv_cancel, one_fpow],
+    exact_mod_cast nat.prime.ne_zero ‹_› },
+  let y : ℤ_[p] := ⟨x * (p : ℚ_[p])^(-x.valuation), this⟩,
+  have y_ne_zero : y ≠ 0,
+  { contrapose! hx with hy,
+    rw subtype.coe_ext at hy,
+    rcases eq_zero_or_eq_zero_of_mul_eq_zero hy with h|h,
+    { exact h },
+    { exfalso, apply nat.prime.ne_zero ‹_›, exact_mod_cast fpow_eq_zero h } },
+  rcases padic_int.exists_repr y_ne_zero with ⟨u, n, hy⟩,
+  refine ⟨u, (n:ℤ) + x.valuation, _⟩,
+  rw [fpow_add, fpow_of_nat],
+  { have : (p:ℚ_[p])^(-x.valuation) ≠ 0,
+    { assume h, exfalso, apply nat.prime.ne_zero ‹_›, exact_mod_cast fpow_eq_zero h },
+    apply group_with_zero.mul_right_cancel this,
+    rw subtype.coe_ext at hy,
+    rw [mul_assoc, mul_assoc, ← fpow_add, add_neg_self, fpow_zero, mul_one],
+    { exact_mod_cast hy, },
+    { exact_mod_cast nat.prime.ne_zero ‹_› } },
+  { exact_mod_cast nat.prime.ne_zero ‹_› }
+end
+.
+
+lemma group_with_zero.inv_inj {Γ₀ : Type*} [group_with_zero Γ₀] {g h : Γ₀} :
+  g⁻¹ = h⁻¹ ↔ g = h :=
+begin
+  split,
+  { intro H,
+    by_cases Hg : g = 0,
+    { by_cases Hh : h = 0, { rw [Hg, Hh] },
+      have := congr_arg ((*) h) H, rw mul_inv_cancel' _ Hh at this,
+      replace := eq_inv_of_mul_left_eq_one' _ _ this,
+      rw [this, inv_inv''] },
+    { have := congr_arg ((*) g) H, rw mul_inv_cancel' _ Hg at this,
+      replace := eq_inv_of_mul_left_eq_one' _ _ this.symm,
+      rw [this, inv_inv''] } },
+  { exact congr_arg _ }
+end
 
 def padic.Spa_unique : unique (Spa $ padic.Huber_pair p) :=
 { uniq :=
@@ -499,8 +606,7 @@ def padic.Spa_unique : unique (Spa $ padic.Huber_pair p) :=
     apply valuation.is_equiv_of_val_le_one,
     intros x, change ℚ_[p] at x,
     split; intro h,
-    { classical,
-      by_cases hx : ∃ y : ℤ_[p], x = y,
+    { by_cases hx : ∃ y : ℤ_[p], x = y,
       { rcases hx with ⟨x, rfl⟩, exact x.property },
       { push_neg at hx,
         contrapose! h,
@@ -510,14 +616,22 @@ def padic.Spa_unique : unique (Spa $ padic.Huber_pair p) :=
         { exact one_ne_zero },
         { rw valuation.ne_zero_iff, contrapose! hx, use [0, hx] },
         { rw [inv_one', ← valuation.map_inv, hy],
-          refine lt_of_le_of_ne (v.property.right y) _,
+          refine lt_of_le_of_ne (spa.map_plus v y) _,
           assume H,
           apply padic.not_discrete p,
           apply (valuation.is_trivial_is_continuous_iff_discrete _ _).mp v.property.left,
+          rw valuation.is_trivial_iff,
+          intro z,
+          by_cases hx' : x = 0, { contrapose! h, simp [hx'], },
+          rcases padic.exists_repr p x hx' with ⟨u, m, rfl⟩, clear hx',
+          by_cases hz : z = 0, { simp [hz], },
+          rcases padic.exists_repr p z hz with ⟨v, n, rfl⟩, clear hz,
+          erw [← hy, valuation.map_inv, valuation.map_mul, spa.map_unit, one_mul, ← inv_one',
+            inv_inj'] at H,
           -- the valuation can't map everything to 1
           sorry
            },
          } },
-    { exact v.property.right ⟨x, h⟩, }
+    { exact spa.map_plus v ⟨x, h⟩, }
   end,
   .. padic.Spa_inhabited p }
