@@ -15,6 +15,66 @@ of Huber rings.
 
 noncomputable theory
 
+section
+open set metric function
+open_locale rat
+variables  {k  : Type*} [normed_field k]
+lemma normed_field.norm_nat_cast {k  : Type*} [normed_field k] (n : ℕ) : ∥(n : k)∥ = abs (n : ℝ) :=
+sorry
+
+lemma normed_field.norm_int_cast {k  : Type*} [normed_field k] (n : ℤ) : ∥(n : k)∥ = abs (n : ℝ) :=
+sorry
+
+lemma normed_field.norm_rat_cast {k  : Type*} [normed_field k] (q : ℚ) : ∥(q : k)∥ = abs q :=
+begin
+  induction q using rat.num_denom_cases_on with n d d_pos coprime,
+  have : injective (λ x : ℝ, (d : ℝ)*x),
+  {
+    sorry },
+  apply this,
+  change (d : ℝ) * ∥↑(n /. d)∥ = d * abs (n /. d),
+  have dR_pos : (0 : ℝ) < (d : ℝ), by exact_mod_cast d_pos,
+  have come_on: (d : ℚ) * (n /. d) = n,
+  { sorry },
+  exact_mod_cast calc
+     (d : ℝ) * ∥↑(n /. d)∥ = ∥(d : k)∥ * ∥(n /. d : k)∥ :
+        by rw [normed_field.norm_nat_cast d,  abs_of_pos dR_pos]
+      ... = ∥(d : k) * (n /. d : k)∥ : (norm_mul _ _).symm
+      ... = ∥(((d : ℚ) * (n /. d) : ℚ) : k)∥ : sorry
+      ... = ∥(n : k)∥ : by { rw_mod_cast come_on, refl }
+      ... = abs (n : ℝ) : normed_field.norm_int_cast n
+      ... = abs ((d : ℚ) * (n /. d) : ℝ) : by { rw_mod_cast come_on, refl }
+      ... = _ : abs_mul _ _,
+end
+
+instance normed_field.char_zero : char_zero k :=
+begin
+
+  sorry
+end
+
+
+lemma nondiscrete_normed_field.nondiscrete {k  : Type*} [nondiscrete_normed_field k] : ¬ discrete_topology k :=
+begin
+  intro h,
+  replace h := discrete_iff_open_singletons.mp h 0,
+  rw is_open_iff at h,
+  rcases h 0 (mem_singleton 0) with ⟨ε, ε_pos, hε⟩,
+  rcases exists_norm_lt_one k with ⟨x₀, x₀_ne, hx₀⟩,
+  obtain ⟨q, hq, hq'⟩ : ∃ q : ℚ, 0 < q ∧ (q : ℝ) < ε,
+    from exists_pos_rat_lt ε_pos,
+  have norm_q : ∥(q : k)∥ = q,
+    by rw_mod_cast [normed_field.norm_rat_cast, abs_of_pos hq],
+  have : (q : k) * x₀ ∈ ball (0 : k) ε,
+  { rw [ball_0_eq, mem_set_of_eq, norm_mul, norm_q],
+    simpa using mul_lt_mul' (le_of_lt hq') hx₀ (norm_nonneg _) ε_pos },
+  specialize hε this,
+  rw [mem_singleton_iff, ← norm_eq_zero, norm_mul, norm_q] at hε,
+  have := mul_pos (by exact_mod_cast hq : (0 : ℝ) < q) x₀_ne,
+  simpa [lt_irrefl, hε] using this
+end
+end
+#exit
 namespace polynomial
 
 lemma monic.as_sum {R : Type*} [comm_ring R] {f : polynomial R} (hf : f.monic) :
