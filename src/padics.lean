@@ -450,8 +450,10 @@ def padic.Spa_unique : unique (Spa $ padic.Huber_pair p) :=
         { rw valuation.ne_zero_iff, contrapose! hx, use [0, hx] },
         { rw [inv_one', ← valuation.map_inv, hy],
           refine lt_of_le_of_ne (v.property.right y) _,
+          assume H,
+          apply padic.not_discrete p,
+          apply (valuation.is_trivial_is_continuous_iff_discrete _ _).mp v.property.left,
           -- the valuation can't map everything to 1
-          -- because of continuity
           sorry
            },
          } },
