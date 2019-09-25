@@ -324,6 +324,22 @@ def padic.bundled_valuation : valuation ℚ_[p] nnreal :=
       congr, },
   end }
 
+lemma group_with_zero.inv_inj {Γ₀ : Type*} [group_with_zero Γ₀] {g h : Γ₀} :
+  g⁻¹ = h⁻¹ ↔ g = h :=
+begin
+  split,
+  { intro H,
+    by_cases Hg : g = 0,
+    { by_cases Hh : h = 0, { rw [Hg, Hh] },
+      have := congr_arg ((*) h) H, rw mul_inv_cancel' _ Hh at this,
+      replace := eq_inv_of_mul_left_eq_one' _ _ this,
+      rw [this, inv_inv''] },
+    { have := congr_arg ((*) g) H, rw mul_inv_cancel' _ Hg at this,
+      replace := eq_inv_of_mul_left_eq_one' _ _ this.symm,
+      rw [this, inv_inv''] } },
+  { exact congr_arg _ }
+end
+
 namespace valuation
 variables {R : Type*} [comm_ring R]
 variables {K : Type*} [discrete_field K]
@@ -436,6 +452,33 @@ begin
       { exact lt_of_le_of_ne hx h₂ },
       { exact inv_ne_zero' _ h₁ } },
     { push_neg at hx, exact ⟨_, hx⟩ } }
+end
+
+-- This is a hack, to avoid an fpow diamond.
+lemma map_fpow_eq_one_iff {v : valuation K Γ₀} {x : K} (n : ℤ) (hn : n ≠ 0) :
+  v (x^n) = 1 ↔ v x = 1 :=
+begin
+  have helper : ∀ x (n : ℕ), n ≠ 0 → (v (x^n) = 1 ↔ v x = 1),
+  { clear hn n x, intros x n hn,
+    erw [is_monoid_hom.map_pow v.to_monoid_hom],
+    cases n, { contradiction, },
+    show (v x)^(n+1) = 1 ↔ v x = 1,
+    by_cases hx : x = 0, { rw [hx, v.map_zero, pow_succ, zero_mul], },
+    change x ≠ 0 at hx,
+    rw ← v.ne_zero_iff at hx,
+    let u : units Γ₀ := group_with_zero.mk₀ _ hx,
+    suffices : u^(n+1) = 1 ↔ u = 1,
+    { rwa [units.ext_iff, units.ext_iff, units.coe_pow] at this, },
+    split; intro h,
+    { exact linear_ordered_structure.eq_one_of_pow_eq_one h },
+    { rw [h, one_pow], } },
+  by_cases hn' : 0 ≤ n,
+  { lift n to ℕ using hn', rw [fpow_of_nat], norm_cast at hn, solve_by_elim },
+  { push_neg at hn', rw ← neg_pos at hn',
+    lift -n to ℕ using le_of_lt hn' with m hm,
+    have hm' : m ≠ 0, { apply ne_of_gt, exact_mod_cast hn' },
+    rw [← neg_neg n, ← mul_neg_one, fpow_mul, fpow_inv, v.map_inv, ← inv_one',
+      group_with_zero.inv_inj, ← hm, inv_one'], solve_by_elim }
 end
 
 end valuation
@@ -574,22 +617,6 @@ begin
 end
 .
 
-lemma group_with_zero.inv_inj {Γ₀ : Type*} [group_with_zero Γ₀] {g h : Γ₀} :
-  g⁻¹ = h⁻¹ ↔ g = h :=
-begin
-  split,
-  { intro H,
-    by_cases Hg : g = 0,
-    { by_cases Hh : h = 0, { rw [Hg, Hh] },
-      have := congr_arg ((*) h) H, rw mul_inv_cancel' _ Hh at this,
-      replace := eq_inv_of_mul_left_eq_one' _ _ this,
-      rw [this, inv_inv''] },
-    { have := congr_arg ((*) g) H, rw mul_inv_cancel' _ Hg at this,
-      replace := eq_inv_of_mul_left_eq_one' _ _ this.symm,
-      rw [this, inv_inv''] } },
-  { exact congr_arg _ }
-end
-
 def padic.Spa_unique : unique (Spa $ padic.Huber_pair p) :=
 { uniq :=
   begin
@@ -619,12 +646,15 @@ def padic.Spa_unique : unique (Spa $ padic.Huber_pair p) :=
           rcases padic.exists_repr p x hx' with ⟨u, m, rfl⟩, clear hx',
           by_cases hz : z = 0, { simp [hz], },
           rcases padic.exists_repr p z hz with ⟨v, n, rfl⟩, clear hz,
-          erw [← hy, valuation.map_inv, valuation.map_mul, spa.map_unit, one_mul, ← inv_one',
-            group_with_zero.inv_inj] at H,
-          -- the valuation can't map everything to 1
-          sorry
-           },
-         } },
+          erw [valuation.map_mul, spa.map_unit, one_mul],
+          by_cases hn : n = 0, { erw [hn, fpow_zero, valuation.map_one], },
+          erw [← hy, valuation.map_inv, valuation.map_mul, spa.map_unit,
+            one_mul, ← inv_one', group_with_zero.inv_inj,
+            valuation.map_fpow_eq_one_iff, ← valuation.map_fpow_eq_one_iff n hn] at H,
+          { erw H, exact le_refl _ },
+          contrapose! h,
+          rw [h, fpow_zero, mul_one, nnreal.coe_le], apply le_of_eq,
+          erw ← padic_int.is_unit_iff, exact is_unit_unit _, } } },
     { exact spa.map_plus v ⟨x, h⟩, }
   end,
   .. padic.Spa_inhabited p }
