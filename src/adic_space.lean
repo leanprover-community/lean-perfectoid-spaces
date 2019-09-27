@@ -100,8 +100,8 @@ open category_theory
 
 structure hom (X Y : PreValuedRingedSpace.{u}) :=
 (fmap : presheaf_of_topological_rings.f_map X.presheaf Y.presheaf)
-(stalk : ∀ x : X, ((X.valuation x).out.comap (stalk_map fmap.to_presheaf_of_rings_f_map x)).is_equiv
-  (Y.valuation (fmap.f x)).out)
+(stalk : ∀ x : X,
+  Spv.comap (stalk_map fmap.to_presheaf_of_rings_f_map x) (X.valuation x) = Y.valuation (fmap.f x))
 
 lemma hom_ext {X Y : PreValuedRingedSpace.{u}} (f g : hom X Y) :
   f.fmap = g.fmap → f = g :=

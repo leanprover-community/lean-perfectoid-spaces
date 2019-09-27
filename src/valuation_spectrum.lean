@@ -160,6 +160,22 @@ section
 
 end
 
+section comap
+variables {S : Type*} [comm_ring S]
+
+noncomputable def comap (f : R → S) [is_ring_hom f] : Spv S → Spv R :=
+lift $ λ Γ₀ _ v, by exactI Spv.mk (v.comap f)
+
+lemma comap_id_apply (v : Spv R) : comap (id : R → R) v = v :=
+begin
+  sorry
+end
+
+@[simp] lemma comap_id : comap (id : R → R) = id :=
+funext $ comap_id_apply
+
+end comap
+
 /-- The open sets generating the topology of Spv R. See [Wedhorn, Def 4.1].-/
 definition basic_open (r s : R) : set (Spv R) :=
 {v | v r ≤ v s ∧ v s ≠ 0}
