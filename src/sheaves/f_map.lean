@@ -22,23 +22,13 @@ structure f_map
 (presheaf_f_flat : ∀ V W : opens Y, ∀ (hWV : W ⊆ V),
   ∀ s : G V, F.res _ _ (hf.comap_mono hWV) (f_flat V s) = f_flat W (G.res V W hWV s))
 
-instance f_map_flat.is_ring_hom (f : presheaf_of_rings.f_map F G) (V : opens Y) :
-  is_ring_hom (f.f_flat V) := f.f_flat_is_ring_hom V
+attribute [instance] f_map.f_flat_is_ring_hom
 
 def f_map_id (F : presheaf_of_rings X) : presheaf_of_rings.f_map F F :=
 { f := λ x, x,
   hf := continuous_id,
   f_flat := λ U, F.res _ _ (λ _ hx, hx),
-  f_flat_is_ring_hom := λ U, begin
-      convert is_ring_hom.id,
-      { simp [continuous.comap_id U] },
-      { simp [continuous.comap_id U] },
-      { simp [continuous.comap_id U] },
-      convert heq_of_eq (F.Hid U),
-      swap, exact continuous.comap_id U,
-      rw continuous.comap_id U,
-      refl,
-    end,
+  f_flat_is_ring_hom := λ U, presheaf_of_rings.res_is_ring_hom _ _ _ _,
   presheaf_f_flat :=  λ U V hVU s, begin
       rw ←F.to_presheaf.Hcomp',
       rw ←F.to_presheaf.Hcomp',
