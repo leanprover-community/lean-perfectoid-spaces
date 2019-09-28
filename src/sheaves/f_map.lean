@@ -106,8 +106,6 @@ def f_map.to_presheaf_of_rings_f_map
   presheaf_of_rings.f_map F.to_presheaf_of_rings G.to_presheaf_of_rings :=
 { ..f}
 
-#print f_map'
-
 @[extensionality]
 lemma presheaf_of_topological_rings.f_map.ext'
   {X : Type u} [topological_space X] {Y : Type u} [topological_space Y]
@@ -127,30 +125,10 @@ lemma presheaf_of_topological_rings.f_map.ext
   a = b :=
 begin
   cases a, cases b,
-  dsimp at *,
+  dsimp [f_map.to_presheaf_of_rings_f_map] at h,
   injections,
-  dsimp at *,
-  sorry
-  -- congr,
-  -- assumption',
+  simp [*]
 end
-
-    -- cases f, cases f_fmap,
-    -- dsimp,
-    -- cases Y, cases Y_presheaf, cases Y_presheaf__to_presheaf_of_rings,
-    -- cases Y_presheaf__to_presheaf_of_rings__to_presheaf,
-    -- dsimp [id, comp, continuous.comap, presheaf_of_rings.f_map_id, presheaf_of_rings.f_map_comp,
-    --   presheaf_of_topological_rings.f_map.to_presheaf_of_rings_f_map,
-    --   presheaf_of_topological_rings.f_map_comp, presheaf_of_topological_rings.f_map_id] at *,
-    -- congr,
-    -- clear f_stalk, funext,
-    -- have H2 : f_fmap_f_flat V
-    --   (Y_presheaf__to_presheaf_of_rings__to_presheaf_res V V _ s) =
-    --   f_fmap_f_flat V s,
-    --   rw Y_presheaf__to_presheaf_of_rings__to_presheaf_Hid V, refl,
-    -- convert H2,
-    --   apply opens.ext,refl,
-    --   apply opens.ext,refl,
 
 @[simp] lemma f_map.to_presheaf_of_rings_f_map_f (f : presheaf_of_topological_rings.f_map F G) :
   f.to_presheaf_of_rings_f_map.f = f.f := rfl
