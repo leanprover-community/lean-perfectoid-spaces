@@ -103,43 +103,26 @@ structure hom (X Y : PreValuedRingedSpace.{u}) :=
 (stalk : ∀ x : X,
   Spv.comap (stalk_map fmap.to_presheaf_of_rings_f_map x) (X.valuation x) = Y.valuation (fmap.f x))
 
+attribute [simp] hom.stalk
+
+@[extensionality]
 lemma hom_ext {X Y : PreValuedRingedSpace.{u}} (f g : hom X Y) :
   f.fmap = g.fmap → f = g :=
 by { cases f, cases g, tidy }
 
 def id (X : PreValuedRingedSpace.{u}) : hom X X :=
-{ fmap := presheaf_of_topological_rings.f_map_id,
-  stalk := λ x,
-  begin
-    show valuation.is_equiv
-    ((Spv.out (X.valuation x)).comap
-       (stalk_map
-          (presheaf_of_rings.f_map_id X.presheaf.to_presheaf_of_rings)
-          x))
-    (Spv.out (X.valuation ((λ (x : X), x) x))),
-    simp only [stalk_map_id' X.presheaf.to_presheaf_of_rings x],
-    convert valuation.is_equiv.refl,
-    ext, refl,
-  end }
+{ fmap := presheaf_of_topological_rings.f_map_id _,
+  stalk := λ x, by { dsimp, simp, } }
+
+@[simp] lemma id_fmap {X : PreValuedRingedSpace} :
+  (id X).fmap = presheaf_of_topological_rings.f_map_id _ := rfl
 
 def comp {X Y Z : PreValuedRingedSpace.{u}} (f : hom X Y) (g : hom Y Z) : hom X Z :=
-{ fmap := presheaf_of_topological_rings.f_map_comp f.fmap g.fmap,
-  stalk := λ x, begin refine valuation.is_equiv.trans _ (g.stalk (f.fmap.f x)),
-    let XXX := f.stalk x,
-    let YYY := valuation.is_equiv.comap (stalk_map (presheaf_of_topological_rings.f_map.to_presheaf_of_rings_f_map (g.fmap))
-          ((presheaf_of_topological_rings.f_map.to_presheaf_of_rings_f_map (f.fmap)).f x)) XXX,
-    show valuation.is_equiv _ ((Spv.out (Y.valuation ((f.fmap).f x))).comap _),
-    refine valuation.is_equiv.trans _ YYY,
-    rw ←valuation.comap_comp,
-    suffices : (stalk_map
-          (presheaf_of_topological_rings.f_map.to_presheaf_of_rings_f_map
-             (presheaf_of_topological_rings.f_map_comp (f.fmap) (g.fmap)))
-          x) = (stalk_map (presheaf_of_topological_rings.f_map.to_presheaf_of_rings_f_map (f.fmap)) x ∘
-          stalk_map (presheaf_of_topological_rings.f_map.to_presheaf_of_rings_f_map (g.fmap))
-            ((presheaf_of_topological_rings.f_map.to_presheaf_of_rings_f_map (f.fmap)).f x)),
-      simp [this],
-    rw ←stalk_map_comp',
-    refl,
+{ fmap := f.fmap.comp g.fmap,
+  stalk := λ x,
+  begin
+    dsimp, simp only [comp_app, stalk_map_comp', hom.stalk, Spv.comap_comp],
+    dsimp, simp only [hom.stalk],
   end }
 
 instance large_category : large_category (PreValuedRingedSpace.{u}) :=
@@ -148,39 +131,13 @@ instance large_category : large_category (PreValuedRingedSpace.{u}) :=
   comp := λ X Y Z f g, comp f g,
   id_comp' :=
   begin
-    intros X Y f,
-    apply hom_ext,
-    rcases f with ⟨⟨f, f_cont, f_flat, f_hom, f_flat_cont, hf⟩, f_stalk⟩,
-    rcases X with ⟨X, top, ⟨⟨presheaf, ps_ring, res_hom⟩, ps_top, ps_top_ring, res_cont⟩, val⟩,
-    dsimp [id, comp, continuous.comap, presheaf_of_rings.f_map_id, presheaf_of_rings.f_map_comp,
-      presheaf_of_topological_rings.f_map.to_presheaf_of_rings_f_map,
-      presheaf_of_topological_rings.f_map_comp, presheaf_of_topological_rings.f_map_id] at *,
-    clear f_stalk,
-    congr,
-    funext V s,
-    resetI,
-    exact congr_fun (presheaf.Hid ⟨f ⁻¹' V.val, _⟩) (f_flat V s)
+    intros X Y f, ext, dsimp [comp],
+    exact presheaf_of_topological_rings.f_map.id_comp _,
   end,
   comp_id' :=
   begin
-    intros X Y f,
-    apply hom_ext,
-    cases f, cases f_fmap,
-    dsimp,
-    cases Y, cases Y_presheaf, cases Y_presheaf__to_presheaf_of_rings,
-    cases Y_presheaf__to_presheaf_of_rings__to_presheaf,
-    dsimp [id, comp, continuous.comap, presheaf_of_rings.f_map_id, presheaf_of_rings.f_map_comp,
-      presheaf_of_topological_rings.f_map.to_presheaf_of_rings_f_map,
-      presheaf_of_topological_rings.f_map_comp, presheaf_of_topological_rings.f_map_id] at *,
-    congr,
-    clear f_stalk, funext,
-    have H2 : f_fmap_f_flat V
-      (Y_presheaf__to_presheaf_of_rings__to_presheaf_res V V _ s) =
-      f_fmap_f_flat V s,
-      rw Y_presheaf__to_presheaf_of_rings__to_presheaf_Hid V, refl,
-    convert H2,
-      apply opens.ext,refl,
-      apply opens.ext,refl,
+    intros X Y f, ext, dsimp [comp],
+    exact presheaf_of_topological_rings.f_map.comp_id _,
   end }
 
 end PreValuedRingedSpace

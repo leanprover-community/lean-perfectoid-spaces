@@ -135,6 +135,15 @@ begin
   apply h,
 end
 
+/-- The induction principle for Spv.-/
+lemma induction_on (v : Spv R) (P : Spv R → Prop)
+  (h : Π ⦃Γ₀ : Type u₀⦄ [linear_ordered_comm_group_with_zero Γ₀] (v : valuation R Γ₀), P (Spv.mk v)) :
+  P v :=
+begin
+  rw ← @mk_out _ _ v,
+  apply h
+end
+
 /-- If two valuations are mapped to the same term of Spv R, then they are equivalent. -/
 lemma is_equiv_of_eq_mk {v₁ : valuation R Γ'₀} {v₂ : valuation R Γ''₀} (h : mk v₁ = mk v₂) :
   v₁.is_equiv v₂ :=
@@ -161,18 +170,43 @@ section
 end
 
 section comap
-variables {S : Type*} [comm_ring S]
+variables {S : Type*} [comm_ring S] {T : Type*} [comm_ring T]
 
 noncomputable def comap (f : R → S) [is_ring_hom f] : Spv S → Spv R :=
 lift $ λ Γ₀ _ v, by exactI Spv.mk (v.comap f)
 
 lemma comap_id_apply (v : Spv R) : comap (id : R → R) v = v :=
 begin
-  sorry
+  apply induction_on v, clear v,
+  intros Γ₀ _ v, resetI,
+  delta comap, rw lift_eq,
+  intros Γ₀' _ v' h, resetI,
+  apply sound,
+  simpa using h,
 end
 
 @[simp] lemma comap_id : comap (id : R → R) = id :=
 funext $ comap_id_apply
+
+@[simp] lemma comap_comp_apply (g : S → T) (f : R → S) [is_ring_hom g] [is_ring_hom f] (v : Spv T):
+  comap (g ∘ f) v = comap f (comap g v) :=
+begin
+  apply induction_on v, clear v,
+  intros Γ₀ _ v, resetI,
+  delta comap, rw lift_eq,
+  intros Γ₀' _ v' h, resetI,
+  apply sound,
+  rw [valuation.comap_comp],
+  apply valuation.is_equiv.comap,
+  rw [lift],
+  apply is_equiv.trans _ (out_mk _).symm,
+  apply valuation.is_equiv.comap,
+  exact h.trans (out_mk v).symm
+end
+
+@[simp] lemma comap_comp (g : S → T) (f : R → S) [is_ring_hom g] [is_ring_hom f] :
+  comap (g ∘ f) = comap f ∘ comap g :=
+funext $ comap_comp_apply g f
 
 end comap
 
