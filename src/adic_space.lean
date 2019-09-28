@@ -121,7 +121,7 @@ def comp {X Y Z : PreValuedRingedSpace.{u}} (f : hom X Y) (g : hom Y Z) : hom X 
 { fmap := f.fmap.comp g.fmap,
   stalk := λ x,
   begin
-    dsimp, simp only [comp_app, stalk_map_comp', hom.stalk, Spv.comap_comp],
+    dsimp, simp only [comp_app, stalk_map.stalk_map_comp', hom.stalk, Spv.comap_comp],
     dsimp, simp only [hom.stalk],
   end }
 
@@ -132,12 +132,12 @@ instance large_category : large_category (PreValuedRingedSpace.{u}) :=
   id_comp' :=
   begin
     intros X Y f, ext, dsimp [comp],
-    exact presheaf_of_topological_rings.f_map.id_comp _,
+    exact presheaf_of_rings.f_map.id_comp _,
   end,
   comp_id' :=
   begin
     intros X Y f, ext, dsimp [comp],
-    exact presheaf_of_topological_rings.f_map.comp_id _,
+    exact presheaf_of_rings.f_map.comp_id _,
   end }
 
 end PreValuedRingedSpace
