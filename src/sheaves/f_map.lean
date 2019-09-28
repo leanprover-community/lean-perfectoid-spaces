@@ -80,11 +80,6 @@ end presheaf_of_rings
 namespace presheaf_of_topological_rings
 variables {F : presheaf_of_topological_rings X} {G : presheaf_of_topological_rings Y} {H : presheaf_of_topological_rings Z}
 
-structure f_map' (F : presheaf_of_topological_rings X) (G : presheaf_of_topological_rings Y)
-extends presheaf_of_rings.f_map (F.to_presheaf_of_rings) (G.to_presheaf_of_rings) :=
-(cont_f_flat : ∀ V : opens Y,
- @continuous _ _ (presheaf_of_topological_rings.Ftop _ _) (presheaf_of_topological_rings.Ftop _ _) (f_flat V))
-
 structure f_map (F : presheaf_of_topological_rings X) (G : presheaf_of_topological_rings Y) :=
 (f : X → Y)
 (hf : continuous f)
@@ -105,17 +100,6 @@ def f_map.to_presheaf_of_rings_f_map
   (f : presheaf_of_topological_rings.f_map F G) :
   presheaf_of_rings.f_map F.to_presheaf_of_rings G.to_presheaf_of_rings :=
 { ..f}
-
-@[extensionality]
-lemma presheaf_of_topological_rings.f_map.ext'
-  {X : Type u} [topological_space X] {Y : Type u} [topological_space Y]
-  {F : presheaf_of_topological_rings X} {G : presheaf_of_topological_rings Y}
-  (a b : F.f_map' G) (h : a.to_f_map = b.to_f_map) :
-  a = b :=
-begin
-  cases a, cases b,
-  congr, exact h,
-end
 
 @[extensionality]
 lemma presheaf_of_topological_rings.f_map.ext
