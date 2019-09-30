@@ -50,15 +50,6 @@ open spa
 
 open_locale classical
 
-namespace sheaf_of_topological_rings
-
--- Maybe we could make this an instance?
-def uniform_space {X : Type u} [topological_space X] (𝒪X : sheaf_of_topological_rings X)
-  (U : opens X) : uniform_space (𝒪X.F.F U) :=
-topological_add_group.to_uniform_space (𝒪X.F.F U)
-
-end sheaf_of_topological_rings
-
 /-- A convenient auxiliary category whose objects are topological spaces equipped with
 a presheaf of topological rings and on each stalk (considered as abstract ring) an
 equivalence class of valuations. The point of this category is that the local isomorphism
@@ -66,7 +57,7 @@ between a general adic space and an affinoid model Spa(A) can be checked in this
 -/
 structure PreValuedRingedSpace :=
 (space : Type u)
-(top   : topological_space space)
+[top   : topological_space space]
 (presheaf : presheaf_of_topological_rings.{u u} space)
 (valuation : ∀ x : space, Spv (stalk_of_rings presheaf.to_presheaf_of_rings x))
 
@@ -74,7 +65,7 @@ namespace PreValuedRingedSpace
 
 variables (X : PreValuedRingedSpace.{u})
 
-/-- Coercion from a PreValuedRingedSpace to the underlying topological space-/
+/-- Coercion from a PreValuedRingedSpace to the underlying topological space.-/
 instance : has_coe_to_sort PreValuedRingedSpace.{u} :=
 { S := Type u,
   coe := λ X, X.space }
@@ -100,6 +91,10 @@ end PreValuedRingedSpace
 namespace PreValuedRingedSpace
 open category_theory
 
+/-- A morphism of pre-valued ringed spaces is a morphism of the structure presheaves
+(of topological rings, hence *continuous* on sections),
+such that for every point x in the domain the induced map on stalks pulls valuation on the stalk
+back to the valuation of the stalk on the image of x.-/
 structure hom (X Y : PreValuedRingedSpace.{u}) :=
 (fmap : presheaf_of_topological_rings.f_map X.presheaf Y.presheaf)
 (stalk : ∀ x : X,
@@ -107,11 +102,14 @@ structure hom (X Y : PreValuedRingedSpace.{u}) :=
 
 attribute [simp] hom.stalk
 
+/-- A morphism of pre-valued ringed spaces is determined by the data
+of the morphism of the structure presheaves.-/
 @[extensionality]
 lemma hom_ext {X Y : PreValuedRingedSpace.{u}} (f g : hom X Y) :
   f.fmap = g.fmap → f = g :=
 by { cases f, cases g, tidy }
 
+/--The identity morphism of a pre-valued ringed space.-/
 def id (X : PreValuedRingedSpace.{u}) : hom X X :=
 { fmap := presheaf_of_topological_rings.f_map_id _,
   stalk := λ x, by { dsimp, simp, } }
@@ -119,6 +117,7 @@ def id (X : PreValuedRingedSpace.{u}) : hom X X :=
 @[simp] lemma id_fmap {X : PreValuedRingedSpace} :
   (id X).fmap = presheaf_of_topological_rings.f_map_id _ := rfl
 
+/--The composition of morphisms of pre-valued ringed spaces.-/
 def comp {X Y Z : PreValuedRingedSpace.{u}} (f : hom X Y) (g : hom Y Z) : hom X Z :=
 { fmap := f.fmap.comp g.fmap,
   stalk := λ x,
@@ -127,6 +126,7 @@ def comp {X Y Z : PreValuedRingedSpace.{u}} (f : hom X Y) (g : hom Y Z) : hom X 
     dsimp, simp only [hom.stalk],
   end }
 
+/--Pre-valued ringed spaces form a large category.-/
 instance large_category : large_category (PreValuedRingedSpace.{u}) :=
 { hom  := hom,
   id   := id,
@@ -144,6 +144,8 @@ instance large_category : large_category (PreValuedRingedSpace.{u}) :=
 
 end PreValuedRingedSpace
 
+/--If U is an open subset of a pre-valued ringed space X, then there is a natural way
+to view U as a pre-valued ringed space by restricting the structure presheaf from X.-/
 noncomputable instance PreValuedRingedSpace.restrict {X : PreValuedRingedSpace.{u}} :
   has_coe (opens X) PreValuedRingedSpace :=
 { coe := λ U,
@@ -152,6 +154,16 @@ noncomputable instance PreValuedRingedSpace.restrict {X : PreValuedRingedSpace.{
     presheaf := presheaf_of_topological_rings.restrict U X.presheaf,
     valuation :=
       λ u, Spv.mk (valuation.comap (presheaf_of_rings.restrict_stalk_map _ _) (X.valuation u).out) } }
+
+namespace sheaf_of_topological_rings
+
+/-- The sections of a sheaf of topological rings form a uniform space.
+When this is made an instance, beware of diamonds.-/
+def uniform_space {X : Type u} [topological_space X] (𝒪X : sheaf_of_topological_rings X)
+  (U : opens X) : uniform_space (𝒪X.F.F U) :=
+topological_add_group.to_uniform_space (𝒪X.F.F U)
+
+end sheaf_of_topological_rings
 
 section
 local attribute [instance] sheaf_of_topological_rings.uniform_space
@@ -176,10 +188,12 @@ open category_theory
 
 attribute [instance] top
 
+/--A CLVRS is naturally a pre-valued ringed space.-/
 def to_PreValuedRingedSpace (X : CLVRS) : PreValuedRingedSpace.{0} :=
 { presheaf := sheaf_of_topological_rings.to_presheaf_of_topological_rings X.sheaf',
   ..X }
 
+/--The coercion from a CLVRS to a pre-valued ringed space.-/
 instance : has_coe CLVRS PreValuedRingedSpace.{0} :=
 ⟨to_PreValuedRingedSpace⟩
 
@@ -187,6 +201,7 @@ instance (X : CLVRS) : topological_space X := X.top
 
 def sheaf (X : CLVRS) : sheaf_of_topological_rings X := X.sheaf'
 
+/--CLVRS is a full subcategory of PreValuedRingedSpace.-/
 instance : large_category CLVRS := induced_category.category to_PreValuedRingedSpace
 
 variables {X Y : CLVRS} (f : X ⟶ Y) (x : X)
@@ -213,12 +228,19 @@ lemma is_local_ring_hom :
     contrapose! h,
   end }
 
+/-
+Remark: One can show that for every morphism in CLVRS,
+the induced maps on stalks are local ring morphisms.
+Sketch of proof: the valuation on the source pulls back to the valuation on the target,
+and by assumption `supp_maximal` this means that the maximal ideal on the target
+is mapped into the maximal ideal on the source.
+-/
+
 end CLVRS
 
 /--The adic spectrum of a Huber pair.-/
 noncomputable def Spa (A : Huber_pair) : PreValuedRingedSpace :=
 { space     := spa A,
-  top       := by apply_instance,
   presheaf  := spa.presheaf_of_topological_rings A,
   valuation := λ x, Spv.mk (spa.presheaf.stalk_valuation x) }
 
@@ -229,18 +251,22 @@ notation A `≊` B := nonempty (A ≅ B)
 
 namespace CLVRS
 
+/--A CLVRS is an adic space if every point has an open neighbourhood that is isomorphic
+to the adic spectrum of a Huber pair.-/
 def is_adic_space (X : CLVRS) : Prop :=
 ∀ x : X, ∃ (U : opens X) (R : Huber_pair), x ∈ U ∧ (Spa R ≊ U)
 
 end CLVRS
 
+/--A CLVRS is an adic space if every point has an open neighbourhood that is isomorphic
+to the adic spectrum of a Huber pair.-/
 def AdicSpace := {X : CLVRS // X.is_adic_space}
 
 namespace AdicSpace
 open category_theory
 
+/--The category of adic spaces is the full subcategory of CLVRS that
+consists of the objects that are adic spaces.-/
 instance : large_category AdicSpace := category_theory.full_subcategory _
 
 end AdicSpace
-
--- #doc_blame!
