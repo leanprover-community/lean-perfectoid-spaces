@@ -169,20 +169,35 @@ section
 
 end
 
+section supp
+
+noncomputable def supp (v : Spv R) := v.out.supp
+
+@[simp] lemma supp_mk (v : valuation R Γ₀) : (mk v).supp = v.supp :=
+(out_mk v).supp_eq
+
+end supp
+
 section comap
 variables {S : Type*} [comm_ring S] {T : Type*} [comm_ring T]
 
 noncomputable def comap (f : R → S) [is_ring_hom f] : Spv S → Spv R :=
 lift $ λ Γ₀ _ v, by exactI Spv.mk (v.comap f)
 
+lemma comap_mk (f : R → S) [is_ring_hom f] (v : valuation S Γ₀) :
+  comap f (mk v) = mk (v.comap f) :=
+begin
+  delta comap, rw lift_eq,
+  intros Γ₀ _ v h, resetI,
+  apply sound,
+  exact is_equiv.comap f h
+end
+
 lemma comap_id_apply (v : Spv R) : comap (id : R → R) v = v :=
 begin
   apply induction_on v, clear v,
   intros Γ₀ _ v, resetI,
-  delta comap, rw lift_eq,
-  intros Γ₀' _ v' h, resetI,
-  apply sound,
-  simpa using h,
+  rw [comap_mk, valuation.comap_id],
 end
 
 @[simp] lemma comap_id : comap (id : R → R) = id :=
@@ -193,20 +208,24 @@ funext $ comap_id_apply
 begin
   apply induction_on v, clear v,
   intros Γ₀ _ v, resetI,
-  delta comap, rw lift_eq,
-  intros Γ₀' _ v' h, resetI,
-  apply sound,
-  rw [valuation.comap_comp],
-  apply valuation.is_equiv.comap,
-  rw [lift],
-  apply is_equiv.trans _ (out_mk _).symm,
-  apply valuation.is_equiv.comap,
-  exact h.trans (out_mk v).symm
+  rw [comap_mk, comap_mk, comap_mk, valuation.comap_comp],
 end
 
 @[simp] lemma comap_comp (g : S → T) (f : R → S) [is_ring_hom g] [is_ring_hom f] :
   comap (g ∘ f) = comap f ∘ comap g :=
 funext $ comap_comp_apply g f
+
+lemma supp_comap (f : R → S) [is_ring_hom f] (v : Spv S) :
+  (v.comap f).supp = v.supp.comap f :=
+begin
+  apply induction_on v, clear v,
+  intros Γ₀ _ v, resetI,
+  rw [comap_mk, supp_mk, supp_mk, valuation.comap_supp],
+end
+
+lemma mem_supp_comap (f : R → S) [is_ring_hom f] (v : Spv S) (r : R) :
+  r ∈ (v.comap f).supp ↔ f r ∈ v.supp :=
+by { rw supp_comap, exact iff.rfl }
 
 end comap
 

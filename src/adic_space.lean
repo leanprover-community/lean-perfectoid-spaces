@@ -179,7 +179,7 @@ structure CLVRS :=
 (complete : ∀ U : opens space, complete_space (sheaf'.F.F U))
 (valuation : ∀ x : space, Spv (stalk_of_rings sheaf'.to_presheaf_of_topological_rings.to_presheaf_of_rings x))
 (local_stalks : ∀ x : space, is_local_ring (stalk_of_rings sheaf'.to_presheaf_of_rings x))
-(supp_maximal : ∀ x : space, ideal.is_maximal (_root_.valuation.supp (valuation x).out))
+(supp_maximal : ∀ x : space, ideal.is_maximal (valuation x).supp)
 
 end
 
@@ -206,27 +206,53 @@ instance : large_category CLVRS := induced_category.category to_PreValuedRingedS
 
 variables {X Y : CLVRS} (f : X ⟶ Y) (x : X)
 
-instance : has_coe_to_fun (X ⟶ Y) :=
-{ F := λ f, X → Y,
-  coe := λ ⟨f,_⟩, presheaf_of_topological_rings.f_map.f f }
-
+/-- The underlying morphism of structure presheaves of a morphism of CLVRSs.-/
 def fmap : presheaf_of_rings.f_map _ _:=
   (PreValuedRingedSpace.hom.fmap f).to_presheaf_of_rings_f_map
 
-theorem diamond {X : Type} [topological_space X] (F : sheaf_of_topological_rings X) :
-  F.to_presheaf_of_topological_rings.to_presheaf_of_rings = F.to_presheaf_of_rings := rfl
+instance : has_coe_to_fun (X ⟶ Y) :=
+{ F := λ f, X → Y,
+  coe := λ f, (fmap f).f }
 
-noncomputable def stalk_map := stalk_map (fmap f) x
+/-- The stalk of the structure sheaf at a point of a CLVRS.-/
+def stalk (X : CLVRS) := stalk_of_rings (X.sheaf.to_presheaf_of_rings)
+
+instance stalk.comm_ring : comm_ring (X.stalk x) := stalk_of_rings_is_comm_ring _ _
+instance stalk.is_local_ring : local_ring (X.stalk x) :=
+local_of_is_local_ring $ X.local_stalks x
+
+/-- The ring homomorphism on the stalks induced by a morphism of CLVRSs.-/
+noncomputable def stalk_map : Y.stalk (f x) → X.stalk x :=
+stalk_map (fmap f) x
 
 instance : is_ring_hom (stalk_map f x) := stalk_map.is_ring_hom _ _
 
+section local_ring
+open local_ring
+
+/-- For every point in a CLVRS,
+the support of the valuation on a stalk is the maximal ideal of the stalk.-/
+lemma nonunits_eq_supp : nonunits_ideal (X.stalk x) = (X.valuation x).supp :=
+unique_of_exists_unique (max_ideal_unique _) (nonunits_ideal.is_maximal _) (X.supp_maximal x)
+
+/-- The map on stalks induced by a morphism of CLVRSs is compatible with the valuations
+on the stalks: the pullback of the valuation on the source is the valuation on the target. -/
+lemma comap_valuation :
+  Spv.comap (stalk_map f x) (X.valuation x) = Y.valuation (f x) :=
+PreValuedRingedSpace.hom.stalk _ _
+
+/-- The map on stalks induced by a morphism of CLVRSs is a morphism of local rings. -/
 lemma is_local_ring_hom :
   is_local_ring_hom (stalk_map f x) :=
 { map_nonunit :=
   begin
     intros s h,
     contrapose! h,
+    rw [← mem_nonunits_iff, ← mem_nonunits_ideal, nonunits_eq_supp] at h ⊢,
+    rwa [← comap_valuation, Spv.supp_comap] at h,
   end }
+
+end local_ring
 
 /-
 Remark: One can show that for every morphism in CLVRS,
