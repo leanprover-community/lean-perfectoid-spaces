@@ -162,11 +162,11 @@ rings; moreover the support of the valuation must be the maximal ideal of the st
 Wedhorn calls this category `𝒱`.-/
 structure CLVRS :=
 (space : Type) -- change this to (Type u) to enable universes
-(top   : topological_space space)
-(sheaf : sheaf_of_topological_rings.{0 0} space)
-(complete : ∀ U : opens space, complete_space (sheaf.F.F U))
-(valuation : ∀ x : space, Spv (stalk_of_rings sheaf.to_presheaf_of_topological_rings.to_presheaf_of_rings x))
-(local_stalks : ∀ x : space, is_local_ring (stalk_of_rings sheaf.to_presheaf_of_rings x))
+[top   : topological_space space]
+(sheaf' : sheaf_of_topological_rings.{0 0} space)
+(complete : ∀ U : opens space, complete_space (sheaf'.F.F U))
+(valuation : ∀ x : space, Spv (stalk_of_rings sheaf'.to_presheaf_of_topological_rings.to_presheaf_of_rings x))
+(local_stalks : ∀ x : space, is_local_ring (stalk_of_rings sheaf'.to_presheaf_of_rings x))
 (supp_maximal : ∀ x : space, ideal.is_maximal (_root_.valuation.supp (valuation x).out))
 
 end
@@ -174,13 +174,44 @@ end
 namespace CLVRS
 open category_theory
 
+attribute [instance] top
+
 def to_PreValuedRingedSpace (X : CLVRS) : PreValuedRingedSpace.{0} :=
-{ presheaf := _, ..X }
+{ presheaf := sheaf_of_topological_rings.to_presheaf_of_topological_rings X.sheaf',
+  ..X }
 
 instance : has_coe CLVRS PreValuedRingedSpace.{0} :=
 ⟨to_PreValuedRingedSpace⟩
 
+instance (X : CLVRS) : topological_space X := X.top
+
+def sheaf (X : CLVRS) : sheaf_of_topological_rings X := X.sheaf'
+
 instance : large_category CLVRS := induced_category.category to_PreValuedRingedSpace
+
+variables {X Y : CLVRS} (f : X ⟶ Y) (x : X)
+
+instance : has_coe_to_fun (X ⟶ Y) :=
+{ F := λ f, X → Y,
+  coe := λ ⟨f,_⟩, presheaf_of_topological_rings.f_map.f f }
+
+def fmap : presheaf_of_rings.f_map _ _:=
+  (PreValuedRingedSpace.hom.fmap f).to_presheaf_of_rings_f_map
+
+theorem diamond {X : Type} [topological_space X] (F : sheaf_of_topological_rings X) :
+  F.to_presheaf_of_topological_rings.to_presheaf_of_rings = F.to_presheaf_of_rings := rfl
+
+noncomputable def stalk_map := stalk_map (fmap f) x
+
+instance : is_ring_hom (stalk_map f x) := stalk_map.is_ring_hom _ _
+
+lemma is_local_ring_hom :
+  is_local_ring_hom (stalk_map f x) :=
+{ map_nonunit :=
+  begin
+    intros s h,
+    contrapose! h,
+  end }
 
 end CLVRS
 
