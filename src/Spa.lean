@@ -22,6 +22,7 @@ local postfix `⁺` : 66 := λ A : Huber_pair, A.plus
 variables {Γ₀ : Type*} [linear_ordered_comm_group_with_zero Γ₀]
 
 -- Wedhorn def 7.23.
+-- We reserve the name `Spa` (with upper case `S`) for the bundled adic spectrum (`adic_space.lean`)
 definition spa (A : Huber_pair) : set (Spv A) :=
 {v | v.is_continuous ∧ ∀ r : A⁺, v (algebra_map A r) ≤ 1}
 

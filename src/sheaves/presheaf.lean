@@ -50,7 +50,7 @@ structure morphism (F G : presheaf α) :=
 (commutes : ∀ (U V) (HVU : V ⊆ U),
   (G.res U V HVU) ∘ (map U) = (map V) ∘ (F.res U V HVU))
 
-infix `⟶`:80 := morphism
+local infix `⟶`:80 := morphism
 
 section morphism
 
@@ -62,7 +62,7 @@ def comp {F G H : presheaf α} (fg : F ⟶ G) (gh : G ⟶ H) : F ⟶ H :=
       rw [function.comp.assoc, ←fg.commutes U V HVU]
     end }
 
-infix `⊚`:80 := comp
+local infix `⊚`:80 := comp
 
 def id (F : presheaf α) : F ⟶ F :=
 { map := λ U, id,

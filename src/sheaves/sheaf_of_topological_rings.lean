@@ -44,7 +44,7 @@ def sheaf_of_topological_rings.to_presheaf_of_topological_rings
 (presheaf_of_topological_rings α) := S.F
 
 def sheaf_of_topological_rings.to_presheaf_of_rings {α : Type u} [topological_space α]
-  (F : sheaf_of_topological_rings α) : presheaf_of_rings α := {..F.F }
+  (F : sheaf_of_topological_rings α) : presheaf_of_rings α := F.F.to_presheaf_of_rings
 
 def sheaf_of_topological_rings.to_sheaf_of_rings {α : Type u} [topological_space α]
   (F : sheaf_of_topological_rings α) : sheaf_of_rings α :=

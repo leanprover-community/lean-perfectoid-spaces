@@ -48,14 +48,7 @@ open nat function
 open topological_space
 open spa
 
-namespace sheaf_of_topological_rings
-
--- Maybe we could make this an instance?
-def uniform_space {X : Type u} [topological_space X] (𝒪X : sheaf_of_topological_rings X)
-  (U : opens X) : uniform_space (𝒪X.F.F U) :=
-topological_add_group.to_uniform_space (𝒪X.F.F U)
-
-end sheaf_of_topological_rings
+open_locale classical
 
 /-- A convenient auxiliary category whose objects are topological spaces equipped with
 a presheaf of topological rings and on each stalk (considered as abstract ring) an
@@ -64,7 +57,7 @@ between a general adic space and an affinoid model Spa(A) can be checked in this
 -/
 structure PreValuedRingedSpace :=
 (space : Type u)
-(top   : topological_space space)
+[top   : topological_space space]
 (presheaf : presheaf_of_topological_rings.{u u} space)
 (valuation : ∀ x : space, Spv (stalk_of_rings presheaf.to_presheaf_of_rings x))
 
@@ -72,7 +65,7 @@ namespace PreValuedRingedSpace
 
 variables (X : PreValuedRingedSpace.{u})
 
-/-- Coercion from a PreValuedRingedSpace to the underlying topological space-/
+/-- Coercion from a PreValuedRingedSpace to the underlying topological space.-/
 instance : has_coe_to_sort PreValuedRingedSpace.{u} :=
 { S := Type u,
   coe := λ X, X.space }
@@ -98,93 +91,61 @@ end PreValuedRingedSpace
 namespace PreValuedRingedSpace
 open category_theory
 
+/-- A morphism of pre-valued ringed spaces is a morphism of the structure presheaves
+(of topological rings, hence *continuous* on sections),
+such that for every point x in the domain the induced map on stalks pulls valuation on the stalk
+back to the valuation of the stalk on the image of x.-/
 structure hom (X Y : PreValuedRingedSpace.{u}) :=
 (fmap : presheaf_of_topological_rings.f_map X.presheaf Y.presheaf)
-(stalk : ∀ x : X, ((X.valuation x).out.comap (stalk_map fmap.to_presheaf_of_rings_f_map x)).is_equiv
-  (Y.valuation (fmap.f x)).out)
+(stalk : ∀ x : X,
+  Spv.comap (stalk_map fmap.to_presheaf_of_rings_f_map x) (X.valuation x) = Y.valuation (fmap.f x))
 
+attribute [simp] hom.stalk
+
+/-- A morphism of pre-valued ringed spaces is determined by the data
+of the morphism of the structure presheaves.-/
+@[extensionality]
 lemma hom_ext {X Y : PreValuedRingedSpace.{u}} (f g : hom X Y) :
   f.fmap = g.fmap → f = g :=
 by { cases f, cases g, tidy }
 
+/--The identity morphism of a pre-valued ringed space.-/
 def id (X : PreValuedRingedSpace.{u}) : hom X X :=
-{ fmap := presheaf_of_topological_rings.f_map_id,
+{ fmap := presheaf_of_topological_rings.f_map_id _,
+  stalk := λ x, by { dsimp, simp, } }
+
+@[simp] lemma id_fmap {X : PreValuedRingedSpace} :
+  (id X).fmap = presheaf_of_topological_rings.f_map_id _ := rfl
+
+/--The composition of morphisms of pre-valued ringed spaces.-/
+def comp {X Y Z : PreValuedRingedSpace.{u}} (f : hom X Y) (g : hom Y Z) : hom X Z :=
+{ fmap := f.fmap.comp g.fmap,
   stalk := λ x,
   begin
-    show valuation.is_equiv
-    ((Spv.out (X.valuation x)).comap
-       (stalk_map
-          (presheaf_of_rings.f_map_id X.presheaf.to_presheaf_of_rings)
-          x))
-    (Spv.out (X.valuation ((λ (x : X), x) x))),
-    simp only [stalk_map_id' X.presheaf.to_presheaf_of_rings x],
-    convert valuation.is_equiv.refl,
-    ext, refl,
+    dsimp, simp only [comp_app, stalk_map.stalk_map_comp', hom.stalk, Spv.comap_comp],
+    dsimp, simp only [hom.stalk],
   end }
 
-def comp {X Y Z : PreValuedRingedSpace.{u}} (f : hom X Y) (g : hom Y Z) : hom X Z :=
-{ fmap := presheaf_of_topological_rings.f_map_comp f.fmap g.fmap,
-  stalk := λ x, begin refine valuation.is_equiv.trans _ (g.stalk (f.fmap.f x)),
-    let XXX := f.stalk x,
-    let YYY := valuation.is_equiv.comap (stalk_map (presheaf_of_topological_rings.f_map.to_presheaf_of_rings_f_map (g.fmap))
-          ((presheaf_of_topological_rings.f_map.to_presheaf_of_rings_f_map (f.fmap)).f x)) XXX,
-    show valuation.is_equiv _ ((Spv.out (Y.valuation ((f.fmap).f x))).comap _),
-    refine valuation.is_equiv.trans _ YYY,
-    rw ←valuation.comap_comp,
-    suffices : (stalk_map
-          (presheaf_of_topological_rings.f_map.to_presheaf_of_rings_f_map
-             (presheaf_of_topological_rings.f_map_comp (f.fmap) (g.fmap)))
-          x) = (stalk_map (presheaf_of_topological_rings.f_map.to_presheaf_of_rings_f_map (f.fmap)) x ∘
-          stalk_map (presheaf_of_topological_rings.f_map.to_presheaf_of_rings_f_map (g.fmap))
-            ((presheaf_of_topological_rings.f_map.to_presheaf_of_rings_f_map (f.fmap)).f x)),
-      simp [this],
-    rw ←stalk_map_comp',
-    refl,
-  end }
-
+/--Pre-valued ringed spaces form a large category.-/
 instance large_category : large_category (PreValuedRingedSpace.{u}) :=
 { hom  := hom,
   id   := id,
   comp := λ X Y Z f g, comp f g,
   id_comp' :=
   begin
-    intros X Y f,
-    apply hom_ext,
-    rcases f with ⟨⟨f, f_cont, f_flat, f_hom, f_flat_cont, hf⟩, f_stalk⟩,
-    rcases X with ⟨X, top, ⟨⟨presheaf, ps_ring, res_hom⟩, ps_top, ps_top_ring, res_cont⟩, val⟩,
-    dsimp [id, comp, continuous.comap, presheaf_of_rings.f_map_id, presheaf_of_rings.f_map_comp,
-      presheaf_of_topological_rings.f_map.to_presheaf_of_rings_f_map,
-      presheaf_of_topological_rings.f_map_comp, presheaf_of_topological_rings.f_map_id] at *,
-    clear f_stalk,
-    congr,
-    funext V s,
-    resetI,
-    exact congr_fun (presheaf.Hid ⟨f ⁻¹' V.val, _⟩) (f_flat V s)
+    intros X Y f, ext, dsimp [comp],
+    exact presheaf_of_rings.f_map.id_comp _,
   end,
   comp_id' :=
   begin
-    intros X Y f,
-    apply hom_ext,
-    cases f, cases f_fmap,
-    dsimp,
-    cases Y, cases Y_presheaf, cases Y_presheaf__to_presheaf_of_rings,
-    cases Y_presheaf__to_presheaf_of_rings__to_presheaf,
-    dsimp [id, comp, continuous.comap, presheaf_of_rings.f_map_id, presheaf_of_rings.f_map_comp,
-      presheaf_of_topological_rings.f_map.to_presheaf_of_rings_f_map,
-      presheaf_of_topological_rings.f_map_comp, presheaf_of_topological_rings.f_map_id] at *,
-    congr,
-    clear f_stalk, funext,
-    have H2 : f_fmap_f_flat V
-      (Y_presheaf__to_presheaf_of_rings__to_presheaf_res V V _ s) =
-      f_fmap_f_flat V s,
-      rw Y_presheaf__to_presheaf_of_rings__to_presheaf_Hid V, refl,
-    convert H2,
-      apply opens.ext,refl,
-      apply opens.ext,refl,
+    intros X Y f, ext, dsimp [comp],
+    exact presheaf_of_rings.f_map.comp_id _,
   end }
 
 end PreValuedRingedSpace
 
+/--If U is an open subset of a pre-valued ringed space X, then there is a natural way
+to view U as a pre-valued ringed space by restricting the structure presheaf from X.-/
 noncomputable instance PreValuedRingedSpace.restrict {X : PreValuedRingedSpace.{u}} :
   has_coe (opens X) PreValuedRingedSpace :=
 { coe := λ U,
@@ -193,6 +154,16 @@ noncomputable instance PreValuedRingedSpace.restrict {X : PreValuedRingedSpace.{
     presheaf := presheaf_of_topological_rings.restrict U X.presheaf,
     valuation :=
       λ u, Spv.mk (valuation.comap (presheaf_of_rings.restrict_stalk_map _ _) (X.valuation u).out) } }
+
+namespace sheaf_of_topological_rings
+
+/-- The sections of a sheaf of topological rings form a uniform space.
+When this is made an instance, beware of diamonds.-/
+def uniform_space {X : Type u} [topological_space X] (𝒪X : sheaf_of_topological_rings X)
+  (U : opens X) : uniform_space (𝒪X.F.F U) :=
+topological_add_group.to_uniform_space (𝒪X.F.F U)
+
+end sheaf_of_topological_rings
 
 section
 local attribute [instance] sheaf_of_topological_rings.uniform_space
@@ -203,32 +174,99 @@ rings; moreover the support of the valuation must be the maximal ideal of the st
 Wedhorn calls this category `𝒱`.-/
 structure CLVRS :=
 (space : Type) -- change this to (Type u) to enable universes
-(top   : topological_space space)
-(sheaf : sheaf_of_topological_rings.{0 0} space)
-(complete : ∀ U : opens space, complete_space (sheaf.F.F U))
-(valuation : ∀ x : space, Spv (stalk_of_rings sheaf.to_presheaf_of_topological_rings.to_presheaf_of_rings x))
-(local_stalks : ∀ x : space, is_local_ring (stalk_of_rings sheaf.to_presheaf_of_rings x))
-(supp_maximal : ∀ x : space, ideal.is_maximal (_root_.valuation.supp (valuation x).out))
+[top   : topological_space space]
+(sheaf' : sheaf_of_topological_rings.{0 0} space)
+(complete : ∀ U : opens space, complete_space (sheaf'.F.F U))
+(valuation : ∀ x : space, Spv (stalk_of_rings sheaf'.to_presheaf_of_topological_rings.to_presheaf_of_rings x))
+(local_stalks : ∀ x : space, is_local_ring (stalk_of_rings sheaf'.to_presheaf_of_rings x))
+(supp_maximal : ∀ x : space, ideal.is_maximal (valuation x).supp)
 
 end
 
 namespace CLVRS
 open category_theory
 
-def to_PreValuedRingedSpace (X : CLVRS) : PreValuedRingedSpace.{0} :=
-{ presheaf := _, ..X }
+attribute [instance] top
 
+/--A CLVRS is naturally a pre-valued ringed space.-/
+def to_PreValuedRingedSpace (X : CLVRS) : PreValuedRingedSpace.{0} :=
+{ presheaf := sheaf_of_topological_rings.to_presheaf_of_topological_rings X.sheaf',
+  ..X }
+
+/--The coercion from a CLVRS to a pre-valued ringed space.-/
 instance : has_coe CLVRS PreValuedRingedSpace.{0} :=
 ⟨to_PreValuedRingedSpace⟩
 
+instance (X : CLVRS) : topological_space X := X.top
+
+def sheaf (X : CLVRS) : sheaf_of_topological_rings X := X.sheaf'
+
+/--CLVRS is a full subcategory of PreValuedRingedSpace.-/
 instance : large_category CLVRS := induced_category.category to_PreValuedRingedSpace
+
+variables {X Y : CLVRS} (f : X ⟶ Y) (x : X)
+
+/-- The underlying morphism of structure presheaves of a morphism of CLVRSs.-/
+def fmap : presheaf_of_rings.f_map _ _:=
+  (PreValuedRingedSpace.hom.fmap f).to_presheaf_of_rings_f_map
+
+instance : has_coe_to_fun (X ⟶ Y) :=
+{ F := λ f, X → Y,
+  coe := λ f, (fmap f).f }
+
+/-- The stalk of the structure sheaf at a point of a CLVRS.-/
+def stalk (X : CLVRS) := stalk_of_rings (X.sheaf.to_presheaf_of_rings)
+
+instance stalk.comm_ring : comm_ring (X.stalk x) := stalk_of_rings_is_comm_ring _ _
+instance stalk.is_local_ring : local_ring (X.stalk x) :=
+local_of_is_local_ring $ X.local_stalks x
+
+/-- The ring homomorphism on the stalks induced by a morphism of CLVRSs.-/
+noncomputable def stalk_map : Y.stalk (f x) → X.stalk x :=
+stalk_map (fmap f) x
+
+instance : is_ring_hom (stalk_map f x) := stalk_map.is_ring_hom _ _
+
+section local_ring
+open local_ring
+
+/-- For every point in a CLVRS,
+the support of the valuation on a stalk is the maximal ideal of the stalk.-/
+lemma nonunits_eq_supp : nonunits_ideal (X.stalk x) = (X.valuation x).supp :=
+unique_of_exists_unique (max_ideal_unique _) (nonunits_ideal.is_maximal _) (X.supp_maximal x)
+
+/-- The map on stalks induced by a morphism of CLVRSs is compatible with the valuations
+on the stalks: the pullback of the valuation on the source is the valuation on the target. -/
+lemma comap_valuation :
+  Spv.comap (stalk_map f x) (X.valuation x) = Y.valuation (f x) :=
+PreValuedRingedSpace.hom.stalk _ _
+
+/-- The map on stalks induced by a morphism of CLVRSs is a morphism of local rings. -/
+lemma is_local_ring_hom :
+  is_local_ring_hom (stalk_map f x) :=
+{ map_nonunit :=
+  begin
+    intros s h,
+    contrapose! h,
+    rw [← mem_nonunits_iff, ← mem_nonunits_ideal, nonunits_eq_supp] at h ⊢,
+    rwa [← comap_valuation, Spv.supp_comap] at h,
+  end }
+
+end local_ring
+
+/-
+Remark: One can show that for every morphism in CLVRS,
+the induced maps on stalks are local ring morphisms.
+Sketch of proof: the valuation on the source pulls back to the valuation on the target,
+and by assumption `supp_maximal` this means that the maximal ideal on the target
+is mapped into the maximal ideal on the source.
+-/
 
 end CLVRS
 
 /--The adic spectrum of a Huber pair.-/
 noncomputable def Spa (A : Huber_pair) : PreValuedRingedSpace :=
 { space     := spa A,
-  top       := by apply_instance,
   presheaf  := spa.presheaf_of_topological_rings A,
   valuation := λ x, Spv.mk (spa.presheaf.stalk_valuation x) }
 
@@ -239,18 +277,22 @@ notation A `≊` B := nonempty (A ≅ B)
 
 namespace CLVRS
 
+/--A CLVRS is an adic space if every point has an open neighbourhood that is isomorphic
+to the adic spectrum of a Huber pair.-/
 def is_adic_space (X : CLVRS) : Prop :=
 ∀ x : X, ∃ (U : opens X) (R : Huber_pair), x ∈ U ∧ (Spa R ≊ U)
 
 end CLVRS
 
+/--A CLVRS is an adic space if every point has an open neighbourhood that is isomorphic
+to the adic spectrum of a Huber pair.-/
 def AdicSpace := {X : CLVRS // X.is_adic_space}
 
 namespace AdicSpace
 open category_theory
 
+/--The category of adic spaces is the full subcategory of CLVRS that
+consists of the objects that are adic spaces.-/
 instance : large_category AdicSpace := category_theory.full_subcategory _
 
 end AdicSpace
-
--- #doc_blame!
