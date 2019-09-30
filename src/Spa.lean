@@ -25,11 +25,12 @@ variables {Γ₀ : Type*} [linear_ordered_comm_group_with_zero Γ₀]
 /-- The space underlying the adic spectrum of a Huber pair (A,A⁺)
 consists of all the equivalence classes of valuations that are continuous
 and whose value on the ring A⁺ is ≤ 1. [Wedhorn, Def 7.23]. -/
-definition spa (A : Huber_pair) : set (Spv A) :=
-{v | v.is_continuous ∧ ∀ r : A⁺, v (algebra_map A r) ≤ 1}
+definition spa (A : Huber_pair) : Type :=
+{v : Spv A // v.is_continuous ∧ ∀ r : A⁺, v (algebra_map A r) ≤ 1}
 
 lemma mk_mem_spa {A : Huber_pair} {v : valuation A Γ₀} :
-  Spv.mk v ∈ spa A ↔ v.is_continuous ∧ ∀ r : A⁺, v (algebra_map A r) ≤ 1 :=
+  Spv.mk v ∈ {v : Spv A | v.is_continuous ∧ ∀ r : A⁺, v (algebra_map A r) ≤ 1} ↔
+  v.is_continuous ∧ ∀ r : A⁺, v (algebra_map A r) ≤ 1 :=
 begin
   apply and_congr,
   { apply is_equiv.is_continuous_iff,
@@ -49,8 +50,9 @@ instance : has_coe (spa A) (Spv A) := ⟨subtype.val⟩
 definition basic_open (r s : A) : set (spa A) :=
 {v | v r ≤ v s ∧ v s ≠ 0 }
 
-lemma mk_mem_basic_open {r s : A} {v : valuation A Γ₀} {hv : Spv.mk v ∈ spa A} :
-(⟨mk v, hv⟩ : spa A) ∈ basic_open r s ↔ v r ≤ v s ∧ v s ≠ 0 :=
+lemma mk_mem_basic_open {r s : A} {v : valuation A Γ₀}
+  {hv₁ : v.is_continuous} {hv₂ : ∀ r : A⁺, v (algebra_map A r) ≤ 1} :
+  (⟨Spv.mk v, mk_mem_spa.mpr ⟨hv₁, hv₂⟩⟩ : spa A) ∈ basic_open r s ↔ v r ≤ v s ∧ v s ≠ 0 :=
 begin
   apply and_congr,
   { apply out_mk, },
@@ -293,11 +295,12 @@ noncomputable def insert_s (r : rational_open_data A) : rational_open_data A :=
     ⟨ideal.span (r.T), r.Hopen, ideal.span_mono $ set.subset_insert _ _⟩
 }
 
-
 end rational_open_data -- namespace
 
-lemma mk_mem_rational_open {s : A} {T : set A} {v : valuation A Γ₀} {hv : Spv.mk v ∈ spa A} :
-  (⟨mk v, hv⟩ : spa A) ∈ rational_open s T ↔ (∀ t ∈ T, (v t ≤ v s)) ∧ (v s ≠ 0) :=
+lemma mk_mem_rational_open {s : A} {T : set A} {v : valuation A Γ₀}
+  {hv₁ : v.is_continuous} {hv₂ : ∀ r : A⁺, v (algebra_map A r) ≤ 1} :
+  (⟨Spv.mk v, mk_mem_spa.mpr ⟨hv₁, hv₂⟩⟩ : spa A) ∈ rational_open s T ↔
+  (∀ t ∈ T, (v t ≤ v s)) ∧ (v s ≠ 0) :=
 begin
   apply and_congr,
   { apply forall_congr,
