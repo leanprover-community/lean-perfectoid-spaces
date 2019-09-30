@@ -21,8 +21,10 @@ local postfix `⁺` : 66 := λ A : Huber_pair, A.plus
 
 variables {Γ₀ : Type*} [linear_ordered_comm_group_with_zero Γ₀]
 
--- Wedhorn def 7.23.
 -- We reserve the name `Spa` (with upper case `S`) for the bundled adic spectrum (`adic_space.lean`)
+/-- The space underlying the adic spectrum of a Huber pair (A,A⁺)
+consists of all the equivalence classes of valuations that are continuous
+and whose value on the ring A⁺ is ≤ 1. [Wedhorn, Def 7.23]. -/
 definition spa (A : Huber_pair) : set (Spv A) :=
 {v | v.is_continuous ∧ ∀ r : A⁺, v (algebra_map A r) ≤ 1}
 
