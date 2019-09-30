@@ -2,9 +2,10 @@ import topology.order
 import group_theory.quotient_group
 import valuation.canonical
 
--- TODO: this file is mostly done, but the module docstring
+-- TODO: this file is done, except that the module docstring
 -- needs to be professionalised. In particular, we need to
 -- hunt down some references.
+-- TODO: Also, there is 1 todo at the bottom of the file.
 
 /-!
 
@@ -171,8 +172,11 @@ end
 
 section supp
 
+/--The support of an equivalence class of valuations.-/
 noncomputable def supp (v : Spv R) := v.out.supp
 
+/--The support of an equivalence class of valuations is equal to the
+support of any of its representatives.-/
 @[simp] lemma supp_mk (v : valuation R Γ₀) : (mk v).supp = v.supp :=
 (out_mk v).supp_eq
 
@@ -181,9 +185,13 @@ end supp
 section comap
 variables {S : Type*} [comm_ring S] {T : Type*} [comm_ring T]
 
+/--The pullback of an equivalence class of valuations
+along a ring homomorphism.-/
 noncomputable def comap (f : R → S) [is_ring_hom f] : Spv S → Spv R :=
 lift $ λ Γ₀ _ v, by exactI Spv.mk (v.comap f)
 
+/--The pullpack of an equivalence class of valuations
+is the equivalence class of the pullback of any of its representatives.-/
 lemma comap_mk (f : R → S) [is_ring_hom f] (v : valuation S Γ₀) :
   comap f (mk v) = mk (v.comap f) :=
 begin
@@ -193,6 +201,7 @@ begin
   exact is_equiv.comap f h
 end
 
+/--The pullback along the identity is the identity.-/
 lemma comap_id_apply (v : Spv R) : comap (id : R → R) v = v :=
 begin
   apply induction_on v, clear v,
@@ -200,9 +209,11 @@ begin
   rw [comap_mk, valuation.comap_id],
 end
 
+/--The pullback along the identity is the identity.-/
 @[simp] lemma comap_id : comap (id : R → R) = id :=
 funext $ comap_id_apply
 
+/--The pullback along a composition is the composition of the pullback maps.-/
 @[simp] lemma comap_comp_apply (g : S → T) (f : R → S) [is_ring_hom g] [is_ring_hom f] (v : Spv T):
   comap (g ∘ f) v = comap f (comap g v) :=
 begin
@@ -211,10 +222,13 @@ begin
   rw [comap_mk, comap_mk, comap_mk, valuation.comap_comp],
 end
 
+/--The pullback along a composition is the composition of the pullback maps.-/
 @[simp] lemma comap_comp (g : S → T) (f : R → S) [is_ring_hom g] [is_ring_hom f] :
   comap (g ∘ f) = comap f ∘ comap g :=
 funext $ comap_comp_apply g f
 
+/--The support of the pullback of an equivalence class of valuations
+is the pullback (as ideal) of the support.-/
 lemma supp_comap (f : R → S) [is_ring_hom f] (v : Spv S) :
   (v.comap f).supp = v.supp.comap f :=
 begin
@@ -223,11 +237,15 @@ begin
   rw [comap_mk, supp_mk, supp_mk, valuation.comap_supp],
 end
 
+/--An element is contained in the support of the pullback of an equivalence
+class of valuations if and only if its image is contained in the support.-/
 lemma mem_supp_comap (f : R → S) [is_ring_hom f] (v : Spv S) (r : R) :
   r ∈ (v.comap f).supp ↔ f r ∈ v.supp :=
 by { rw supp_comap, exact iff.rfl }
 
 end comap
+
+-- TODO(jmc): Shall we delete the next three declarations?
 
 /-- The open sets generating the topology of Spv R. See [Wedhorn, Def 4.1].-/
 definition basic_open (r s : R) : set (Spv R) :=
