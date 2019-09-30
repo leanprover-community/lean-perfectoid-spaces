@@ -438,9 +438,9 @@ instance quot_of_quot_of_eq_supp.is_ring_hom (h : supp v₁ = supp v₂) :
 by delta quot_of_quot_of_eq_supp; apply_instance
 
 /-- If supp(v₁)=supp(v₂) then R/supp(v₁) and R/supp(v₂) are isomorphic rings. -/
-def quot_equiv_quot_of_eq_supp (h : supp v₁ = supp v₂) : valuation_ID v₁ ≃r valuation_ID v₂ :=
-{ hom :=quot_of_quot_of_eq_supp.is_ring_hom h,
-  ..valuation_ID.equiv h}
+def quot_equiv_quot_of_eq_supp (h : supp v₁ = supp v₂) : valuation_ID v₁ ≃+* valuation_ID v₂ :=
+{ .. ring_hom.of (quot_of_quot_of_eq_supp h),
+  .. valuation_ID.equiv h }
 
 /-- If supp(v₁)=supp(v₂) then the triangle R → R/supp(v₁) → R/supp(v₂) commutes. -/
 lemma quot_equiv_quot_mk_eq_mk (h : supp v₁ = supp v₂) (r : R) :
@@ -496,7 +496,7 @@ is_semiring_hom.is_monoid_hom (valfield_of_valfield_of_eq_supp h)
 /-- If supp(v₁)=supp(v₂) then the natural map Frac(R/supp(v₁)) → Frac(R/supp(v₂)) is an
 isomorphism of rings. -/
 def valfield_equiv_valfield_of_eq_supp (h : supp v₁ = supp v₂) :
-  valuation_field v₁ ≃r valuation_field v₂ :=
+  valuation_field v₁ ≃+* valuation_field v₂ :=
 fraction_ring.equiv_of_equiv (quot_equiv_quot_of_eq_supp h)
 
 lemma valfield_equiv_eq_valfield_of_valfield (h : supp v₁ = supp v₂) (q : valuation_field v₁) :
@@ -542,16 +542,12 @@ begin
 end
 
 /-- The valuation rings of two equivalent valuations are isomorphic as rings. -/
-def val_ring_equiv_of_is_equiv (h : v₁.is_equiv v₂) : v₁.valuation_ring ≃r v₂.valuation_ring :=
-{ hom := begin
-  cases (valfield_equiv_valfield_of_eq_supp h.supp_eq).hom,
-    constructor,
-    all_goals {
-      intros,
-      apply subtype.val_injective,
-      apply_assumption,
-} end,
-..val_ring_equiv_of_is_equiv_aux h }
+def val_ring_equiv_of_is_equiv (h : v₁.is_equiv v₂) : v₁.valuation_ring ≃+* v₂.valuation_ring :=
+{ map_add' := λ x y, subtype.val_injective $
+    (valfield_equiv_valfield_of_eq_supp h.supp_eq).map_add x y,
+  map_mul' := λ x y, subtype.val_injective $
+    (valfield_equiv_valfield_of_eq_supp h.supp_eq).map_mul x y,
+  .. val_ring_equiv_of_is_equiv_aux h, }
 
 -- we omit the proof that the diagram {r | v₁ r ≤ 1} → v₁.valuation_ring → v₂.valuation_ring
 -- commutes.
@@ -584,9 +580,8 @@ lemma units_valfield_of_units_valfield_of_eq_supp_mk
   = units_valfield_mk v₂ r (h ▸ hr) := units.ext $ valfield_equiv_valfield_mk_eq_mk h r
 
 def valfield_units_equiv_units_of_eq_supp (h : supp v₁ = supp v₂) :
-mul_equiv (units (valuation_field v₁)) (units (valuation_field v₂)) :=
-let h' := valfield_equiv_valfield_of_eq_supp h in
-by letI := h'.hom; exact units.map_equiv {map_mul' := h'.hom.map_mul, ..h'}
+(units (valuation_field v₁)) ≃* (units (valuation_field v₂)) :=
+units.map_equiv { .. valfield_equiv_valfield_of_eq_supp h }
 
 end valuation_field -- section
 
