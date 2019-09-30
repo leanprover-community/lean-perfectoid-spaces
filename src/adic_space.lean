@@ -48,6 +48,8 @@ open nat function
 open topological_space
 open spa
 
+open_locale classical
+
 namespace sheaf_of_topological_rings
 
 -- Maybe we could make this an instance?

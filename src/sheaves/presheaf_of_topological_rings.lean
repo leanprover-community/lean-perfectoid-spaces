@@ -44,7 +44,7 @@ structure morphism (F G : presheaf_of_topological_rings α)
 (ring_homs : ∀ (U), is_ring_hom (map U))
 (continuous_homs : ∀ (U), continuous (map U))
 
-infix `⟶`:80 := morphism
+local infix `⟶`:80 := morphism
 
 def identity (F : presheaf_of_topological_rings α) : F ⟶ F :=
 { ring_homs := λ U, is_ring_hom.id,
@@ -52,6 +52,7 @@ def identity (F : presheaf_of_topological_rings α) : F ⟶ F :=
   ..presheaf.id F.to_presheaf }
 
 -- Isomorphic presheaves of rings.
+local infix `⊚`:80 := presheaf.comp
 
 structure iso (F G : presheaf_of_topological_rings α) :=
 (mor : F ⟶ G)
