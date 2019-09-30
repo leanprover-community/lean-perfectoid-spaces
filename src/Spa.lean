@@ -28,17 +28,18 @@ and whose value on the ring A⁺ is ≤ 1. [Wedhorn, Def 7.23]. -/
 definition spa (A : Huber_pair) : Type :=
 {v : Spv A // v.is_continuous ∧ ∀ r : A⁺, v (algebra_map A r) ≤ 1}
 
+/--The equivalence class of a valuation is contained in spa
+if and only if the valuation is continuous and its values on the ring A⁺ are ≤ 1,
+since these properties are constant on equivalence classes.-/
 lemma mk_mem_spa {A : Huber_pair} {v : valuation A Γ₀} :
   Spv.mk v ∈ {v : Spv A | v.is_continuous ∧ ∀ r : A⁺, v (algebra_map A r) ≤ 1} ↔
   v.is_continuous ∧ ∀ r : A⁺, v (algebra_map A r) ≤ 1 :=
 begin
   apply and_congr,
-  { apply is_equiv.is_continuous_iff,
-    apply out_mk, },
+  { exact (out_mk v).is_continuous_iff, },
   { apply forall_congr,
     intro r,
-    convert (out_mk v) (algebra_map A r) 1;
-    rw [valuation.map_one] }
+    simpa using (out_mk v) (algebra_map A r) 1, }
 end
 
 namespace spa
@@ -47,6 +48,13 @@ variable {A : Huber_pair}
 
 instance : has_coe (spa A) (Spv A) := ⟨subtype.val⟩
 
+-- Warning. We do not use the basic open sets to define the topology on spa.
+-- For more details, see the explanation in TODO.
+
+/-- The basic open sets in spa A generate a topology
+that is provably equal to the topology generated
+by the rational open sets.
+We use the latter, and do not prove the equality of these topologies. -/
 definition basic_open (r s : A) : set (spa A) :=
 {v | v r ≤ v s ∧ v s ≠ 0 }
 

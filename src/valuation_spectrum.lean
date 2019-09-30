@@ -5,7 +5,6 @@ import valuation.canonical
 -- TODO: this file is done, except that the module docstring
 -- needs to be professionalised. In particular, we need to
 -- hunt down some references.
--- TODO: Also, there is 1 todo at the bottom of the file.
 
 /-!
 
@@ -244,8 +243,6 @@ lemma mem_supp_comap (f : R → S) [is_ring_hom f] (v : Spv S) (r : R) :
 by { rw supp_comap, exact iff.rfl }
 
 end comap
-
--- TODO(jmc): Shall we delete the next three declarations?
 
 /-- The open sets generating the topology of Spv R. See [Wedhorn, Def 4.1].-/
 definition basic_open (r s : R) : set (Spv R) :=
