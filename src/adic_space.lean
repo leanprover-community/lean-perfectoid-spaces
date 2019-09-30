@@ -254,14 +254,6 @@ lemma is_local_ring_hom :
 
 end local_ring
 
-/-
-Remark: One can show that for every morphism in CLVRS,
-the induced maps on stalks are local ring morphisms.
-Sketch of proof: the valuation on the source pulls back to the valuation on the target,
-and by assumption `supp_maximal` this means that the maximal ideal on the target
-is mapped into the maximal ideal on the source.
--/
-
 end CLVRS
 
 /--The adic spectrum of a Huber pair.-/
