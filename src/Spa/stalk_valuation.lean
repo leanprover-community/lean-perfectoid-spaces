@@ -1,4 +1,4 @@
-import rat_open_data_completion
+import Spa.rat_open_data_completion
 import valuation.field
 
 /-!

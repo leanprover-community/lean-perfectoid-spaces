@@ -10,8 +10,8 @@ import for_mathlib.topological_groups
 import sheaves.f_map
 
 import continuous_valuations
-import rat_open_data_completion
-import stalk_valuation
+import Spa.rat_open_data_completion
+import Spa.stalk_valuation
 import Huber_pair
 
 /-!

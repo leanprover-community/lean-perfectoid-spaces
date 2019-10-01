@@ -8,7 +8,7 @@
 -- we can get maps O_X(U) -> K_v-hat for an arbitrary open with v ∈ U.
 -- we need this for the valuations on the stalks.
 
-import valuation.localization_Huber
+import Spa.localization_Huber
 import sheaves.stalk_of_rings -- for defining valuations on stalks
 --import valuation.field -- where KB just dumped valuation_on_completion
 

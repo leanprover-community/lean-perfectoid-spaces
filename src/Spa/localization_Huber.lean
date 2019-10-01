@@ -7,7 +7,7 @@
 import valuation.localization
 import valuation.topology
 import Huber_ring.localization
-import Spa
+import Spa.space
 
 noncomputable theory
 
