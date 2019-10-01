@@ -160,8 +160,7 @@ noncomputable def s_inv_aux (r1 r2 : rational_open_data A) (h : r1 ≤ r2) :
 /-- The map A(T1/s1) -> A(T2/s2) coming from the inequality r1 ≤ r2 -/
 noncomputable def localization_map {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
   localization r1 → localization r2 :=
-Huber_ring.away.lift r1.T r1.s
-( show ((s_inv_aux r1 r2 h)⁻¹).inv = (of_id A (localization r2)).to_fun r1.s, from rfl)
+Huber_ring.away.lift r1.T r1.s (of_id A (localization r2)) (s_inv_aux r1 r2 h) rfl
 
 instance {r1 r2 : rational_open_data A} (h : r1 ≤ r2) : is_ring_hom
 (localization_map h) := by delta localization_map; apply_instance
@@ -220,7 +219,7 @@ end
 -- Continuity now follows from the universal property.
 lemma localization_map_is_cts {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
   continuous (localization_map h) := Huber_ring.away.lift_continuous r1.T r1.s
-  (localization.nonarchimedean r2) (Huber_ring.away.of_continuous r2.T r2.s _) _ _
+  (localization.nonarchimedean r2) (Huber_ring.away.of_continuous r2.T r2.s _) _ _ _
   (localization_map_is_cts_aux h)
 
 end rational_open_data -- namespace
