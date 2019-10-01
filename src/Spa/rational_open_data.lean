@@ -86,7 +86,7 @@ end
 
 lemma le_inter_right (r1 r2 : rational_open_data A) :
   r2 ≤ (inter r1 r2) :=
-by { rw symm, apply le_inter_left, }
+by { rw inter_symm, apply le_inter_left, }
 
 -- The preorder defined above is weaker than the preorder we're supposed to have but don't.
 -- However the projective limit we take over our preorder is provably (in maths) equal to

@@ -189,7 +189,7 @@ begin
     { assume eq_zero, simp at eq_zero, tauto }, }
 end
 
-lemma symm (r1 r2 : rational_open_data A) :
+lemma inter_symm (r1 r2 : rational_open_data A) :
   r1.inter r2 = r2.inter r1 :=
 ext (mul_comm _ _) (mul_comm _ _)
 
