@@ -1,13 +1,11 @@
+import Huber_ring.localization
+import Spa.rational_open_data
+
 -- Extending continuous valuations on Huber rings R to rational localizations R(T/s)
 -- and their completions.
 -- Note that this file comes much lower down the import tree
 -- than stuff like valuation.canonical and valuation.field.
 -- Here we use all this Huber ring stuff like R(T/s).
-
-import valuation.localization
-import valuation.topology
-import Huber_ring.localization
-import Spa.space
 
 noncomputable theory
 
@@ -31,17 +29,8 @@ local notation `T` := rd.T
 --noncomputable instance valuation_field.ring_with_zero_nhd : ring_with_zero_nhd (valuation_field v) :=
 --valuation.ring_with_zero_nhd (on_valuation_field v : valuation (valuation_field v) Γ₀)
 
-def unit_lemma (hs : v s ≠ 0) : is_unit (valuation_field_mk v s) :=
-is_unit_of_mul_one _ (valuation_field_mk v s)⁻¹ $ mul_inv_cancel $
-  valuation_field_mk_ne_zero v s hs
-
--- TODO? : change Huber_ring.away.lift so that instead of asking for an implicit unit
--- whose inv is f s, it just asks for is_unit f s. Or at least a unit whose val is f s...
-noncomputable def unit_s (hs : v s ≠ 0) : units (valuation_field v) :=
-classical.some (unit_lemma hs)
-
-lemma unit_aux (hs : v s ≠ 0) : ((unit_s hs)⁻¹).inv = valuation_field_mk v s
-:= (classical.some_spec (unit_lemma hs)).symm
+def unit_s (hs : v s ≠ 0) : units (valuation_field v) :=
+units.mk0 (valuation_field_mk v s) $ valuation_field_mk_ne_zero v s hs
 
 example : (λ r, localization.of (valuation_ID_mk v r)) = valuation_field_mk v := rfl
 
@@ -55,7 +44,7 @@ begin
   intros k Hk,
   show v' k ≤ 1,
   let u := unit_s hs,
-  have remember_this : u.val = valuation_field_mk v s := unit_aux hs,
+  have remember_this : valuation_field_mk v s = u.val := rfl,
   unfold v_T_over_s at Hk,
   rw set.mem_smul_set at Hk,
   rcases Hk with ⟨l, Hl, rfl⟩,
@@ -68,7 +57,7 @@ begin
   show v' _ * v' _ * v' u ≤ _,
   rw [mul_assoc, one_mul, ← v'.map_mul, units.inv_mul, v'.map_one, mul_one],
   change canonical_valuation v t ≤ v' u.val,
-  rw remember_this,
+  rw ← remember_this,
   change _ ≤ canonical_valuation v s,
   rw canonical_valuation_is_equiv v,
   exact hT2 _ ht,
@@ -116,7 +105,7 @@ begin
 end
 
 noncomputable def to_valuation_field (hs : v s ≠ 0) : A⟮T/s⟯ → (valuation_field v) :=
-Huber_ring.away.lift T s (unit_aux hs)
+Huber_ring.away.lift T s (valuation_field_mk v) (unit_s hs) rfl
 
 instance (hs : v s ≠ 0) : is_ring_hom (to_valuation_field hs) :=
 by delta to_valuation_field; apply_instance
@@ -126,7 +115,7 @@ local attribute [instance] valued.subgroups_basis
 theorem to_valuation_field_cts' (hs : v s ≠ 0)(hT2 : ∀ t : A, t ∈ T → v t ≤ v s) (hv : is_continuous v) :
   continuous (to_valuation_field hs) :=
 Huber_ring.away.lift_continuous T s (by convert subgroups_basis.nonarchimedean)
-  (continuous_valuation_field_mk_of_continuous v hv) (unit_aux hs) (rd.Hopen)
+  (continuous_valuation_field_mk_of_continuous v hv) _ rfl (rd.Hopen)
   (v_T_over_s_is_power_bounded hs hT2)
 
 -- now we need that the triangles commute when we fix v but change s.
@@ -140,37 +129,35 @@ begin
     ((to_valuation_field hs2) ∘ (spa.rational_open_data.localization_map h) :
       localization A (powers r1.s) → valuation_field v) _,
   intro r,
-  change Huber_ring.away.lift (r1.T) (r1.s) _ (localization.of r) =
-    Huber_ring.away.lift (r2.T) (r2.s) _ (spa.rational_open_data.localization_map h (localization.of r)),
-  dunfold spa.rational_open_data.localization_map,
-  rw Huber_ring.away.lift_of,
-  rw Huber_ring.away.lift_of,
-  change _ = Huber_ring.away.lift (r2.T) (r2.s) _ (localization.of r),
+  delta to_valuation_field spa.rational_open_data.localization_map function.comp,
+  erw Huber_ring.away.lift_of,
+  erw Huber_ring.away.lift_of,
+  change _ = Huber_ring.away.lift (r2.T) (r2.s) _ _ _ (localization.of r),
   rw Huber_ring.away.lift_of,
 end
 
 namespace rational_open_data
 
 lemma to_valuation_field_cts_aux {r : spa.rational_open_data A} {v : spa A}
-(hv : v ∈ r.rational_open) : (Spv.out v.1) (r.s) ≠ 0 := hv.2
+(hv : v ∈ r.open_set) : (Spv.out v.1) (r.s) ≠ 0 := hv.2
 
-def to_valuation_field {r : spa.rational_open_data A} {v : spa A} (hv : v ∈ r.rational_open) :
+def to_valuation_field {r : spa.rational_open_data A} {v : spa A} (hv : v ∈ r.open_set) :
   spa.rational_open_data.localization r → valuation_field (Spv.out (v.val)) :=
 (to_valuation_field $ to_valuation_field_cts_aux hv)
 
-instance {r : spa.rational_open_data A} {v : spa A} (hv : v ∈ r.rational_open) :
+instance {r : spa.rational_open_data A} {v : spa A} (hv : v ∈ r.open_set) :
   is_ring_hom (to_valuation_field hv) := by {delta to_valuation_field, apply_instance}
 
 /-- If v : spa A is in D(T,s) then the map A(T/s) -> K_v is continuous -/
 theorem to_valuation_field_cts {r : spa.rational_open_data A} {v : spa A}
-  (hv : v ∈ r.rational_open) : continuous (to_valuation_field hv) :=
+  (hv : v ∈ r.open_set) : continuous (to_valuation_field hv) :=
 Huber_pair.to_valuation_field_cts' hv.2 hv.1 v.2.1
 
 -- Now we need to show that if r1 <= r2 then these to_valuation_field maps
 -- are compatible.
 
 theorem to_valuation_field_commutes {r1 r2 : spa.rational_open_data A} {v : spa A}
-  (hv1 : v ∈ r1.rational_open) (hv2 : v ∈ r2.rational_open) (h : r1 ≤ r2) :
+  (hv1 : v ∈ r1.open_set) (hv2 : v ∈ r2.open_set) (h : r1 ≤ r2) :
 (to_valuation_field hv1) = (to_valuation_field hv2) ∘ (spa.rational_open_data.localization_map h) :=
 to_valuation_field_commutes r1 r2 h hv1.2 hv2.2
 

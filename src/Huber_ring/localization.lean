@@ -361,41 +361,41 @@ end
 
 section
 variables {B : Type*} [comm_ring B] [topological_space B] [topological_ring B]
-variables (hB : nonarchimedean B) {f : A → B} [is_ring_hom f] (hf : continuous f)
-variables {fs_inv : units B} (hs : fs_inv.inv = f s)
+variables (hB : nonarchimedean B) (f : A → B) [is_ring_hom f] (hf : continuous f)
+variables (fs : units B) (hs : f s = fs)
 variables (hT : is_open (↑(ideal.span T) : set A))
-variables (hTB : is_power_bounded_subset ((↑fs_inv : B) • f '' T))
+variables (hTB : is_power_bounded_subset ((↑fs⁻¹ : B) • f '' T))
 
 include hs
-lemma is_unit : is_unit (f s) :=
-by rw [← hs, ← units.coe_inv]; exact is_unit_unit _
 
 /-- The universal property of the localization of a Huber ring.
 (Let A be a Huber ring, s an element of A and T ⊆ A a subset that generates an open ideal.
 Let B be a ring, and f : A → B a ring homomorphism, such that f(s) is invertible.
 The natural map A⟮T/s⟯ → B is simply defined using the universal property of ordinary localizations.
 Under additional assumptions, this map is continuous. See lift_continuous.) -/
-noncomputable def lift : A⟮T/s⟯ → B := localization.away.lift f (is_unit s hs)
+noncomputable def lift : A⟮T/s⟯ → B := localization.away.lift f (hs.symm ▸ is_unit_unit fs)
 
-instance : is_ring_hom (lift T s hs : A⟮T/s⟯ → B) :=
+instance : is_ring_hom (lift T s f fs hs : A⟮T/s⟯ → B) :=
 localization.away.lift.is_ring_hom f _
 
+variable {f}
+
 @[simp] lemma lift_of (a : A) :
-  lift T s hs (of a) = f a := localization.away.lift_of _ _ _
+  lift T s f fs hs (of a) = f a := localization.away.lift_of _ _ _
 
 @[simp] lemma lift_coe (a : A) :
-  lift T s hs a = f a := localization.away.lift_of _ _ _
+  lift T s f fs hs a = f a := localization.away.lift_of _ _ _
 
 @[simp] lemma lift_comp_of :
-  lift T s hs ∘ of = f := localization.lift'_comp_of _ _ _
+  lift T s f fs hs ∘ of = f := localization.lift'_comp_of _ _ _
 
 include hB hf hT hTB
 
 /-- Let A be a Huber ring, s an element of A and T ⊆ A a subset that generates an open ideal.
-Let B be a nonarchimedean ring, and f : A → B a continous ring homomorphism, such that f(s) is
+Let B be a nonarchimedean ring, and f : A → B a continuous ring homomorphism, such that f(s) is
 invertible. Suppose that f(s)⁻¹ * f(T) is a power bounded subset of B.
 Then the natural map A⟮T/s⟯ → B is continuous. -/
-lemma lift_continuous : @continuous _ _ (away.top_space T s hT) _ (lift T s hs) :=
+lemma lift_continuous : @continuous _ _ (away.top_space T s hT) _ (lift T s f fs hs) :=
 begin
   letI := away.top_loc_basis T s hT,
   letI := away.top_space T s hT,
@@ -403,7 +403,7 @@ begin
   apply continuous_of_continuous_at_zero _ _,
   all_goals {try {apply_instance}},
   intros U hU,
-  rw is_ring_hom.map_zero (lift T s hs) at hU,
+  rw is_ring_hom.map_zero (lift T s f fs hs) at hU,
   rw filter.mem_map_sets_iff,
   let hF := power_bounded.ring.closure' hB _ hTB,
   erw is_bounded_add_subgroup_iff hB at hF,
@@ -425,14 +425,14 @@ begin
       erw [lift_of, ← mul_one (f a)],
       refine mul_mem_mul (subset_span $ hWV $ ⟨a, hY ha, rfl⟩)
         (subset_span $ is_submonoid.one_mem _) },
-    { rw is_ring_hom.map_zero (lift T s hs),
+    { rw is_ring_hom.map_zero (lift T s f fs hs),
       exact is_add_submonoid.zero_mem _ },
     { intros a b ha hb,
-      rw is_ring_hom.map_add (lift T s hs),
+      rw is_ring_hom.map_add (lift T s f fs hs),
       exact is_add_submonoid.add_mem ha hb },
     { rw [submodule.smul_def, span_mul_span],
       intros d a ha,
-      rw [(show d • a = ↑d * a, from rfl), is_ring_hom.map_mul (lift T s hs), mul_comm],
+      rw [(show d • a = ↑d * a, from rfl), is_ring_hom.map_mul (lift T s f fs hs), mul_comm],
       rcases (finsupp.mem_span_iff_total ℤ).mp (by rw set.image_id; exact ha) with ⟨l, hl₁, hl₂⟩,
       rw finsupp.mem_supported at hl₁,
       rw [← hl₂, finsupp.total_apply] at ha ⊢,
@@ -442,28 +442,28 @@ begin
       apply subset_span,
       show (↑(_ : ℤ) * _) * _ ∈ _,
       rcases hl₁ hb' with ⟨v, hv, b, hb, rfl⟩,
-      refine ⟨↑(l (v * b)) * v, _, b * lift T s hs ↑d, _, _⟩,
+      refine ⟨↑(l (v * b)) * v, _, b * lift T s f fs hs ↑d, _, _⟩,
       { rw ← gsmul_eq_mul, exact is_add_subgroup.gsmul_mem hv },
       { refine is_submonoid.mul_mem hb _,
         cases d with d hd,
         rw subtype.coe_mk,
         apply ring.in_closure.rec_on hd,
-        { rw is_ring_hom.map_one (lift T s hs), exact is_submonoid.one_mem _ },
-        { rw [is_ring_hom.map_neg (lift T s hs), is_ring_hom.map_one (lift T s hs)],
+        { rw is_ring_hom.map_one (lift T s f fs hs), exact is_submonoid.one_mem _ },
+        { rw [is_ring_hom.map_neg (lift T s f fs hs), is_ring_hom.map_one (lift T s f fs hs)],
           exact is_add_subgroup.neg_mem (is_submonoid.one_mem _) },
         { rintros _ ⟨sinv, hsinv, _, ⟨t, ht, rfl⟩, rfl⟩ b hb,
-          rw is_ring_hom.map_mul (lift T s hs),
+          rw is_ring_hom.map_mul (lift T s f fs hs),
           refine is_submonoid.mul_mem _ hb,
           apply ring.mem_closure,
-          erw [is_ring_hom.map_mul (lift T s hs), lift_of],
+          erw [is_ring_hom.map_mul (lift T s f fs hs), lift_of],
           refine ⟨_, _, _, ⟨t, ht, rfl⟩, rfl⟩,
           rw mem_singleton_iff at hsinv ⊢,
           subst hsinv,
-          erw [← units.coe_map' (lift T s hs), ← units.ext_iff, (units.map' _).map_inv,
-            inv_eq_iff_inv_eq, units.ext_iff, units.coe_inv, hs],
-          { symmetry, exact lift_of T s hs s } },
+          erw [← units.coe_map' (lift T s f fs hs), ← units.ext_iff, (units.map' _).map_inv,
+            inv_inj', units.ext_iff, ← hs],
+          { exact lift_of T s fs hs s } },
         { intros a b ha hb,
-          rw is_ring_hom.map_add (lift T s hs),
+          rw is_ring_hom.map_add (lift T s f fs hs),
           exact is_add_submonoid.add_mem ha hb } },
       { simp [mul_assoc] } } }
 end
