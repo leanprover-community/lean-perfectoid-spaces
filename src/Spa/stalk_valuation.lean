@@ -1,39 +1,31 @@
 import Spa.localization_Huber
 import Spa.presheaf
-import sheaves.stalk_of_rings -- for defining valuations on stalks
---import valuation.field -- where KB just dumped valuation_on_completion
+import sheaves.stalk_of_rings
 
 /-!
 # The valuation on the stalk
 
 We define the valuations on the stalks of the structure presheaf of the adic spectrum
+
+TODO(jmc): Process these notes by kmb:
+In this file we show that rat_open_data_completion r := A<T/s>
+satisfies the property that if v in D(T1,s1) ⊂ D(T2,s2) then
+the maps A<Ti/si> - > K_v-hat commute with the restriction map.
+
+We then, assuming D(T,s) are a basis for Spa(A), show that
+we can get maps O_X(U) -> K_v-hat for an arbitrary open with v ∈ U.
+we need this for the valuations on the stalks.
+
 -/
-
--- rational open data completion stuff.
-
--- In this file we show that rat_open_data_completion r := A<T/s>
--- satisfies the property that if v in D(T1,s1) ⊂ D(T2,s2) then
--- the maps A<Ti/si> - > K_v-hat commute with the restriction map.
-
--- We then, assuming D(T,s) are a basis for Spa(A), show that
--- we can get maps O_X(U) -> K_v-hat for an arbitrary open with v ∈ U.
--- we need this for the valuations on the stalks.
 
 open_locale classical
 open topological_space valuation Spv spa uniform_space
 
 variable {A : Huber_pair}
 
+local attribute [instance] valued.uniform_space
+
 namespace spa.rat_open_data_completion
-
-section scary_uniform_space_instance
-
-set_option class.instance_max_depth 100
-
-noncomputable def uniform_space' (v : spa A) : uniform_space (valuation_field (out (v.val))) :=
-topological_add_group.to_uniform_space _
-
-local attribute [instance] uniform_space'
 
 instance (v : spa A) : uniform_add_group (valuation_field (out (v.val))) :=
 topological_add_group_is_uniform
@@ -70,8 +62,6 @@ begin
   rw [Huber_pair.rational_open_data.to_valuation_field_commutes hv1 hv2 h, completion.map_comp uc2 uc1]
 end
 
-end scary_uniform_space_instance
-
 end spa.rat_open_data_completion
 
 -- Now we need to show that for any O_X(U) with v in U we have a map
@@ -102,15 +92,6 @@ classical.some_spec $ spa.exists_rational_open_subset hv
 
 namespace spa.presheaf
 
-section scary_uniform_space_instance
-
-set_option class.instance_max_depth 100
-
-noncomputable def uniform_space' (v : spa A) : uniform_space (valuation_field (out (v.val))) :=
-topological_add_group.to_uniform_space _
-
-local attribute [instance] uniform_space'
-
 /-- The map from F(U) to K_v for v ∈ U -/
 noncomputable def to_valuation_field_completion {v : spa A} {U : opens (spa A)} (hv : v ∈ U)
   (f : spa.presheaf_value U) : completion (valuation_field (Spv.out v.1)) :=
@@ -132,8 +113,6 @@ instance {v : spa A}
   rw H,
   refine is_ring_hom.comp _ _,
 end
-
-end scary_uniform_space_instance
 
 -- I need now to prove that if V ⊆ U then to_valuation_field_completion commutes with res
 
@@ -238,12 +217,11 @@ begin
   refl,
 end
 
--- We need this search depth because of the following scary instance
-set_option class.instance_max_depth 100
+set_option class.instance_max_depth 49
 
-local attribute [instance] uniform_space'
-
-/--The underlying function of the valuation on the stalk of the structure presheaf.-/
+/--An auxiliary function in the definition of the valuations on the stalks
+of the structure presheaf of the adic spectrum of a Huber pair:
+the valuation is obtained by pulling back a valuation along this function.-/
 noncomputable def stalk_to_valuation_field (x : spa A) :
   stalk_of_rings (spa.presheaf_of_topological_rings A).to_presheaf_of_rings x →
   completion (valuation_field (Spv.out x.1)) :=
@@ -261,4 +239,3 @@ noncomputable def stalk_valuation (x : spa A) :
 (valuation_on_completion (out x.1)).comap (stalk_to_valuation_field x)
 
 end spa.presheaf
-
