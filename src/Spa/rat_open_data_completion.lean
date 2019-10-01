@@ -9,7 +9,7 @@
 -- we need this for the valuations on the stalks.
 
 import Spa.localization_Huber
-import Spa.bu
+import Spa.presheaf
 import sheaves.stalk_of_rings -- for defining valuations on stalks
 --import valuation.field -- where KB just dumped valuation_on_completion
 

@@ -5,9 +5,7 @@ import for_mathlib.nonarchimedean.basic
 import for_mathlib.topological_rings -- subring of a top ring
 
 import sheaves.presheaf_of_topological_rings
-import continuous_valuations
 import Spa.rational_open_data
-import Huber_ring.localization
 
 universes u₁ u₂ u₃
 
