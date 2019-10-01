@@ -7,7 +7,7 @@
 import valuation.localization
 import valuation.topology
 import Huber_ring.localization
-import Spa.space
+import Spa.rational_open_data
 
 noncomputable theory
 
@@ -152,25 +152,25 @@ end
 namespace rational_open_data
 
 lemma to_valuation_field_cts_aux {r : spa.rational_open_data A} {v : spa A}
-(hv : v ∈ r.rational_open) : (Spv.out v.1) (r.s) ≠ 0 := hv.2
+(hv : v ∈ r.open_set) : (Spv.out v.1) (r.s) ≠ 0 := hv.2
 
-def to_valuation_field {r : spa.rational_open_data A} {v : spa A} (hv : v ∈ r.rational_open) :
+def to_valuation_field {r : spa.rational_open_data A} {v : spa A} (hv : v ∈ r.open_set) :
   spa.rational_open_data.localization r → valuation_field (Spv.out (v.val)) :=
 (to_valuation_field $ to_valuation_field_cts_aux hv)
 
-instance {r : spa.rational_open_data A} {v : spa A} (hv : v ∈ r.rational_open) :
+instance {r : spa.rational_open_data A} {v : spa A} (hv : v ∈ r.open_set) :
   is_ring_hom (to_valuation_field hv) := by {delta to_valuation_field, apply_instance}
 
 /-- If v : spa A is in D(T,s) then the map A(T/s) -> K_v is continuous -/
 theorem to_valuation_field_cts {r : spa.rational_open_data A} {v : spa A}
-  (hv : v ∈ r.rational_open) : continuous (to_valuation_field hv) :=
+  (hv : v ∈ r.open_set) : continuous (to_valuation_field hv) :=
 Huber_pair.to_valuation_field_cts' hv.2 hv.1 v.2.1
 
 -- Now we need to show that if r1 <= r2 then these to_valuation_field maps
 -- are compatible.
 
 theorem to_valuation_field_commutes {r1 r2 : spa.rational_open_data A} {v : spa A}
-  (hv1 : v ∈ r1.rational_open) (hv2 : v ∈ r2.rational_open) (h : r1 ≤ r2) :
+  (hv1 : v ∈ r1.open_set) (hv2 : v ∈ r2.open_set) (h : r1 ≤ r2) :
 (to_valuation_field hv1) = (to_valuation_field hv2) ∘ (spa.rational_open_data.localization_map h) :=
 to_valuation_field_commutes r1 r2 h hv1.2 hv2.2
 
