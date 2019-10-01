@@ -11,3 +11,6 @@
 /_cache
 _target.tar.gz
 
+*.graphml
+*.dot
+
