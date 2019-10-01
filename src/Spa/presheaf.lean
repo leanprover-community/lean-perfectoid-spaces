@@ -195,6 +195,7 @@ def presheaf_map_cts {U V : opens (spa A)} (hUV : U ≤ V) :
 continuous_subtype_mk _ (continuous_pi (λ i, ((continuous_apply _).comp continuous_subtype_val)))
 
 variable (A)
+
 noncomputable def presheaf_of_topological_rings : presheaf_of_topological_rings (spa A) :=
 { F := presheaf_value,
   res := λ U V, presheaf_map,
@@ -204,9 +205,7 @@ noncomputable def presheaf_of_topological_rings : presheaf_of_topological_rings 
   res_is_ring_hom := λ U V, spa.presheaf_map_is_ring_hom,
   Ftop := spa.presheaf_top_space,
   Ftop_ring := spa.presheaf_top_ring,
-  res_continuous := λ U V, presheaf_map_cts
-}
-
+  res_continuous := λ U V, presheaf_map_cts }
 
 end spa -- namespace I think
 

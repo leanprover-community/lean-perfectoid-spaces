@@ -1,13 +1,11 @@
+import Huber_ring.localization
+import Spa.rational_open_data
+
 -- Extending continuous valuations on Huber rings R to rational localizations R(T/s)
 -- and their completions.
 -- Note that this file comes much lower down the import tree
 -- than stuff like valuation.canonical and valuation.field.
 -- Here we use all this Huber ring stuff like R(T/s).
-
-import valuation.localization
-import valuation.topology
-import Huber_ring.localization
-import Spa.rational_open_data
 
 noncomputable theory
 
