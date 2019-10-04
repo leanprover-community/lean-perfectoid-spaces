@@ -288,7 +288,7 @@ end
 namespace valuation
 variables {R : Type*} [comm_ring R]
 variables {K : Type*} [discrete_field K]
-variables {L : Type*} [discrete_field L] [topological_space L] [topological_ring L]
+variables {L : Type*} [discrete_field L] [topological_space L]
 variables {Γ₀ : Type*} [linear_ordered_comm_group_with_zero Γ₀]
 variables {Γ'₀ : Type*} [linear_ordered_comm_group_with_zero Γ'₀]
 
@@ -364,6 +364,8 @@ begin
     rw submodule.mem_coe at hr,
     simp [hr] }
 end
+
+variable [topological_ring L]
 
 lemma is_trivial_is_continuous_iff_discrete (v : valuation L Γ₀) (hv : v.is_trivial) :
   v.is_continuous ↔ discrete_topology L :=

@@ -41,6 +41,7 @@ local attribute [instance] valuation.lt_is_add_subgroup
 
 universe u
 
+/-- A valued ring is a ring that comes equipped with a distinguished valuation.-/
 class valued (R : Type u) [ring R] :=
 (Γ₀ : Type u)
 [grp : linear_ordered_comm_group_with_zero Γ₀]
@@ -53,6 +54,7 @@ open valued
 namespace valued
 variables {R : Type*} [ring R] [valued R]
 
+/-- The function underlying the valuation of a valued ring.-/
 def value : R → (valued.Γ₀ R) := (valued.v R)
 
 local notation `v` := valued.value
@@ -71,6 +73,7 @@ valuation.map_mul _ _ _
 lemma map_add (x y : R) : v (x+y) ≤ max (v x) (v y) :=
 valuation.map_add _ _ _
 
+/-- The basis of open subgroups for the topology on a valued ring.-/
 def subgroups_basis : subgroups_basis R :=
 { sets := range (valued.v R).subgroup,
   ne_empty := ne_empty_of_mem (mem_range_self 1),
@@ -144,23 +147,23 @@ def subgroups_basis : subgroups_basis R :=
 
 local attribute [instance] valued.subgroups_basis subgroups_basis.topology ring_filter_basis.topological_ring
 
-lemma mem_basis_zero [valued R] {s : set R} :
+lemma mem_basis_zero {s : set R} :
   s ∈ filter_basis.sets R ↔ ∃ γ : units (valued.Γ₀ R), {x | valued.v R x < (γ : valued.Γ₀ R)} = s :=
 iff.rfl
 
 
-lemma mem_nhds [valued R] {s : set R} {x : R} :
+lemma mem_nhds {s : set R} {x : R} :
   (s ∈ 𝓝 x) ↔ ∃ γ : units (valued.Γ₀ R), {y | v (y - x) < γ } ⊆ s :=
 begin
   erw [subgroups_basis.mem_nhds, exists_mem_range],
   exact iff.rfl,
 end
 
-lemma mem_nhds_zero [valued R] {s : set R} :
+lemma mem_nhds_zero {s : set R} :
   (s ∈ 𝓝 (0 : R)) ↔ ∃ γ : units (Γ₀ R), {x | v x < (γ : Γ₀ R) } ⊆ s :=
 by simp [valued.mem_nhds, sub_zero]
 
-lemma loc_const [valued R] {x : R} (h : v x ≠ 0) : {y : R | v y = v x} ∈ 𝓝 x :=
+lemma loc_const {x : R} (h : v x ≠ 0) : {y : R | v y = v x} ∈ 𝓝 x :=
 begin
   rw valued.mem_nhds,
   rcases ne_zero_iff_exists.mp h with ⟨γ, hx⟩,
@@ -170,17 +173,19 @@ begin
   exact valuation.map_eq_of_sub_lt _ y_in
 end
 
-def uniform_space [valued R] : uniform_space R :=
+/-- The uniform structure on a valued ring.-/
+def uniform_space : uniform_space R :=
 topological_add_group.to_uniform_space R
 
 local attribute [instance] valued.uniform_space
 
-lemma uniform_add_group [valued R] : uniform_add_group R :=
+/-- A valued ring is a uniform additive group.-/
+lemma uniform_add_group : uniform_add_group R :=
 topological_add_group_is_uniform
 
 local attribute [instance] valued.uniform_add_group
 
-lemma cauchy_iff [valued R] {F : filter R} :
+lemma cauchy_iff {F : filter R} :
   cauchy F ↔ F ≠ ⊥ ∧ ∀ γ : units (valued.Γ₀ R), ∃ M ∈ F,
     ∀ x y, x ∈ M → y ∈ M → y - x ∈ {x : R | valued.v R x < ↑γ} :=
 begin
@@ -200,5 +205,3 @@ end valued
 
 #sanity_check
 #doc_blame
-
-

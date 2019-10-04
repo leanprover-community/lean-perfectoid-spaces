@@ -56,8 +56,8 @@ local notation r `≤[`v`]` s := v.1 r s
 namespace Spv
 open valuation
 
-variables {Γ₀  : Type u}  [linear_ordered_comm_group_with_zero Γ₀]
-variables {Γ'₀ : Type u₁} [linear_ordered_comm_group_with_zero Γ'₀]
+variables {Γ₀  : Type u}   [linear_ordered_comm_group_with_zero Γ₀]
+variables {Γ'₀ : Type u₁}  [linear_ordered_comm_group_with_zero Γ'₀]
 variables {Γ''₀ : Type u₂} [linear_ordered_comm_group_with_zero Γ''₀]
 
 -- The work is embedded here with `canonical_valuation_is_equiv v` etc.
@@ -72,6 +72,8 @@ definition mk (v : valuation R Γ₀) : Spv R :=
 /-- The value group attached to a term of type Spv R -/
 definition out_Γ₀ (v : Spv R) : Type u₀ := classical.some v.2
 
+/-- The value group attached to a term of type Spv R
+is a linearly ordered commutative group with zero. -/
 noncomputable instance (v : Spv R) : linear_ordered_comm_group_with_zero (out_Γ₀ v) :=
 classical.some $ classical.some_spec v.2
 
@@ -156,6 +158,8 @@ begin
   simp [this],
 end
 
+/-- A coercion that allows to treat an element of Spv(R) as a function,
+by picking a random representative of the equivalence class of valuations. -/
 noncomputable instance : has_coe_to_fun (Spv R) :=
 { F := λ v, R → out_Γ₀ v,
   coe := λ v, (out v : R → out_Γ₀ v) }
@@ -248,6 +252,7 @@ end comap
 definition basic_open (r s : R) : set (Spv R) :=
 {v | v r ≤ v s ∧ v s ≠ 0}
 
+/-- The topology on the valuation spectrum of a ring. -/
 instance : topological_space (Spv R) :=
 topological_space.generate_from {U : set (Spv R) | ∃ r s : R, U = basic_open r s}
 
@@ -264,5 +269,4 @@ end Spv
 
 #sanity_check
 #doc_blame
-
 
