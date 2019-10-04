@@ -179,5 +179,5 @@ instance discrete_field.to_comm_group_with_zero {α : Type*} [discrete_field α]
   .. ‹discrete_field α› }
 
 
-#sanity_check
-#doc_blame
+
+

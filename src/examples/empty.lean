@@ -71,7 +71,7 @@ def CLVRS.empty : CLVRS := {
 example : PerfectoidSpace ⟨37, by norm_num⟩ := ⟨CLVRS.empty, by rintro ⟨⟩⟩
 
 
-#sanity_check
-#doc_blame
+
+
 
 

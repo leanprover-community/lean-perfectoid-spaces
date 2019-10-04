@@ -293,5 +293,5 @@ instance : large_category AdicSpace := category_theory.full_subcategory _
 end AdicSpace
 
 
-#sanity_check
-#doc_blame
+
+

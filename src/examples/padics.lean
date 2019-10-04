@@ -600,5 +600,5 @@ def padic.Spa_unique : unique (Spa $ padic.Huber_pair p) :=
   .. padic.Spa_inhabited p }
 
 
-#sanity_check
-#doc_blame
+
+

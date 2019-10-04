@@ -60,5 +60,5 @@ instance valuation_field.completion_valued : valued (completion $ valuation_fiel
 ⟨value_monoid v, valuation_on_completion v⟩
 
 
-#sanity_check
-#doc_blame
+
+

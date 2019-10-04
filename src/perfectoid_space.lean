@@ -55,5 +55,5 @@ def PerfectoidSpace := {X : CLVRS // is_perfectoid X}
 end
 
 
-#sanity_check
-#doc_blame
+
+

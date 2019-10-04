@@ -110,5 +110,5 @@ Wedhorn, p.59 contains the following typo:
 -/
 
 
-#sanity_check
-#doc_blame
+
+

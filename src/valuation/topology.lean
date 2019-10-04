@@ -21,6 +21,7 @@ section
 variables {Γ₀ : Type*} [linear_ordered_comm_group_with_zero Γ₀]
 variables {R : Type*} [ring R]
 
+/-- The subgroup of elements whose valuation is less than a certain unit.-/
 def valuation.subgroup (v : valuation R Γ₀) (γ : units Γ₀) : set R := {x | v x < γ}
 
 lemma valuation.lt_is_add_subgroup (v : valuation R Γ₀) (γ : units Γ₀) :
@@ -203,5 +204,5 @@ end
 end valued
 
 
-#sanity_check
-#doc_blame
+
+

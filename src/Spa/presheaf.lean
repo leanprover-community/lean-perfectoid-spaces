@@ -213,5 +213,5 @@ end spa -- namespace
 -- straightforward) of complete topological rings (need proj lim of complete is complete)
 
 
-#sanity_check
-#doc_blame
+
+

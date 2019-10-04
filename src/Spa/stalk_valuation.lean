@@ -249,5 +249,5 @@ noncomputable def stalk_valuation (x : spa A) :
 end spa.presheaf
 
 
-#sanity_check
-#doc_blame
+
+

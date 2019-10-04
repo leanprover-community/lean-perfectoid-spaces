@@ -382,5 +382,5 @@ definition is_uniform : Prop := is_bounded (power_bounded_subring R)
 end power_bounded_subring
 
 
-#sanity_check
-#doc_blame
+
+

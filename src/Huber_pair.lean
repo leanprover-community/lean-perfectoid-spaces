@@ -50,21 +50,27 @@ structure Huber_pair :=
 namespace Huber_pair
 variable (A : Huber_pair)
 
+/-- The coercion of a Huber pair to a type (the ambient ring).-/
 instance : has_coe_to_sort Huber_pair :=
 { S := Type, coe := Huber_pair.carrier }
 
 -- The following notation is very common in the literature.
 local postfix `⁺` : 66 := λ A : Huber_pair, A.plus
 
+/-- The ring structure on the ring of integral elements. -/
 instance : comm_ring (A⁺) := A.ring
+
+/-- The topology on the ring of integral elements. -/
 instance : topological_space (A⁺) := A.top
+
+/-- The Huber ring structure on a Huber pair. -/
 instance : Huber_ring A := A.Huber
+
+/-- The algebra structure of a Huber pair. -/
 instance : algebra (A⁺) A := A.alg
 
 end Huber_pair
 
 
-#sanity_check
-#doc_blame
 
 

@@ -721,9 +721,3 @@ end Wedhorn1_27_equivalences -- section
 end valuation
 
 
-#sanity_check
-#doc_blame
-
-#check valuation.valfield_units_preorder_equiv
-#check valuation.valfield_units_equiv_units_of_eq_supp
-#check valuation.valfield.preorder_equiv

@@ -14,7 +14,7 @@ notation `Frob` R `∕` x := Frobenius (ideal.quotient (ideal.span ({x} : set R)
 notation x `∣` y `in` R := (x : R) ∣ (y : R)
 
 
-#sanity_check
-#doc_blame
+
+
 
 
