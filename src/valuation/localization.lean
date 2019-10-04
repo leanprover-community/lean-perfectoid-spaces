@@ -39,6 +39,7 @@ variables (v : valuation R Γ₀)
 lemma inverse_exists (s : S) : ∃ u : localization R S, u * s = 1 :=
 ⟨(localization.to_units s).inv, units.inv_val _⟩
 
+/-- The underlying function of the extension of a valuation to a localization.-/
 def localization_v (h : ∀ s, s ∈ S → v s ≠ 0) : localization R S → Γ₀ :=
 λ (q : localization R S), quotient.lift_on' q (λ rs, v rs.1 * (v rs.2.1)⁻¹)
 begin
@@ -141,13 +142,14 @@ end
 section fraction_ring
 open localization localization.fraction_ring
 
--- move this def
+/-- A ring in which the zero ideal is prime is an integral domain. -/
 def integral_domain_of_prime_bot (h : (⊥ : ideal R).is_prime) : integral_domain R :=
 { zero_ne_one := assume zero_eq_one, h.1 $ (ideal.eq_top_iff_one _).mpr $
                  (submodule.mem_bot R).mpr zero_eq_one.symm,
   eq_zero_or_eq_zero_of_mul_eq_zero := λ r s, by { repeat {rw ← submodule.mem_bot R}, apply h.2 },
   .. ‹comm_ring R› }
 
+/-- A ring is an integral domain if it admits a valuation whose support is the zero ideal. -/
 def integral_domain_of_supp_zero (hv : v.supp = 0) : integral_domain R :=
 integral_domain_of_prime_bot $
 by { rw [← ideal.zero_eq_bot, ← hv], exact valuation.ideal.is_prime v }
@@ -320,5 +322,3 @@ end valuation
 
 #sanity_check
 #doc_blame
-
-

@@ -135,6 +135,7 @@ section
 -- In the next lemma, K will be endowed with its left uniformity coming from the valuation topology
 local attribute [instance] valued.uniform_space
 
+/-- A valued division ring is separated. -/
 instance valued_ring.separated [valued K] : separated K :=
 begin
   apply topological_add_group.separated_of_zero_sep,
@@ -171,13 +172,14 @@ local notation `hat` K := completion K
 set_option class.instance_max_depth 300
 
 -- The following instances helps going over the uniform_add_group/topological_add_group loop
-def hatK_top_group : topological_add_group (hat K) := uniform_add_group.to_topological_add_group
+lemma hatK_top_group : topological_add_group (hat K) := uniform_add_group.to_topological_add_group
 local attribute [instance] hatK_top_group
 
-def hatK_top_monoid : topological_add_monoid (hat K) :=
+lemma hatK_top_monoid : topological_add_monoid (hat K) :=
 topological_add_group.to_topological_add_monoid _
 local attribute [instance] hatK_top_monoid
 
+/-- A valued field is completable. -/
 instance valued.completable : completable_top_field K :=
 { separated := by apply_instance,
   nice := begin
@@ -228,6 +230,7 @@ local attribute [instance]
   linear_ordered_comm_group_with_zero.t2_space
   linear_ordered_comm_group_with_zero.ordered_topology
 
+/-- The extension of the valuation of a valued field to the completion of the field. -/
 noncomputable def valued.extension : (hat K) → Γ₀ K :=
 completion.dense_inducing_coe.extend (v : K → Γ₀ K)
 
@@ -322,6 +325,7 @@ begin
   exact completion.dense_inducing_coe.extend_eq_of_cont valued.continuous_valuation x
 end
 
+/-- the extension of a valuation on a division ring to its completion. -/
 noncomputable def valued.extension_valuation :
 valuation (hat K) (Γ₀ K) :=
 { to_fun := valued.extension,
@@ -359,5 +363,3 @@ end valuation_on_valued_field_completion
 
 #sanity_check
 #doc_blame
-
-
