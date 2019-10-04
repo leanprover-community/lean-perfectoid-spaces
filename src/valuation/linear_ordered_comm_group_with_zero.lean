@@ -6,12 +6,17 @@ import valuation.group_with_zero
 
 set_option old_structure_cmd true
 
+/-- A linearly ordered commutative group with zero
+is a linearly ordered commutative monoid with a zero elements
+such that all nonzero elements are invertible.-/
 class linear_ordered_comm_group_with_zero (α : Type*)
   extends linear_ordered_comm_monoid α, comm_group_with_zero α :=
 (zero_le' : ∀ a, (0:α) ≤ a)
 
 namespace with_zero
 
+/-- Adjoining a zero element to a linearly ordered commutative group
+gives a linearly ordered commutative group with zero.-/
 instance (α : Type*) [linear_ordered_comm_group α] [decidable_eq α] :
   linear_ordered_comm_group_with_zero (with_zero α) :=
 { zero_le' := λ a, with_zero.zero_le,
@@ -27,27 +32,16 @@ end with_zero
 namespace linear_ordered_comm_group_with_zero
 variables (α : Type*) [linear_ordered_comm_group_with_zero α]
 
+/--The units of a linearly ordered commutative group are linearly ordered.-/
 instance units.linear_order : linear_order (units α) :=
 linear_order.lift (coe : units α → α) units.ext infer_instance
 
+/--The units of a linearly ordered commutative group with zero
+form a linearly ordered commutative group.-/
 instance units.linear_ordered_comm_group : linear_ordered_comm_group (units α) :=
 { mul_le_mul_left := λ a b h c, mul_le_mul_left h _,
   .. units.linear_order α,
   .. (infer_instance : comm_group (units α))}
-
-
-noncomputable def with_zero_units_equiv : with_zero (units α) ≃ α :=
-equiv.symm $ @equiv.of_bijective α (with_zero (units α))
-(λ a, if h : a = 0 then 0 else group_with_zero.mk₀ a h)
-begin
-  split,
-  { intros a b, dsimp,
-    split_ifs; simp [with_zero.coe_inj, units.ext_iff, *], },
-  { intros a, with_zero_cases a,
-    { exact ⟨0, dif_pos rfl⟩ },
-    { refine ⟨a, _⟩, rw [dif_neg (group_with_zero.unit_ne_zero a)],
-      simp [with_zero.coe_inj, units.ext_iff, *] } }
-end
 
 end linear_ordered_comm_group_with_zero
 
@@ -107,6 +101,7 @@ begin
   exact linear_ordered_structure.lt_of_mul_lt_mul_left (mk₀ a ha) (mk₀ b hb) (mk₀ c hc) h
 end
 
+/-- Every linearly ordered commutative group with zero is an ordered commutative monoid.-/
 instance : actual_ordered_comm_monoid α :=
 { lt_of_mul_lt_mul_left := λ a b c, lt_of_mul_lt_mul_left',
   .. ‹linear_ordered_comm_group_with_zero α› }
@@ -119,7 +114,7 @@ begin
   { simp [min_eq_right, le_of_not_le h] }
 end
 
-lemma ne_zero_of_gt (h : a > b) : a ≠ 0 :=
+lemma ne_zero_of_lt (h : b < a) : a ≠ 0 :=
 by { contrapose! h, simp [h] }
 
 @[simp] lemma zero_lt_unit (u : units α) : (0 : α) < u :=
@@ -128,8 +123,8 @@ by { have h := group_with_zero.unit_ne_zero u, contrapose! h, simpa using h }
 lemma mul_lt_mul' : a < b → c < d → a*c < b*d :=
 begin
   intros hab hcd,
-  let b' := group_with_zero.mk₀ b (ne_zero_of_gt hab),
-  let d' := group_with_zero.mk₀ d (ne_zero_of_gt hcd),
+  let b' := group_with_zero.mk₀ b (ne_zero_of_lt hab),
+  let d' := group_with_zero.mk₀ d (ne_zero_of_lt hcd),
   have hbd : 0 < b * d,
   { have h := group_with_zero.unit_ne_zero (b' * d'), contrapose! h, simpa using h },
   by_cases ha : a = 0,
@@ -154,7 +149,7 @@ end
 
 lemma mul_lt_right' (γ : α) (h : a < b) (hγ : γ ≠ 0) : a*γ < b*γ :=
 begin
-  have hb : b ≠ 0 := ne_zero_of_gt h,
+  have hb : b ≠ 0 := ne_zero_of_lt h,
   by_cases ha : a = 0,
   { by_contra H, simp [ha] at H, tauto, },
   change (group_with_zero.mk₀ _ ha) < (group_with_zero.mk₀ _ hb) at h,
@@ -165,6 +160,7 @@ end linear_ordered_structure
 
 namespace nnreal
 
+/-- The nonnegative real numbers form a linearly ordered commutative group with zero.-/
 noncomputable instance : linear_ordered_comm_group_with_zero nnreal :=
 { inv_zero := by simp,
   zero_le' := zero_le,
@@ -180,5 +176,3 @@ end nnreal
 
 #sanity_check
 #doc_blame
-
-

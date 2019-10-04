@@ -1,7 +1,19 @@
 import algebra.group.units
+import data.equiv.basic
+
+import for_mathlib.with_zero
 
 set_option old_structure_cmd true
 
+/-- A type `α` is a “group with zero” if it is a monoid with zero element (distinct from `1`)
+such that every nonzero element is invertible.
+The type is required to come with an “inverse” function, and the inverse of `0` must be `0`.
+
+Examples include fields and the ordered monoids that are the
+target of valuations in general valuation theory.
+
+Currently division rings are not an example,
+because they don't have the requirement 0⁻¹ = 0.-/
 class group_with_zero (α : Type*)
   extends monoid α, has_inv α, zero_ne_one_class α, mul_zero_class α :=
 [has_decidable_eq : decidable_eq α]
@@ -76,6 +88,7 @@ end group_with_zero
 namespace group_with_zero
 variables {α : Type*} [group_with_zero α]
 
+/-- Every nonzero element is a unit.-/
 def mk₀ (a : α) (h : a ≠ 0) : units α :=
 { val := a,
   inv := a⁻¹,
@@ -130,10 +143,35 @@ begin
   symmetry, apply eq_inv_of_mul_left_eq_one', simp [_root_.mul_assoc, hx, hy],
 end
 
+/--Adjoining a zero element to the units of a group with zero
+is naturally equivalent to the group with zero.-/
+noncomputable def with_zero_units_equiv : with_zero (units α) ≃ α :=
+equiv.symm $ @equiv.of_bijective α (with_zero (units α))
+(λ a, if h : a = 0 then 0 else group_with_zero.mk₀ a h)
+begin
+  split,
+  { intros a b, dsimp,
+    split_ifs; simp [with_zero.coe_inj, units.ext_iff, *], },
+  { intros a, with_zero_cases a,
+    { exact ⟨0, dif_pos rfl⟩ },
+    { refine ⟨a, _⟩, rw [dif_neg (group_with_zero.unit_ne_zero a)],
+      simp [with_zero.coe_inj, units.ext_iff, *] } }
+end
+
 end group_with_zero
 
+/-- A type `α` is a commutative “group with zero”
+if it is a commutative monoid with zero element (distinct from `1`)
+such that every nonzero element is invertible.
+The type is required to come with an “inverse” function, and the inverse of `0` must be `0`. -/
 class comm_group_with_zero (α : Type*) extends comm_monoid α, group_with_zero α.
 
+/- TODO(jmc): Refactor the algebraic hierarchy so that
+division rings and discrete fields extend group_with_zero (resp. comm_group_with_zero).
+
+Once that is done, unify group_with_zero.mk₀ with units.mk0. -/
+
+/--Every field is a comm_group_with_zero.-/
 instance discrete_field.to_comm_group_with_zero {α : Type*} [discrete_field α] :
   comm_group_with_zero α :=
 { zero_mul := _,
@@ -143,5 +181,3 @@ instance discrete_field.to_comm_group_with_zero {α : Type*} [discrete_field α]
 
 #sanity_check
 #doc_blame
-
-
