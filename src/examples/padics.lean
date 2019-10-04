@@ -208,6 +208,7 @@ instance padic.Huber_ring : Huber_ring ℚ_[p] :=
     top := is_adic p,
     .. padic_int.algebra }⟩⟩ }
 
+/-- The p-adic numbers form a Huber pair (with the p-adic integers as power bounded subring).-/
 @[reducible] def padic.Huber_pair : Huber_pair :=
 { plus := ℤ_[p],
   carrier := ℚ_[p],
@@ -242,6 +243,11 @@ instance padic.Huber_ring : Huber_ring ℚ_[p] :=
 @[simp] lemma nnreal.coe_max (x y : nnreal) : ((max x y : nnreal) : ℝ) = max (x : ℝ) (y : ℝ) :=
 by { delta max, split_ifs; refl }
 
+-- Valuations take values in a linearly ordered monoid with a minimal element 0,
+-- whereas norms in mathlib are defined to take values in ℝ.
+-- This is a repackaging of the p-adic norm as a valuation with values in the non-negative reals.
+
+/-- The standard p-adic valuation. -/
 def padic.bundled_valuation : valuation ℚ_[p] nnreal :=
 { to_fun := λ x, ⟨∥x∥, norm_nonneg _⟩,
   map_zero' := subtype.val_injective norm_zero,
@@ -344,6 +350,7 @@ begin
     simpa only [(value_monoid.to_Γ₀_strict_mono v).lt_iff_lt.symm, help] using h x, }
 end
 
+/-- A valuation is trivial if it maps everything to 0 or 1.-/
 def is_trivial (v : valuation R Γ₀) : Prop :=
 ∀ r:R, v r = 0 ∨ v r = 1
 
@@ -436,6 +443,7 @@ begin
     rwa [inv_eq_one_div, one_div_pow hx], }
 end
 
+/-- The ring of p-adic integers has characteristic 0.-/
 instance padic_int.char_zero : char_zero ℤ_[p] :=
 { cast_inj := λ m n, by { rw subtype.coe_ext, norm_cast, exact char_zero.cast_inj _, } }
 
@@ -453,6 +461,7 @@ begin
   exact_mod_cast this
 end
 
+/-- The adic spectrum Spa(ℚ_p, ℤ_p) is inhabited. -/
 def padic.Spa_inhabited : inhabited (Spa $ padic.Huber_pair p) :=
 { default := ⟨Spv.mk (padic.bundled_valuation p),
   begin
@@ -479,15 +488,16 @@ namespace spa
 variables {A : Huber_pair}
 
 @[extensionality]
-lemma spa.ext (v₁ v₂ : spa A) (h : (Spv.out ↑v₁).is_equiv (Spv.out (↑v₂ : Spv A))) :
+lemma ext (v₁ v₂ : spa A) (h : (Spv.out ↑v₁).is_equiv (Spv.out (↑v₂ : Spv A))) :
   v₁ = v₂ :=
 subtype.val_injective $ Spv.ext _ _ h
 
-lemma spa.ext_iff {v₁ v₂ : spa A} :
+lemma ext_iff {v₁ v₂ : spa A} :
   v₁ = v₂ ↔ ((Spv.out ↑v₁).is_equiv (Spv.out (↑v₂ : Spv A))) :=
 by rw [subtype.coe_ext, Spv.ext_iff]
 
-abbreviation spa.out_Γ₀ (v  : spa A) := Spv.out_Γ₀ (v : Spv A)
+/-- The value monoid of a random representative valuation of a point in the adic spectrum. -/
+abbreviation out_Γ₀ (v  : spa A) := Spv.out_Γ₀ (v : Spv A)
 
 lemma map_plus (v : spa A) (a : (A⁺)) : v (algebra_map A a) ≤ 1 := v.property.right a
 
@@ -542,8 +552,9 @@ begin
     { exact_mod_cast nat.prime.ne_zero ‹_› } },
   { exact_mod_cast nat.prime.ne_zero ‹_› }
 end
-.
 
+/-- The adic spectrum Spa(ℚ_p, ℤ_p) is a singleton:
+the only element is the standard p-adic valuation. -/
 def padic.Spa_unique : unique (Spa $ padic.Huber_pair p) :=
 { uniq :=
   begin
@@ -589,5 +600,3 @@ def padic.Spa_unique : unique (Spa $ padic.Huber_pair p) :=
 
 #sanity_check
 #doc_blame
-
-

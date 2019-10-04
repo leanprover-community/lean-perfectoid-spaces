@@ -67,8 +67,7 @@ instance : has_coe_to_sort PreValuedRingedSpace.{u} :=
 { S := Type u,
   coe := λ X, X.space }
 
--- Adding the fact that the underlying space of a PreValuedRingedSpace is a topological
--- space, to the type class inference system
+/-- The topology on the underlying space of a PreValuedRingedSpace.-/
 instance : topological_space X := X.top
 
 end PreValuedRingedSpace
@@ -194,8 +193,10 @@ def to_PreValuedRingedSpace (X : CLVRS) : PreValuedRingedSpace.{0} :=
 instance : has_coe CLVRS PreValuedRingedSpace.{0} :=
 ⟨to_PreValuedRingedSpace⟩
 
+/-- The topology on the underlying space of a CLVRS. -/
 instance (X : CLVRS) : topological_space X := X.top
 
+/-- The structure sheaf of a CLVRS. -/
 def sheaf (X : CLVRS) : sheaf_of_topological_rings X := X.sheaf'
 
 /--CLVRS is a full subcategory of PreValuedRingedSpace.-/
@@ -207,6 +208,7 @@ variables {X Y : CLVRS} (f : X ⟶ Y) (x : X)
 def fmap : presheaf_of_rings.f_map _ _:=
   (PreValuedRingedSpace.hom.fmap f).to_presheaf_of_rings_f_map
 
+/-- The coercion of a morphims of CLVRSs to the map between the underlying topological spaces.-/
 instance : has_coe_to_fun (X ⟶ Y) :=
 { F := λ f, X → Y,
   coe := λ f, (fmap f).f }
@@ -214,7 +216,10 @@ instance : has_coe_to_fun (X ⟶ Y) :=
 /-- The stalk of the structure sheaf at a point of a CLVRS.-/
 def stalk (X : CLVRS) := stalk_of_rings (X.sheaf.to_presheaf_of_rings)
 
+/-- The ring structure on the stalk of the structure sheaf of a CLVRS. -/
 instance stalk.comm_ring : comm_ring (X.stalk x) := stalk_of_rings_is_comm_ring _ _
+
+/-- The stalk of the structure sheaf of a CLVRS is a local ring. -/
 instance stalk.is_local_ring : local_ring (X.stalk x) :=
 local_of_is_local_ring $ X.local_stalks x
 
@@ -222,6 +227,7 @@ local_of_is_local_ring $ X.local_stalks x
 noncomputable def stalk_map : Y.stalk (f x) → X.stalk x :=
 stalk_map (fmap f) x
 
+/-- The map on the stalks induced by a morphism of CLVRSs is a ring homomorphism.-/
 instance : is_ring_hom (stalk_map f x) := stalk_map.is_ring_hom _ _
 
 section local_ring
@@ -289,5 +295,3 @@ end AdicSpace
 
 #sanity_check
 #doc_blame
-
-
