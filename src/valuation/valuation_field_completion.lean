@@ -58,7 +58,3 @@ valued.extension_valuation
 /--The completion of the valuation field of a valuation is a valued field.-/
 instance valuation_field.completion_valued : valued (completion $ valuation_field v) :=
 ⟨value_monoid v, valuation_on_completion v⟩
-
-
-
-

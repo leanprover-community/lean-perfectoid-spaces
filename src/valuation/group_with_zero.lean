@@ -177,7 +177,3 @@ instance discrete_field.to_comm_group_with_zero {α : Type*} [discrete_field α]
 { zero_mul := _,
   mul_zero := _,
   .. ‹discrete_field α› }
-
-
-
-

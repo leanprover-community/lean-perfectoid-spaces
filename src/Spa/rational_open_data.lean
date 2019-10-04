@@ -251,7 +251,3 @@ uniform_continuous_of_continuous (rational_open_data.localization_map_is_cts h)
 end rational_open_data -- namespace
 
 end spa
-
-
-
-

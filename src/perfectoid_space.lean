@@ -53,7 +53,3 @@ def is_perfectoid (X : CLVRS) : Prop :=
 def PerfectoidSpace := {X : CLVRS // is_perfectoid X}
 
 end
-
-
-
-

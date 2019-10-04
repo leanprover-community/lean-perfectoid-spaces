@@ -107,7 +107,3 @@ begin
 end
 
 end Huber_ring
-
-
-
-

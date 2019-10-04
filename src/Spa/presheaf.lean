@@ -211,7 +211,3 @@ end spa -- namespace
 -- on V is proj lim of O_X(U) as U runs through rationals opens in V. This gets
 -- the projective limit topology and then we have a presheaf (hopefully this is
 -- straightforward) of complete topological rings (need proj lim of complete is complete)
-
-
-
-

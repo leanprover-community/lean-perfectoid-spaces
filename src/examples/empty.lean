@@ -69,9 +69,3 @@ def CLVRS.empty : CLVRS := {
   supp_maximal := by rintro ⟨⟩ }
 
 example : PerfectoidSpace ⟨37, by norm_num⟩ := ⟨CLVRS.empty, by rintro ⟨⟩⟩
-
-
-
-
-
-

@@ -598,7 +598,3 @@ def padic.Spa_unique : unique (Spa $ padic.Huber_pair p) :=
     { exact spa.map_plus v ⟨x, h⟩, }
   end,
   .. padic.Spa_inhabited p }
-
-
-
-

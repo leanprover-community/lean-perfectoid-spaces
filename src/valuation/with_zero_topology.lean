@@ -397,7 +397,3 @@ instance : topological_monoid Γ₀ :=
 end⟩
 
 end linear_ordered_comm_group_with_zero
-
-
-
-

@@ -108,7 +108,3 @@ Wedhorn, p.59 contains the following typo:
 
   This is a typo, it should be v(a) ≤ γ.
 -/
-
-
-
-

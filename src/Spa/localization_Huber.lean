@@ -175,7 +175,3 @@ to_valuation_field_commutes r1 r2 h hv1.2 hv2.2
 end rational_open_data
 
 end Huber_pair
-
-
-
-

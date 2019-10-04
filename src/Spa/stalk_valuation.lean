@@ -247,7 +247,3 @@ noncomputable def stalk_valuation (x : spa A) :
 (valuation_on_completion (out x.1)).comap (stalk_to_valuation_field x)
 
 end spa.presheaf
-
-
-
-

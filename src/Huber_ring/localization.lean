@@ -486,7 +486,3 @@ end
 end away
 
 end Huber_ring
-
-
-
-

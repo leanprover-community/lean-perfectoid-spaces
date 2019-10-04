@@ -202,7 +202,3 @@ begin
       apply h }
 end
 end valued
-
-
-
-

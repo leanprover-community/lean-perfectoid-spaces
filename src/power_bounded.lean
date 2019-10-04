@@ -380,7 +380,3 @@ variable (R)
 definition is_uniform : Prop := is_bounded (power_bounded_subring R)
 
 end power_bounded_subring
-
-
-
-

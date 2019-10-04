@@ -12,9 +12,3 @@ noncomputable def Frobenius (α : Type*) [semiring α] : α → α := λ x, x^(r
 notation `Frob` R `∕` x := Frobenius (ideal.quotient (ideal.span ({x} : set R)))
 
 notation x `∣` y `in` R := (x : R) ∣ (y : R)
-
-
-
-
-
-

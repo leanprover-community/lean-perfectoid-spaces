@@ -719,5 +719,3 @@ end
 end Wedhorn1_27_equivalences -- section
 
 end valuation
-
-
