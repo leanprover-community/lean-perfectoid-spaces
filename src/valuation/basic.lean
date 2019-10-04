@@ -386,3 +386,9 @@ preorder.ext $ λ x y, iff.rfl
 end supp_comm -- end of section
 
 end valuation
+
+
+#sanity_check
+#doc_blame
+
+

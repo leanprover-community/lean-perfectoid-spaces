@@ -47,3 +47,9 @@ valued.extension_valuation
 
 instance valuation_field.completion_valued : valued (completion $ valuation_field v) :=
 ⟨value_monoid v, valuation_on_completion v⟩
+
+
+#sanity_check
+#doc_blame
+
+

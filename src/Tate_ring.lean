@@ -71,3 +71,9 @@ end pseudo_uniformizer
 /--A Tate ring is a Huber ring that has a pseudo uniformizer.-/
 class Tate_ring (R : Type u) [Huber_ring R] : Prop :=
 (has_pseudo_uniformizer : nonempty (pseudo_uniformizer R))
+
+
+#sanity_check
+#doc_blame
+
+

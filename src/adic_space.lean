@@ -285,3 +285,9 @@ consists of the objects that are adic spaces.-/
 instance : large_category AdicSpace := category_theory.full_subcategory _
 
 end AdicSpace
+
+
+#sanity_check
+#doc_blame
+
+

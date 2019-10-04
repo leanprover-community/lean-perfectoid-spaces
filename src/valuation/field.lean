@@ -355,3 +355,9 @@ valuation (hat K) (Γ₀ K) :=
   end }
 
 end valuation_on_valued_field_completion
+
+
+#sanity_check
+#doc_blame
+
+

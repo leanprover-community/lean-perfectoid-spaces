@@ -62,3 +62,9 @@ instance : Huber_ring A := A.Huber
 instance : algebra (A⁺) A := A.alg
 
 end Huber_pair
+
+
+#sanity_check
+#doc_blame
+
+

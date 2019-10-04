@@ -176,3 +176,9 @@ noncomputable instance : linear_ordered_comm_group_with_zero nnreal :=
   .. (infer_instance : comm_semiring nnreal) }
 
 end nnreal
+
+
+#sanity_check
+#doc_blame
+
+

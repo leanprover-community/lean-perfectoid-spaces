@@ -225,3 +225,9 @@ lemma localization_map_is_cts {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
 end rational_open_data -- namespace
 
 end spa
+
+
+#sanity_check
+#doc_blame
+
+

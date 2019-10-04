@@ -316,3 +316,9 @@ definition residue_field := (max_ideal v).quotient
 instance residue_field.discrete_field : discrete_field (residue_field v) := ideal.quotient.field _
 end valuation_field
 end valuation
+
+
+#sanity_check
+#doc_blame
+
+

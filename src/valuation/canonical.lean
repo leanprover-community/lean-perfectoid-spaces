@@ -712,3 +712,9 @@ end
 end Wedhorn1_27_equivalences -- section
 
 end valuation
+
+
+#sanity_check
+#doc_blame
+
+
