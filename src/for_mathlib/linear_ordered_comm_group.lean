@@ -379,6 +379,15 @@ iff.intro
    and.intro ‹a = 1› ‹b = 1›)
   (assume ⟨ha', hb'⟩, by rw [ha', hb', mul_one])
 
+lemma mul_eq_one_iff_of_le_one' (ha : a ≤ 1) (hb : b ≤ 1) : a * b = 1 ↔ a = 1 ∧ b = 1 :=
+begin
+  refine iff.intro _ (assume ⟨ha', hb'⟩, by rw [ha', hb', mul_one]),
+  intro hab,
+  have : 1 ≤ a, { rw [← mul_one a, ← hab], exact mul_le_mul' (le_refl _) hb, },
+  have : 1 ≤ b, { rw [← one_mul b, ← hab], exact mul_le_mul' ha (le_refl _), },
+  split; apply _root_.le_antisymm; assumption
+end
+
 lemma square_gt_one {a : α} (h : 1 < a) : 1 < a*a :=
 mul_gt_one' h h
 end actual_ordered_comm_monoid

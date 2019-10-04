@@ -158,6 +158,15 @@ begin
   simp [this],
 end
 
+@[extensionality]
+lemma ext (v₁ v₂ : Spv R) (h : (Spv.out v₁).is_equiv (Spv.out v₂)) :
+  v₁ = v₂ :=
+by simpa only [Spv.mk_out] using Spv.sound h
+
+lemma ext_iff  {v₁ v₂ : Spv R} :
+  v₁ = v₂ ↔ ((Spv.out v₁).is_equiv (Spv.out v₂)) :=
+⟨λ h, Spv.is_equiv_of_eq_mk (by simpa only [Spv.mk_out] using h), Spv.ext _ _⟩
+
 /-- A coercion that allows to treat an element of Spv(R) as a function,
 by picking a random representative of the equivalence class of valuations. -/
 noncomputable instance : has_coe_to_fun (Spv R) :=

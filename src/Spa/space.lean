@@ -44,6 +44,34 @@ variables {A : Huber_pair}
 /-- The coercion from the adic spectrum of a Huber pair to the ambient valuation spectrum.-/
 instance : has_coe (spa A) (Spv A) := ⟨subtype.val⟩
 
+@[extensionality]
+lemma ext (v₁ v₂ : spa A) (h : (Spv.out ↑v₁).is_equiv (Spv.out (↑v₂ : Spv A))) :
+  v₁ = v₂ :=
+subtype.val_injective $ Spv.ext _ _ h
+
+lemma ext_iff {v₁ v₂ : spa A} :
+  v₁ = v₂ ↔ ((Spv.out ↑v₁).is_equiv (Spv.out (↑v₂ : Spv A))) :=
+by rw [subtype.coe_ext, Spv.ext_iff]
+
+/-- The value monoid of a random representative valuation of a point in the adic spectrum. -/
+abbreviation out_Γ₀ (v  : spa A) := Spv.out_Γ₀ (v : Spv A)
+
+/-- The valuation of an integral element is at most 1. -/
+lemma map_plus (v : spa A) (a : (A⁺)) : v (algebra_map A a) ≤ 1 := v.property.right a
+
+/-- The valuation of a unit of the ring of integral elements is 1. -/
+@[simp] lemma map_unit (v : spa A) (u : units (A⁺)) :
+  v ((algebra_map A : (A⁺) → A) u) = 1 :=
+begin
+  have h₁ := map_plus v u,
+  have h₂ := map_plus v (u⁻¹ : _),
+  have := actual_ordered_comm_monoid.mul_eq_one_iff_of_le_one' h₁ h₂,
+  apply (this.mp _).left,
+  erw ← valuation.map_mul,
+  rw ← is_ring_hom.map_mul (algebra_map A : (A⁺) → A),
+  simp only [units.mul_inv, algebra.map_one, valuation.map_one]
+end
+
 -- We are now going to setup the topology on `spa A`.
 -- A basis of the topology is indexed by the following data:
 
