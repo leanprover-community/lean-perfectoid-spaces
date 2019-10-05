@@ -124,6 +124,25 @@ begin
     apply nat.le_add_left }
 end
 
+lemma is_bot_adic_iff {A : Type*} [comm_ring A] [topological_space A] [topological_ring A] :
+is-(⊥ : ideal A)-adic ↔ discrete_topology A :=
+begin
+  rw is_ideal_adic_iff,
+  split,
+  { rintro ⟨h, h'⟩,
+    rw @topological_add_group.discrete_iff_open_zero A _ _ _,
+    simpa using h 1 },
+  { introsI,
+    split,
+    { intros n,
+      simp, },
+    { intros U U_nhds,
+      use 1,
+      rw pow_one,
+      change ({0} : set A) ⊆ U,
+      simp [mem_of_nhds U_nhds] } },
+end
+
 variables (R)
 
 def is_adic : Prop := ∃ (J : ideal R), is-J-adic
