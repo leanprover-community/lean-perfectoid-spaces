@@ -193,8 +193,8 @@ local notation `Dspan` U := span D (of_id A A⟮T/s⟯ '' (U : set A))
 set_option class.instance_max_depth 80
 
 /-- If T ⊆ A generates an open ideal, and U is an open subgroup of A,
-then T * U generates an open subgroup.
-(This lemma is the case n = 1 of [Wedhorn, Lem 6.20].)-/
+then T • U generates an open subgroup.
+(This lemma is the main part of case n = 1 of [Wedhorn, Lem 6.20].)-/
 lemma mul_T_open (hT : is_open ((ideal.span T) : set A)) (U : open_add_subgroup A) :
   is_open (↑(T • span ℤ (U : set A)) : set A) :=
 begin
@@ -257,6 +257,16 @@ begin
   erw [span_span, ← mul_smul],
   refl
 end
+
+-- The above lemma is what we really need, but the version below is here for comparison with
+-- Wedhorn.
+
+/-- If T ⊆ A generates an open ideal, and U is an open subgroup of A,
+then T • U is a neighborhood of zero.
+(This lemma is the main part of case n = 1 of [Wedhorn, Lem 6.20].)-/
+lemma mul_T_nhds (hT : is_open ((ideal.span T) : set A)) (U : open_add_subgroup A) :
+  ↑(T • span ℤ (U : set A)) ∈ nhds (0 : A) :=
+mem_nhds_sets (mul_T_open _ hT _) (submodule.zero_mem (T • span ℤ (U : set A)))
 
 set_option class.instance_max_depth 80
 
