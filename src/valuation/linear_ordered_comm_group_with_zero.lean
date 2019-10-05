@@ -1,8 +1,7 @@
 import data.real.nnreal
 
+import for_mathlib.group_with_zero
 import for_mathlib.linear_ordered_comm_group
-
-import valuation.group_with_zero
 
 set_option old_structure_cmd true
 

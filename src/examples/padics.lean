@@ -18,7 +18,7 @@ They are the fundamental examples of Huber rings.
 
 We also show that (ℚ_[p], ℤ_[p]) is a Huber pair,
 and that its adic spectrum is a singleton,
-consisting of the standard p-adic valuation on ℚ_[p]. 
+consisting of the standard p-adic valuation on ℚ_[p].
 -/
 
 noncomputable theory
@@ -399,25 +399,6 @@ end
 end valuation
 
 --move this
-lemma fpow_eq_zero {K : Type*} [discrete_field K] {x : K} {n : ℤ} (h : x^n = 0) :
-  x = 0 :=
-begin
-  by_cases hn : 0 ≤ n,
-  { lift n to ℕ using hn, rw fpow_of_nat at h, exact pow_eq_zero h, },
-  { by_cases hx : x = 0, { exact hx },
-    push_neg at hn, rw ← neg_pos at hn, replace hn := le_of_lt hn,
-    lift (-n) to ℕ using hn with m hm,
-    rw [← neg_neg n, fpow_neg, ← hm, fpow_of_nat] at h,
-    rw ← inv_eq_zero,
-    apply pow_eq_zero (_ : _^m = _),
-    rwa [inv_eq_one_div, one_div_pow hx], }
-end
-
-/-- The ring of p-adic integers has characteristic 0.-/
-instance padic_int.char_zero : char_zero ℤ_[p] :=
-{ cast_inj := λ m n, by { rw subtype.coe_ext, norm_cast, exact char_zero.cast_inj _, } }
-
---move this
 lemma padic.not_discrete : ¬ discrete_topology ℚ_[p] :=
 nondiscrete_normed_field.nondiscrete
 
@@ -475,9 +456,9 @@ def padic.Spa_unique : unique (Spa $ padic.Huber_pair p) :=
           rw valuation.is_trivial_iff,
           intro z,
           by_cases hx' : x = 0, { contrapose! h, simp [hx'], },
-          rcases padic.exists_repr p x hx' with ⟨u, m, rfl⟩, clear hx',
+          rcases padic.exists_repr x hx' with ⟨u, m, rfl⟩, clear hx',
           by_cases hz : z = 0, { simp [hz], },
-          rcases padic.exists_repr p z hz with ⟨v, n, rfl⟩, clear hz,
+          rcases padic.exists_repr z hz with ⟨v, n, rfl⟩, clear hz,
           erw [valuation.map_mul, spa.map_unit, one_mul],
           by_cases hn : n = 0, { erw [hn, fpow_zero, valuation.map_one], },
           erw [← hy, valuation.map_inv, valuation.map_mul, spa.map_unit,

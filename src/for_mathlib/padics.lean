@@ -1,5 +1,7 @@
 import data.padics
 import ring_theory.noetherian
+
+import for_mathlib.group_with_zero
 import for_mathlib.field_power
 import for_mathlib.ideal_operations
 
@@ -358,9 +360,9 @@ begin
   rcases padic_int.exists_repr y_ne_zero with ⟨u, n, hy⟩,
   refine ⟨u, (n:ℤ) + x.valuation, _⟩,
   rw [fpow_add, fpow_of_nat],
-  { have : (p:ℚ_[p])^(-x.valuation) ≠ 0,
+  { have hnz : (p:ℚ_[p])^(-x.valuation) ≠ 0,
     { assume h, exfalso, apply nat.prime.ne_zero ‹_›, exact_mod_cast fpow_eq_zero h },
-    apply group_with_zero.mul_right_cancel this,
+    apply group_with_zero.mul_right_cancel hnz,
     rw subtype.coe_ext at hy,
     rw [mul_assoc, mul_assoc, ← fpow_add, add_neg_self, fpow_zero, mul_one],
     { exact_mod_cast hy, },
@@ -368,3 +370,6 @@ begin
   { exact_mod_cast nat.prime.ne_zero ‹_› }
 end
 
+/-- The ring of p-adic integers has characteristic 0.-/
+instance padic_int.char_zero : char_zero ℤ_[p] :=
+{ cast_inj := λ m n, by { rw subtype.coe_ext, norm_cast, exact char_zero.cast_inj _, } }
