@@ -19,3 +19,12 @@ begin
   { simp },
   { rw [pow_succ, ih, ideal.span_singleton_mul, pow_succ] }
 end
+
+lemma ideal.eq_bot_iff_zero {R : Type*} [comm_ring R] {I : ideal R} : I = ⊥ ↔ (I : set R) = {0} :=
+begin
+  split ; intro h,
+  { simp [h] },
+  { ext,
+    change x ∈ (I : set R) ↔ _,
+    simp [h] },
+end
