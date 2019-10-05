@@ -217,6 +217,45 @@ end
 
 lemma discrete_iff_open_singletons : discrete_topology α ↔ ∀ x, is_open ({x} : set α) :=
 ⟨by introsI ; exact is_open_discrete _, λ h, ⟨eq_bot_of_singletons_open h⟩⟩
+
+lemma discrete_iff_nhds_eq_pure {X : Type*} [topological_space X] :
+  discrete_topology X ↔ ∀ x : X, nhds x = pure x :=
+begin
+  split,
+  { introsI h,
+    exact congr_fun (nhds_discrete X) },
+  { intro h,
+    constructor,
+    apply eq_bot_of_singletons_open,
+    intro x,
+    change _root_.is_open {x},
+    rw is_open_iff_nhds,
+    simp [h] },
+end
+
+lemma discrete_of_embedding_discrete {X : Type*} {Y : Type*} [topological_space X] [topological_space Y]
+  {f : X → Y} (hf : embedding f) [discrete_topology Y] : discrete_topology X :=
+begin
+  rw discrete_iff_nhds_eq_pure,
+  intro x,
+  rw [hf.to_inducing.nhds_eq_comap, nhds_discrete],
+  suffices : f ⁻¹' {f x} = {x}, by simpa,
+  ext,
+  simp [hf.inj]
+end
+
+lemma is_open_singleton_iff {X : Type*} [topological_space X] {x : X} :
+  is_open ({x} : set X) ↔ {x} ∈ nhds x :=
+begin
+  rw is_open_iff_nhds,
+  split ; intro h,
+  { apply h x (mem_singleton _),
+    simp },
+  { intros y y_in,
+    rw mem_singleton_iff at y_in,
+    simp [*] },
+end
+
 end
 
 -- tools for proving that a product of top rings is a top ring
