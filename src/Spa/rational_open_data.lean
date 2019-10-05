@@ -23,14 +23,16 @@ variables {A : Huber_pair}
 namespace rational_open_data
 variables (r : rational_open_data A)
 
-/-
-The correct preorder on rational open data:
+/-- The preorder on rational open data.
+
+Due to limitations in the existing mathematical library,
+we cannot work with the “correct” preorder on rational open data.
+The “correct” preorder on rational open data would be:
 
 def correct_preorder : preorder (rational_open_data A) :=
 { le := λ r1 r2, rational_open r1 ⊆ rational_open r2,
   le_refl := λ _ _, id,
-  le_trans := λ _ _ _, subset.trans,
-}
+  le_trans := λ _ _ _, subset.trans }
 
 One can prove (in maths) that r1 ≤ r2 iff there's a continuous R-algebra morphism
 of Huber pairs localization r2 → localization r1. I think the ← direction of this
@@ -57,9 +59,7 @@ API for continuous valuations. We basically work with the preorder r1 ≤ r2 iff
 there's a continuous R-algebra map localization r2 → localization r1, i.e, we
 define our way around the problem. We are fortunate in that we can prove
 (in maths) that the projective limit over this preorder agrees with the projective
-limit over the correct preorder.
--/
-
+limit over the correct preorder. -/
 instance : preorder (rational_open_data A) :=
 { le := λ r1 r2, ∃ k : A, r1.s * k = r2.s ∧
     ∀ t₁ ∈ r1.T, ∃ t₂ ∈ r2.T, ∃ N : ℕ, r2.s ^ N * t₂ = r2.s ^ N * (t₁ * k),
@@ -93,34 +93,54 @@ by { rw inter_symm, apply le_inter_left, }
 -- the projective limit that we cannot even formalise. The thing we definitely need
 -- is that if r1 ≤ r2 then there's a map localization r1 → localization r2
 
+/-- The localization of a Huber pair A at the rational open subset r = D(T,s) ⊆ spa(A). -/
 def localization (r : rational_open_data A) := Huber_ring.away r.T r.s
 
 namespace localization
 
+/-- The ring structure on the localization at the rational open subset r = D(T,s) ⊆ spa(A). -/
 instance : comm_ring (localization r) :=
 by unfold localization; apply_instance
 
+/-- The basis of open subgroups of the localization
+ at the rational open subset r = D(T,s) ⊆ spa(A). -/
 instance : subgroups_basis (localization r) :=
 Huber_ring.away.top_loc_basis r.T r.s r.Hopen
 
+/-- The topology on the localization at the rational open subset r = D(T,s) ⊆ spa(A). -/
 instance : topological_space (localization r) :=
 subgroups_basis.topology _
 
+/-- The localization at the rational open subset r = D(T,s) ⊆ spa(A) is a topological ring. -/
 instance : topological_ring (localization r) :=
 ring_filter_basis.is_topological_ring _ rfl
 
+/-- The uniform structure on the localization at the rational open subset r = D(T,s) ⊆ spa(A). -/
+instance (r : rational_open_data A) : uniform_space (rational_open_data.localization r) :=
+topological_add_group.to_uniform_space _
+
+/-- The localization at the rational open subset r = D(T,s) ⊆ spa(A) is a uniform additive group. -/
+instance (rd : rational_open_data A): uniform_add_group (rational_open_data.localization rd) :=
+topological_add_group_is_uniform
+
+/-- The localization at the rational open subset r = D(T,s) ⊆ spa(A) is a an algebra over A. -/
 instance : algebra A (localization r) := Huber_ring.away.algebra r.T r.s
 
+/-- The coercion from a Huber pair A
+to the localization at the rational open subset r = D(T,s) ⊆ spa(A). -/
 instance : has_coe A (localization r) := ⟨λ a, (of_id A (localization r) : A → localization r) a⟩
 
 lemma nonarchimedean (r : rational_open_data A) :
   topological_add_group.nonarchimedean (localization r) :=
 subgroups_basis.nonarchimedean
 
+/--If A is a Huber pair, and r = D(T,s) a rational open subset of Spa(A),
+and coe is the localization map A → A(T/s),
+then `power_bounded_data r` is the set { coe(t)/s | t ∈ T } ⊆ A(T/s).-/
 def power_bounded_data (r : rational_open_data A) : set (localization r) :=
 let s_inv : localization r :=
   ((localization.to_units ⟨r.s, ⟨1, by simp⟩⟩)⁻¹ : units (localization r)) in
-(s_inv • of_id A (localization r) '' r.T)
+(s_inv • (coe : A → localization r) '' r.T)
 
 set_option class.instance_max_depth 38
 
@@ -145,7 +165,7 @@ end
 
 end localization
 
-/-- This awful function produces r1.s as a unit in localization r2 -/
+/-- This auxilliary function produces r1.s as a unit in localization r2 -/
 noncomputable def s_inv_aux (r1 r2 : rational_open_data A) (h : r1 ≤ r2) :
   units (localization r2) :=
 @units.unit_of_mul_left_eq_unit _ _
@@ -162,12 +182,14 @@ noncomputable def localization_map {r1 r2 : rational_open_data A} (h : r1 ≤ r2
   localization r1 → localization r2 :=
 Huber_ring.away.lift r1.T r1.s (of_id A (localization r2)) (s_inv_aux r1 r2 h) rfl
 
+/-- The induced map A(T1/s1) -> A(T2/s2) coming from the inequality r1 ≤ r2
+is a ring homomorphism. -/
 instance {r1 r2 : rational_open_data A} (h : r1 ≤ r2) : is_ring_hom
 (localization_map h) := by delta localization_map; apply_instance
 
--- To prove continuity of the localisation map coming from r1 ≤ r2 I need to check
--- that the image of T/s in the r1 ring is power-bounded in the r2 ring. This is
--- this lemma.
+/- To prove continuity of the localisation map coming from r1 ≤ r2 we need to check
+that the image of T1/s1 under the localization map is power-bounded in the ring (localization r2).
+This is done in the following lemma. -/
 
 local attribute [instance] set.pointwise_mul_comm_semiring
 local attribute [instance] set.pointwise_mul_action
@@ -221,6 +243,10 @@ lemma localization_map_is_cts {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
   continuous (localization_map h) := Huber_ring.away.lift_continuous r1.T r1.s
   (localization.nonarchimedean r2) (Huber_ring.away.of_continuous r2.T r2.s _) _ _ _
   (localization_map_is_cts_aux h)
+
+lemma localization_map_is_uniform_continuous {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
+  uniform_continuous (rational_open_data.localization_map h) :=
+uniform_continuous_of_continuous (rational_open_data.localization_map_is_cts h)
 
 end rational_open_data -- namespace
 

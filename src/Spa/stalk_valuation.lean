@@ -27,9 +27,8 @@ local attribute [instance] valued.uniform_space
 
 namespace spa.rat_open_data_completion
 
-instance (v : spa A) : uniform_add_group (valuation_field (out (v.val))) :=
-topological_add_group_is_uniform
-
+/-- The natural map from A<T/s> to the completion of the valuation field of a valuation v
+contained in D(T/s). -/
 noncomputable def to_complete_valuation_field {r : rational_open_data A} {v : spa A}
   (hv : v ∈ r.open_set) :
   rat_open_data_completion r → completion (valuation_field (Spv.out v.1)) :=
@@ -38,9 +37,8 @@ completion.map (Huber_pair.rational_open_data.to_valuation_field hv)
 example {r : rational_open_data A} {v : spa A} (hv : v ∈ r.open_set) :
   is_ring_hom (Huber_pair.rational_open_data.to_valuation_field hv) := by apply_instance
 
-example {r : rational_open_data A} {v : spa A} (hv : v ∈ r.open_set) :
-  is_ring_hom (Huber_pair.rational_open_data.to_valuation_field hv) := by apply_instance
-
+/-- The natural map from A<T/s> to the completion of the valuation field of a valuation v
+contained in D(T/s) is a ring homomorphism. -/
 instance {r : rational_open_data A} {v : spa A} (hv : v ∈ r.open_set) :
   is_ring_hom (to_complete_valuation_field hv) :=
 completion.is_ring_hom_map (Huber_pair.rational_open_data.to_valuation_field_cts hv)
@@ -56,7 +54,7 @@ begin
   delta to_complete_valuation_field,
   delta rat_open_data_completion.restriction,
   have uc1 : uniform_continuous (rational_open_data.localization_map h),
-    from localization_map_is_uniform_continuous h,
+    from rational_open_data.localization_map_is_uniform_continuous h,
   have uc2 : uniform_continuous (Huber_pair.rational_open_data.to_valuation_field hv2),
     from uniform_continuous_of_continuous (Huber_pair.rational_open_data.to_valuation_field_cts hv2),
   rw [Huber_pair.rational_open_data.to_valuation_field_commutes hv1 hv2 h, completion.map_comp uc2 uc1]
@@ -64,61 +62,64 @@ end
 
 end spa.rat_open_data_completion
 
--- Now we need to show that for any O_X(U) with v in U we have a map
--- to K_v-hat. We do this under the additional assumption that D(T,s) is a basis.
+-- Now we need to show that for any 𝒪_X(U) with v in U we have a map to K_v-hat.
+-- We do this under the additional assumption that D(T,s) is a basis.
 -- First let's write a noncomputable function which gets a basis element.
-
--- def rational_basis (A : Huber_pair) : set (set (spa A)) :=
--- {U : set (spa A) | ∃ r : rational_open_data A, U = r.rational_open }
 
 lemma spa.exists_rational_open_subset {v : spa A} {U : opens (spa A)} (hv : v ∈ U) :
   ∃ r : rational_open_data_subsets U, v ∈ r.1.open_set :=
 begin
   suffices : U.1 ∈ nhds v,
-    rw mem_nhds_of_is_topological_basis (rational_basis.is_basis) at this,
+  { rw mem_nhds_of_is_topological_basis (rational_basis.is_basis) at this,
     rcases this with ⟨_, ⟨r, rfl⟩, hv, hr⟩,
     use ⟨r, hr⟩,
-    exact hv,
+    exact hv, },
   apply mem_nhds_sets U.2 hv,
 end
 
+/-- Given an open set U and a valuation v, this chooses a random rational open subset
+containing v and contained in U. -/
 noncomputable def spa.rational_open_subset_nhd {v : spa A} {U : opens (spa A)} (hv : v ∈ U) :
   rational_open_data_subsets U :=
 classical.some $ spa.exists_rational_open_subset hv
 
-def spa.mem_rational_open_subset_nhd {v : spa A} {U : opens (spa A)} (hv : v ∈ U) :
+lemma spa.mem_rational_open_subset_nhd {v : spa A} {U : opens (spa A)} (hv : v ∈ U) :
   v ∈ (spa.rational_open_subset_nhd hv).1.open_set :=
 classical.some_spec $ spa.exists_rational_open_subset hv
 
 namespace spa.presheaf
 
-/-- The map from F(U) to K_v for v ∈ U -/
+/-- The map from F(U) to K_v for v ∈ U, that restricts a section of the structure presheaf
+to the completion of the valuation field of v. -/
 noncomputable def to_valuation_field_completion {v : spa A} {U : opens (spa A)} (hv : v ∈ U)
   (f : spa.presheaf_value U) : completion (valuation_field (Spv.out v.1)) :=
 spa.rat_open_data_completion.to_complete_valuation_field (spa.mem_rational_open_subset_nhd hv) $
   f.1 $ spa.rational_open_subset_nhd hv
 
-instance {v : spa A}
-  {U : opens (spa A)} (hv : v ∈ U) :
-  is_ring_hom (to_valuation_field_completion hv) := begin
-  delta to_valuation_field_completion,
-  let F := (λ (f : presheaf_value U),
-       spa.rat_open_data_completion.to_complete_valuation_field (spa.mem_rational_open_subset_nhd hv)
-       (f.val (spa.rational_open_subset_nhd hv))),
-  show is_ring_hom F,
-  have H : F =
-    ((spa.rat_open_data_completion.to_complete_valuation_field (spa.mem_rational_open_subset_nhd hv))
-    ∘ (λ (f : presheaf_value U), (f.val (spa.rational_open_subset_nhd hv)))),
-    refl,
-  rw H,
-  refine is_ring_hom.comp _ _,
+/-- Restricting a section of the structure presheaf to a smaller open set is a ring homomorphism.-/
+instance restriction_is_ring_hom (U : opens (spa A)) (r : rational_open_data_subsets U) :
+  is_ring_hom (λ (f : presheaf_value U), f.val r) :=
+{ map_one := rfl,
+  map_mul := λ _ _, rfl,
+  map_add := λ _ _, rfl }
+
+/-- The map that restricts a section of the structure presheaf above U to the completion of
+the valuation field of v ∈ U is a ring homomorphism. -/
+instance {v : spa A} {U : opens (spa A)} (hv : v ∈ U) :
+  is_ring_hom (to_valuation_field_completion hv) :=
+begin
+  show is_ring_hom
+    ((spa.rat_open_data_completion.to_complete_valuation_field
+        (spa.mem_rational_open_subset_nhd hv)) ∘
+      (λ (f : presheaf_value U), (f.val (spa.rational_open_subset_nhd hv)))),
+  exact is_ring_hom.comp _ _,
 end
 
 -- I need now to prove that if V ⊆ U then to_valuation_field_completion commutes with res
 
 -- before we even start with this terrifying noncomputable spa.rational_open_subset_nhd
 -- let's check that spa.rat_open_data_completion.to_complete_valuation_field commutes with ≤
-lemma to_valuation_field_completion_well_defined_aux₁ {v : spa A} {U : opens (spa A)} (hv : v ∈ U)
+lemma to_valuation_field_completion_well_defined_aux₁ {v : spa A} {U : opens (spa A)}
   (f : spa.presheaf_value U) {r1 r2 : rational_open_data_subsets U}
   (h1 : v ∈ r1.1.open_set) (h2 : v ∈ r2.1.open_set) :
 spa.rat_open_data_completion.to_complete_valuation_field h1 (f.1 r1) =
@@ -141,7 +142,7 @@ begin
 end
 
 -- now the other way
-lemma to_valuation_field_completion_well_defined_aux₂ {v : spa A} {U : opens (spa A)} (hv : v ∈ U)
+lemma to_valuation_field_completion_well_defined_aux₂ {v : spa A} {U : opens (spa A)}
   (f : spa.presheaf_value U) {r1 r2 : rational_open_data_subsets U}
   (h1 : v ∈ r1.1.open_set) (h2 : v ∈ r2.1.open_set) :
 spa.rat_open_data_completion.to_complete_valuation_field h2 (f.1 r2) =
@@ -164,14 +165,14 @@ begin
 end
 
 -- now let's check it agrees on any rational_open_data_subsets
-lemma to_valuation_field_completion_well_defined_aux₃ {v : spa A} {U : opens (spa A)} (hv : v ∈ U)
+lemma to_valuation_field_completion_well_defined_aux₃ {v : spa A} {U : opens (spa A)}
   (f : spa.presheaf_value U) {r1 r2 : rational_open_data_subsets U}
   (h1 : v ∈ r1.1.open_set) (h2 : v ∈ r2.1.open_set) :
   spa.rat_open_data_completion.to_complete_valuation_field h1 (f.1 r1) =
   spa.rat_open_data_completion.to_complete_valuation_field h2 (f.1 r2) :=
 begin
-  rw to_valuation_field_completion_well_defined_aux₁ hv f h1 h2,
-  rw to_valuation_field_completion_well_defined_aux₂ hv f h1 h2,
+  rw to_valuation_field_completion_well_defined_aux₁ f h1 h2,
+  rw to_valuation_field_completion_well_defined_aux₂ f h1 h2,
 end
 
 -- next I will prove that for every r : rational_open_data_subsets U with v ∈ r.1.rational_open,
@@ -180,7 +181,7 @@ lemma to_valuation_field_completion_well_defined {v : spa A} {U : opens (spa A)}
   (f : spa.presheaf_value U) (r : rational_open_data_subsets U) (hr : v ∈ r.1.open_set):
 to_valuation_field_completion hv f =
   spa.rat_open_data_completion.to_complete_valuation_field hr (f.1 r) :=
-to_valuation_field_completion_well_defined_aux₃ hv f _ hr
+to_valuation_field_completion_well_defined_aux₃ f _ hr
 
 -- now the main goal
 /-- If v ∈ U then the map from 𝒪_X(U) to `completion (valuation_field v)`
@@ -221,7 +222,12 @@ set_option class.instance_max_depth 49
 
 /--An auxiliary function in the definition of the valuations on the stalks
 of the structure presheaf of the adic spectrum of a Huber pair:
-the valuation is obtained by pulling back a valuation along this function.-/
+the valuation is obtained by pulling back a valuation along this function.
+
+It is the natural map from the stalk above a point in spa(A),
+which is an equivalence class of valuations,
+to the completion of the valuation field of a valuation
+that is a representative of this equivalence class. -/
 noncomputable def stalk_to_valuation_field (x : spa A) :
   stalk_of_rings (spa.presheaf_of_topological_rings A).to_presheaf_of_rings x →
   completion (valuation_field (Spv.out x.1)) :=
@@ -229,6 +235,8 @@ to_stalk.rec (spa.presheaf_of_topological_rings A).to_presheaf_of_rings x
   (completion (valuation_field (Spv.out x.1))) (λ U hxU, to_valuation_field_completion hxU)
   (λ U V HUV r hxU, (to_valuation_field_completion_commutes hxU HUV r).symm)
 
+/-- The natural map from the stalk above a point v in spa(A) to the
+completion of the valuation field of v is a ring homomorphism. -/
 instance stalk_to_valuation_field.is_ring_hom (x : spa A) :
   is_ring_hom (stalk_to_valuation_field x) := to_stalk.rec_is_ring_hom _ _ _ _ _
 

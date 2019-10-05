@@ -70,6 +70,7 @@ begin
   exact Htop.nonarchimedean
 end
 
+/-- The subset of power bounded elements of a Huber ring is a subring.-/
 instance power_bounded_subring.is_subring : is_subring (power_bounded_subring A) :=
 power_bounded_subring.is_subring Huber_ring.nonarchimedean
 

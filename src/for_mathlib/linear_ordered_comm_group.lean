@@ -272,7 +272,10 @@ set_option old_structure_cmd true
 
 /-- An ordered commutative monoid is a commutative monoid
   with a partial order such that mulition is an order embedding, i.e.
-  `a * b ≤ a * c ↔ b ≤ c`. -/
+  `a * b ≤ a * c ↔ b ≤ c`.
+
+  This name is needed because the `ordered_comm_monoid` that exists in mathlib
+  is actually an additive monoid. TODO: refactor this. -/
 class actual_ordered_comm_monoid (α : Type*) extends comm_monoid α, partial_order α :=
 (mul_le_mul_left       : ∀ a b : α, a ≤ b → ∀ c : α, c * a ≤ c * b)
 (lt_of_mul_lt_mul_left : ∀ a b c : α, a * b < a * c → b < c)
@@ -375,6 +378,15 @@ iff.intro
    have b = 1, from _root_.le_antisymm this hb,
    and.intro ‹a = 1› ‹b = 1›)
   (assume ⟨ha', hb'⟩, by rw [ha', hb', mul_one])
+
+lemma mul_eq_one_iff_of_le_one' (ha : a ≤ 1) (hb : b ≤ 1) : a * b = 1 ↔ a = 1 ∧ b = 1 :=
+begin
+  refine iff.intro _ (assume ⟨ha', hb'⟩, by rw [ha', hb', mul_one]),
+  intro hab,
+  have : 1 ≤ a, { rw [← mul_one a, ← hab], exact mul_le_mul' (le_refl _) hb, },
+  have : 1 ≤ b, { rw [← one_mul b, ← hab], exact mul_le_mul' ha (le_refl _), },
+  split; apply _root_.le_antisymm; assumption
+end
 
 lemma square_gt_one {a : α} (h : 1 < a) : 1 < a*a :=
 mul_gt_one' h h

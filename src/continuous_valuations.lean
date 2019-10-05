@@ -7,7 +7,7 @@ import for_mathlib.nonarchimedean.basic
 universes u u₀ u₁ u₂ u₃
 
 namespace valuation
-variables {R : Type u₀} [comm_ring R] [topological_space R] [topological_ring R]
+variables {R : Type u₀} [comm_ring R] [topological_space R]
 variables {Γ₀ : Type u} [linear_ordered_comm_group_with_zero Γ₀]
 variables {Γ'₀ : Type u₁} [linear_ordered_comm_group_with_zero Γ'₀]
 variables {Γ''₀ : Type u₂} [linear_ordered_comm_group_with_zero Γ''₀]
@@ -44,6 +44,7 @@ What is true is that the valuation is continuous iff the associated map
 from R to the valuation field is continuous.
 -/
 
+variable [topological_ring R]
 
 /--If R is a topological ring with continuous valuation v, then the natural map from R
 to the valuation field of v is continuous.-/
@@ -71,19 +72,15 @@ end valuation
 
 namespace Spv
 
-variables {R : Type u₀} [comm_ring R] [topological_space R] [topological_ring R]
+variables {R : Type u₀} [comm_ring R] [topological_space R]
 
 /--An equivalence class of valuations is continuous if one representative is continuous.-/
-def is_continuous : Spv R → Prop := lift (@valuation.is_continuous _ _ _ _)
+def is_continuous : Spv R → Prop := lift (@valuation.is_continuous _ _ _)
 
 end Spv
 
-namespace Spv
-
-variables {R : Type u₁} [comm_ring R] [topological_space R] [topological_ring R]
+variables (R : Type u₁) [comm_ring R] [topological_space R]
 variables {Γ₀ : Type u} [linear_ordered_comm_group_with_zero Γ₀]
-
-variable (R)
 
 /--The type of equivalence classes of continuous valuations.-/
 def Cont := {v : Spv R | v.is_continuous}
@@ -91,19 +88,18 @@ def Cont := {v : Spv R | v.is_continuous}
 variable {R}
 
 /--A valuation v is continuous if and only if its equivalence class is continuous.-/
-lemma mk_mem_Cont {v : valuation R Γ₀} : mk v ∈ Cont R ↔ v.is_continuous :=
+lemma mk_mem_Cont (v : valuation R Γ₀) : Spv.mk v ∈ Cont R ↔ v.is_continuous :=
 begin
   show Spv.lift (by exactI (λ _ _, by exactI valuation.is_continuous)) (Spv.mk v)
     ↔ valuation.is_continuous v,
-  refine (lift_eq' _ _ _ _),
+  refine (Spv.lift_eq' _ _ _ _),
   intros _ _ _ h,
   resetI,
   exact h.is_continuous_iff,
 end
 
+/-- The topology on the space of continuous valuations. -/
 instance Cont.topological_space : topological_space (Cont R) := by apply_instance
-
-end Spv
 
 /-
 Wedhorn, p.59 contains the following typo:

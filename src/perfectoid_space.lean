@@ -22,6 +22,9 @@ open nat power_bounded_subring topological_space function
 -- We fix a prime number p
 parameter (p : primes)
 
+/-- A perfectoid ring is a Huber ring that is complete, uniform,
+that has a pseudo-uniformizer whose p-th power divides p in the power bounded subring,
+and such that Frobenius is a surjection on the reduction modulo p.-/
 structure perfectoid_ring (R : Type) [Huber_ring R] extends Tate_ring R : Prop :=
 (complete  : is_complete_hausdorff R)
 (uniform   : is_uniform R)

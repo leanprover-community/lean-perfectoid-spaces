@@ -1,70 +1,30 @@
 import data.padics
 
 import for_mathlib.field_power
+import for_mathlib.finset
 import for_mathlib.ideal_operations
-import for_mathlib.padics
 import for_mathlib.normed_spaces
+import for_mathlib.nnreal
+import for_mathlib.padics
+import for_mathlib.polynomial
 
 import adic_space
 
 /-!
 # The p-adics form a Huber ring
 
-In this file we show that ℤ_[p] and ℚ_[p] are Huber rings. They are the fundamental examples
-of Huber rings.
+In this file we show that ℤ_[p] and ℚ_[p] are Huber rings.
+They are the fundamental examples of Huber rings.
+
+We also show that (ℚ_[p], ℤ_[p]) is a Huber pair,
+and that its adic spectrum is a singleton,
+consisting of the standard p-adic valuation on ℚ_[p].
 -/
 
 noncomputable theory
 open_locale classical
 
 local postfix `⁺` : 66 := λ A : Huber_pair, A.plus
-
-namespace polynomial
-
-lemma monic.as_sum {R : Type*} [comm_ring R] {f : polynomial R} (hf : f.monic) :
-  f = X^(f.nat_degree) + ((finset.range f.nat_degree).sum $ λ i, C (f.coeff i) * X^i) :=
-begin
-  ext n,
-  rw [coeff_add, coeff_X_pow],
-  rw show coeff (finset.sum (finset.range (nat_degree f)) (λ (i : ℕ), C (coeff f i) * X ^ i)) n =
-    (finset.sum (finset.range (nat_degree f)) (λ (i : ℕ), coeff (C (coeff f i) * X ^ i) n)),
-  { symmetry,
-    let tmp : _ := _,
-    refine @finset.sum_hom _ _ _ _ _ _ _ (λ f, coeff f n) tmp,
-    exact { map_add := λ f g, coeff_add f g n, map_zero := rfl }, },
-  split_ifs with h,
-  { subst h, convert (add_zero _).symm, { symmetry, exact hf },
-    apply finset.sum_eq_zero,
-    intros i hi, rw finset.mem_range at hi, replace hi := ne_of_gt hi,
-    simp [hi], },
-  { rw zero_add,
-    by_cases hn : n < nat_degree f,
-    { rw finset.sum_eq_single n, { simp, },
-      { intros i hi hin, simp [hin.symm], },
-      { rw finset.mem_range, intro H, contradiction, } },
-    { push_neg at hn, replace hn := lt_of_le_of_ne hn h.symm,
-      rw [finset.sum_eq_zero, coeff_eq_zero_of_degree_lt],
-      { refine lt_of_le_of_lt degree_le_nat_degree _, rwa with_bot.coe_lt_coe },
-      { intros i hi, rw finset.mem_range at hi, have : n ≠ i, by linarith, simp [this], } } }
-end
-
-end polynomial
-
-lemma finset.fold_max_lt {α : Type*} {β : Type*} [decidable_eq α] [decidable_linear_order β]
-  (s : finset α) (f : α → β) (b x : β) :
-  s.fold max b f < x ↔ (b < x ∧ ∀ a∈s, f a < x) :=
-begin
-  apply finset.induction_on s, { simp, },
-  clear s, intros a s ha IH,
-  rw [finset.fold_insert ha, max_lt_iff, IH, ← and_assoc, and_comm (f a < x), and_assoc],
-  apply and_congr iff.rfl,
-  split,
-  { rintro ⟨h₁, h₂⟩, intros b hb, rw finset.mem_insert at hb,
-    rcases hb with rfl|hb; solve_by_elim },
-  { intro h, split,
-    { exact h a (finset.mem_insert_self _ _), },
-    { intros b hb, apply h b, rw finset.mem_insert, right, exact hb } }
-end
 
 namespace linear_ordered_comm_group_with_zero
 variables {Γ₀ : Type*} [linear_ordered_comm_group_with_zero Γ₀]
@@ -208,6 +168,7 @@ instance padic.Huber_ring : Huber_ring ℚ_[p] :=
     top := is_adic p,
     .. padic_int.algebra }⟩⟩ }
 
+/-- The p-adic numbers form a Huber pair (with the p-adic integers as power bounded subring).-/
 @[reducible] def padic.Huber_pair : Huber_pair :=
 { plus := ℤ_[p],
   carrier := ℚ_[p],
@@ -239,9 +200,11 @@ instance padic.Huber_ring : Huber_ring ℚ_[p] :=
     .. is_integrally_closed p } }
 .
 
-@[simp] lemma nnreal.coe_max (x y : nnreal) : ((max x y : nnreal) : ℝ) = max (x : ℝ) (y : ℝ) :=
-by { delta max, split_ifs; refl }
+-- Valuations take values in a linearly ordered monoid with a minimal element 0,
+-- whereas norms in mathlib are defined to take values in ℝ.
+-- This is a repackaging of the p-adic norm as a valuation with values in the non-negative reals.
 
+/-- The standard p-adic valuation. -/
 def padic.bundled_valuation : valuation ℚ_[p] nnreal :=
 { to_fun := λ x, ⟨∥x∥, norm_nonneg _⟩,
   map_zero' := subtype.val_injective norm_zero,
@@ -263,6 +226,7 @@ def padic.bundled_valuation : valuation ℚ_[p] nnreal :=
       congr, },
   end }
 
+-- move this
 lemma group_with_zero.inv_inj {Γ₀ : Type*} [group_with_zero Γ₀] {g h : Γ₀} :
   g⁻¹ = h⁻¹ ↔ g = h :=
 begin
@@ -282,10 +246,11 @@ end
 namespace valuation
 variables {R : Type*} [comm_ring R]
 variables {K : Type*} [discrete_field K]
-variables {L : Type*} [discrete_field L] [topological_space L] [topological_ring L]
+variables {L : Type*} [discrete_field L] [topological_space L]
 variables {Γ₀ : Type*} [linear_ordered_comm_group_with_zero Γ₀]
 variables {Γ'₀ : Type*} [linear_ordered_comm_group_with_zero Γ'₀]
 
+-- move this
 lemma is_equiv_of_val_le_one (v : valuation K Γ₀) (v' : valuation K Γ'₀)
   (h : ∀ {x:K}, v x ≤ 1 ↔ v' x ≤ 1) :
   v.is_equiv v' :=
@@ -307,6 +272,7 @@ begin
     rwa h, },
 end
 
+-- move this
 lemma canonical_valuation.surjective (v : valuation K Γ₀) :
   function.surjective (v.canonical_valuation) :=
 begin
@@ -330,6 +296,7 @@ begin
   exact not_not.mpr rfl
 end
 
+-- move this
 lemma is_continuous_iff {v : valuation L Γ₀} :
   v.is_continuous ↔ ∀ x:L, is_open {y:L | v y < v x} :=
 begin
@@ -344,9 +311,13 @@ begin
     simpa only [(value_monoid.to_Γ₀_strict_mono v).lt_iff_lt.symm, help] using h x, }
 end
 
+-- move this
+
+/-- A valuation is trivial if it maps everything to 0 or 1.-/
 def is_trivial (v : valuation R Γ₀) : Prop :=
 ∀ r:R, v r = 0 ∨ v r = 1
 
+--move this
 lemma trivial_is_trivial (I : ideal R) [hI : I.is_prime] :
   (trivial I : valuation R Γ₀).is_trivial :=
 begin
@@ -358,6 +329,9 @@ begin
     simp [hr] }
 end
 
+variable [topological_ring L]
+
+--move this
 lemma is_trivial_is_continuous_iff_discrete (v : valuation L Γ₀) (hv : v.is_trivial) :
   v.is_continuous ↔ discrete_topology L :=
 begin
@@ -378,6 +352,7 @@ begin
   { resetI, intro g, exact is_open_discrete _ }
 end
 
+--move this
 lemma is_trivial_iff {v : valuation K Γ₀} :
   v.is_trivial ↔ ∀ x:K, v x ≤ 1 :=
 begin
@@ -393,6 +368,7 @@ begin
     { push_neg at hx, exact ⟨_, hx⟩ } }
 end
 
+--move this
 -- This is a hack, to avoid an fpow diamond.
 lemma map_fpow_eq_one_iff {v : valuation K Γ₀} {x : K} (n : ℤ) (hn : n ≠ 0) :
   v (x^n) = 1 ↔ v x = 1 :=
@@ -422,26 +398,11 @@ end
 
 end valuation
 
-lemma fpow_eq_zero {K : Type*} [discrete_field K] {x : K} {n : ℤ} (h : x^n = 0) :
-  x = 0 :=
-begin
-  by_cases hn : 0 ≤ n,
-  { lift n to ℕ using hn, rw fpow_of_nat at h, exact pow_eq_zero h, },
-  { by_cases hx : x = 0, { exact hx },
-    push_neg at hn, rw ← neg_pos at hn, replace hn := le_of_lt hn,
-    lift (-n) to ℕ using hn with m hm,
-    rw [← neg_neg n, fpow_neg, ← hm, fpow_of_nat] at h,
-    rw ← inv_eq_zero,
-    apply pow_eq_zero (_ : _^m = _),
-    rwa [inv_eq_one_div, one_div_pow hx], }
-end
-
-instance padic_int.char_zero : char_zero ℤ_[p] :=
-{ cast_inj := λ m n, by { rw subtype.coe_ext, norm_cast, exact char_zero.cast_inj _, } }
-
+--move this
 lemma padic.not_discrete : ¬ discrete_topology ℚ_[p] :=
 nondiscrete_normed_field.nondiscrete
 
+--move this
 lemma padic_int.not_discrete : ¬ discrete_topology ℤ_[p] :=
 begin
   assume h,
@@ -453,6 +414,7 @@ begin
   exact_mod_cast this
 end
 
+/-- The adic spectrum Spa(ℚ_p, ℤ_p) is inhabited. -/
 def padic.Spa_inhabited : inhabited (Spa $ padic.Huber_pair p) :=
 { default := ⟨Spv.mk (padic.bundled_valuation p),
   begin
@@ -466,84 +428,8 @@ def padic.Spa_inhabited : inhabited (Spa $ padic.Huber_pair p) :=
     { intro x, change ℤ_[p] at x, exact x.property },
   end⟩ }
 
-@[extensionality]
-lemma Spv.ext {R : Type*} [comm_ring R] (v₁ v₂ : Spv R) (h : (Spv.out v₁).is_equiv (Spv.out v₂)) :
-  v₁ = v₂ :=
-by simpa only [Spv.mk_out] using Spv.sound h
-
-lemma Spv.ext_iff {R : Type*} [comm_ring R] {v₁ v₂ : Spv R} :
-  v₁ = v₂ ↔ ((Spv.out v₁).is_equiv (Spv.out v₂)) :=
-⟨λ h, Spv.is_equiv_of_eq_mk (by simpa only [Spv.mk_out] using h), Spv.ext _ _⟩
-
-namespace spa
-variables {A : Huber_pair}
-
-@[extensionality]
-lemma spa.ext (v₁ v₂ : spa A) (h : (Spv.out ↑v₁).is_equiv (Spv.out (↑v₂ : Spv A))) :
-  v₁ = v₂ :=
-subtype.val_injective $ Spv.ext _ _ h
-
-lemma spa.ext_iff {v₁ v₂ : spa A} :
-  v₁ = v₂ ↔ ((Spv.out ↑v₁).is_equiv (Spv.out (↑v₂ : Spv A))) :=
-by rw [subtype.coe_ext, Spv.ext_iff]
-
-abbreviation spa.out_Γ₀ (v  : spa A) := Spv.out_Γ₀ (v : Spv A)
-
-lemma map_plus (v : spa A) (a : (A⁺)) : v (algebra_map A a) ≤ 1 := v.property.right a
-
-@[simp] lemma map_unit (v : spa A) (u : units (A⁺)) :
-  v ((algebra_map A : (A⁺) → A) u) = 1 :=
-begin
-  apply le_antisymm,
-  { exact spa.map_plus _ _ },
-  { let u' : units A :=
-    (@units.map' (A⁺) A _ _ (algebra_map A : (A⁺) → A) (by apply_instance) : units (A⁺) → units A) u,
-    change (1:_) ≤ v (u' : A),
-    rw [← linear_ordered_comm_group_with_zero.inv_le_inv one_ne_zero, inv_one'],
-    { convert map_plus v (u⁻¹ : units (A⁺)),
-      calc (v (u' : A))⁻¹ = v ((u'⁻¹ : units A) : A) : (valuation.map_units_inv _ _).symm
-        ... = v (algebra_map A ((u⁻¹ : units (A⁺)) : A⁺)) : rfl },
-    { convert group_with_zero.unit_ne_zero _,
-      swap,
-      { let tmp : _ := _,
-        refine (@units.map' A _ _ _ v tmp : units A → units _) u',
-        convert monoid_hom.is_monoid_hom _ using 1,
-        swap,
-        { apply valuation.to_monoid_hom, refine Spv.out _, },
-        refl },
-      refl } }
-end
-
-end spa
-
-lemma padic.exists_repr (x : ℚ_[p]) (hx : x ≠ 0) :
-  ∃ (u : units ℤ_[p]) (n : ℤ), x = (u : ℤ_[p])*p^n :=
-begin
-  have : ∥x * (p : ℚ_[p])^(-x.valuation)∥ ≤ 1,
-  { rw [_root_.norm_mul, padic.norm_eq_pow_val hx, norm_fpow, padic.norm_p,
-      ← mul_fpow, mul_inv_cancel, one_fpow],
-    exact_mod_cast nat.prime.ne_zero ‹_› },
-  let y : ℤ_[p] := ⟨x * (p : ℚ_[p])^(-x.valuation), this⟩,
-  have y_ne_zero : y ≠ 0,
-  { contrapose! hx with hy,
-    rw subtype.coe_ext at hy,
-    rcases eq_zero_or_eq_zero_of_mul_eq_zero hy with h|h,
-    { exact h },
-    { exfalso, apply nat.prime.ne_zero ‹_›, exact_mod_cast fpow_eq_zero h } },
-  rcases padic_int.exists_repr y_ne_zero with ⟨u, n, hy⟩,
-  refine ⟨u, (n:ℤ) + x.valuation, _⟩,
-  rw [fpow_add, fpow_of_nat],
-  { have : (p:ℚ_[p])^(-x.valuation) ≠ 0,
-    { assume h, exfalso, apply nat.prime.ne_zero ‹_›, exact_mod_cast fpow_eq_zero h },
-    apply group_with_zero.mul_right_cancel this,
-    rw subtype.coe_ext at hy,
-    rw [mul_assoc, mul_assoc, ← fpow_add, add_neg_self, fpow_zero, mul_one],
-    { exact_mod_cast hy, },
-    { exact_mod_cast nat.prime.ne_zero ‹_› } },
-  { exact_mod_cast nat.prime.ne_zero ‹_› }
-end
-.
-
+/-- The adic spectrum Spa(ℚ_p, ℤ_p) is a singleton:
+the only element is the standard p-adic valuation. -/
 def padic.Spa_unique : unique (Spa $ padic.Huber_pair p) :=
 { uniq :=
   begin
@@ -570,9 +456,9 @@ def padic.Spa_unique : unique (Spa $ padic.Huber_pair p) :=
           rw valuation.is_trivial_iff,
           intro z,
           by_cases hx' : x = 0, { contrapose! h, simp [hx'], },
-          rcases padic.exists_repr p x hx' with ⟨u, m, rfl⟩, clear hx',
+          rcases padic.exists_repr x hx' with ⟨u, m, rfl⟩, clear hx',
           by_cases hz : z = 0, { simp [hz], },
-          rcases padic.exists_repr p z hz with ⟨v, n, rfl⟩, clear hz,
+          rcases padic.exists_repr z hz with ⟨v, n, rfl⟩, clear hz,
           erw [valuation.map_mul, spa.map_unit, one_mul],
           by_cases hn : n = 0, { erw [hn, fpow_zero, valuation.map_one], },
           erw [← hy, valuation.map_inv, valuation.map_mul, spa.map_unit,

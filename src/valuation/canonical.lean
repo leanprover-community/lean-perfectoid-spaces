@@ -64,6 +64,9 @@ open linear_ordered_structure
 
 variables {R : Type u₀} [comm_ring R]
 
+/- TODO(jmc): Refactor this file to use valued_field,
+instead of working explicitly with v.valuation_field. -/
+
 namespace valuation
 
 variables {Γ₀ : Type u} [linear_ordered_comm_group_with_zero Γ₀]
@@ -79,6 +82,8 @@ by unfold valuation_field_norm_one; apply_instance
 
 namespace value_monoid
 
+/-- The relation on a valuation field induced by the valuation:
+a ≈ b if and only if there is a unit c of valuation 1 such that a * c = b.-/
 def quotient_rel (a b : v.valuation_field) : Prop :=
 ∃ c : units v.valuation_field, c ∈ v.valuation_field_norm_one ∧ a * c = b
 
@@ -99,6 +104,8 @@ end
 
 end quotient_rel
 
+/-- The setoid on a valuation field induced by the valuation:
+a ≈ b if and only if there is a unit c of valuation 1 such that a * c = b.-/
 def setoid : setoid (v.valuation_field) :=
 { r := quotient_rel v,
   iseqv := ⟨quotient_rel.refl v, quotient_rel.symm v, quotient_rel.trans v⟩ }
@@ -112,6 +119,7 @@ def value_monoid (v : valuation R Γ₀) : Type u₀ :=
 namespace value_monoid
 open function
 
+/-- The natural map from the canonical value monoid to Γ₀, for a valuation with values in Γ₀. -/
 def to_Γ₀ : v.value_monoid → Γ₀ :=
 λ x, quotient.lift_on' x v.on_valuation_field $
 begin
@@ -134,6 +142,7 @@ begin
     simp [units.ext_iff, h, hb] }
 end
 
+/--The linear order on the canonical value monoid associated with a valuation.-/
 instance : linear_order (v.value_monoid) :=
 linear_order.lift (to_Γ₀ v) (to_Γ₀_inj v) infer_instance
 
@@ -142,10 +151,13 @@ lemma to_Γ₀_strict_mono : strict_mono (to_Γ₀ v) := λ a b, id
 @[simp] lemma triangle (a : v.valuation_field) :
   to_Γ₀ v (quotient.mk' a) = v.on_valuation_field a := rfl
 
+/--The zero element of the canonical value monoid associated with a valuation.-/
 instance : has_zero (v.value_monoid) := ⟨quotient.mk' 0⟩
 
+/--The unit element of the canonical value monoid associated with a valuation.-/
 instance : has_one  (v.value_monoid) := ⟨quotient.mk' 1⟩
 
+/--The inversion function of the canonical value monoid associated with a valuation.-/
 instance : has_inv  (v.value_monoid) :=
 ⟨λ x, quotient.lift_on' x (λ a, quotient.mk' a⁻¹)
 begin
@@ -155,6 +167,7 @@ begin
   simp [hc],
 end⟩
 
+/--The multiplication on the canonical value monoid associated with a valuation.-/
 instance : has_mul  (v.value_monoid) :=
 ⟨λ x y, quotient.lift_on₂' x y (λ a b, quotient.mk' (a*b))
 begin
@@ -175,6 +188,7 @@ quotient.induction_on' a $ λ x, v.on_valuation_field.map_inv
 @[simp] lemma to_Γ₀_mul (a b) : to_Γ₀ v (a*b) = (to_Γ₀ v a) * (to_Γ₀ v b) :=
 quotient.induction_on₂' a b $ λ x y, v.on_valuation_field.map_mul x y
 
+/--The canonical value monoid associated with a valuation is a group with zero.-/
 instance : group_with_zero (v.value_monoid) :=
 begin
   refine_struct {
@@ -191,6 +205,8 @@ begin
   { apply mul_inv_cancel', intro this, apply_assumption, apply to_Γ₀_inj, simpa }
 end
 
+/--The canonical value monoid associated with a valuation
+is a linearly ordered commutative group with zero.-/
 instance : linear_ordered_comm_group_with_zero (v.value_monoid) :=
 { mul_comm := λ a b, to_Γ₀_inj v $ by simpa using mul_comm _ _,
   mul_le_mul_left := λ a b h c,
@@ -566,12 +582,16 @@ def valfield.preorder_equiv (h : v₁.is_equiv v₂) :
 
 -- units
 
+/-- The induced map between the unit groups of the valuation fields of
+two valuations with the same support.-/
 def valfield_units_of_valfield_units_of_eq_supp (h : supp v₁ = supp v₂) :
   units (valuation_field v₁) → units (valuation_field v₂) :=
 units.map' $ valfield_of_valfield_of_eq_supp h
 
+/-- The induced map between the unit groups of the valuation fields of
+two valuations with the same support is a group homomorphism.-/
 instance valfield_units.is_group_hom (h : supp v₁ = supp v₂) :
-is_group_hom (valfield_units_of_valfield_units_of_eq_supp h) :=
+  is_group_hom (valfield_units_of_valfield_units_of_eq_supp h) :=
 by unfold valfield_units_of_valfield_units_of_eq_supp; apply_instance
 
 lemma units_valfield_of_units_valfield_of_eq_supp_mk
@@ -589,27 +609,11 @@ lemma valfield_units_equiv_units_mk_eq_mk (h : supp v₁ = supp v₂) (r : R) (h
 (valfield_units_equiv_units_of_eq_supp h).to_equiv (units_valfield_mk v₁ r hr) =
 units_valfield_mk v₂ r (h ▸ hr) := units_valfield_of_units_valfield_of_eq_supp_mk h r hr
 
+
 def valfield_units_preorder_equiv (h : v₁.is_equiv v₂) :
   preorder_equiv (units (valuation_field v₁)) (units (valuation_field v₂)) :=
 { le_map := λ u v, @le_equiv.le_map _ _ _ _ (valfield.preorder_equiv h) u.val v.val,
-  ..valfield_units_equiv_units_of_eq_supp (h.supp_eq)
- }
-
--- This explicit instance helps type class inference; it's a shortcut.
--- The "by apply_instance" proof needs
--- set_option class.instance_max_depth 35
-instance (h : is_equiv v₁ v₂) :
-is_subgroup ((valfield_units_of_valfield_units_of_eq_supp (is_equiv.supp_eq h)) ⁻¹'
-  (valuation_field_norm_one v₂)) :=
-normal_subgroup.to_is_subgroup _
-
--- Same here -- the `by apply_instance` proof needs max_depth 35
-instance (h : is_equiv v₁ v₂) : group (quotient_group.quotient
-  ((valfield_units_of_valfield_units_of_eq_supp (is_equiv.supp_eq h)) ⁻¹'
-    (valuation_field_norm_one v₂))) :=
-quotient_group.group
-  ((valfield_units_of_valfield_units_of_eq_supp (is_equiv.supp_eq h)) ⁻¹'
-    (valuation_field_norm_one v₂))
+  ..valfield_units_equiv_units_of_eq_supp (h.supp_eq) }
 
 lemma val_one_iff_unit_val_one (x : units (valuation_field v)) :
   x ∈ valuation_field_norm_one v ↔ v.on_valuation_field x = 1 :=
@@ -627,7 +631,9 @@ begin
   refl,
 end
 
--- group part of Wedhorn 1.27 (iii) -> (i)
+/-- Two equivalent valuations have isomorphic canonical value monoids.
+
+This is part of the statement of [Wedhorn, 1.27 (iii) -> (i)]. -/
 def is_equiv.value_mul_equiv (h : is_equiv v₁ v₂) :
   (value_monoid v₁) ≃* (value_monoid v₂) :=
 { to_fun := λ x, quotient.lift_on' x ((valuation_field.canonical_valuation v₂).comap (valfield_of_valfield_of_eq_supp h.supp_eq))
@@ -671,13 +677,14 @@ def is_equiv.value_mul_equiv (h : is_equiv v₁ v₂) :
   end }
 
 -- ordering part of 1.27 (iii) -> (i)
-def is_equiv.value_monoid_order_equiv_aux (h : is_equiv v₁ v₂) (x y : value_monoid v₁) (h2 : x ≤ y) :
+lemma is_equiv.value_monoid_order_equiv_aux (h : is_equiv v₁ v₂) (x y : value_monoid v₁) (h2 : x ≤ y) :
   h.value_mul_equiv x ≤ h.value_mul_equiv y :=
 begin
   induction x with x, induction y, swap, refl, swap, refl,
   exact (is_equiv.on_valuation_field_is_equiv h x y).1 h2,
 end
 
+/-- The canonical value monoids of two equivalent valuations are order equivalent.-/
 def is_equiv.value_monoid_le_equiv (h : is_equiv v₁ v₂) :
   (value_monoid v₁) ≃≤ (value_monoid v₂) :=
 { le_map := λ x y, linear_order_le_iff_of_monotone_injective
@@ -685,11 +692,11 @@ def is_equiv.value_monoid_le_equiv (h : is_equiv v₁ v₂) :
   (is_equiv.value_monoid_order_equiv_aux h) x y
    ..h.value_mul_equiv}
 
-def is_equiv.value_mul_equiv_monotone (h : is_equiv v₁ v₂) :
+lemma is_equiv.value_mul_equiv_monotone (h : is_equiv v₁ v₂) :
   monotone (h.value_mul_equiv) := λ x y,
   (@@le_equiv.le_map _ _ (is_equiv.value_monoid_le_equiv h)).1
 
-def is_equiv.value_mul_equiv_map_zero (h : is_equiv v₁ v₂) :
+lemma is_equiv.value_mul_equiv_map_zero (h : is_equiv v₁ v₂) :
   h.value_mul_equiv 0 = 0 :=
 begin
   apply quotient.sound',

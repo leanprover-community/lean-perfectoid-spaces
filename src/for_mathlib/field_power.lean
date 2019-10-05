@@ -60,3 +60,17 @@ begin
     rw fpow_neg_succ_of_nat,
     norm_cast }
 end
+
+lemma fpow_eq_zero {K : Type*} [discrete_field K] {x : K} {n : ℤ} (h : x^n = 0) :
+  x = 0 :=
+begin
+  by_cases hn : 0 ≤ n,
+  { lift n to ℕ using hn, rw fpow_of_nat at h, exact pow_eq_zero h, },
+  { by_cases hx : x = 0, { exact hx },
+    push_neg at hn, rw ← neg_pos at hn, replace hn := le_of_lt hn,
+    lift (-n) to ℕ using hn with m hm,
+    rw [← neg_neg n, fpow_neg, ← hm, fpow_of_nat] at h,
+    rw ← inv_eq_zero,
+    apply pow_eq_zero (_ : _^m = _),
+    rwa [inv_eq_one_div, one_div_pow hx], }
+end

@@ -15,7 +15,7 @@ Topologically nilpotent units are also called pseudo-uniformizers.
 
 universe u
 
-variables {R : Type u} [comm_ring R] [topological_space R] [topological_ring R]
+variables {R : Type u} [comm_ring R] [topological_space R]
 
 open filter function
 
@@ -29,6 +29,7 @@ variable {R}
 
 namespace pseudo_uniformizer
 
+/-- The coercion from pseudo-uniformizers to the unit group. -/
 instance : has_coe (pseudo_uniformizer R) (units R) := ⟨subtype.val⟩
 
 /--The unit underlying a pseudo-uniformizer.-/
@@ -37,6 +38,8 @@ abbreviation unit (ϖ : pseudo_uniformizer R) : units R := ϖ
 /--A pseudo-uniformizer is topologically nilpotent (by definition).-/
 lemma is_topologically_nilpotent (ϖ : pseudo_uniformizer R) :
   is_topologically_nilpotent (ϖ : R) := ϖ.property
+
+variables [topological_ring R]
 
 /--A pseudo-uniformizer is power bounded.-/
 lemma power_bounded (ϖ : pseudo_uniformizer R) :
@@ -63,6 +66,7 @@ begin
   linarith
 end
 
+/-- The coercion from pseudo-uniformizers to the power bounded subring. -/
 instance coe_to_power_bounded_subring : has_coe (pseudo_uniformizer R) (power_bounded_subring R) :=
 ⟨λ ϖ, ⟨_, ϖ.power_bounded⟩⟩
 

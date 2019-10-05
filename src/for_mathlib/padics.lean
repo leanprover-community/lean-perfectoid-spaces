@@ -1,5 +1,7 @@
 import data.padics
 import ring_theory.noetherian
+
+import for_mathlib.group_with_zero
 import for_mathlib.field_power
 import for_mathlib.ideal_operations
 
@@ -340,3 +342,34 @@ lemma continuous_coe : continuous (coe : ℤ_[p] → ℚ_[p]) :=
  coe_open_embedding.to_embedding.continuous
 
 end padic_int
+
+lemma padic.exists_repr (x : ℚ_[p]) (hx : x ≠ 0) :
+  ∃ (u : units ℤ_[p]) (n : ℤ), x = (u : ℤ_[p])*p^n :=
+begin
+  have : ∥x * (p : ℚ_[p])^(-x.valuation)∥ ≤ 1,
+  { rw [_root_.norm_mul, padic.norm_eq_pow_val hx, norm_fpow, padic.norm_p,
+      ← mul_fpow, mul_inv_cancel, one_fpow],
+    exact_mod_cast nat.prime.ne_zero ‹_› },
+  let y : ℤ_[p] := ⟨x * (p : ℚ_[p])^(-x.valuation), this⟩,
+  have y_ne_zero : y ≠ 0,
+  { contrapose! hx with hy,
+    rw subtype.coe_ext at hy,
+    rcases eq_zero_or_eq_zero_of_mul_eq_zero hy with h|h,
+    { exact h },
+    { exfalso, apply nat.prime.ne_zero ‹_›, exact_mod_cast fpow_eq_zero h } },
+  rcases padic_int.exists_repr y_ne_zero with ⟨u, n, hy⟩,
+  refine ⟨u, (n:ℤ) + x.valuation, _⟩,
+  rw [fpow_add, fpow_of_nat],
+  { have hnz : (p:ℚ_[p])^(-x.valuation) ≠ 0,
+    { assume h, exfalso, apply nat.prime.ne_zero ‹_›, exact_mod_cast fpow_eq_zero h },
+    apply group_with_zero.mul_right_cancel hnz,
+    rw subtype.coe_ext at hy,
+    rw [mul_assoc, mul_assoc, ← fpow_add, add_neg_self, fpow_zero, mul_one],
+    { exact_mod_cast hy, },
+    { exact_mod_cast nat.prime.ne_zero ‹_› } },
+  { exact_mod_cast nat.prime.ne_zero ‹_› }
+end
+
+/-- The ring of p-adic integers has characteristic 0.-/
+instance padic_int.char_zero : char_zero ℤ_[p] :=
+{ cast_inj := λ m n, by { rw subtype.coe_ext, norm_cast, exact char_zero.cast_inj _, } }

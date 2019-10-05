@@ -38,6 +38,7 @@ topological_space.mk_of_nhds (nhds_fun Γ₀)
 local attribute [instance] linear_ordered_comm_group_with_zero.topological_space
 
 /--The neighbourhoods {γ | γ < γ₀} of 0 form a directed set indexed by the invertible elements γ₀.-/
+@[sanity_skip]
 lemma directed_lt : directed (≥) (λ (γ₀ : units Γ₀), principal {γ : Γ₀ | γ < ↑γ₀}) :=
 begin
   intros γ₁ γ₂,
@@ -145,7 +146,7 @@ variable (Γ₀)
 
 /--The topology on a linearly ordered group with zero element adjoined
 is compatible with the order structure.-/
-def ordered_topology : ordered_topology Γ₀ :=
+lemma ordered_topology : ordered_topology Γ₀ :=
 { is_closed_le' :=
   begin
     show is_open {p : Γ₀ × Γ₀ | ¬p.fst ≤ p.snd},
@@ -153,7 +154,7 @@ def ordered_topology : ordered_topology Γ₀ :=
     rw is_open_iff_mem_nhds,
     rintros ⟨a,b⟩ hab,
     change b < a at hab,
-    have ha : a ≠ 0 := ne_zero_of_gt hab,
+    have ha : a ≠ 0 := ne_zero_of_lt hab,
     rw [nhds_prod_eq, mem_prod_iff],
     by_cases hb : b = 0,
     { subst b,
@@ -221,9 +222,12 @@ def zero_filter_basis : filter_basis Γ₀ :=
 
 variable {Γ₀}
 
+-- TODO: Generalise the following definition into something like filter_basis.pure.
+
 /--The filter basis around nonzero elements of
 a linearly ordered group with zero element adjoined.-/
-def ne_zero_filter_basis (x : Γ₀) (h : x ≠ 0) : filter_basis Γ₀ :=
+@[sanity_skip]
+def ne_zero_filter_basis (x : Γ₀) : filter_basis Γ₀ :=
 { sets := ({({x} : set Γ₀)} : set (set Γ₀)),
   ne_empty := by simp,
   directed := by finish }
@@ -232,7 +236,7 @@ variable (Γ₀)
 
 /--The neighbourhood basis of a linearly ordered group with zero element adjoined.-/
 def nhds_basis : nhds_basis Γ₀ :=
-{ B := λ x, if h : x = 0 then zero_filter_basis Γ₀ else ne_zero_filter_basis x h,
+{ B := λ x, if h : x = 0 then zero_filter_basis Γ₀ else ne_zero_filter_basis x,
   is_nhds := begin
     intro x,
     ext s,
@@ -264,7 +268,7 @@ lemma mem_nhds_basis_ne_zero {U : set Γ₀} {γ₀ : Γ₀} (h : γ₀ ≠ 0) :
 begin
   dsimp [nhds_basis],
   simp only [dif_neg h],
-  dsimp [filter_basis.has_mem, ne_zero_filter_basis γ₀ h],
+  dsimp [filter_basis.has_mem, ne_zero_filter_basis γ₀],
   exact set.mem_singleton_iff
 end
 
@@ -273,10 +277,12 @@ variable {Γ₀}
 -- until the end of this section, all linearly ordered commutative groups will be endowed with
 -- the discrete topology
 variables (α : Type*) [linear_ordered_comm_group α]
-def discrete_ordered_comm_group : topological_space α := ⊥
 
+/--The discrete topology on a linearly ordered commutative group.-/
+@[sanity_skip] def discrete_ordered_comm_group : topological_space α := ⊥
 local attribute [instance] discrete_ordered_comm_group
-def ordered_comm_group_is_discrete : discrete_topology α := ⟨rfl⟩
+
+lemma ordered_comm_group_is_discrete : discrete_topology α := ⟨rfl⟩
 local attribute [instance] ordered_comm_group_is_discrete
 
 lemma comap_coe_nhds (γ : units Γ₀) : 𝓝 γ = comap coe (𝓝 (γ : Γ₀)) :=
@@ -333,6 +339,10 @@ begin
   exact mem_singleton_iff.symm
 end
 
+/--A linearly ordered commutative group with zero Γ₀ is a topological monoid
+if it is endowed with the following topology:
+A subset U ⊆ Γ₀ is open if 0 ∉ U or if there is an invertible γ₀ ∈ Γ₀ such that {γ | γ < γ₀} ⊆ U.
+-/
 instance : topological_monoid Γ₀ :=
 ⟨begin
   rw continuous_iff_continuous_at,
