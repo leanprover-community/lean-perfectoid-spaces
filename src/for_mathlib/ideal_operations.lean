@@ -28,3 +28,6 @@ begin
     change x ∈ (I : set R) ↔ _,
     simp [h] },
 end
+
+lemma ideal.span_empty {R : Type*} [comm_ring R] : ideal.span (∅ : set R) = ⊥ :=
+ideal.span_eq_bot.mpr (λ x h, false.elim h)
