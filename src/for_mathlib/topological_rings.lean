@@ -145,3 +145,9 @@ local attribute [instance] workaround
 lemma topological_ring (α : Type u) [ring α] [b : ring_filter_basis α] : topological_ring α :=
 is_topological_ring α rfl
 end ring_filter_basis
+
+lemma discrete_top_ring {R : Type*} [ring R] [topological_space R] [discrete_topology R] :
+  topological_ring R :=
+{ continuous_mul := continuous_of_discrete_topology,
+  continuous_add := continuous_of_discrete_topology,
+  continuous_neg := continuous_of_discrete_topology }
