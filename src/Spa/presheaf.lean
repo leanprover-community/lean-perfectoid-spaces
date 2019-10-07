@@ -2,10 +2,30 @@ import ring_theory.localization
 import ring_theory.subring
 
 import for_mathlib.nonarchimedean.basic
-import for_mathlib.topological_rings -- subring of a top ring
+import for_mathlib.topological_rings
 
 import sheaves.presheaf_of_topological_rings
 import Spa.rational_open_data
+
+/-!
+# The structure presheaf on the adic spectrum of a Huber pair
+
+The purpose of this file is to endow the adic spectrum `spa A` of a Huber pair
+with a presheaf of topological rings: the structure presheaf.
+Sections of this presheaf will be thought of as functions on the adic spectrum.
+
+## Implementation details
+
+Because the library for categorical limits was not yet very stable at the time of writing,
+we implement the sections of the presheaf by manually taking a limit:
+
+  -- The underlying type of 𝒪_X(U), the structure presheaf on X = Spa(A)
+  def presheaf_value (U : opens (spa A)) :=
+  {f : Π (rd : rational_open_data_subsets U), rat_open_data_completion rd.1 //
+     ∀ (rd1 rd2 : rational_open_data_subsets U) (h : rd1.1 ≤ rd2.1),
+       rat_open_data_completion.restriction h (f rd1) = (f rd2)} -- agrees on overlaps
+
+-/
 
 universes u₁ u₂ u₃
 

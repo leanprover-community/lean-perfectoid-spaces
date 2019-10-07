@@ -22,8 +22,8 @@
 
 			<h1 id="how-to-read-lean">How to read Lean</h1>
 <p>On this page we explain how to read the file <a href="https://github.com/leanprover-community/lean-perfectoid-spaces/blob/master/src/perfectoid_space.lean"><code>perfectoid_space.lean</code></a> step by step.</p>
-<p>After some introductory comments, we start with some <code>import</code> statements.</p>
-<div class="highlight"><pre><span class="c1">-- We import definitions of adic_space, preadic_space, Huber_pair, etc</span>
+<p>We start the file with some <code>import</code> statements.</p>
+<div class="highlight"><pre><span class="c1">-- We import definitions of adic_space, Huber_pair, etc</span>
 <span class="kn">import</span> <span class="n">Frobenius</span>
 <span class="kn">import</span> <span class="n">adic_space</span>
 <span class="kn">import</span> <span class="n">Tate_ring</span>
@@ -31,6 +31,21 @@
 </pre></div>
 
 <p>These lines import other definitions, theorems, notation, etc… from other files in the library. This import is transitive, so this will automatically import a large part of the library (on algebra, topology, etc, and ultimately basic logic).</p>
+<p>The next lines form a so-called module docstring: a piece of documentation describing the file. Such module docstrings can be automatically retrieved by documentation tools.</p>
+<div class="highlight"><pre><span class="c">/-</span><span class="cm">!</span>
+<span class="cm"># Perfectoid Spaces</span>
+
+<span class="cm">by Kevin Buzzard, Johan Commelin, and Patrick Massot</span>
+
+<span class="cm">Definitions in this file follow Scholze&#39;s paper: Étale cohomology of diamonds,</span>
+<span class="cm">specifically Definition 3.1 and 3.19</span>
+
+<span class="cm">For more information on how to read this file, see</span>
+<span class="cm">https://leanprover-community.github.io/lean-perfectoid-spaces/how-to-read-lean.html</span>
+<span class="cm">-/</span>
+</pre></div>
+
+<p>After these introductory lines, we are almost ready to turn to the subject at hand. But we first need to introduce some notation and terminology.</p>
 <div class="highlight"><pre><span class="kn">section</span>
 <span class="c1">-- notation for the power bounded subring</span>
 <span class="kn">local</span> <span class="kd">postfix</span> <span class="bp">`ᵒ`</span> <span class="o">:</span> <span class="mi">66</span> <span class="o">:=</span> <span class="n">power_bounded_subring</span>

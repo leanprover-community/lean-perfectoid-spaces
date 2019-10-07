@@ -5,7 +5,7 @@ import Huber_pair
 # The adic spectrum as a topological space
 
 In this file we define a structure (`rational_open_data`) that will parameterise
-a basis for the topologoy on the adic spectrum of a Huber pair.
+a basis for the topology on the adic spectrum of a Huber pair.
 -/
 
 open_locale classical

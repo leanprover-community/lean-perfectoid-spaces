@@ -7,9 +7,9 @@ On this page we explain how to read the file
 [`perfectoid_space.lean`](https://github.com/leanprover-community/lean-perfectoid-spaces/blob/master/src/perfectoid_space.lean)
 step by step.
 
-After some introductory comments, we start with some `import` statements.
+We start the file with some `import` statements.
 ```lean
--- We import definitions of adic_space, preadic_space, Huber_pair, etc
+-- We import definitions of adic_space, Huber_pair, etc
 import Frobenius
 import adic_space
 import Tate_ring
@@ -19,6 +19,25 @@ These lines import other definitions, theorems, notation, etc… from other file
 This import is transitive, so this will automatically import a large part of the library
 (on algebra, topology, etc, and ultimately basic logic).
 
+The next lines form a so-called module docstring:
+a piece of documentation describing the file.
+Such module docstrings can be automatically retrieved by documentation tools.
+```lean
+/-!
+# Perfectoid Spaces
+
+by Kevin Buzzard, Johan Commelin, and Patrick Massot
+
+Definitions in this file follow Scholze's paper: Étale cohomology of diamonds,
+specifically Definition 3.1 and 3.19
+
+For more information on how to read this file, see
+https://leanprover-community.github.io/lean-perfectoid-spaces/how-to-read-lean.html
+-/
+```
+
+After these introductory lines, we are almost ready to turn to the subject at hand.
+But we first need to introduce some notation and terminology.
 ```lean
 section
 -- notation for the power bounded subring
@@ -26,7 +45,8 @@ local postfix `ᵒ` : 66 := power_bounded_subring
 ```
 We start a section, and then setup notation for the power bounded subring.
 Because a postfix `ᵒ` is also useful as notation for other concepts,
-we choose to make this notation local to this file, instead of global notation for every file that imports this file.
+we choose to make this notation local to this file,
+instead of global notation for every file that imports this file.
 
 ```lean
 open nat power_bounded_subring topological_space function
@@ -37,9 +57,12 @@ As an example, there are functions `nat.add` and `int.add`,
 that define the addition on natural numbers and integers respectively.
 Thus we have two functions `add`, one in the namespace `nat`, and the other in the namespace `int`.
 
-By opening a namespace, we don't have to write down the namespace prefix when referring to a definition or lemma in the namespace.
+By opening a namespace,
+we don't have to write down the namespace prefix
+when referring to a definition or lemma in the namespace.
 For example, `topological_space.opens X` is the type of all open subsets of `X`.
-But because we open the namespace `topological_space`, we can simply write `opens X` later on in the file.
+But because we open the namespace `topological_space`,
+we can simply write `opens X` later on in the file.
 
 ```lean
 parameter (p : primes)

@@ -1,17 +1,20 @@
-/-
-Perfectoid Spaces
+-- We import definitions of adic_space, Huber_pair, etc
+import Frobenius
+import adic_space
+import Tate_ring
+import power_bounded
+
+/-!
+# Perfectoid Spaces
 
 by Kevin Buzzard, Johan Commelin, and Patrick Massot
 
 Definitions in this file follow Scholze's paper: Étale cohomology of diamonds,
 specifically Definition 3.1 and 3.19
--/
 
--- We import definitions of adic_space, preadic_space, Huber_pair, etc
-import Frobenius
-import adic_space
-import Tate_ring
-import power_bounded
+For more information on how to read this file, see
+https://leanprover-community.github.io/lean-perfectoid-spaces/how-to-read-lean.html
+-/
 
 section
 -- notation for the power bounded subring
