@@ -4,6 +4,18 @@ import valuation.valuation_field_completion
 
 import for_mathlib.nonarchimedean.basic
 
+/-!
+# Continuous valuations
+
+The general theory of valuations does not consider a topology on the ring.
+However, in practice many rings are naturally topological rings: for example ℝ, ℂ, ℤ_p and ℚ_p.
+
+Among all valuations one can single out a class of “continuous” valuations.
+This notions is constant on equivalence classes, and therefore defines a predicate on `Spv R`.
+
+In this file, we introduce this predicate.
+-/
+
 universes u u₀ u₁ u₂ u₃
 
 namespace valuation

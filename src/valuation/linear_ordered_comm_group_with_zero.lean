@@ -3,10 +3,27 @@ import data.real.nnreal
 import for_mathlib.group_with_zero
 import for_mathlib.linear_ordered_comm_group
 
+/-!
+# Linearly ordered commutative groups with a zero element adjoined
+
+This file sets up a special class of linearly ordered commutative monoids
+that show up as the target of so-called “valuations” in algebraic number theory.
+
+Usually, in the informal literature, these objects are constructed
+by taking a linearly ordered commutative group Γ and formally adjoining a zero element: Γ ∪ {0}.
+
+The disadvantage is that a type such as `nnreal` is not of that form,
+whereas it is a very common target for valuations.
+The solutions is to use a typeclass, and that is exactly what we do in this file.
+
+We show that both `with_zero Γ` and `nnreal` are instances of `linear_ordered_comm_group_with_zero`.
+-/
+
+
 set_option old_structure_cmd true
 
 /-- A linearly ordered commutative group with zero
-is a linearly ordered commutative monoid with a zero elements
+is a linearly ordered commutative monoid with a zero element
 such that all nonzero elements are invertible.-/
 class linear_ordered_comm_group_with_zero (α : Type*)
   extends linear_ordered_comm_monoid α, comm_group_with_zero α :=

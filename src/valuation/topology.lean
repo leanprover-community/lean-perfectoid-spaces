@@ -1,12 +1,12 @@
-/-
-In this file, we define the topology induced by a valuation on a ring
-
-valuation.topology {Γ₀ : Type*} [linear_ordered_comm_group Γ₀] {R : Type*} [ring R] :
-    valuation R Γ₀ → topological_space R
--/
 import for_mathlib.nonarchimedean.is_subgroups_basis
 import for_mathlib.uniform_space.group_basis
 import valuation.basic
+
+/-!
+# The topology on a valued ring
+
+In this file, we define the topology induced by a valuation on a ring.
+-/
 
 local attribute [instance] classical.prop_decidable
 noncomputable theory
