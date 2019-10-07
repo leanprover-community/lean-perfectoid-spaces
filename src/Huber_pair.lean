@@ -32,7 +32,39 @@ structure is_ring_of_integral_elements (Rplus : Type u) (R : Type u)
   extends is_integrally_closed Rplus R, open_embedding (algebra_map R : Rplus → R) : Prop :=
 (is_power_bounded : set.range (algebra_map R : Rplus → R) ≤ Rᵒ)
 
--- TODO : the definition implies that Rplus is a topological ring.
+namespace is_ring_of_integral_elements
+variables (Rplus : Type u) (R : Type u)
+variables [comm_ring Rplus] [topological_space Rplus] [Huber_ring R] [algebra Rplus R]
+
+lemma plus_is_topological_ring (h : is_ring_of_integral_elements Rplus R) :
+  topological_ring Rplus :=
+{ continuous_add :=
+  begin
+    rw h.to_open_embedding.to_embedding.to_inducing.continuous_iff,
+    simp only [function.comp, algebra.map_add],
+    apply continuous_add,
+    all_goals { apply continuous.comp h.to_open_embedding.continuous },
+    { exact continuous_fst },
+    { exact continuous_snd },
+  end,
+  continuous_mul :=
+  begin
+    rw h.to_open_embedding.to_embedding.to_inducing.continuous_iff,
+    simp only [function.comp, algebra.map_mul],
+    apply continuous_mul,
+    all_goals { apply continuous.comp h.to_open_embedding.continuous },
+    { exact continuous_fst },
+    { exact continuous_snd },
+  end,
+  continuous_neg :=
+  begin
+    rw h.to_open_embedding.to_embedding.to_inducing.continuous_iff,
+    simp only [function.comp, algebra.map_neg],
+    apply continuous_neg,
+    exact h.to_open_embedding.continuous,
+  end }
+
+end is_ring_of_integral_elements
 
 /-- A Huber pair consists of a Huber ring and a
 so-call ring of integral elements: an integrally closed, power bounded, open subring.
@@ -57,16 +89,20 @@ instance : has_coe_to_sort Huber_pair :=
 -- The following notation is very common in the literature.
 local postfix `⁺` : 66 := λ A : Huber_pair, A.plus
 
+/-- The Huber ring structure on a Huber pair. -/
+instance : Huber_ring A := A.Huber
+
 /-- The ring structure on the ring of integral elements. -/
 instance : comm_ring (A⁺) := A.ring
+
+/-- The algebra structure of a Huber pair. -/
+instance : algebra (A⁺) A := A.alg
 
 /-- The topology on the ring of integral elements. -/
 instance : topological_space (A⁺) := A.top
 
-/-- The Huber ring structure on a Huber pair. -/
-instance : Huber_ring A := A.Huber
-
-/-- The algebra structure of a Huber pair. -/
-instance : algebra (A⁺) A := A.alg
+/-- The ring of integral elements is a topological ring.-/
+instance : topological_ring (A⁺) :=
+is_ring_of_integral_elements.plus_is_topological_ring _ A A.intel
 
 end Huber_pair
