@@ -19,8 +19,6 @@ of v. See [Wedhorn; 1.26].
 
 -/
 
--- TODO: this file could use a general cleanup and some extra comments
-
 local attribute [instance] classical.prop_decidable
 local attribute [instance] classical.decidable_linear_order
 noncomputable theory
