@@ -150,13 +150,14 @@ end
 -- Before we even start with this terrifying noncomputable spa.rational_open_subset_nhd
 -- let's check that spa.rat_open_data_completion.to_complete_valuation_field commutes with ≤.
 
--- We will use the following variables throughout.
+-- We will place these helper lemmas in a separate namespace
 
+namespace to_valuation_field_completion_well_defined
 variables {r1 r2 : rational_open_data_subsets U}
 variables (h1 : v ∈ r1.1.open_set) (h2 : v ∈ r2.1.open_set)
 include h1 h2
 
-lemma to_valuation_field_completion_well_defined_aux₁ :
+lemma aux₁ :
   to_complete_valuation_field _ h1 (f.1 r1) = to_complete_valuation_field _
     (show v ∈ (r1.1.inter r2.1).open_set, by { rw inter_open_set, exact ⟨h1, h2⟩ })
   (f.1 (rational_open_data_subsets_inter r1 r2)) :=
@@ -170,7 +171,7 @@ begin
 end
 
 -- now the other way
-lemma to_valuation_field_completion_well_defined_aux₂ :
+lemma aux₂ :
   to_complete_valuation_field _ h2 (f.1 r2) = to_complete_valuation_field _
     (show v ∈ (r1.1.inter r2.1).open_set, by { rw inter_open_set, exact ⟨h1, h2⟩ })
   (f.1 (rational_open_data_subsets_inter r1 r2)) :=
@@ -184,21 +185,18 @@ begin
 end
 
 -- now let's check it agrees on any rational_open_data_subsets
-lemma to_valuation_field_completion_well_defined_aux₃ :
+lemma aux₃ :
   to_complete_valuation_field _ h1 (f.1 r1) = to_complete_valuation_field _ h2 (f.1 r2) :=
-begin
-  rw to_valuation_field_completion_well_defined_aux₁ f h1 h2,
-  rw to_valuation_field_completion_well_defined_aux₂ f h1 h2,
-end
+by rw [aux₁ f h1 h2, aux₂ f h1 h2]
 
-omit h1 h2
+end to_valuation_field_completion_well_defined
 
 -- next I will prove that for every r : rational_open_data_subsets U with v ∈ r.1.rational_open,
 -- f gets sent to the same thing.
 lemma to_valuation_field_completion_well_defined
   (r : rational_open_data_subsets U) (hr : v ∈ r.1.open_set) :
   to_valuation_field_completion hv f = to_complete_valuation_field _ hr (f.1 r) :=
-to_valuation_field_completion_well_defined_aux₃ f _ hr
+to_valuation_field_completion_well_defined.aux₃ f _ hr
 
 -- now the main goal
 
@@ -210,30 +208,17 @@ theorem to_valuation_field_completion_commutes {U V : opens (spa A)} (hv : v ∈
   to_valuation_field_completion hv (spa.presheaf_map hUV f) :=
 begin
   -- to_valuation_field_completion involves choosing a random basis element.
-  let rU := spa.rational_open_subset_nhd hv,
-  let rV := spa.rational_open_subset_nhd (hUV hv),
+  let rU := rational_open_subset_nhd hv,
+  let rV := rational_open_subset_nhd (hUV hv),
   -- we now need to intersect these two things.
-  let rUV1 := rational_open_data.inter rU.1 rV.1,
-  rw to_valuation_field_completion_well_defined hv (spa.presheaf_map hUV f)
-    ⟨rUV1, begin rw rational_open_data.inter_open_set,
-    exact set.subset.trans (set.inter_subset_left _ _) rU.2 end⟩
-    ( begin rw rational_open_data.inter_open_set,
-        split,
-          exact spa.mem_rational_open_subset_nhd hv,
-        exact spa.mem_rational_open_subset_nhd _,
-      end),
-  rw to_valuation_field_completion_well_defined (hUV hv) f
-    ⟨rUV1,
-      begin rw rational_open_data.inter_open_set,
-        exact set.subset.trans (set.inter_subset_right _ _) rV.2
-      end⟩
-    ( begin
-        rw rational_open_data.inter_open_set,
-        split,
-          exact spa.mem_rational_open_subset_nhd hv,
-        exact spa.mem_rational_open_subset_nhd _,
-      end),
-  refl,
+  let rUV1 := rU.1.inter rV.1,
+  rw [to_valuation_field_completion_well_defined hv (spa.presheaf_map hUV f) ⟨rUV1, _⟩,
+      to_valuation_field_completion_well_defined (hUV hv) f ⟨rUV1, _⟩],
+  { refl },
+  { rw rational_open_data.inter_open_set,
+    exact ⟨mem_rational_open_subset_nhd hv, mem_rational_open_subset_nhd _⟩, },
+  { rw rational_open_data.inter_open_set,
+    exact set.subset.trans (set.inter_subset_left _ _) rU.2 },
 end
 
 set_option class.instance_max_depth 49
