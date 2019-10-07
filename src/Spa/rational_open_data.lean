@@ -240,9 +240,9 @@ end
 
 -- Continuity now follows from the universal property.
 lemma localization_map_is_cts {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
-  continuous (localization_map h) := Huber_ring.away.lift_continuous r1.T r1.s
-  (localization.nonarchimedean r2) (Huber_ring.away.of_continuous r2.T r2.s _) _ _ _
-  (localization_map_is_cts_aux h)
+  continuous (localization_map h) :=
+Huber_ring.away.lift_continuous r1.T r1.s (localization.nonarchimedean r2)
+  (Huber_ring.away.of_continuous r2.T r2.s _) _ _ _ (localization_map_is_cts_aux h)
 
 lemma localization_map_is_uniform_continuous {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
   uniform_continuous (rational_open_data.localization_map h) :=
