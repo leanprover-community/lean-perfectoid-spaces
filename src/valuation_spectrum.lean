@@ -2,12 +2,7 @@ import topology.order
 import group_theory.quotient_group
 import valuation.canonical
 
--- TODO: this file is done, except that the module docstring
--- needs to be professionalised. In particular, we need to
--- hunt down some references.
-
 /-!
-
 # Valuation Spectrum (Spv)
 
 The API for the valuation spectrum of a commutative ring. Normally defined as
@@ -19,22 +14,10 @@ attached to a valuation sends (r,s) to v r ≤ v s.
 ## Implementation details
 
 Our definition of Spv is currently the predicates which come from a
-valuation. There is another approach though: Prop 2.20 (p16) of
-https://homepages.uni-regensburg.de/~maf55605/contin_valuation.pdf
-classifies the relations which come from valuations as those satisfying
-some axioms. See also Wedhorn 4.7.
-TODO(jmc): This observation is also somewhere in Huber. But I currently don't
-have the paper at hand.
-
-Here's why such a theorem must exist: given a relation coming from a valuation,
-we can reconstruct the support of the valuation (v r ≤ v 0), the relation on
-R / support coming from `on_quot v`, the relation on Frac(R/supp) coming from
-`on_frac v`, the things of valuation 1 in this field, and hence the value group
-of the valuation. The induced canonical valuation is a valuation we seek. This
-argument only uses a finite number of facts about the inequality, and so the
-theorem is that an inequality comes from a valuation if and only if these facts
-are satisfied.
-
+valuation. There is another approach though:
+In the proof of Prop 2.2 of “Continuous Valuations” by R. Huber,
+the relations that come from a valuations are classified as thoe satisfying some axioms.
+See also Wedhorn 4.7.
 -/
 
 universes u u₀ u₁ u₂ u₃
