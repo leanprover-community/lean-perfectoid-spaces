@@ -263,7 +263,7 @@ end
 
 /-- If T ⊆ A generates an open ideal, and U is an open subgroup of A,
 then T • U is a neighborhood of zero.
-(This lemma is the main part of case n = 1 of [Wedhorn, Lem 6.20].)-/
+(This lemma is case n = 1 of [Wedhorn, Lem 6.20].)-/
 lemma mul_T_nhds (hT : is_open ((ideal.span T) : set A)) (U : open_add_subgroup A) :
   ↑(T • span ℤ (U : set A)) ∈ nhds (0 : A) :=
 mem_nhds_sets (mul_T_open _ hT _) (submodule.zero_mem (T • span ℤ (U : set A)))
