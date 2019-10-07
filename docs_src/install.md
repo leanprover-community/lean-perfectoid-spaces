@@ -1,3 +1,6 @@
+---
+title: Installation instructuions | Perfectoid Spaces in Lean
+---
 # How to get it?
 
 If you already have lean and its standard tools:

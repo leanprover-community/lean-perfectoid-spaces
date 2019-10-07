@@ -1,13 +1,16 @@
+---
+title: How to read Lean | Perfectoid Spaces in Lean
+---
 # How to read Lean
 
 On this page we explain how to read the file
 [`perfectoid_space.lean`](https://github.com/leanprover-community/lean-perfectoid-spaces/blob/master/src/perfectoid_space.lean)
 step by step.
 
-We start with the first 5 lines
+After some introductory comments, we start with some `import` statements.
 ```lean
 -- We import definitions of adic_space, preadic_space, Huber_pair, etc
-import prime
+import Frobenius
 import adic_space
 import Tate_ring
 import power_bounded
@@ -26,9 +29,9 @@ Because a postfix `ᵒ` is also useful as notation for other concepts,
 we choose to make this notation local to this file, instead of global notation for every file that imports this file.
 
 ```lean
-open power_bounded_subring topological_space function
+open nat power_bounded_subring topological_space function
 ```
-This block opens three namespaces.
+This block opens some namespaces.
 Namespaces exist to avoid naming conflicts.
 As an example, there are functions `nat.add` and `int.add`,
 that define the addition on natural numbers and integers respectively.
@@ -39,7 +42,7 @@ For example, `topological_space.opens X` is the type of all open subsets of `X`.
 But because we open the namespace `topological_space`, we can simply write `opens X` later on in the file.
 
 ```lean
-parameter (p : Prime)
+parameter (p : primes)
 ```
 Once and for all (in this file) we fix a prime number `p`.
 
@@ -51,7 +54,7 @@ structure perfectoid_ring (R : Type) [Huber_ring R] extends Tate_ring R : Prop :
 (Frobenius : surjective (Frob Rᵒ∕p))
 ```
 In this block there are a lot of things going on.
-First of all, this block defines a predicate, because it is of the form `structure something : Prop := something`.
+This block defines a predicate, because it is of the form `structure something : Prop := something`.
 Indeed, `Prop` is the type of propositions: theorems, lemmas, properties, predicates…
 The predicate in question is `perfectoid_ring`, and it is a predicate for Huber rings.
 (Technically, it defines the predicate for types `R` endowed with the structure of a Huber ring.)
@@ -69,7 +72,7 @@ Because Lean is based on type theory, it uses `:` in places where a mathematicia
 In condition `ramified`, we ask for the existence of a term `ϖ` of type `pseudo_uniformizer R`.
 
 Note also that the notation of the universal and existential quantifier use a `,` where some mathematicians would write a `:`.
-Because the `:` already has a very fundamental meaning, we don't write
+Because the `:` already has a fundamental meaning, we don't write
 `∃ (x : X) : condition_on_x` to mean “there exists an `x` such that condition-on-`x`”
 but instead we write `∃ (x : X), condition_on_x`.
 
