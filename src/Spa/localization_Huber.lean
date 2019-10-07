@@ -1,11 +1,14 @@
 import Huber_ring.localization
 import Spa.rational_open_data
 
--- Extending continuous valuations on Huber rings R to rational localizations R(T/s)
--- and their completions.
--- Note that this file comes much lower down the import tree
--- than stuff like valuation.canonical and valuation.field.
--- Here we use all this Huber ring stuff like R(T/s).
+/-!
+# Extending continuous valuations on Huber rings
+
+In this file, we extend continuous valuations on Huber rings R
+to rational localizations R(T/s) and their completions.
+
+This is an important step in the definition of the structure presheaf on the adic spectrum.
+-/
 
 noncomputable theory
 
@@ -25,9 +28,6 @@ local attribute [instance] set.pointwise_mul_action
 local notation `A⟮T/s⟯` := spa.rational_open_data.localization rd
 local notation `s` := rd.s
 local notation `T` := rd.T
-
---noncomputable instance valuation_field.ring_with_zero_nhd : ring_with_zero_nhd (valuation_field v) :=
---valuation.ring_with_zero_nhd (on_valuation_field v : valuation (valuation_field v) Γ₀)
 
 /-- An auxilliary definition that constructs s as unit in the valuation field
 of a valuation v, under the assumption that v s ≠ 0.-/
@@ -169,7 +169,8 @@ Huber_pair.to_valuation_field_cts' hv.2 hv.1 v.2.1
 
 theorem to_valuation_field_commutes {r1 r2 : spa.rational_open_data A} {v : spa A}
   (hv1 : v ∈ r1.open_set) (hv2 : v ∈ r2.open_set) (h : r1 ≤ r2) :
-(to_valuation_field hv1) = (to_valuation_field hv2) ∘ (spa.rational_open_data.localization_map h) :=
+  (to_valuation_field hv1) =
+  (to_valuation_field hv2) ∘ (spa.rational_open_data.localization_map h) :=
 to_valuation_field_commutes r1 r2 h hv1.2 hv2.2
 
 end rational_open_data
