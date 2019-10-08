@@ -82,6 +82,9 @@ variables {R} {Γ₀} (v : valuation R Γ₀) {x y z : R}
 @[simp] lemma map_mul  : ∀ x y, v (x * y) = v x * v y := v.map_mul'
 @[simp] lemma map_add  : ∀ x y, v (x + y) ≤ max (v x) (v y) := v.map_add'
 
+@[simp] lemma map_pow  : ∀ x (n:ℕ), v (x^n) = (v x)^n :=
+@is_monoid_hom.map_pow _ _ _ _ v (monoid_hom.is_monoid_hom v.to_monoid_hom)
+
 @[extensionality] lemma ext {v₁ v₂ : valuation R Γ₀} (h : ∀ r, v₁ r = v₂ r) : v₁ = v₂ :=
 by { cases v₁, cases v₂, congr, funext r, exact h r }
 
