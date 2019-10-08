@@ -12,6 +12,7 @@ begin
 end
 
 noncomputable theory
+open_locale classical
 
 namespace valuation
 variables {R : Type*} [comm_ring R]
@@ -90,7 +91,15 @@ def perfection : valuation (perfect_closure R p) nnreal :=
   map_zero' := perfection.f_zero v p,
   map_one' := perfection.f_one v p,
   map_mul' := perfection.f_mul v p,
-  map_add' := perfection.f_add v p }
+  map_add' :=
+  begin
+    -- TODO(jmc): This is really ugly. But Lean doesn't cooperate.
+    -- It finds two instances that aren't defeq.
+    intros r s,
+    convert perfection.f_add v p r s,
+    delta classical.decidable_linear_order nnreal.decidable_linear_order,
+    congr,
+  end }
 
 end
 
