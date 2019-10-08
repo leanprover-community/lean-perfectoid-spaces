@@ -193,7 +193,7 @@ instance padic.Huber_ring : Huber_ring ℚ_[p] :=
         rintros _ ⟨v, v_in, rfl⟩ b hb,
         specialize H v v_in ⟨b, hb⟩ (mem_univ _),
         rwa [mem_preimage, coe_mul] at H },
-      { rw ← padic_int.coe_zero at hU, -- TODO: put coe_zero from mathlib group_completion in a ns
+      { rw ← coe_zero at hU,
         exact continuous_coe.continuous_at hU }
     end
     .. coe_open_embedding,
