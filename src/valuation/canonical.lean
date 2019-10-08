@@ -394,6 +394,30 @@ end is_equiv -- end of namespace
 lemma canonical_valuation_supp (v : valuation R Γ₀) :
   supp (v.canonical_valuation) = supp v := (canonical_valuation_is_equiv v).supp_eq
 
+/-- The canonical valuation of a valuation on a field is surjective. -/
+lemma canonical_valuation.surjective {K : Type*} [discrete_field K] (v : valuation K Γ₀) :
+  function.surjective (v.canonical_valuation) :=
+begin
+  rintro ⟨⟨⟨r⟩,⟨⟨s⟩,h⟩⟩⟩,
+  refine ⟨s⁻¹ * r, _⟩,
+  apply quotient.sound,
+  refine ⟨1, is_submonoid.one_mem _, _⟩,
+  rw [units.coe_one, mul_one],
+  apply quotient.sound,
+  refine ⟨_, h, _⟩,
+  dsimp only [-sub_eq_add_neg],
+  convert zero_mul _, rw [sub_eq_zero],
+  dsimp, rw ← mul_assoc,
+  congr, symmetry,
+  show ideal.quotient.mk (supp v) _ * ideal.quotient.mk (supp v) _ = 1,
+  rw ← is_ring_hom.map_mul (ideal.quotient.mk (supp v)),
+  convert is_ring_hom.map_one (ideal.quotient.mk (supp v)),
+  apply mul_inv_cancel,
+  contrapose! h, subst s,
+  refine (not_iff_not_of_iff localization.fraction_ring.mem_non_zero_divisors_iff_ne_zero).mpr _,
+  exact not_not.mpr rfl
+end
+
 section Wedhorn1_27_equivalences
 
 variables {v : valuation R Γ₀} {v₁ : valuation R Γ'₀} {v₂ : valuation R Γ''₀} {v₃ : valuation R Γ₀₃}

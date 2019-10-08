@@ -172,6 +172,31 @@ begin
   exact linear_ordered_structure.mul_lt_right (group_with_zero.mk₀ _ hγ) h
 end
 
+lemma inv_lt_inv (ha : a ≠ 0) (hb : b ≠ 0) :
+  a⁻¹ < b⁻¹ ↔ b < a :=
+begin
+  suffices : ∀ {x y : α}, x ≠ 0 → y ≠ 0 → x < y → y⁻¹ < x⁻¹,
+  { refine ⟨_, this hb ha⟩, intro h, rw [← inv_inv'' a, ← inv_inv'' b],
+    apply this _ _ h; solve_by_elim [inv_ne_zero'], },
+  clear ha hb a b,
+  intros x y hx hy h,
+  have hx' : x⁻¹ ≠ 0 := by solve_by_elim [inv_ne_zero'],
+  have hy' : y⁻¹ ≠ 0 := by solve_by_elim [inv_ne_zero'],
+  replace h := linear_ordered_structure.mul_lt_right' _ h hx',
+  replace h := linear_ordered_structure.mul_lt_right' _ h hy',
+  rw [mul_inv_cancel' _ hx, _root_.one_mul] at h,
+  erw [mul_comm y x⁻¹, _root_.mul_assoc, mul_inv_cancel' _ hy, _root_.mul_one] at h,
+  exact h
+end
+
+lemma inv_le_inv (ha : a ≠ 0) (hb : b ≠ 0) :
+  a⁻¹ ≤ b⁻¹ ↔ b ≤ a :=
+begin
+  have := not_iff_not_of_iff (inv_lt_inv hb ha),
+  push_neg at this,
+  exact this
+end
+
 end linear_ordered_structure
 
 namespace nnreal

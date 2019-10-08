@@ -26,36 +26,6 @@ open_locale classical
 
 local postfix `⁺` : 66 := λ A : Huber_pair, A.plus
 
-namespace linear_ordered_comm_group_with_zero
-variables {Γ₀ : Type*} [linear_ordered_comm_group_with_zero Γ₀]
-
-lemma inv_lt_inv {x y : Γ₀} (hx : x ≠ 0) (hy : y ≠ 0) :
-  y⁻¹ < x⁻¹ ↔ x < y :=
-begin
-  suffices : ∀ {x y : Γ₀}, x ≠ 0 → y ≠ 0 → x < y → y⁻¹ < x⁻¹,
-  { refine ⟨_, this hx hy⟩, intro h, rw [← inv_inv'' x, ← inv_inv'' y],
-    apply this _ _ h; solve_by_elim [inv_ne_zero'], },
-  clear hx hy x y,
-  intros x y hx hy h,
-  have hx' : x⁻¹ ≠ 0 := by solve_by_elim [inv_ne_zero'],
-  have hy' : y⁻¹ ≠ 0 := by solve_by_elim [inv_ne_zero'],
-  replace h := linear_ordered_structure.mul_lt_right' _ h hx',
-  replace h := linear_ordered_structure.mul_lt_right' _ h hy',
-  rw [mul_inv_cancel' _ hx, one_mul] at h,
-  erw [mul_comm y x⁻¹, mul_assoc, mul_inv_cancel' _ hy, mul_one] at h,
-  exact h
-end
-
-lemma inv_le_inv {x y : Γ₀} (hx : x ≠ 0) (hy : y ≠ 0) :
-  y⁻¹ ≤ x⁻¹ ↔ x ≤ y :=
-begin
-  have := not_iff_not_of_iff (inv_lt_inv hy hx),
-  push_neg at this,
-  exact this
-end
-
-end linear_ordered_comm_group_with_zero
-
 open local_ring
 
 local attribute [instance] padic_int.algebra
@@ -146,6 +116,7 @@ instance : Huber_ring ℤ_[p] :=
 end padic_int
 
 section
+--move this
 variables {α : Type*} {β : Type*} [topological_space α] [topological_space β]
 lemma is_open_map.image_nhds {f : α → β} (hf : is_open_map f)
   {x : α} {U : set α} (hU : U ∈ nhds x) : f '' U ∈ nhds (f x) :=
@@ -226,147 +197,12 @@ def padic.bundled_valuation : valuation ℚ_[p] nnreal :=
       congr, },
   end }
 
--- move this
-lemma group_with_zero.inv_inj {Γ₀ : Type*} [group_with_zero Γ₀] {g h : Γ₀} :
-  g⁻¹ = h⁻¹ ↔ g = h :=
-begin
-  split,
-  { intro H,
-    by_cases Hg : g = 0,
-    { by_cases Hh : h = 0, { rw [Hg, Hh] },
-      have := congr_arg ((*) h) H, rw mul_inv_cancel' _ Hh at this,
-      replace := eq_inv_of_mul_left_eq_one' _ _ this,
-      rw [this, inv_inv''] },
-    { have := congr_arg ((*) g) H, rw mul_inv_cancel' _ Hg at this,
-      replace := eq_inv_of_mul_left_eq_one' _ _ this.symm,
-      rw [this, inv_inv''] } },
-  { exact congr_arg _ }
-end
-
 namespace valuation
 variables {R : Type*} [comm_ring R]
 variables {K : Type*} [discrete_field K]
 variables {L : Type*} [discrete_field L] [topological_space L]
 variables {Γ₀ : Type*} [linear_ordered_comm_group_with_zero Γ₀]
 variables {Γ'₀ : Type*} [linear_ordered_comm_group_with_zero Γ'₀]
-
--- move this
-lemma is_equiv_of_val_le_one (v : valuation K Γ₀) (v' : valuation K Γ'₀)
-  (h : ∀ {x:K}, v x ≤ 1 ↔ v' x ≤ 1) :
-  v.is_equiv v' :=
-begin
-  intros x y,
-  by_cases hy : y = 0, { simp [hy, zero_iff], },
-  rw show y = 1 * y, by rw one_mul,
-  rw show x = (x * y⁻¹) * y, { rw [mul_assoc, inv_mul_cancel hy, mul_one], },
-  iterate 2 {rw [v.map_mul _ y, v'.map_mul _ y]},
-  rw [v.map_one, v'.map_one],
-  split; intro H,
-  { apply actual_ordered_comm_monoid.mul_le_mul_right',
-    replace hy := v.ne_zero_iff.mpr hy,
-    replace H := linear_ordered_structure.le_of_le_mul_right hy H,
-    rwa h at H, },
-  { apply actual_ordered_comm_monoid.mul_le_mul_right',
-    replace hy := v'.ne_zero_iff.mpr hy,
-    replace H := linear_ordered_structure.le_of_le_mul_right hy H,
-    rwa h, },
-end
-
--- move this
-lemma canonical_valuation.surjective (v : valuation K Γ₀) :
-  function.surjective (v.canonical_valuation) :=
-begin
-  rintro ⟨⟨⟨r⟩,⟨⟨s⟩,h⟩⟩⟩,
-  refine ⟨s⁻¹ * r, _⟩,
-  apply quotient.sound,
-  refine ⟨1, is_submonoid.one_mem _, _⟩,
-  rw [units.coe_one, mul_one],
-  apply quotient.sound,
-  refine ⟨_, h, _⟩,
-  dsimp only [-sub_eq_add_neg],
-  convert zero_mul _, rw [sub_eq_zero],
-  dsimp, rw ← mul_assoc,
-  congr, symmetry,
-  show ideal.quotient.mk (supp v) _ * ideal.quotient.mk (supp v) _ = 1,
-  rw ← is_ring_hom.map_mul (ideal.quotient.mk (supp v)),
-  convert is_ring_hom.map_one (ideal.quotient.mk (supp v)),
-  apply mul_inv_cancel,
-  contrapose! h, subst s,
-  refine (not_iff_not_of_iff localization.fraction_ring.mem_non_zero_divisors_iff_ne_zero).mpr _,
-  exact not_not.mpr rfl
-end
-
--- move this
-lemma is_continuous_iff {v : valuation L Γ₀} :
-  v.is_continuous ↔ ∀ x:L, is_open {y:L | v y < v x} :=
-begin
-  have help : ∀ x:L, value_monoid.to_Γ₀ v (v.canonical_valuation x) = v x,
-  { intro x, show v x * (v 1)⁻¹ = v x, by simp },
-  split,
-  { intros h x,
-    specialize h (v.canonical_valuation x),
-    simpa only [(value_monoid.to_Γ₀_strict_mono v).lt_iff_lt.symm, help] using h, },
-  { intros h x,
-    rcases canonical_valuation.surjective v x with ⟨x, rfl⟩,
-    simpa only [(value_monoid.to_Γ₀_strict_mono v).lt_iff_lt.symm, help] using h x, }
-end
-
--- move this
-
-/-- A valuation is trivial if it maps everything to 0 or 1.-/
-def is_trivial (v : valuation R Γ₀) : Prop :=
-∀ r:R, v r = 0 ∨ v r = 1
-
---move this
-lemma trivial_is_trivial (I : ideal R) [hI : I.is_prime] :
-  (trivial I : valuation R Γ₀).is_trivial :=
-begin
-  intro r,
-  by_cases hr : r ∈ I; [left, right],
-  all_goals
-  { show ite _ _ _ = _,
-    rw submodule.mem_coe at hr,
-    simp [hr] }
-end
-
-variable [topological_ring L]
-
---move this
-lemma is_trivial_is_continuous_iff_discrete (v : valuation L Γ₀) (hv : v.is_trivial) :
-  v.is_continuous ↔ discrete_topology L :=
-begin
-  split; intro h,
-  { rw valuation.is_continuous_iff at h,
-    suffices : is_open ({(0:L)} : set L),
-      from topological_add_group.discrete_iff_open_zero.mpr this,
-    specialize h 1,
-    rw v.map_one at h,
-    suffices : {y : L | v y < 1} = {0}, by rwa this at h,
-    ext x,
-    rw [set.mem_singleton_iff, ← v.zero_iff],
-    show v x < 1 ↔ v x = 0,
-    split; intro hx,
-    { cases hv x with H H, {assumption},
-      { exfalso, rw H at hx, exact lt_irrefl _ hx }, },
-    { rw hx, apply lt_of_le_of_ne linear_ordered_structure.zero_le zero_ne_one } },
-  { resetI, intro g, exact is_open_discrete _ }
-end
-
---move this
-lemma is_trivial_iff {v : valuation K Γ₀} :
-  v.is_trivial ↔ ∀ x:K, v x ≤ 1 :=
-begin
-  split; intros h x,
-  { cases h x; simp *, },
-  { contrapose! h, cases h with h₁ h₂,
-    by_cases hx : v x ≤ 1,
-    { refine ⟨x⁻¹, _⟩,
-      rw [v.map_inv, ← linear_ordered_comm_group_with_zero.inv_lt_inv one_ne_zero,
-        inv_inv'', inv_one'],
-      { exact lt_of_le_of_ne hx h₂ },
-      { exact inv_ne_zero' _ h₁ } },
-    { push_neg at hx, exact ⟨_, hx⟩ } }
-end
 
 --move this
 -- This is a hack, to avoid an fpow diamond.
@@ -393,7 +229,7 @@ begin
     lift -n to ℕ using le_of_lt hn' with m hm,
     have hm' : m ≠ 0, { apply ne_of_gt, exact_mod_cast hn' },
     rw [← neg_neg n, ← mul_neg_one, fpow_mul, fpow_inv, v.map_inv, ← inv_one',
-      group_with_zero.inv_inj, ← hm, inv_one'], solve_by_elim }
+      inv_inj'', ← hm, inv_one'], solve_by_elim }
 end
 
 end valuation
@@ -434,6 +270,7 @@ def padic.Spa_unique : unique (Spa $ padic.Huber_pair p) :=
 { uniq :=
   begin
     intros v,
+    change spa (padic.Huber_pair p) at v,
     ext,
     refine valuation.is_equiv.trans _ (Spv.out_mk _).symm,
     apply valuation.is_equiv_of_val_le_one,
@@ -445,15 +282,14 @@ def padic.Spa_unique : unique (Spa $ padic.Huber_pair p) :=
         contrapose! h,
         obtain ⟨y, hy⟩ : ∃ y : ℤ_[p], x⁻¹ = y,
         { refine ⟨⟨x⁻¹, _⟩, rfl⟩, rw norm_inv, apply inv_le_one, apply le_of_lt, exact h },
-        refine (linear_ordered_comm_group_with_zero.inv_lt_inv _ _).mp _,
-        { exact one_ne_zero },
+        refine (linear_ordered_structure.inv_lt_inv _ one_ne_zero).mp _,
         { rw valuation.ne_zero_iff, contrapose! hx, use [0, hx] },
         { rw [inv_one', ← valuation.map_inv, hy],
-          refine lt_of_le_of_ne (spa.map_plus v y) _,
+          refine lt_of_le_of_ne (v.map_plus y) _,
           assume H,
           apply padic.not_discrete p,
-          apply (valuation.is_trivial_is_continuous_iff_discrete _ _).mp v.property.left,
-          rw valuation.is_trivial_iff,
+          apply (valuation.is_continuous_iff_discrete_of_is_trivial _ _).mp v.is_continuous,
+          rw valuation.is_trivial_iff_val_le_one,
           intro z,
           by_cases hx' : x = 0, { contrapose! h, simp [hx'], },
           rcases padic.exists_repr x hx' with ⟨u, m, rfl⟩, clear hx',
@@ -462,9 +298,9 @@ def padic.Spa_unique : unique (Spa $ padic.Huber_pair p) :=
           erw [valuation.map_mul, spa.map_unit, one_mul],
           by_cases hn : n = 0, { erw [hn, fpow_zero, valuation.map_one], },
           erw [← hy, valuation.map_inv, valuation.map_mul, spa.map_unit,
-            one_mul, ← inv_one', group_with_zero.inv_inj,
+            one_mul, ← inv_one', inv_inj'',
             valuation.map_fpow_eq_one_iff, ← valuation.map_fpow_eq_one_iff n hn] at H,
-          { erw H, exact le_refl _ },
+          { exact le_of_eq H, },
           contrapose! h,
           rw [h, fpow_zero, mul_one, nnreal.coe_le], apply le_of_eq,
           erw ← padic_int.is_unit_iff, exact is_unit_unit _, } } },

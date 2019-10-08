@@ -5,6 +5,7 @@ import order.basic
 import tactic.abel
 
 import for_mathlib.with_zero
+import for_mathlib.punit_instances
 
 universes u v
 set_option old_structure_cmd true
@@ -504,3 +505,8 @@ namespace linear_ordered_cancel_comm_monoid_with_zero
 -- when we need to make an API for this object
 
 end linear_ordered_cancel_comm_monoid_with_zero
+
+instance punit.linear_ordered_comm_group : linear_ordered_comm_group punit :=
+{ mul_le_mul_left := λ a b h c, trivial,
+  .. punit.decidable_linear_ordered_cancel_comm_monoid,
+  .. punit.comm_group }

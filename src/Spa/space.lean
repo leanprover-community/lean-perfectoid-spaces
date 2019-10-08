@@ -56,6 +56,9 @@ by rw [subtype.coe_ext, Spv.ext_iff]
 /-- The value monoid of a random representative valuation of a point in the adic spectrum. -/
 abbreviation out_Γ₀ (v  : spa A) := Spv.out_Γ₀ (v : Spv A)
 
+/-- A valuation in the adic spectrum is continuous. -/
+lemma is_continuous (v : spa A) : Spv.is_continuous (v : Spv A) := v.property.left
+
 /-- The valuation of an integral element is at most 1. -/
 lemma map_plus (v : spa A) (a : (A⁺)) : v (algebra_map A a) ≤ 1 := v.property.right a
 

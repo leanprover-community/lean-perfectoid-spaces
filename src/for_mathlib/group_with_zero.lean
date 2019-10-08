@@ -83,6 +83,22 @@ calc a = (a * b) * b⁻¹ : (mul_inv_cancel_assoc_left _ _ (ne_zero_of_mul_left_
 @[simp] lemma inv_one' : (1 : α)⁻¹ = 1 :=
 eq.symm $ eq_inv_of_mul_right_eq_one' _ _ (mul_one 1)
 
+lemma inv_inj'' {Γ₀ : Type*} [group_with_zero Γ₀] {g h : Γ₀} :
+  g⁻¹ = h⁻¹ ↔ g = h :=
+begin
+  split,
+  { intro H,
+    by_cases Hg : g = 0,
+    { by_cases Hh : h = 0, { rw [Hg, Hh] },
+      have := congr_arg ((*) h) H, rw mul_inv_cancel' _ Hh at this,
+      replace := eq_inv_of_mul_left_eq_one' _ _ this,
+      rw [this, inv_inv''] },
+    { have := congr_arg ((*) g) H, rw mul_inv_cancel' _ Hg at this,
+      replace := eq_inv_of_mul_left_eq_one' _ _ this.symm,
+      rw [this, inv_inv''] } },
+  { exact congr_arg _ }
+end
+
 end group_with_zero
 
 namespace group_with_zero

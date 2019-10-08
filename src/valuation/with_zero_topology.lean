@@ -359,7 +359,7 @@ instance : topological_monoid Γ₀ :=
     try { cases U_in with γ hγ } },
   { cases linear_ordered_structure.exists_square_le γ with γ₀ hγ₀,
     simp only [mem_nhds_zero, exists_prop],
-    use [{x : Γ₀ | x < ↑γ₀}, γ₀, subset.refl _, {x : Γ₀ | x < ↑γ₀}, γ₀, subset.refl _],
+    refine ⟨{x : Γ₀ | x < ↑γ₀}, ⟨γ₀, subset.refl _⟩, _⟩,
     rw set.prod_subset_iff,
     intros x x_in y y_in,
     apply hγ,

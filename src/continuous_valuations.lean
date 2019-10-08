@@ -80,6 +80,46 @@ begin
   exact Hu, -- the joys of definitional equality
 end
 
+variables {L : Type*} [discrete_field L] [topological_space L] [topological_ring L]
+
+/-- A valuation on a field is continuous if and only if
+the sets {y | v y < v x} are open, for all x. -/
+lemma is_continuous_iff {v : valuation L Γ₀} :
+  v.is_continuous ↔ ∀ x:L, is_open {y:L | v y < v x} :=
+begin
+  have help : ∀ x:L, value_monoid.to_Γ₀ v (v.canonical_valuation x) = v x,
+  { intro x, show v x * (v 1)⁻¹ = v x, by simp },
+  split,
+  { intros h x,
+    specialize h (v.canonical_valuation x),
+    simpa only [(value_monoid.to_Γ₀_strict_mono v).lt_iff_lt.symm, help] using h, },
+  { intros h x,
+    rcases canonical_valuation.surjective v x with ⟨x, rfl⟩,
+    simpa only [(value_monoid.to_Γ₀_strict_mono v).lt_iff_lt.symm, help] using h x, }
+end
+
+/-- The trivial valuation on a field is continuous if and only if
+the topology on the field is discrete. -/
+lemma is_continuous_iff_discrete_of_is_trivial (v : valuation L Γ₀) (hv : v.is_trivial) :
+  v.is_continuous ↔ discrete_topology L :=
+begin
+  split; intro h,
+  { rw valuation.is_continuous_iff at h,
+    suffices : is_open ({(0:L)} : set L),
+      from topological_add_group.discrete_iff_open_zero.mpr this,
+    specialize h 1,
+    rw v.map_one at h,
+    suffices : {y : L | v y < 1} = {0}, by rwa this at h,
+    ext x,
+    rw [set.mem_singleton_iff, ← v.zero_iff],
+    show v x < 1 ↔ v x = 0,
+    split; intro hx,
+    { cases hv x with H H, {assumption},
+      { exfalso, rw H at hx, exact lt_irrefl _ hx }, },
+    { rw hx, apply lt_of_le_of_ne linear_ordered_structure.zero_le zero_ne_one } },
+  { resetI, intro g, exact is_open_discrete _ }
+end
+
 end valuation
 
 namespace Spv

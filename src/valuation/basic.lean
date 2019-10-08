@@ -251,27 +251,74 @@ lemma is_equiv_of_map_strict_mono [ring R] {v : valuation R Γ₀}
   is_equiv (v.map f h₀ (H.monotone)) v :=
 λ x y, ⟨H.le_iff_le.mp, λ h, H.monotone h⟩
 
+lemma is_equiv_of_val_le_one {K : Type*} [division_ring K]
+  (v : valuation K Γ₀) (v' : valuation K Γ'₀) (h : ∀ {x:K}, v x ≤ 1 ↔ v' x ≤ 1) :
+  v.is_equiv v' :=
+begin
+  intros x y,
+  by_cases hy : y = 0, { simp [hy, zero_iff], },
+  rw show y = 1 * y, by rw one_mul,
+  rw show x = (x * y⁻¹) * y, { rw [mul_assoc, inv_mul_cancel hy, mul_one], },
+  iterate 2 {rw [v.map_mul _ y, v'.map_mul _ y]},
+  rw [v.map_one, v'.map_one],
+  split; intro H,
+  { apply actual_ordered_comm_monoid.mul_le_mul_right',
+    replace hy := v.ne_zero_iff.mpr hy,
+    replace H := linear_ordered_structure.le_of_le_mul_right hy H,
+    rwa h at H, },
+  { apply actual_ordered_comm_monoid.mul_le_mul_right',
+    replace hy := v'.ne_zero_iff.mpr hy,
+    replace H := linear_ordered_structure.le_of_le_mul_right hy H,
+    rwa h, },
+end
+
+/-- A valuation is trivial if it maps everything to 0 or 1.-/
+def is_trivial [ring R] (v : valuation R Γ₀) : Prop :=
+∀ r:R, v r = 0 ∨ v r = 1
+
 section trivial -- the trivial valuation
 variable [comm_ring R]
-variables (S : ideal R) [prime : ideal.is_prime S]
-include prime
+variables (I : ideal R) [prime : I.is_prime]
 
 /-- The trivial Γ₀-valued valuation associated to a prime ideal S of R. -/
-def trivial : valuation R Γ₀ :=
-{ to_fun := λ x, if x ∈ S then 0 else 1,
-  map_zero' := if_pos S.zero_mem,
-  map_one'  := if_neg (assume h, prime.1 (S.eq_top_iff_one.2 h)),
+def trivial : valuation R (with_zero punit) :=
+{ to_fun := λ x, if x ∈ I then 0 else 1,
+  map_zero' := if_pos I.zero_mem,
+  map_one'  := if_neg (assume h, prime.1 (I.eq_top_iff_one.2 h)),
   map_mul'  := λ x y,
-    if hx : x ∈ S then by rw [if_pos hx, zero_mul, if_pos (S.mul_mem_right hx)]
-    else if hy : y ∈ S then by rw [if_pos hy, mul_zero, if_pos (S.mul_mem_left hy)]
-    else have hxy : x * y ∉ S,
+    if hx : x ∈ I then by rw [if_pos hx, zero_mul, if_pos (I.mul_mem_right hx)]
+    else if hy : y ∈ I then by rw [if_pos hy, mul_zero, if_pos (I.mul_mem_left hy)]
+    else have hxy : x * y ∉ I,
     by { assume hxy, replace hxy := prime.mem_or_mem hxy, tauto },
     by rw [if_neg hx, if_neg hy, if_neg hxy, mul_one],
   map_add'  := λ x y, begin
       split_ifs with hxy hx hy _ hx hy;
       try {simp}; try {exact le_refl _},
-      { exact hxy (S.add_mem hx hy) }
+      { exact hxy (I.add_mem hx hy) }
     end }
+
+lemma trivial_is_trivial (I : ideal R) [hI : I.is_prime] :
+  (trivial I).is_trivial :=
+begin
+  intro r, generalize : (trivial I) r = x,
+  cases x; [left, {right, cases x}]; refl
+end
+
+lemma is_trivial_iff_val_le_one {K : Type*} [division_ring K] {v : valuation K Γ₀} :
+  v.is_trivial ↔ ∀ x:K, v x ≤ 1 :=
+begin
+  split; intros h x,
+  { cases h x; simp *, },
+  { contrapose! h, cases h with h₁ h₂,
+    by_cases hx : v x ≤ 1,
+    { refine ⟨x⁻¹, _⟩,
+      rw [v.map_inv', ← linear_ordered_structure.inv_lt_inv _ one_ne_zero,
+        inv_inv'', inv_one'],
+      { exact lt_of_le_of_ne hx h₂ },
+      { exact inv_ne_zero' _ h₁ },
+      { rwa v.ne_zero_iff at h₁ } },
+    { push_neg at hx, exact ⟨_, hx⟩ } }
+end
 
 end trivial -- end of section
 
