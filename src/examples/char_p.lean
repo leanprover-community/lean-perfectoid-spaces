@@ -132,14 +132,15 @@ def valuation : valuation (power_series K) nnreal :=
     rw le_max_iff,
     have inv_p_ne_zero : (p : nnreal)⁻¹ ≠ 0,
     { assume H, rw [← inv_inj'', inv_inv'', inv_zero'] at H,
-      apply p.ne_zero, sorry
-      /- exact_mod_cast H -/ },
+      apply p.ne_zero,
+      rw [show (p : nnreal) = (p : ℕ), by rw coe_coe] at H, exact_mod_cast H, },
     cases this with h h; [left, right],
     all_goals
     { apply nnreal_of_enat_le _ inv_p_ne_zero _ _ _ h,
       rw [← linear_ordered_structure.inv_le_inv one_ne_zero inv_p_ne_zero, inv_inv'', inv_one'],
-      apply le_of_lt, sorry
-      /- exact_mod_cast p.one_lt, -/ },
+      apply le_of_lt,
+      rw [show (p : nnreal) = (p : ℕ), by rw coe_coe],
+      exact_mod_cast p.one_lt, },
   end }
 
 end power_series
@@ -169,13 +170,14 @@ begin
   change nnreal_of_enat _ _ = 0 at h,
   have inv_p_ne_zero : (p : nnreal)⁻¹ ≠ 0,
   { assume H, rw [← inv_inj'', inv_inv'', inv_zero'] at H,
-    apply p.ne_zero, sorry, -- exact_mod_cast H
-     },
+    apply p.ne_zero,
+    rw [show (p : nnreal) = (p : ℕ), by rw coe_coe] at H,
+    exact_mod_cast H },
   rwa [← nnreal_of_enat_top, (nnreal_of_enat_inj _ inv_p_ne_zero _).eq_iff,
       power_series.order_eq_top] at h,
   rw [← linear_ordered_structure.inv_lt_inv one_ne_zero inv_p_ne_zero, inv_inv'', inv_one'],
-  sorry
-  -- exact_mod_cast p.one_lt,
+  rw [show (p : nnreal) = (p : ℕ), by rw coe_coe],
+  exact_mod_cast p.one_lt,
 end
 
 lemma non_trivial : ¬ (valuation p K).is_trivial :=
@@ -183,13 +185,14 @@ begin
   assume H, cases H (localization.of (power_series.X)) with h h;
   erw valuation.localization_apply at h; change nnreal_of_enat _ _ = _ at h,
   { apply p.ne_zero,
-    simp only [nnreal.inv_eq_zero, nnreal_of_enat_one,
-      nat.cast_eq_zero, power_series.order_X] at h,
-    sorry },
+    rw [show (p : nnreal) = (p : ℕ), by rw coe_coe] at h,
+    simpa only [nnreal.inv_eq_zero, nnreal_of_enat_one,
+      nat.cast_eq_zero, power_series.order_X] using h, },
   { simp only [nnreal_of_enat_one, power_series.order_X] at h,
     rw [← inv_inj'', inv_inv'', inv_one'] at h,
-    apply p.ne_one, sorry, -- exact_mod_cast h
-     }
+    apply p.ne_one,
+    rw [show (p : nnreal) = (p : ℕ), by rw coe_coe] at h,
+    exact_mod_cast h }
 end
 
 local attribute [instance] algebra
