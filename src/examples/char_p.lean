@@ -63,7 +63,9 @@ begin
     rwa [nnreal.coe_le, nnreal.coe_pow, nnreal.coe_pow, nnreal.coe_inv, ← pow_inv, ← pow_inv,
       ← nnreal.coe_pow, ← nnreal.coe_pow, ← nnreal.coe_inv, ← nnreal.coe_inv, ← nnreal.coe_le,
       linear_ordered_structure.inv_le_inv] at this,
-    all_goals { sorry } },
+    all_goals { contrapose! h₁ },
+    any_goals { exact subtype.val_injective h₁ },
+    all_goals { apply group_with_zero.pow_eq_zero, assumption } },
   { rw dif_neg hn, exact zero_le _ }
 end
 
