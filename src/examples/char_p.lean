@@ -5,11 +5,12 @@ import for_mathlib.nnreal
 
 import adic_space
 
-section
-
+noncomputable theory
 open_locale classical
 
-noncomputable def nnreal_of_enat (b : nnreal) (n : enat) : nnreal :=
+section
+
+def nnreal_of_enat (b : nnreal) (n : enat) : nnreal :=
 if h : n.dom then (b^n.get h) else 0
 
 @[simp] lemma nnreal_of_enat_top (b : nnreal) :
@@ -69,16 +70,54 @@ begin
   { rw dif_neg hn, exact zero_le _ }
 end
 
+@[simp] lemma nnreal_of_enat_lt (b : nnreal) (h₁ : b ≠ 0) (h₂ : b < 1) (m n : enat) (h : m < n) :
+  nnreal_of_enat b n < nnreal_of_enat b m :=
+begin
+  delta nnreal_of_enat,
+  by_cases hn : n.dom,
+  { rw ← enat.coe_get hn at h,
+    have hm : m.dom := enat.dom_of_le_some (le_of_lt h),
+    rw [← enat.coe_get hm, enat.coe_lt_coe] at h,
+    rw [dif_pos hm, dif_pos hn],
+    rw [← linear_ordered_structure.inv_lt_inv one_ne_zero h₁, inv_one'] at h₂,
+    have := pow_lt_pow h₂ h,
+    -- We need lots of norm_cast lemmas
+    rwa [nnreal.coe_lt, nnreal.coe_pow, nnreal.coe_pow, nnreal.coe_inv, ← pow_inv, ← pow_inv,
+      ← nnreal.coe_pow, ← nnreal.coe_pow, ← nnreal.coe_inv, ← nnreal.coe_inv, ← nnreal.coe_lt,
+      linear_ordered_structure.inv_lt_inv] at this,
+    all_goals { contrapose! h₁ },
+    any_goals { exact subtype.val_injective h₁ },
+    all_goals { apply group_with_zero.pow_eq_zero, assumption } },
+  { rw dif_neg hn,
+    have : n = ⊤ := roption.eq_none_iff'.mpr hn, subst this,
+    replace h := ne_of_lt h,
+    rw enat.ne_top_iff at h, rcases h with ⟨m, rfl⟩,
+    rw dif_pos, swap, {trivial},
+    apply pow_pos,
+    exact lt_of_le_of_ne b.2 h₁.symm }
+end
+
+open function
+
+@[simp] lemma nnreal_of_enat_inj (b : nnreal) (h₁ : b ≠ 0) (h₂ : b < 1) :
+  injective (nnreal_of_enat b) :=
+begin
+  intros m n h,
+  wlog H : m ≤ n,
+  rcases lt_or_eq_of_le H with H|rfl,
+  { have := nnreal_of_enat_lt b h₁ h₂ m n H,
+    exfalso, exact ne_of_lt this h.symm, },
+  { refl },
+end
+
 end
 
 namespace power_series
-variables {p : ℕ} [hp : p.prime]
-variables {K : Type*} [discrete_field K] [char_p K p]
+variables (p : ℕ) [hp : p.prime]
+variables (K : Type*) [discrete_field K] [char_p K p]
 include hp
 
-open_locale classical
-
-noncomputable def valuation : valuation (power_series K) nnreal :=
+def valuation : valuation (power_series K) nnreal :=
 { to_fun := λ φ, nnreal_of_enat (p⁻¹) φ.order,
   map_zero' := by rw [order_zero, nnreal_of_enat_top],
   map_one' := by rw [order_one, nnreal_of_enat_zero],
@@ -99,3 +138,34 @@ noncomputable def valuation : valuation (power_series K) nnreal :=
   end }
 
 end power_series
+
+/- The following definition is mathematically correct,
+but probably not the version that we want to put into mathlib.
+We make it for the sole purpose of constructing a perfectoid field.-/
+def laurent_series (K : Type*) [discrete_field K] := localization.fraction_ring (power_series K)
+
+namespace laurent_series
+variables (K : Type*) [discrete_field K]
+
+instance : discrete_field (laurent_series K) := by delta laurent_series; apply_instance
+
+variables {p : ℕ} [hp : p.prime] [char_p K p]
+
+include hp
+
+def valuation : valuation (laurent_series K) nnreal :=
+valuation.localization (power_series.valuation p K) $ λ φ h,
+begin
+  rw localization.fraction_ring.mem_non_zero_divisors_iff_ne_zero at h,
+  contrapose! h,
+  change nnreal_of_enat _ _ = 0 at h,
+  have inv_p_ne_zero : (p : nnreal)⁻¹ ≠ 0,
+  { assume H, rw [← inv_inj'', inv_inv'', inv_zero'] at H,
+    apply hp.ne_zero, exact_mod_cast H },
+  rwa [← nnreal_of_enat_top, (nnreal_of_enat_inj _ inv_p_ne_zero _).eq_iff,
+      power_series.order_eq_top] at h,
+  rw [← linear_ordered_structure.inv_lt_inv one_ne_zero inv_p_ne_zero, inv_inv'', inv_one'],
+  exact_mod_cast hp.one_lt,
+end
+
+end laurent_series
