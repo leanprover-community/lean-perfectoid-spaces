@@ -106,6 +106,31 @@ def perfection : valuation (perfect_closure R p) nnreal :=
 end
 
 namespace perfection
+open filter real
+
+lemma tendsto_pow_zero {x : ℝ} (hx : x ≠ 0) : tendsto (λ ε, x^ε) (nhds (0 : ℝ)) (nhds 1) :=
+begin
+  convert (continuous_rpow_of_ne_zero (λ y, hx) continuous_const continuous_id).continuous_at,
+  simp
+end
+
+-- TODO: rename?
+lemma johan {x ε : ℝ} (hx : 1 < x) (hε : 0 < ε) : ∃ r : ℝ, 0 < r ∧ x^r < 1 + ε :=
+begin
+  have lim := tendsto_pow_zero (by linarith : x ≠ 0),
+  rw metric.tendsto_nhds_nhds at lim,
+  simp only [dist_0_eq_abs, dist_eq, sub_zero] at lim,
+  rcases lim ε hε with ⟨r, rpos, H⟩,
+  use [r/2, by linarith],
+  have : abs (r/2) < r, by rw abs_of_nonneg ; linarith,
+  specialize H this,
+  have : 0 ≤ x ^ (r / 2) - 1,
+  { suffices : 1 ≤ x^(r/2), by linarith,
+    apply one_le_rpow ; linarith },
+  rw abs_of_nonneg this at H,
+  linarith
+end
+
 variables (K : Type*) [discrete_field K] (p : ℕ) [hp : p.prime] [char_p K p]
 include hp
 
@@ -127,7 +152,20 @@ begin
     apply real.one_lt_rpow hx,
     apply fpow_pos_of_pos,
     exact_mod_cast hp.pos, },
-  sorry
+  rcases johan hx h with ⟨r, hr, H⟩,
+  -- TODO: the next block is copied from examples/padics, should we extract it?
+  obtain ⟨n, hn⟩ : ∃ n : ℕ, (p : ℝ)^-(n : ℤ) < r,
+    { have hp : (1:ℝ) < p := by exact_mod_cast nat.prime.one_lt ‹_›,
+      obtain ⟨n, hn⟩ : ∃ (n:ℕ), r⁻¹ < p^n := pow_unbounded_of_one_lt r⁻¹ hp,
+      use n,
+      have hp' : (0:ℝ) < p^n,
+      { rw ← fpow_of_nat, apply fpow_pos_of_pos, exact_mod_cast nat.prime.pos ‹_› },
+      rw [inv_lt hr hp', inv_eq_one_div] at hn,
+      rwa [fpow_neg, fpow_of_nat], },
+  use n,
+  transitivity (v x)^r,
+  exact rpow_lt_rpow_of_exponent_lt hx hn,
+  assumption
 end
 
 end perfection
