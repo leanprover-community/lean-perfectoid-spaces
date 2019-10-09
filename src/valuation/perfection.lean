@@ -84,7 +84,9 @@ end
 end perfection
 
 section
-variables (p : ℕ) [nat.prime p] [char_p R p]
+variables (R) (p : ℕ) [hp : p.prime] [char_p R p]
+
+include hp
 
 def perfection : valuation (perfect_closure R p) nnreal :=
 { to_fun := perfection.f v p,
@@ -102,5 +104,32 @@ def perfection : valuation (perfect_closure R p) nnreal :=
   end }
 
 end
+
+namespace perfection
+variables (K : Type*) [discrete_field K] (p : ℕ) [hp : p.prime] [char_p K p]
+include hp
+
+lemma non_discrete (v : valuation K nnreal) (hv : ¬ v.is_trivial) (ε : nnreal) (h : 0 < ε) :
+  ∃ x : perfect_closure K p, 1 < v.perfection K p x ∧ v.perfection K p x < 1 + ε :=
+begin
+  obtain ⟨x, hx⟩ : ∃ x, 1 < v x,
+  { delta is_trivial at hv, push_neg at hv, rcases hv with ⟨x, h₁, h₂⟩,
+    by_cases hx : 1 < v x, { use [x,hx] },
+    use x⁻¹,
+    rw [v.map_inv, ← linear_ordered_structure.inv_lt_inv _ one_ne_zero, inv_inv'', inv_one'],
+    { push_neg at hx, exact lt_of_le_of_ne hx h₂ },
+    { contrapose! h₁, rwa nnreal.inv_eq_zero at h₁ } },
+  suffices : ∃ n : ℕ, (v x)^(p^(-n : ℤ) : ℝ) < 1 + ε,
+  { rcases this with ⟨n, hn⟩,
+    refine ⟨quot.mk (perfect_closure.r K p) (n,x), _, hn⟩,
+    change 1 < (v x)^(p^(-n : ℤ) : ℝ),
+    rw nnreal.coe_lt,
+    apply real.one_lt_rpow hx,
+    apply fpow_pos_of_pos,
+    exact_mod_cast hp.pos, },
+  sorry
+end
+
+end perfection
 
 end valuation
