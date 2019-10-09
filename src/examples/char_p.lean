@@ -4,8 +4,8 @@ import algebra.char_p
 import for_mathlib.nnreal
 import for_mathlib.char_p
 
-import adic_space
 import valuation.perfection
+import perfectoid_space
 
 noncomputable theory
 open_locale classical
@@ -197,3 +197,44 @@ def valuation : valuation (laurent_series_perfection K p) nnreal :=
 valuation.perfection (laurent_series.valuation K p) p
 
 end laurent_series_perfection
+
+namespace laurent_series_perfection
+-- Now we take K in universe Type. For example `valued` requires this.
+variables (K : Type) [discrete_field K]
+variables (p : ℕ) [hp : p.prime] [char_p K p]
+include hp
+
+instance : valued (laurent_series_perfection K p) :=
+{ Γ₀ := nnreal, v := valuation K p }
+
+end laurent_series_perfection
+
+section
+open uniform_space
+variables (K : Type) [discrete_field K]
+variables (p : ℕ) [hp : p.prime] [char_p K p]
+
+include hp
+
+local attribute [instance] valued.subgroups_basis subgroups_basis.topology
+  ring_filter_basis.topological_ring valued.uniform_space
+
+/-- The completion of the perfection of the Laurent series over a field. -/
+def clsp := completion (laurent_series_perfection K p)
+
+end
+
+namespace clsp
+variables (K : Type) [discrete_field K]
+variables (p : ℕ) [hp : p.prime] [char_p K p]
+
+include hp
+
+local attribute [instance] valued.subgroups_basis subgroups_basis.topology
+  ring_filter_basis.topological_ring valued.uniform_space
+
+instance : discrete_field (clsp K p) := uniform_space.completion.discrete_field
+
+def valuation : valuation (clsp K p) nnreal := valued.extension_valuation
+
+end clsp
