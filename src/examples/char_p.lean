@@ -2,6 +2,7 @@ import ring_theory.power_series
 import algebra.char_p
 
 import for_mathlib.nnreal
+import for_mathlib.char_p
 
 import adic_space
 import valuation.perfection
@@ -150,6 +151,11 @@ variables (K : Type*) [discrete_field K]
 
 instance : discrete_field (laurent_series K) := by delta laurent_series; apply_instance
 
+def algebra : algebra K (laurent_series K) :=
+algebra.of_ring_hom (localization.of ∘ power_series.C K) $
+@is_ring_hom.comp _ _ _ _ (power_series.C K) (ring_hom.is_ring_hom _)
+  _ _ localization.of localization.of.is_ring_hom
+
 variables (p : ℕ) [hp : p.prime] [char_p K p]
 
 include hp
@@ -169,14 +175,10 @@ begin
   exact_mod_cast hp.one_lt,
 end
 
+local attribute [instance] algebra
+
 instance : char_p (laurent_series K) p :=
-begin
-  constructor,
-  intro n,
-  -- We shouldn't prove this directly.
-  -- Rather: every nonzero algebra over a char_p is itself char_p
-  sorry
-end
+char_p_algebra K
 
 end laurent_series
 
