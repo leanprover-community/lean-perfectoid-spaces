@@ -4,6 +4,7 @@ import algebra.char_p
 import for_mathlib.nnreal
 
 import adic_space
+import valuation.perfection
 
 noncomputable theory
 open_locale classical
@@ -149,7 +150,7 @@ variables (K : Type*) [discrete_field K]
 
 instance : discrete_field (laurent_series K) := by delta laurent_series; apply_instance
 
-variables {p : ℕ} [hp : p.prime] [char_p K p]
+variables (p : ℕ) [hp : p.prime] [char_p K p]
 
 include hp
 
@@ -168,4 +169,29 @@ begin
   exact_mod_cast hp.one_lt,
 end
 
+instance : char_p (laurent_series K) p :=
+begin
+  constructor,
+  intro n,
+  -- We shouldn't prove this directly.
+  -- Rather: every nonzero algebra over a char_p is itself char_p
+  sorry
+end
+
 end laurent_series
+
+def laurent_series_perfection (K : Type*) [discrete_field K] (p : ℕ) :=
+perfect_closure (laurent_series K) p
+
+namespace laurent_series_perfection
+variables (K : Type*) [discrete_field K]
+variables (p : ℕ) [hp : p.prime] [char_p K p]
+include hp
+
+instance : discrete_field (laurent_series_perfection K p) :=
+perfect_closure.discrete_field (laurent_series K) p
+
+def valuation : valuation (laurent_series_perfection K p) nnreal :=
+valuation.perfection (laurent_series.valuation K p) p
+
+end laurent_series_perfection
