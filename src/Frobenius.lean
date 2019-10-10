@@ -8,10 +8,10 @@ The main purpose of this file is to introduce notation that
 is not available in mathlib, and that we don't want to set up in the main file.
 -/
 
-/--The Frobenius endomorphism of a semiring-/
-noncomputable def Frobenius (α : Type*) [semiring α] : α → α := λ x, x^(ring_char α)
+-- /--The Frobenius endomorphism of a semiring-/
+-- noncomputable def Frobenius (α : Type*) [semiring α] : α → α := λ x, x^(ring_char α)
 
-notation `Frob` R `∕` x := Frobenius (ideal.quotient (ideal.span ({x} : set R)))
+notation `Frob` R `∕` p := frobenius (ideal.quotient (ideal.span ({p} : set R))) p
 
 notation x `∣` y `in` R := (x : R) ∣ (y : R)
 
@@ -48,24 +48,15 @@ begin
   { apply_instance }
 end
 
-lemma Frob_mod_surjective_char_p [hp : char_p R p] (h : surjective (Frobenius R)) :
+lemma frobenius_surjective_of_char_p [hp : char_p R p] (h : surjective (frobenius R p)) :
   surjective (Frob R∕p) :=
 begin
   rintro ⟨x⟩,
   rcases h x with ⟨y, rfl⟩,
   refine ⟨ideal.quotient.mk _ y, _⟩,
-  delta Frobenius,
+  delta frobenius,
   rw ← ideal.quotient.mk_pow,
-  congr' 2,
-  rw [char_p.eq R (ring_char.char R) hp, ring_char.eq_iff],
-  refine @char_p_algebra R _ _ _
-    (algebra.of_ring_hom (ideal.quotient.mk _) (ideal.quotient.is_ring_hom_mk _)) _ hp _,
-  assume H, apply p.not_dvd_one,
-  rw [eq_comm, ← ideal.quotient.mk_one, ideal.quotient.eq_zero_iff_mem,
-      ideal.mem_span_singleton] at H,
-  rw [show (p : R) = (p : ℕ), by rw coe_coe] at H,
-  rwa [char_p.cast_eq_zero R, zero_dvd_iff,
-    ← nat.cast_one, char_p.cast_eq_zero_iff R p] at H,
+  refl,
 end
 
 end

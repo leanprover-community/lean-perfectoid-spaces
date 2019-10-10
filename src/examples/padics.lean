@@ -221,7 +221,7 @@ begin
     suffices : u^(n+1) = 1 ↔ u = 1,
     { rwa [units.ext_iff, units.ext_iff, units.coe_pow] at this, },
     split; intro h,
-    { exact linear_ordered_structure.eq_one_of_pow_eq_one h },
+    { exact linear_ordered_structure.eq_one_of_pow_eq_one (nat.succ_ne_zero _) h },
     { rw [h, one_pow], } },
   by_cases hn' : 0 ≤ n,
   { lift n to ℕ using hn', rw [fpow_of_nat], norm_cast at hn, solve_by_elim },

@@ -9,6 +9,7 @@ import perfectoid_space
 
 noncomputable theory
 open_locale classical
+open function
 
 local postfix `ᵒ` : 66 := power_bounded_subring
 
@@ -100,8 +101,6 @@ begin
     apply pow_pos,
     exact lt_of_le_of_ne b.2 h₁.symm }
 end
-
-open function
 
 @[simp] lemma nnreal_of_enat_inj (b : nnreal) (h₁ : b ≠ 0) (h₂ : b < 1) :
   injective (nnreal_of_enat b) :=
@@ -197,8 +196,8 @@ end
 
 local attribute [instance] algebra
 
-instance : char_p (laurent_series K) (ring_char K) :=
-@char_p_algebra_over_field K _ _ _ _ _ (ring_char.char _)
+instance [char_p K p] : char_p (laurent_series K) p :=
+char_p_algebra_over_field K
 
 end laurent_series
 
@@ -206,20 +205,22 @@ def laurent_series_perfection (K : Type*) [discrete_field K] :=
 perfect_closure (laurent_series K) (ring_char K)
 
 namespace laurent_series_perfection
-variables (p : nat.primes) (K : Type*) [discrete_field K] [char_p K p]
-include p
+variables (p : nat.primes) (K : Type*) [discrete_field K] [hp : char_p K p]
+include hp
 
 instance : discrete_field (laurent_series_perfection K) :=
-@perfect_closure.discrete_field (laurent_series K) _ _ (ring_char.prime p K) _
+@perfect_closure.discrete_field (laurent_series K) _ _ (ring_char.prime p K) $
+by { rw ← ring_char.eq K hp, apply_instance }
 
 def valuation : valuation (laurent_series_perfection K) nnreal :=
 @valuation.perfection (laurent_series K) _ (laurent_series.valuation p K)
-(ring_char K) (ring_char.prime p _) _
+(ring_char K) (ring_char.prime p _) $
+by { rw ← ring_char.eq K hp, apply_instance }
 
 lemma non_discrete (ε : nnreal) (h : 0 < ε) :
   ∃ x : laurent_series_perfection K, 1 < valuation p K x ∧ valuation p K x < 1 + ε :=
-@valuation.perfection.non_discrete _ _ _ (ring_char.prime p _) _ _
-(laurent_series.non_trivial p K) ε h
+@valuation.perfection.non_discrete _ _ _ (ring_char.prime p _)
+(by { rw ← ring_char.eq K hp, apply_instance }) _ (laurent_series.non_trivial p K) ε h
 
 lemma non_trivial : ¬ (valuation p K).is_trivial :=
 begin
@@ -227,6 +228,20 @@ begin
   contrapose! h₁, cases h₁ x with h h; rw h,
   exact zero_le _,
 end
+
+lemma frobenius_surjective : surjective (frobenius (laurent_series_perfection K) p) :=
+begin
+  rw ring_char.eq K hp,
+  let F := (perfect_closure.frobenius_equiv (laurent_series K) _),
+  { exact F.surjective },
+  { exact ring_char.prime p K },
+  { rw ← ring_char.eq K hp, apply_instance }
+end
+
+def algebra : algebra (laurent_series K) (laurent_series_perfection K) :=
+algebra.of_ring_hom (perfect_closure.of _ _) $
+@perfect_closure.is_ring_hom _ _ _ (ring_char.prime _ _) $
+by { rw ← ring_char.eq K hp, apply_instance }
 
 end laurent_series_perfection
 
@@ -246,10 +261,10 @@ variables {Γ₀ : Type*} [linear_ordered_comm_group_with_zero Γ₀]
 
 local attribute [instance] classical.decidable_linear_order
 
-def le_one_subring (v : valuation R Γ₀) := {r : R // v r ≤ 1}
+def le_one_subring (v : valuation R Γ₀) := {r : R | v r ≤ 1}
 
-instance le_one_subring.is_subring (v : valuation R Γ₀) : comm_ring v.le_one_subring :=
-@subtype.comm_ring R _ {r : R | v r ≤ 1}
+instance le_one_subring.is_subring (v : valuation R Γ₀) : is_subring v.le_one_subring :=
+-- @subtype.comm_ring R _ {r : R | v r ≤ 1}
 { zero_mem := show v 0 ≤ 1, by simp,
   one_mem := show v 1 ≤ 1, by simp,
   add_mem := λ r s (hr : v r ≤ 1) (hs : v s ≤ 1), show v (r+s) ≤ 1,
@@ -263,21 +278,24 @@ instance le_one_subring.is_subring (v : valuation R Γ₀) : comm_ring v.le_one_
     rwa one_mul
   end }
 
+instance coe_nat_le_one_subring (v : valuation R Γ₀) :
+  has_coe ℕ v.le_one_subring := by apply_instance
+
 end valuation
 
 section pfd_fld
-open function
 parameter (p : nat.primes)
-variables (K : Type) [discrete_field K]
+variables (K : Type)
 
-class perfectoid_field : Type :=
-[top : uniform_space K]
-[top_fld : topological_division_ring K]
-[complete : complete_space K]
-[sep : separated K]
-(v : valuation K nnreal)
-(non_discrete : ∀ ε : nnreal, 0 < ε → ∃ x : K, 1 < v x ∧ v x < 1 + ε)
-(Frobenius : surjective (Frob v.le_one_subring∕p))
+-- class perfectoid_field : Type 1 :=
+-- [fld : discrete_field K]
+-- [top : uniform_space K]
+-- [top_fld : topological_division_ring K]
+-- [complete : complete_space K]
+-- [sep : separated K]
+-- (v : valuation K nnreal)
+-- (non_discrete : ∀ ε : nnreal, 0 < ε → ∃ x : K, 1 < v x ∧ v x < 1 + ε)
+-- (Frobenius : surjective (Frob v.le_one_subring ∕p))
 
 end pfd_fld
 
@@ -310,19 +328,60 @@ instance : separated (clsp p K) := completion.separated _
 
 def valuation : valuation (clsp p K) nnreal := valued.extension_valuation
 
-instance : perfectoid_field p (clsp p K) :=
-{ v := valuation p K,
-  non_discrete := λ ε h,
-  begin
-    choose x hx using laurent_series_perfection.non_discrete p K ε h,
-    delta clsp, use x,
-    convert hx using 2; exact valued.extension_extends _
-  end,
-  Frobenius :=
-  begin
-    apply Frob_mod_surjective_char_p,
-    sorry,
-    sorry,
-  end }
+lemma frobenius_surjective : surjective (frobenius (clsp p K) p) :=
+begin
+  sorry
+end
+
+instance laurent_series_valued : valued (laurent_series K) :=
+{ Γ₀ := nnreal, v := laurent_series.valuation p K }
+
+protected def algebra : algebra (laurent_series_perfection K) (clsp p K) :=
+algebra.of_ring_hom
+  (coe : (laurent_series_perfection K) → completion (laurent_series_perfection K)) $
+@completion.is_ring_hom_coe (laurent_series_perfection K) _ _ _ $
+@valued.uniform_add_group (laurent_series_perfection K) _ $ laurent_series_perfection.valued p K
+
+-- def rod_algebra : algebra (power_series K) (clsp p K) :=
+-- @algebra.comap.algebra _ _ _ _ _ _ _ $
+-- @algebra.comap.algebra (laurent_series K) (laurent_series_perfection K) (clsp p K) _ _ _
+-- (laurent_series_perfection.algebra p K) (clsp.algebra p K)
+
+-- def rod : Huber_ring.ring_of_definition (laurent_series K) (clsp p K) :=
+-- {
+--   .. rod_algebra p K }
+
+-- def Huber_ring : Huber_ring (clsp p K) :=
+-- { pod :=
+--   begin
+--   end }
+
+-- instance : perfectoid_field p (clsp p K) :=
+-- { v := valuation p K,
+--   non_discrete := λ ε h,
+--   begin
+--     choose x hx using laurent_series_perfection.non_discrete p K ε h,
+--     delta clsp, use x,
+--     convert hx using 2; exact valued.extension_extends _
+--   end,
+--   Frobenius :=
+--   begin
+--     apply @surjective.of_comp _ _ _ _ (ideal.quotient.mk _) _,
+--     conv {congr, simp only [frobenius, comp], funext, rw [← ideal.quotient.mk_pow]},
+--     apply surjective_comp,
+--     { rintro ⟨x⟩, exact ⟨x, rfl⟩ },
+--     intro x,
+--     choose y hy using frobenius_surjective p K x.val,
+--     have hvy : valuation p K y ≤ 1,
+--     { have aux := congr_arg (valuation p K) hy,
+--       replace hy := x.property,
+--       rw [← aux, frobenius, valuation.map_pow] at hy, clear aux,
+--       apply linear_ordered_structure.le_one_of_pow_le_one _ _ hy,
+--       exact_mod_cast p.ne_zero, },
+--     refine ⟨⟨y, hvy⟩, _⟩,
+--     { rw [subtype.ext], convert hy,
+--       convert @is_semiring_hom.map_pow _ _ _ _ subtype.val _ ⟨y,_⟩ p,
+--        }
+--   end }
 
 end clsp

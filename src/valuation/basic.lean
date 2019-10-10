@@ -134,7 +134,7 @@ eq_inv_of_mul_right_eq_one' _ _ $ by rw [← v.map_mul, units.mul_inv, v.map_one
 begin
   show (units.map (v : R →* Γ₀) (-1 : units R) : Γ₀) = (1 : units Γ₀),
   rw ← units.ext_iff,
-  apply linear_ordered_structure.eq_one_of_pow_eq_one (_ : _ ^ 2 = _),
+  apply linear_ordered_structure.eq_one_of_pow_eq_one (nat.succ_ne_zero _) (_ : _ ^ 2 = _),
   rw [pow_two, ← monoid_hom.map_mul, units.ext_iff],
   show v ((-1) * (-1)) = 1,
   rw [neg_one_mul, neg_neg, v.map_one]
