@@ -200,6 +200,7 @@ end
 end linear_ordered_structure
 
 namespace nnreal
+open linear_ordered_structure
 
 /-- The nonnegative real numbers form a linearly ordered commutative group with zero.-/
 noncomputable instance : linear_ordered_comm_group_with_zero nnreal :=
@@ -211,5 +212,26 @@ noncomputable instance : linear_ordered_comm_group_with_zero nnreal :=
   .. (infer_instance : has_inv nnreal),
   .. (infer_instance : linear_order nnreal),
   .. (infer_instance : comm_semiring nnreal) }
+
+--move this
+lemma cardinal.eq_one_iff_nonempty_subsingleton {α : Type*} :
+  cardinal.mk α = 1 ↔ (nonempty α ∧ subsingleton α) :=
+begin
+  symmetry,
+  rw [← cardinal.ne_zero_iff_nonempty, ← cardinal.le_one_iff_subsingleton],
+  rw [eq_iff_le_not_lt, ← cardinal.succ_zero, cardinal.lt_succ, cardinal.le_zero, and_comm],
+end
+
+lemma height : height (units nnreal) = 1 :=
+begin
+  refine cardinal.eq_one_iff_nonempty_subsingleton.mpr ⟨⟨⟨set.univ, _⟩⟩, _⟩,
+  { constructor, any_goals { intros, exact set.mem_univ _ },
+    have h2 : (2:nnreal) ≠ 0 := by norm_num,
+    let two : units nnreal := ⟨2,2⁻¹, mul_inv_cancel' _ h2, inv_mul_cancel' _ h2⟩,
+    refine ⟨1, two, set.mem_univ _, set.mem_univ _, _⟩,
+    sorry
+    },
+    sorry
+end
 
 end nnreal
