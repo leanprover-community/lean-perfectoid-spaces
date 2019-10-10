@@ -29,5 +29,8 @@ begin
     simp [h] },
 end
 
-lemma ideal.span_empty {R : Type*} [comm_ring R] : ideal.span (∅ : set R) = ⊥ :=
+@[simp] lemma ideal.span_empty {R : Type*} [comm_ring R] : ideal.span (∅ : set R) = ⊥ :=
 ideal.span_eq_bot.mpr (λ x h, false.elim h)
+
+@[simp] lemma ideal.span_zero {R : Type*} [comm_ring R] : ideal.span ({0} : set R) = ⊥ :=
+ideal.span_eq_bot.mpr $ λ x, set.mem_singleton_iff.mp

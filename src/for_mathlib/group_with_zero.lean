@@ -159,6 +159,15 @@ begin
   symmetry, apply eq_inv_of_mul_left_eq_one', simp [_root_.mul_assoc, hx, hy],
 end
 
+lemma pow_eq_zero (x : α) (n : ℕ) (h : x^n = 0) : x = 0 :=
+begin
+  induction n with n ih, { rw pow_zero at h, exfalso, exact one_ne_zero h },
+  by_cases hx : x = 0, { exact hx },
+  apply ih,
+  replace h := congr_arg ((*) x⁻¹) h,
+  rwa [pow_succ, mul_zero, inv_mul_cancel_assoc_right _ _ hx] at h,
+end
+
 /--Adjoining a zero element to the units of a group with zero
 is naturally equivalent to the group with zero.-/
 noncomputable def with_zero_units_equiv : with_zero (units α) ≃ α :=

@@ -33,24 +33,9 @@ lemma mul_le_mul_right (H : x ≤ y) : ∀ z : α, x * z ≤ y * z :=
 end linear_ordered_structure
 
 namespace linear_ordered_structure
-variables {α : Type u} [linear_ordered_comm_group α] {x y z : α}
-variables {β : Type v} [linear_ordered_comm_group β]
-
-class linear_ordered_comm_group.is_hom (f : α → β) extends is_group_hom f : Prop :=
-(ord : ∀ {a b : α}, a ≤ b → f a ≤ f b)
-
--- this is Kenny's; I think we should have iff
-structure linear_ordered_comm_group.equiv extends equiv α β :=
-(is_hom : linear_ordered_comm_group.is_hom to_fun)
-
-lemma div_le_div (a b c d : α) : a * b⁻¹ ≤ c * d⁻¹ ↔ a * d ≤ c * b :=
-begin
-  split ; intro h,
-  have := mul_le_mul_right (mul_le_mul_right h b) d,
-  rwa [inv_mul_cancel_right, mul_assoc _ _ b, mul_comm _ b, ← mul_assoc, inv_mul_cancel_right] at this,
-  have := mul_le_mul_right (mul_le_mul_right h d⁻¹) b⁻¹,
-  rwa [mul_inv_cancel_right, _root_.mul_assoc, _root_.mul_comm d⁻¹ b⁻¹, ← mul_assoc, mul_inv_cancel_right] at this,
-end
+section monoid
+variables {α : Type u} [linear_ordered_comm_monoid α] {x y z : α}
+variables {β : Type v} [linear_ordered_comm_monoid β]
 
 lemma one_le_mul_of_one_le_of_one_le (Hx : 1 ≤ x) (Hy : 1 ≤ y) : 1 ≤ x * y :=
 have h1 : x * 1 ≤ x * y, from mul_le_mul_left Hy x,
@@ -77,18 +62,51 @@ begin
 end
 
 /-- Wedhorn Remark 1.6 (3) -/
-lemma eq_one_of_pow_eq_one {n : ℕ} (H : x ^ (n+1) = 1) : x = 1 :=
+lemma eq_one_of_pow_eq_one {n : ℕ} (hn : n ≠ 0) (H : x ^ n = 1) : x = 1 :=
 begin
+  rcases nat.exists_eq_succ_of_ne_zero hn with ⟨n, rfl⟩, clear hn,
   induction n with n ih,
   { simpa using H },
   { cases le_total x 1,
-  all_goals { have h1 := mul_le_mul_right h (x ^ (n+1)),
+    all_goals
+    { have h1 := mul_le_mul_right h (x ^ (n+1)),
       rw pow_succ at H,
       rw [H, one_mul] at h1 },
     { have h2 := pow_le_one_of_le_one h,
       exact ih (le_antisymm h2 h1) },
     { have h2 := one_le_pow_of_one_le h,
       exact ih (le_antisymm h1 h2) } }
+end
+
+open_locale classical
+
+lemma le_one_of_pow_le_one {a : α} (n : ℕ) (hn : n ≠ 0) (h : a^n ≤ 1) : a ≤ 1 :=
+begin
+  rcases lt_or_eq_of_le h with H|H,
+  { apply le_of_lt, contrapose! H, exact one_le_pow_of_one_le H, },
+  { apply le_of_eq, exact eq_one_of_pow_eq_one hn H }
+end
+
+end monoid
+
+section group
+variables {α : Type u} [linear_ordered_comm_group α] {x y z : α}
+variables {β : Type v} [linear_ordered_comm_group β]
+
+class linear_ordered_comm_group.is_hom (f : α → β) extends is_group_hom f : Prop :=
+(ord : ∀ {a b : α}, a ≤ b → f a ≤ f b)
+
+-- this is Kenny's; I think we should have iff
+structure linear_ordered_comm_group.equiv extends equiv α β :=
+(is_hom : linear_ordered_comm_group.is_hom to_fun)
+
+lemma div_le_div (a b c d : α) : a * b⁻¹ ≤ c * d⁻¹ ↔ a * d ≤ c * b :=
+begin
+  split ; intro h,
+  have := mul_le_mul_right (mul_le_mul_right h b) d,
+  rwa [inv_mul_cancel_right, mul_assoc _ _ b, mul_comm _ b, ← mul_assoc, inv_mul_cancel_right] at this,
+  have := mul_le_mul_right (mul_le_mul_right h d⁻¹) b⁻¹,
+  rwa [mul_inv_cancel_right, _root_.mul_assoc, _root_.mul_comm d⁻¹ b⁻¹, ← mul_assoc, mul_inv_cancel_right] at this,
 end
 
 lemma inv_le_one_of_one_le (H : 1 ≤ x) : x⁻¹ ≤ 1 :=
@@ -152,6 +170,7 @@ theorem ker.is_convex (f : α → β) (hf : linear_ordered_comm_group.is_hom f) 
 def height (α : Type) [linear_ordered_comm_group α] : cardinal :=
 cardinal.mk {S : set α // is_proper_convex S}
 
+end group
 end linear_ordered_structure
 
 namespace with_zero
@@ -391,6 +410,25 @@ end
 
 lemma square_gt_one {a : α} (h : 1 < a) : 1 < a*a :=
 mul_gt_one' h h
+
+lemma pow_le_one {a : α} (h : a ≤ 1) (n : ℕ) : a^n ≤ 1 :=
+begin
+  induction n with n ih, {rwa pow_zero},
+  rw pow_succ,
+  transitivity a,
+  { simpa only [mul_one] using mul_le_mul_left' ih },
+  { exact h }
+end
+
+lemma one_le_pow {a : α} (h : 1 ≤ a) (n : ℕ) : 1 ≤ a^n :=
+begin
+  induction n with n ih, {rwa pow_zero},
+  rw pow_succ,
+  transitivity a,
+  { exact h },
+  { simpa only [mul_one] using mul_le_mul_left' ih }
+end
+
 end actual_ordered_comm_monoid
 
 variables {Γ₀ : Type*} [linear_ordered_comm_group Γ₀]
