@@ -198,7 +198,7 @@ end
 local attribute [instance] algebra
 
 instance : char_p (laurent_series K) (ring_char K) :=
-@char_p_algebra K _ _ _ _ _ (ring_char.char _)
+@char_p_algebra_over_field K _ _ _ _ _ (ring_char.char _)
 
 end laurent_series
 

@@ -12,6 +12,7 @@ instance : has_coe primes ℕ := ⟨subtype.val⟩
 lemma ne_zero : (p : ℕ) ≠ 0 := p.2.ne_zero
 lemma ne_one : (p : ℕ) ≠ 1 := p.2.ne_one
 lemma one_lt : 1 < (p : ℕ) := p.2.one_lt
+lemma not_dvd_one : ¬ (p : ℕ) ∣ 1 := p.2.not_dvd_one
 
 end primes
 end nat

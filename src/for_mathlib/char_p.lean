@@ -24,7 +24,7 @@ end
 
 variable (K)
 
-lemma char_p_algebra [char_p K p] : char_p R p :=
+lemma char_p_algebra_over_field [char_p K p] : char_p R p :=
 { cast_eq_zero_iff := λ n,
   begin
     have : injective (algebra_map R : K → R) := hom_injective _,
