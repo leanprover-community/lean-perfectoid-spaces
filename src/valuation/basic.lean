@@ -315,11 +315,12 @@ begin
   { contrapose! h, cases h with h₁ h₂,
     by_cases hx : v x ≤ 1,
     { refine ⟨x⁻¹, _⟩,
-      rw [v.map_inv', ← linear_ordered_structure.inv_lt_inv _ one_ne_zero,
+      rw [v.map_inv', ← linear_ordered_structure.inv_lt_inv _ _,
         inv_inv'', inv_one'],
       { exact lt_of_le_of_ne hx h₂ },
       { exact inv_ne_zero' _ h₁ },
-      { rwa v.ne_zero_iff at h₁ } },
+      { exact one_ne_zero },
+      { rwa v.ne_zero_iff at h₁, } },
     { push_neg at hx, exact ⟨_, hx⟩ } }
 end
 

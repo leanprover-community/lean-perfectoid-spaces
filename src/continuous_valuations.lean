@@ -116,7 +116,7 @@ begin
     split; intro hx,
     { cases hv x with H H, {assumption},
       { exfalso, rw H at hx, exact lt_irrefl _ hx }, },
-    { rw hx, apply lt_of_le_of_ne linear_ordered_structure.zero_le zero_ne_one } },
+    { rw hx, apply lt_of_le_of_ne linear_ordered_structure.zero_le, exact zero_ne_one } },
   { resetI, intro g, exact is_open_discrete _ }
 end
 
