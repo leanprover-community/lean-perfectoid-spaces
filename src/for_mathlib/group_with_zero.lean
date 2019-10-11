@@ -201,7 +201,7 @@ section nat_pow
 by induction n with n ih; [exact inv_one'.symm,
   rw [pow_succ', pow_succ, ih, mul_inv_rev]]
 
--- This should be done for [no_zero_divisors]
+-- This should be done for [no_zero_divisors] .. doesn't work, we don't have pow for them.
 lemma eq_zero_of_pow_eq_zero {a : α} {n : ℕ} (h : a^n = 0) : a = 0 :=
 begin
   induction n with n ih,
@@ -210,7 +210,7 @@ begin
   cases h; solve_by_elim
 end
 
--- This should be done for [no_zero_divisors]
+-- This should be done for [no_zero_divisors] .. except nope, see above
 lemma pow_ne_zero {a : α} {n : ℕ} (h : a ≠ 0) : a^n ≠ 0 :=
 assume H, h $ eq_zero_of_pow_eq_zero H
 
