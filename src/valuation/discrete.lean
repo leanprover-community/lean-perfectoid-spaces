@@ -13,8 +13,8 @@ open_locale classical
 namespace valuation
 variables {R : Type u} [ring R]
 variables {Γ₀   : Type u₀} [linear_ordered_comm_group_with_zero Γ₀]
-variables {Γ₀'  : Type u₁} [linear_ordered_comm_group_with_zero Γ₀']
-variables (v : valuation R Γ₀) {v' : valuation R Γ₀'}
+variables {Γ'₀  : Type u₁} [linear_ordered_comm_group_with_zero Γ'₀]
+variables (v : valuation R Γ₀) {v' : valuation R Γ'₀}
 
 def is_non_discrete : Prop :=
 ∀ r : R, v r < 1 → ∃ s : R, v r < v s ∧ v s < 1
@@ -24,34 +24,6 @@ def is_discrete : Prop :=
 
 namespace is_equiv
 variable {v}
-
--- move this
-lemma eq_zero (h : v.is_equiv v') {r : R} :
-  v r = 0 ↔ v' r = 0 :=
-by { rw [← v.map_zero, ← v'.map_zero], exact h.val_eq }
-
--- move this
-lemma eq_one (h : v.is_equiv v') {r : R} :
-  v r = 1 ↔ v' r = 1 :=
-by { rw [← v.map_one, ← v'.map_one], exact h.val_eq }
-
--- move this
-lemma lt_iff (h : v.is_equiv v') {r s : R} :
-  v r < v s ↔ v' r < v' s :=
-by { have := not_iff_not_of_iff (h s r), push_neg at this, exact this }
-
--- move this
-lemma lt_one (h : v.is_equiv v') {r : R} :
-  v r < 1 ↔ v' r < 1 :=
-by { rw [← v.map_one, ← v'.map_one], exact h.lt_iff }
-
--- move this
-lemma is_trivial (h : v.is_equiv v') :
-  v.is_trivial ↔ v'.is_trivial :=
-begin
-  apply forall_congr, intro r,
-  exact or_congr h.eq_zero h.eq_one,
-end
 
 lemma is_non_discrete (h : v.is_equiv v') :
   v.is_non_discrete ↔ v'.is_non_discrete :=
