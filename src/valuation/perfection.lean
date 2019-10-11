@@ -3,6 +3,7 @@ import field_theory.perfect_closure
 import for_mathlib.nnreal
 
 import valuation.basic
+import valuation.discrete
 
 lemma iterate_frobenius_apply {α : Type*} [monoid α] (p n : ℕ) (a : α) :
   (frobenius α p)^[n] a = a^p^n :=
@@ -103,6 +104,14 @@ def perfection : valuation (perfect_closure R p) nnreal :=
     congr,
   end }
 
+lemma perfection_apply (n : ℕ) (r : R) :
+  v.perfection R p (quot.mk _ ⟨n, r⟩) = v r ^ (p ^ (-n : ℤ) : ℝ) := rfl
+
+@[simp] lemma perfection_of (r : R) :
+  v.perfection R p (perfect_closure.of R p r) = v r :=
+show (v r) ^ _ = v r,
+by simp only [fpow_zero, int.coe_nat_zero, nnreal.rpow_one, neg_zero]
+
 end
 
 namespace perfection
@@ -167,6 +176,21 @@ begin
   transitivity (v x)^r,
   exact rpow_lt_rpow_of_exponent_lt hx hn,
   assumption
+end
+
+lemma non_discrete' (v : valuation K nnreal) (hv : ¬ v.is_trivial) :
+  (v.perfection K p).is_non_discrete :=
+begin
+  intros r hr,
+  by_cases H : v.perfection K p r = 0,
+  { rcases exists_lt_one_of_not_trivial _ hv with ⟨x, h₁, h₂⟩,
+    rw H, refine ⟨(perfect_closure.of K p x), _, _⟩,
+    { contrapose! h₂, rwa [perfection_of, le_zero_iff_eq] at h₂ },
+    { rwa perfection_of } },
+  sorry
+  -- { refine ⟨perfect_field.pth_root 1 r, _, _⟩,
+  --   {  },
+  --   {  } }
 end
 
 end perfection
