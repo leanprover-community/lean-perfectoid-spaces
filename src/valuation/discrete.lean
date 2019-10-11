@@ -16,9 +16,13 @@ variables {Γ₀   : Type u₀} [linear_ordered_comm_group_with_zero Γ₀]
 variables {Γ'₀  : Type u₁} [linear_ordered_comm_group_with_zero Γ'₀]
 variables (v : valuation R Γ₀) {v' : valuation R Γ'₀}
 
+/-- A valuation on a ring R is nondiscrete if for every element of R with value x < 1,
+there is another element of R whose value lies between x and 1. -/
 def is_non_discrete : Prop :=
 ∀ r : R, v r < 1 → ∃ s : R, v r < v s ∧ v s < 1
 
+/-- A valuation on a ring R is discrete if there is an element x of the value monoid
+such that the valuation of every element of R is either 0 or an integer power of x. -/
 def is_discrete : Prop :=
 ∃ r : R, ∀ s : R, v s ≠ 0 → ∃ n : ℤ, v s = (v r)^n
 
@@ -45,10 +49,10 @@ end
 --   sorry
 -- end
 
+end is_equiv
+
 -- lemma trichotomy :
 --   v.is_trivial ∨ v.is_discrete ∨ v.is_non_discrete :=
 -- sorry
-
-end is_equiv
 
 end valuation
