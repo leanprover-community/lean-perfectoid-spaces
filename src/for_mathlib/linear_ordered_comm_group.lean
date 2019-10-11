@@ -441,6 +441,84 @@ end actual_ordered_comm_monoid
 
 variables {Γ₀ : Type*} [linear_ordered_comm_group Γ₀]
 
+example (Γ₀ : Type*) [linear_ordered_comm_group Γ₀] : (1 : with_zero Γ₀) ≠ 0 := by simp
+
+class linear_ordered_cancel_comm_monoid_with_zero (α : Type*)
+  extends linear_ordered_comm_monoid α, zero_ne_one_class α :=
+(zero_le : ∀ a : α, 0 ≤ a)
+(mul_left_cancel {a b c : α} (h : a ≠ 0) : a * b = a * c → b = c)
+
+namespace linear_ordered_cancel_comm_monoid_with_zero
+
+-- variables {α : Type u} [linear_ordered_cancel_comm_monoid_with_zero α] {x: α}
+-- when we need to make an API for this object
+
+end linear_ordered_cancel_comm_monoid_with_zero
+
+instance punit.linear_ordered_comm_group : linear_ordered_comm_group punit :=
+{ mul_le_mul_left := λ a b h c, trivial,
+  .. punit.decidable_linear_ordered_cancel_comm_monoid,
+  .. punit.comm_group }
+
+namespace with_zero
+
+variables {α : Type u} {β : Type v}
+
+variables [linear_ordered_comm_group α] [linear_ordered_comm_group β]
+
+theorem map_mul (f : α → β) [is_group_hom f] (x y : with_zero α) :
+map f (x * y) = option.map f x * option.map f y :=
+begin
+  cases hx : x; cases hy : y; try {refl},
+  show some (f (val * val_1)) = some ((f val) * (f val_1)),
+  apply option.some_inj.2,
+  exact is_mul_hom.map_mul f val val_1
+end
+
+lemma mul_le_mul_left : ∀ a b : with_zero α, a ≤ b → ∀ c : with_zero α, c * a ≤ c * b
+| (some x) (some y) hxy (some z) := begin
+    rw with_bot.some_le_some at hxy,
+    change @has_le.le (with_zero α) _ (some (z * x)) (some (z * y)),
+    simp,
+    exact linear_ordered_structure.mul_le_mul_left hxy z,
+  end
+| _        _        hxy 0        := by simp
+| (some x) 0        hxy _        := by simp [le_antisymm hxy (le_of_lt (with_bot.bot_lt_some x))]
+| 0        _        hxy (some _) := by simp
+
+instance : linear_ordered_comm_monoid (with_zero α) :=
+{ mul_le_mul_left := mul_le_mul_left,
+  .. with_zero.comm_monoid,
+  .. with_zero.linear_order }
+
+theorem eq_zero_or_eq_zero_of_mul_eq_zero : ∀ x y : with_zero α, x * y = 0 → x = 0 ∨ y = 0
+| (some x) (some y) hxy := false.elim $ option.no_confusion hxy
+| 0        _        hxy := or.inl rfl
+| _        0        hxy := or.inr rfl
+
+@[simp] lemma mul_inv_self (a : with_zero α) : a * a⁻¹ ≤ 1 :=
+begin
+  cases a,
+  { exact zero_le },
+  { apply le_of_eq _,
+    exact congr_arg some (mul_inv_self a) }
+end
+
+@[simp] lemma div_self (a : with_zero α) : a / a ≤ 1 := mul_inv_self a
+
+@[move_cast] lemma div_coe' (a b : α) : (a*b⁻¹ : with_zero α) = a / b := rfl
+
+lemma div_le_div (a b c d : with_zero α) (hb : b ≠ 0) (hd : d ≠ 0) :
+  a / b ≤ c / d ↔ a * d ≤ c * b :=
+begin
+  rcases ne_zero_iff_exists.1 hb with ⟨b, rfl⟩,
+  rcases ne_zero_iff_exists.1 hd with ⟨d, rfl⟩,
+  with_zero_cases a c,
+  exact linear_ordered_structure.div_le_div _ _ _ _
+end
+
+end with_zero
+
 namespace with_zero
 open linear_ordered_structure
 
@@ -520,7 +598,6 @@ begin
   exact mul_lt_right γ h
 end
 
-
 lemma le_of_le_mul_right (h : c ≠ 0) (hab : a * c ≤ b * c) : a ≤ b :=
 begin
   replace hab := linear_ordered_structure.mul_le_mul_right hab c⁻¹,
@@ -535,83 +612,5 @@ le_of_le_mul_right h (by rwa [mul_assoc, mul_left_inv _ h, mul_one])
 
 lemma mul_inv_le_of_le_mul (h : c ≠ 0) (hab : a ≤ b * c) : a * c⁻¹ ≤ b :=
 le_of_le_mul_right h (by rwa [mul_assoc, mul_left_inv _ h, mul_one])
-
-end with_zero
-
-example (Γ₀ : Type*) [linear_ordered_comm_group Γ₀] : (1 : with_zero Γ₀) ≠ 0 := by simp
-
-class linear_ordered_cancel_comm_monoid_with_zero (α : Type*)
-  extends linear_ordered_comm_monoid α, zero_ne_one_class α :=
-(zero_le : ∀ a : α, 0 ≤ a)
-(mul_left_cancel {a b c : α} (h : a ≠ 0) : a * b = a * c → b = c)
-
-namespace linear_ordered_cancel_comm_monoid_with_zero
-
--- variables {α : Type u} [linear_ordered_cancel_comm_monoid_with_zero α] {x: α}
--- when we need to make an API for this object
-
-end linear_ordered_cancel_comm_monoid_with_zero
-
-instance punit.linear_ordered_comm_group : linear_ordered_comm_group punit :=
-{ mul_le_mul_left := λ a b h c, trivial,
-  .. punit.decidable_linear_ordered_cancel_comm_monoid,
-  .. punit.comm_group }
-
-namespace with_zero
-
-variables {α : Type u} {β : Type v}
-
-variables [linear_ordered_comm_group α] [linear_ordered_comm_group β]
-
-theorem map_mul (f : α → β) [is_group_hom f] (x y : with_zero α) :
-map f (x * y) = option.map f x * option.map f y :=
-begin
-  cases hx : x; cases hy : y; try {refl},
-  show some (f (val * val_1)) = some ((f val) * (f val_1)),
-  apply option.some_inj.2,
-  exact is_mul_hom.map_mul f val val_1
-end
-
-lemma mul_le_mul_left : ∀ a b : with_zero α, a ≤ b → ∀ c : with_zero α, c * a ≤ c * b
-| (some x) (some y) hxy (some z) := begin
-    rw with_bot.some_le_some at hxy,
-    change @has_le.le (with_zero α) _ (some (z * x)) (some (z * y)),
-    simp,
-    exact linear_ordered_structure.mul_le_mul_left hxy z,
-  end
-| _        _        hxy 0        := by simp
-| (some x) 0        hxy _        := by simp [le_antisymm hxy (le_of_lt (with_bot.bot_lt_some x))]
-| 0        _        hxy (some _) := by simp
-
-instance : linear_ordered_comm_monoid (with_zero α) :=
-{ mul_le_mul_left := mul_le_mul_left,
-  .. with_zero.comm_monoid,
-  .. with_zero.linear_order }
-
-theorem eq_zero_or_eq_zero_of_mul_eq_zero : ∀ x y : with_zero α, x * y = 0 → x = 0 ∨ y = 0
-| (some x) (some y) hxy := false.elim $ option.no_confusion hxy
-| 0        _        hxy := or.inl rfl
-| _        0        hxy := or.inr rfl
-
-@[simp] lemma mul_inv_self (a : with_zero α) : a * a⁻¹ ≤ 1 :=
-begin
-  cases a,
-  { exact zero_le },
-  { apply le_of_eq _,
-    exact congr_arg some (mul_inv_self a) }
-end
-
-@[simp] lemma div_self (a : with_zero α) : a / a ≤ 1 := mul_inv_self a
-
-@[move_cast] lemma div_coe' (a b : α) : (a*b⁻¹ : with_zero α) = a / b := rfl
-
-lemma div_le_div (a b c d : with_zero α) (hb : b ≠ 0) (hd : d ≠ 0) :
-  a / b ≤ c / d ↔ a * d ≤ c * b :=
-begin
-  rcases ne_zero_iff_exists.1 hb with ⟨b, rfl⟩,
-  rcases ne_zero_iff_exists.1 hd with ⟨d, rfl⟩,
-  with_zero_cases a c,
-  exact linear_ordered_structure.div_le_div _ _ _ _
-end
 
 end with_zero
