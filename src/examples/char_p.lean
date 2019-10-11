@@ -63,15 +63,16 @@ begin
     have hm : m.dom := enat.dom_of_le_some h,
     rw [← enat.coe_get hm, enat.coe_le_coe] at h,
     rw [dif_pos hm, dif_pos hn],
-    rw [← linear_ordered_structure.inv_le_inv one_ne_zero h₁, inv_one'] at h₂,
+    rw [← linear_ordered_structure.inv_le_inv _ h₁, inv_one'] at h₂,
     have := pow_le_pow h₂ h,
     -- We need lots of norm_cast lemmas
     rwa [nnreal.coe_le, nnreal.coe_pow, nnreal.coe_pow, nnreal.coe_inv, ← pow_inv, ← pow_inv,
       ← nnreal.coe_pow, ← nnreal.coe_pow, ← nnreal.coe_inv, ← nnreal.coe_inv, ← nnreal.coe_le,
       linear_ordered_structure.inv_le_inv] at this,
+    any_goals { exact one_ne_zero },
     all_goals { contrapose! h₁ },
     any_goals { exact subtype.val_injective h₁ },
-    all_goals { apply group_with_zero.pow_eq_zero, assumption } },
+    any_goals { apply group_with_zero.pow_eq_zero, assumption } },
   { rw dif_neg hn, exact zero_le _ }
 end
 
@@ -84,12 +85,13 @@ begin
     have hm : m.dom := enat.dom_of_le_some (le_of_lt h),
     rw [← enat.coe_get hm, enat.coe_lt_coe] at h,
     rw [dif_pos hm, dif_pos hn],
-    rw [← linear_ordered_structure.inv_lt_inv one_ne_zero h₁, inv_one'] at h₂,
+    rw [← linear_ordered_structure.inv_lt_inv _ h₁, inv_one'] at h₂,
     have := pow_lt_pow h₂ h,
     -- We need lots of norm_cast lemmas
     rwa [nnreal.coe_lt, nnreal.coe_pow, nnreal.coe_pow, nnreal.coe_inv, ← pow_inv, ← pow_inv,
       ← nnreal.coe_pow, ← nnreal.coe_pow, ← nnreal.coe_inv, ← nnreal.coe_inv, ← nnreal.coe_lt,
       linear_ordered_structure.inv_lt_inv] at this,
+    any_goals { exact one_ne_zero },
     all_goals { contrapose! h₁ },
     any_goals { exact subtype.val_injective h₁ },
     all_goals { apply group_with_zero.pow_eq_zero, assumption } },
@@ -136,10 +138,11 @@ def valuation : valuation (power_series K) nnreal :=
     cases this with h h; [left, right],
     all_goals
     { apply nnreal_of_enat_le _ inv_p_ne_zero _ _ _ h,
-      rw [← linear_ordered_structure.inv_le_inv one_ne_zero inv_p_ne_zero, inv_inv'', inv_one'],
-      apply le_of_lt,
-      rw [show (p : nnreal) = (p : ℕ), by rw coe_coe],
-      exact_mod_cast p.one_lt, },
+      rw [← linear_ordered_structure.inv_le_inv _ inv_p_ne_zero, inv_inv'', inv_one'],
+      { apply le_of_lt,
+        rw [show (p : nnreal) = (p : ℕ), by rw coe_coe],
+        exact_mod_cast p.one_lt, },
+      { exact one_ne_zero } },
   end }
 
 end power_series
@@ -174,9 +177,10 @@ begin
     exact_mod_cast H },
   rwa [← nnreal_of_enat_top, (nnreal_of_enat_inj _ inv_p_ne_zero _).eq_iff,
       power_series.order_eq_top] at h,
-  rw [← linear_ordered_structure.inv_lt_inv one_ne_zero inv_p_ne_zero, inv_inv'', inv_one'],
-  rw [show (p : nnreal) = (p : ℕ), by rw coe_coe],
-  exact_mod_cast p.one_lt,
+  rw [← linear_ordered_structure.inv_lt_inv _ inv_p_ne_zero, inv_inv'', inv_one'],
+  { rw [show (p : nnreal) = (p : ℕ), by rw coe_coe],
+    exact_mod_cast p.one_lt },
+  { exact one_ne_zero }
 end
 
 lemma non_trivial : ¬ (valuation p K).is_trivial :=
