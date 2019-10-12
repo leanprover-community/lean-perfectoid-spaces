@@ -18,15 +18,3 @@ end primes
 end nat
 
 instance monoid.prime_pow {α : Type*} [monoid α]: has_pow α nat.primes := ⟨λ x p, x^p.val⟩
-
-section
-variables (p : nat.primes) (R : Type*) [semiring R] [char_p R p]
-include p
-
-lemma ring_char.prime : nat.prime (ring_char R) :=
-by { rw ← ring_char.eq R ‹_›, exact p.2 }
-
-end
-
-instance ring_char.char (R : Type*) [semiring R] : char_p R (ring_char R) :=
-{ cast_eq_zero_iff := ring_char.spec R }
