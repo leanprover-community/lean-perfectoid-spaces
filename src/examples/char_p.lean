@@ -1,5 +1,5 @@
 import ring_theory.power_series
-import algebra.char_p
+import algebra.char_p algebra.group_power
 
 import for_mathlib.nnreal
 import for_mathlib.char_p
@@ -214,13 +214,81 @@ def clsp := completion (laurent_series_perfection K)
 
 end
 
+section char_p_completion
+open uniform_space
+variables {R : Type*} [comm_ring R] [uniform_space R] [uniform_add_group R] [separated R]
+  [topological_ring R] (p : nat.primes) [char_p R p]
+
+instance completion.char_p : char_p (completion R) p :=
+(subring_char_p p (completion.uniform_embedding_coe R).inj).mpr ‹_›
+
+end char_p_completion
+
+section
+open uniform_space
+--variables (K : Type*) [discrete_field K] [topological_space K] [topological_division_ring K]
+variables {G : Type*} [add_comm_group G] [uniform_space G] [uniform_add_group G]
+variables {H : Type*} [add_comm_group H] [uniform_space H] [uniform_add_group H]
+variables {φ : G → H} {ψ : H → G} (h : φ ∘ ψ = id) [is_add_group_hom φ] [is_add_group_hom ψ]
+  (hφ : continuous φ) (hψ : continuous ψ)
+include h hφ hψ
+local notation `hat` x:90 := completion.map x
+
+lemma johan : surjective hat φ :=
+have key : hat φ ∘ hat ψ = id,
+  by { rw [← completion.map_id, ← h],
+       exact completion.map_comp (uniform_continuous_of_continuous hφ)
+                              (uniform_continuous_of_continuous hψ) },
+λ y, ⟨(hat ψ) y, congr_fun key _⟩
+end
+
+namespace uniform_space.completion
+open uniform_space
+variables {α : Type*} [ring α] [uniform_space α] [topological_ring α] [uniform_add_group α]
+
+local infix `^` := monoid.pow
+
+@[move_cast]
+lemma coe_pow (a : α) (n : ℕ): ((a^n : α) : completion α) = a^n :=
+begin
+  induction n with n ih,
+  exact completion.coe_one _,
+  change ↑(a*a^n) = ↑a*↑a^n,
+  rw [coe_mul, ih],
+end
+end uniform_space.completion
+
+section
+open uniform_space
+variables (p : nat.primes) (K : Type) [discrete_field K] [char_p K p] [uniform_space K]
+  [uniform_add_group K] [topological_division_ring K] [separated K]
+
+lemma completion.frobenius_eq : frobenius (completion K) p = completion.map (frobenius K p) :=
+begin
+  symmetry,
+  apply completion.map_unique,
+  { haveI hom : is_ring_hom (frobenius (completion K) p) := by {
+    apply frobenius.is_ring_hom _,
+    exact p.property,
+    exact completion.char_p _,
+  },
+    haveI : topological_monoid (completion K) := topological_ring.to_topological_monoid _,
+    exact uniform_continuous_of_continuous (continuous_pow p)
+    },
+  { intro x,
+    simp [frobenius],
+    erw completion.coe_pow,
+    refl }
+end
+end
+
 namespace clsp
 open uniform_space
 variables (p : nat.primes) (K : Type) [discrete_field K] [char_p K p]
 include p
 
 local attribute [instance] valued.subgroups_basis subgroups_basis.topology
-  ring_filter_basis.topological_ring valued.uniform_space
+  ring_filter_basis.topological_ring valued.uniform_space valued.uniform_add_group
 
 instance : discrete_field (clsp p K) := completion.discrete_field
 instance : uniform_space (clsp p K) := completion.uniform_space _
@@ -232,6 +300,15 @@ def valuation : valuation (clsp p K) nnreal := valued.extension_valuation
 
 lemma frobenius_surjective : surjective (frobenius (clsp p K) p) :=
 begin
+  dsimp [clsp],
+  set lsp := (laurent_series_perfection K),
+  haveI char : char_p lsp ↑p := sorry,
+  rw completion.frobenius_eq,
+  obtain ⟨ψ, inv, cont⟩ : ∃ ψ : (laurent_series_perfection K) → (laurent_series_perfection K),
+    (frobenius lsp p) ∘ ψ = id ∧ continuous ψ,
+  {
+    sorry },
+
   sorry
 end
 
