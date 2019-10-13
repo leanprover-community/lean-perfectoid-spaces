@@ -13,7 +13,7 @@ noncomputable instance foo {K : Type}
 { Γ₀ := nnreal,
   v := nondiscrete_valued_field.v K}
 
---  Currently we know that clsp is a complete uniform topological field.
+-- Currently we know that clsp is a complete uniform topological field.
 -- And this all comes from the completion machine
 
 open function nat
@@ -44,4 +44,4 @@ class is_perfectoid_field (K : Type) [nondiscrete_valued_field K] (p : primes) :
 -- is a valued R a Huber ring?
 
 theorem perfectoid_field.huber_ring (K : Type) (p : primes)
-  [nondiscrete_valued_field K] [is_perfectoid_field K p] : Huber_ring K :=
+  [nondiscrete_valued_field K] [is_perfectoid_field K p] : Huber_ring K := sorry
