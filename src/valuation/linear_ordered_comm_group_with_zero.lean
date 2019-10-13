@@ -198,18 +198,3 @@ begin
 end
 
 end linear_ordered_structure
-
-namespace nnreal
-
-/-- The nonnegative real numbers form a linearly ordered commutative group with zero.-/
-noncomputable instance : linear_ordered_comm_group_with_zero nnreal :=
-{ inv_zero := by simp,
-  zero_le' := zero_le,
-  mul_le_mul_left := λ a b h c, mul_le_mul (le_refl _) h (zero_le _) (zero_le _),
-  mul_inv_cancel := λ a h, mul_inv_cancel h,
-  .. (infer_instance : zero_ne_one_class nnreal),
-  .. (infer_instance : has_inv nnreal),
-  .. (infer_instance : linear_order nnreal),
-  .. (infer_instance : comm_semiring nnreal) }
-
-end nnreal
