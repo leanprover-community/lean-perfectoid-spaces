@@ -31,7 +31,7 @@ local notation `𝓝` x: 70 := nhds x
 
 section division_ring
 
-variables {K : Type*} [division_ring K]
+variables {K : Type*} [discrete_field K]
 
 
 section valuation_topological_division_ring
@@ -78,7 +78,7 @@ end inversion_estimate
 local attribute [instance] valued.subgroups_basis subgroups_basis.topology
   ring_filter_basis.topological_ring
 
-local notation `v` := valued.value
+open valuation
 
 /-- The topology coming from a valuation on a division rings make it a topological division ring
     [BouAC, VI.5.1 middle of Proposition 1] -/
@@ -88,14 +88,12 @@ instance valued.topological_division_ring [valued K] : topological_division_ring
       intros x x_ne s s_in,
       cases valued.mem_nhds.mp s_in with γ hs, clear s_in,
       rw [mem_map, valued.mem_nhds],
-      change ∃ (γ : units (valued.Γ₀ K)), {y : K | v (y - x) < γ} ⊆ {x : K | x⁻¹ ∈ s},
-      have vx_ne := (valuation.ne_zero_iff $ valued.v K).mpr x_ne,
+      have vx_ne := (ne_zero_iff $ canonical_valuation $ valued.v K).mpr x_ne,
       let γ' := group_with_zero.mk₀ _ vx_ne,
       use min (γ * (γ'*γ')) γ',
       intros y y_in,
       apply hs,
-      change v (y⁻¹ - x⁻¹) < γ,
-      simp only [mem_set_of_eq] at y_in,
+      dsimp only [mem_set_of_eq] at y_in ⊢,
 -- and the fact that a valued field is completable
       rw [coe_min, units.coe_mul, units.coe_mul] at y_in,
       exact valuation.inversion_estimate _ x_ne y_in
@@ -108,23 +106,23 @@ local attribute [instance]
   linear_ordered_comm_group_with_zero.regular_space
   linear_ordered_comm_group_with_zero.nhds_basis
 
-lemma valued.continuous_valuation [valued K] : continuous (v : K → valued.Γ₀ K) :=
+lemma valued.continuous_valuation [valued K] : continuous (canonical_valuation (valued.v K)) :=
 begin
   rw continuous_iff_continuous_at,
   intro x,
   classical,
   by_cases h : x = 0,
   { rw h,
-    change tendsto _ _ (𝓝 (valued.v K 0)),
+    change tendsto _ _ (𝓝 (canonical_valuation (valued.v K) 0)),
     erw valuation.map_zero,
     rw linear_ordered_comm_group_with_zero.tendsto_zero,
     intro γ,
     rw valued.mem_nhds_zero,
     use [γ, set.subset.refl _] },
   { change tendsto _ _ _,
-    have v_ne : v x ≠ 0, from (valuation.ne_zero_iff _).mpr h,
-    rw linear_ordered_comm_group_with_zero.tendsto_nonzero v_ne,
-    apply valued.loc_const v_ne },
+    replace h := (valuation.ne_zero_iff (canonical_valuation (valued.v K))).mpr h,
+    rw linear_ordered_comm_group_with_zero.tendsto_nonzero h,
+    apply valued.loc_const h },
 end
 end
 
@@ -134,15 +132,17 @@ section
 
 -- In the next lemma, K will be endowed with its left uniformity coming from the valuation topology
 local attribute [instance] valued.uniform_space
+set_option class.instance_max_depth 33
 
-/-- A valued division ring is separated. -/
+/-- A valued field is separated. -/
 instance valued_ring.separated [valued K] : separated K :=
 begin
-  apply topological_add_group.separated_of_zero_sep,
+  apply topological_add_group.separated_of_zero_sep K,
   intros x x_ne,
-  refine ⟨{k | v k < v x}, _, λ h, lt_irrefl _ h⟩,
+  refine ⟨{k | canonical_valuation (valued.v K) k <
+    canonical_valuation (valued.v K) x}, _, λ h, lt_irrefl _ h⟩,
   rw valued.mem_nhds,
-  have vx_ne := (valuation.ne_zero_iff $ valued.v K).mpr x_ne,
+  have vx_ne := (valuation.ne_zero_iff (canonical_valuation (valued.v K))).mpr x_ne,
   let γ' := group_with_zero.mk₀ _ vx_ne,
   exact ⟨γ', λ y hy, by simpa using hy⟩,
 end
@@ -158,9 +158,7 @@ open uniform_space
 variables {K : Type*} [discrete_field K] [vK : valued K]
 include vK
 
-open valued
-
-local notation `v` := valued.value
+open valued valuation
 
 -- until the end of this section, all linearly ordered commutative groups will be endowed with
 -- the discrete topology
@@ -184,7 +182,8 @@ instance valued.completable : completable_top_field K :=
 { separated := by apply_instance,
   nice := begin
     rintros F hF h0,
-    have : ∃ (γ₀ : units (Γ₀ K)) (M ∈ F), ∀ x ∈ M, (γ₀ : Γ₀ K) ≤ v x,
+    have : ∃ (γ₀ : units (value_monoid (v K))) (M ∈ F),
+      ∀ x ∈ M, (γ₀ : value_monoid (v K)) ≤ (canonical_valuation (v K)) x,
     { rcases (filter.inf_eq_bot_iff _ _).1 h0 with ⟨U, U_in, M, M_in, H⟩,
       rcases valued.mem_nhds_zero.mp U_in with ⟨γ₀, hU⟩,
       existsi [γ₀, M, M_in],
@@ -210,18 +209,17 @@ instance valued.completable : completable_top_field K :=
       replace x_in₀ := H₀ x x_in₀,
       replace y_in₀ := H₀ y y_in₀, clear H₀,
       apply valuation.inversion_estimate,
-      { have : v x ≠ 0,
+      { have : (canonical_valuation (v K)) x ≠ 0,
         { intro h, rw h at x_in₀, simpa using x_in₀, },
         exact (valuation.ne_zero_iff _).mp this },
       { refine lt_of_lt_of_le H₁ _,
         rw coe_min,
         apply min_le_min _ x_in₀,
         rw mul_assoc,
-        have : ((γ₀ * γ₀ : units (Γ₀ K)) : Γ₀ K) ≤ v x * v x,
-          from calc ↑γ₀ * ↑γ₀ ≤ ↑γ₀ * v x : actual_ordered_comm_monoid.mul_le_mul_left' x_in₀
-                          ... ≤ _ : actual_ordered_comm_monoid.mul_le_mul_right' x_in₀,
-        exact actual_ordered_comm_monoid.mul_le_mul_left' this } }
-  end  }
+        apply actual_ordered_comm_monoid.mul_le_mul_left',
+        apply le_trans (actual_ordered_comm_monoid.mul_le_mul_left' x_in₀),
+        exact actual_ordered_comm_monoid.mul_le_mul_right' x_in₀, } }
+  end }
 
 local attribute [instance]
   linear_ordered_comm_group_with_zero.topological_space
