@@ -178,20 +178,20 @@ begin
   assumption
 end
 
-lemma non_discrete' (v : valuation K nnreal) (hv : ¬ v.is_trivial) :
-  (v.perfection K p).is_non_discrete :=
-begin
-  intros r hr,
-  by_cases H : v.perfection K p r = 0,
-  { rcases exists_lt_one_of_not_trivial _ hv with ⟨x, h₁, h₂⟩,
-    rw H, refine ⟨(perfect_closure.of K p x), _, _⟩,
-    { contrapose! h₂, rwa [perfection_of, le_zero_iff_eq] at h₂ },
-    { rwa perfection_of } },
-  sorry
-  -- { refine ⟨perfect_field.pth_root 1 r, _, _⟩,
-  --   {  },
-  --   {  } }
-end
+-- lemma non_discrete' (v : valuation K nnreal) (hv : ¬ v.is_trivial) :
+--   (v.perfection K p).is_non_discrete :=
+-- begin
+--   intros r hr,
+--   by_cases H : v.perfection K p r = 0,
+--   { rcases exists_lt_one_of_not_trivial _ hv with ⟨x, h₁, h₂⟩,
+--     rw H, refine ⟨(perfect_closure.of K p x), _, _⟩,
+--     { contrapose! h₂, rwa [perfection_of, le_zero_iff_eq] at h₂ },
+--     { rwa perfection_of } },
+--   sorry
+--   -- { refine ⟨perfect_field.pth_root 1 r, _, _⟩,
+--   --   {  },
+--   --   {  } }
+-- end
 
 end perfection
 

@@ -16,11 +16,10 @@ local postfix `ᵒ` : 66 := power_bounded_subring
 local attribute [instance] nnreal.pow_enat
 
 namespace power_series
-variables (p : nat.primes)
-variables (K : Type*) [discrete_field K] [char_p K p]
+variables (K : Type*) [discrete_field K]
 
-def valuation : valuation (power_series K) nnreal :=
-{ to_fun := λ φ, (p⁻¹) ^ φ.order,
+def valuation (b : {r : nnreal // 0 < r ∧ r < 1}) : valuation (power_series K) nnreal :=
+{ to_fun := λ φ, b ^ φ.order,
   map_zero' := by rw [order_zero, nnreal.pow_enat_top],
   map_one' := by rw [order_one, nnreal.pow_enat_zero],
   map_mul' := λ x y, by rw [order_mul, nnreal.pow_enat_add],
@@ -29,18 +28,11 @@ def valuation : valuation (power_series K) nnreal :=
     have : _ ≤ _ := order_add_ge x y,
     rw min_le_iff at this,
     rw le_max_iff,
-    have inv_p_ne_zero : (p : nnreal)⁻¹ ≠ 0,
-    { assume H, rw [← inv_inj'', inv_inv'', inv_zero'] at H,
-      apply p.ne_zero,
-      rw [show (p : nnreal) = (p : ℕ), by rw coe_coe] at H, exact_mod_cast H, },
+    have b_ne_zero : (b : nnreal) ≠ 0 := ne_of_gt b.2.left,
     cases this with h h; [left, right],
     all_goals
-    { apply nnreal.pow_enat_le _ inv_p_ne_zero _ _ _ h,
-      rw [← linear_ordered_structure.inv_le_inv _ inv_p_ne_zero, inv_inv'', inv_one'],
-      { apply le_of_lt,
-        rw [show (p : nnreal) = (p : ℕ), by rw coe_coe],
-        exact_mod_cast p.one_lt, },
-      { exact one_ne_zero } },
+    { apply nnreal.pow_enat_le _ b_ne_zero _ _ _ h,
+      exact le_of_lt b.2.right, },
   end }
 
 end power_series
@@ -62,38 +54,27 @@ algebra.of_ring_hom (localization.of ∘ power_series.C K) $
 
 variables [char_p K p]
 
-def valuation : valuation (laurent_series K) nnreal :=
-valuation.localization (power_series.valuation p K) $ λ φ h,
+def valuation (b : {r : nnreal // 0 < r ∧ r < 1}) : valuation (laurent_series K) nnreal :=
+valuation.localization (power_series.valuation K b) $ λ φ h,
 begin
   rw localization.fraction_ring.mem_non_zero_divisors_iff_ne_zero at h,
   contrapose! h,
   change (_ : nnreal) ^ φ.order = 0 at h,
-  have inv_p_ne_zero : (p : nnreal)⁻¹ ≠ 0,
-  { assume H, rw [← inv_inj'', inv_inv'', inv_zero'] at H,
-    apply p.ne_zero,
-    rw [show (p : nnreal) = (p : ℕ), by rw coe_coe] at H,
-    exact_mod_cast H },
-  rwa [← nnreal.pow_enat_top, (nnreal.pow_enat_inj _ inv_p_ne_zero _).eq_iff,
-      power_series.order_eq_top] at h,
-  rw [← linear_ordered_structure.inv_lt_inv _ inv_p_ne_zero, inv_inv'', inv_one'],
-  { rw [show (p : nnreal) = (p : ℕ), by rw coe_coe],
-    exact_mod_cast p.one_lt },
-  { exact one_ne_zero }
+  have b_ne_zero : (b : nnreal) ≠ 0 := ne_of_gt b.2.left,
+  rw ← power_series.order_eq_top,
+  apply (nnreal.pow_enat_inj _ b_ne_zero b.2.right),
+  rwa nnreal.pow_enat_top,
 end
 
-lemma non_trivial : ¬ (valuation p K).is_trivial :=
+lemma non_trivial (b : {r : nnreal // 0 < r ∧ r < 1}) : ¬ (valuation K b).is_trivial :=
 begin
+  have b_ne_zero : (b : nnreal) ≠ 0 := ne_of_gt b.2.left,
   assume H, cases H (localization.of (power_series.X)) with h h;
   erw valuation.localization_apply at h; change _ ^ _ = _ at h,
-  { apply p.ne_zero,
-    rw [show (p : nnreal) = (p : ℕ), by rw coe_coe] at h,
-    simpa only [nnreal.inv_eq_zero, nnreal.pow_enat_one,
-      nat.cast_eq_zero, power_series.order_X] using h, },
+  { apply b_ne_zero,
+    simpa only [nnreal.pow_enat_one, power_series.order_X] using h },
   { simp only [nnreal.pow_enat_one, power_series.order_X] at h,
-    rw [← inv_inj'', inv_inv'', inv_one'] at h,
-    apply p.ne_one,
-    rw [show (p : nnreal) = (p : ℕ), by rw coe_coe] at h,
-    exact_mod_cast h }
+    exact ne_of_lt b.2.right h, },
 end
 
 local attribute [instance] algebra
@@ -114,19 +95,20 @@ instance : discrete_field (laurent_series_perfection K) :=
 @perfect_closure.discrete_field (laurent_series K) _ _ (ring_char.prime p K) $
 by { rw ← ring_char.eq K hp, apply_instance }
 
-def valuation : valuation (laurent_series_perfection K) nnreal :=
-@valuation.perfection (laurent_series K) _ (laurent_series.valuation p K)
+def valuation (b : {r : nnreal // 0 < r ∧ r < 1}) :
+  valuation (laurent_series_perfection K) nnreal :=
+@valuation.perfection (laurent_series K) _ (laurent_series.valuation K b)
 (ring_char K) (ring_char.prime p _) $
 by { rw ← ring_char.eq K hp, apply_instance }
 
-lemma non_discrete (ε : nnreal) (h : 0 < ε) :
-  ∃ x : laurent_series_perfection K, 1 < valuation p K x ∧ valuation p K x < 1 + ε :=
+lemma non_discrete (b : {r : nnreal // 0 < r ∧ r < 1}) (ε : nnreal) (h : 0 < ε) :
+  ∃ x : laurent_series_perfection K, 1 < valuation p K b x ∧ valuation p K b x < 1 + ε :=
 @valuation.perfection.non_discrete _ _ _ (ring_char.prime p _)
-(by { rw ← ring_char.eq K hp, apply_instance }) _ (laurent_series.non_trivial p K) ε h
+(by { rw ← ring_char.eq K hp, apply_instance }) _ (laurent_series.non_trivial K b) ε h
 
-lemma non_trivial : ¬ (valuation p K).is_trivial :=
+lemma non_trivial (b : {r : nnreal // 0 < r ∧ r < 1}) : ¬ (valuation p K b).is_trivial :=
 begin
-  rcases non_discrete p K 2 (by norm_num) with ⟨x, h₁, h₂⟩,
+  rcases non_discrete p K b 2 (by norm_num) with ⟨x, h₁, h₂⟩,
   contrapose! h₁, cases h₁ x with h h; rw h,
   exact zero_le _,
 end
@@ -152,8 +134,24 @@ namespace laurent_series_perfection
 variables (p : nat.primes) (K : Type) [discrete_field K] [char_p K p]
 include p
 
-instance : valued (laurent_series_perfection K) :=
-{ Γ₀ := nnreal, v := valuation p K }
+protected def valued (b : {r : nnreal // 0 < r ∧ r < 1}) : valued (laurent_series_perfection K) :=
+{ Γ₀ := nnreal, v := valuation p K b }
+
+def valued_p : valued (laurent_series_perfection K) :=
+laurent_series_perfection.valued p K ⟨p⁻¹,
+begin
+  have p_inv_ne_zero : (p⁻¹ : nnreal) ≠ 0,
+  { assume H, apply p.ne_zero,
+    rw [← inv_inj'', inv_zero', inv_inv'', eq_comm, (show (p:nnreal) = (p:ℕ), by rw coe_coe)] at H,
+    exact_mod_cast H.symm, },
+  split,
+  { exact lt_of_le_of_ne (zero_le _) p_inv_ne_zero.symm, },
+  { rw [← linear_ordered_structure.inv_lt_inv, inv_one', inv_inv'',
+        (show (p:nnreal) = (p:ℕ), by rw coe_coe)],
+    { exact_mod_cast p.one_lt },
+    { exact one_ne_zero },
+    { exact p_inv_ne_zero } }
+end⟩
 
 end laurent_series_perfection
 
@@ -207,7 +205,7 @@ variables (p : nat.primes) (K : Type) [discrete_field K] [char_p K p]
 include p
 
 local attribute [instance] valued.subgroups_basis subgroups_basis.topology
-  ring_filter_basis.topological_ring valued.uniform_space
+  ring_filter_basis.topological_ring valued.uniform_space laurent_series_perfection.valued_p
 
 /-- The completion of the perfection of the Laurent series over a field. -/
 def clsp := completion (laurent_series_perfection K)
@@ -289,6 +287,7 @@ include p
 
 local attribute [instance] valued.subgroups_basis subgroups_basis.topology
   ring_filter_basis.topological_ring valued.uniform_space valued.uniform_add_group
+  laurent_series_perfection.valued_p
 
 instance : discrete_field (clsp p K) := completion.discrete_field
 instance : uniform_space (clsp p K) := completion.uniform_space _
@@ -312,14 +311,14 @@ begin
   sorry
 end
 
-instance laurent_series_valued : valued (laurent_series K) :=
-{ Γ₀ := nnreal, v := laurent_series.valuation p K }
+-- instance laurent_series_valued : valued (laurent_series K) :=
+-- { Γ₀ := nnreal, v := laurent_series.valuation p K }
 
-protected def algebra : algebra (laurent_series_perfection K) (clsp p K) :=
-algebra.of_ring_hom
-  (coe : (laurent_series_perfection K) → completion (laurent_series_perfection K)) $
-@completion.is_ring_hom_coe (laurent_series_perfection K) _ _ _ $
-@valued.uniform_add_group (laurent_series_perfection K) _ $ laurent_series_perfection.valued p K
+-- protected def algebra : algebra (laurent_series_perfection K) (clsp p K) :=
+-- algebra.of_ring_hom
+--   (coe : (laurent_series_perfection K) → completion (laurent_series_perfection K)) $
+-- @completion.is_ring_hom_coe (laurent_series_perfection K) _ _ _ $
+-- @valued.uniform_add_group (laurent_series_perfection K) _ $ laurent_series_perfection.valued p K
 
 -- def rod_algebra : algebra (power_series K) (clsp p K) :=
 -- @algebra.comap.algebra _ _ _ _ _ _ _ $
