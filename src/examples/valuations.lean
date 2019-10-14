@@ -25,16 +25,10 @@ open  linear_ordered_structure
 lemma linear_ordered_comm_group_with_zero.pow_strict_mono (n : ℕ+) : strict_mono (λ x : Γ₀, x^(n : ℕ)) :=
 begin
   intros x y h,
-  induction n using pnat.induction_on with n ih,
-  { simpa },
-  { simp only [] at *,
+  induction n using pnat.induction_on with n ih, { simpa },
+  { dsimp only [] at *,
     rw [pnat.add_coe, pnat.one_coe, pow_succ, pow_succ], -- here we miss some norm_cast attribute
-    by_cases hx : x = 0,
-    { subst x, rw group_with_zero.zero_pow_pnat at ih ⊢, rw zero_mul,
-      let := (group_with_zero.mk₀ _ (ne_of_gt h)) * (group_with_zero.mk₀ _ (ne_of_gt ih)),
-      exact zero_lt_unit this, },
-    { -- do x * ih (using that x ≠ 0) and then h * y^n (using 0 < x^n < y^n)
-      sorry } }
+    apply linear_ordered_structure.mul_lt_mul' h ih, }
 end
 
 lemma linear_ordered_comm_group_with_zero.pow_mono (n : ℕ+) : monotone (λ x : Γ₀, x^(n : ℕ)) :=
