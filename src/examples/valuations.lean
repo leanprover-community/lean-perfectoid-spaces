@@ -4,6 +4,7 @@ but keeping it here is faster at this point.
 -/
 
 import valuation.basic
+import valuation.topology
 
 local attribute [instance, priority 0] classical.decidable_linear_order
 
@@ -43,6 +44,7 @@ end
 namespace valuation
 variables {R : Type*} [ring R]
 variables {Γ₀   : Type*} [linear_ordered_comm_group_with_zero Γ₀]
+variables {Γ'₀   : Type*} [linear_ordered_comm_group_with_zero Γ'₀]
 variables (v : valuation R Γ₀)
 
 instance : has_pow (valuation R Γ₀) ℕ+ :=
@@ -80,5 +82,34 @@ end
 
 lemma is_equiv_pow_self (v : valuation R Γ₀) (n : ℕ+) : is_equiv v (v^n) :=
 by simpa using v.is_equiv_pow_pow 1 n
+
+namespace is_equiv
+
+open_locale uniformity
+
+lemma uniformity_eq_aux (h₁ : valued R) (h₂ : valued R) (h : h₁.v.is_equiv h₂.v) :
+  @valued.uniform_space R _ h₁ ≤ id (@valued.uniform_space R _ h₂) :=
+begin
+  rw ← uniform_space_comap_id,
+  rw ← uniform_continuous_iff,
+  apply @uniform_continuous_of_continuous R R
+    (@valued.uniform_space R _ h₁) _ (@valued.uniform_add_group R _ h₁)
+    (@valued.uniform_space R _ h₂) _ (@valued.uniform_add_group R _ h₂),
+  apply @topological_add_group.continuous_of_continuous_at_zero _ _ _ _ _ _ _ _ _ _ _,
+  any_goals { apply_instance },
+  { exact @uniform_add_group.to_topological_add_group R (@valued.uniform_space R _ h₁) _ (@valued.uniform_add_group R _ h₁), },
+  { exact @uniform_add_group.to_topological_add_group R (@valued.uniform_space R _ h₂) _ (@valued.uniform_add_group R _ h₂), },
+  { intros U,
+    rw [id.def, filter.map_id, valued.mem_nhds_zero, (@valued.mem_nhds_zero R _ h₁ U)],
+    rintros ⟨γ, hU⟩,
+    sorry -- is this provable with the current definitions??
+    },
+end
+
+lemma uniformity_eq (h₁ : valued R) (h₂ : valued R) (h : h₁.v.is_equiv h₂.v) :
+  @valued.uniform_space R _ h₁ = @valued.uniform_space R _ h₂ :=
+le_antisymm (h.uniformity_eq_aux h₁ h₂) (h.symm.uniformity_eq_aux h₂ h₁)
+
+end is_equiv
 
 end valuation
