@@ -69,7 +69,7 @@ ext $ λ r, pow_one (v r)
 protected lemma pow_mul (m n : ℕ+) : v^(m*n) = (v^m)^n :=
 ext $ λ r, pow_mul (v r) m n
 
-lemma is_equiv_of_pow (v : valuation R Γ₀) (m n : ℕ+) : is_equiv (v^m) (v^n) :=
+lemma is_equiv_pow_pow (v : valuation R Γ₀) (m n : ℕ+) : is_equiv (v^m) (v^n) :=
 begin
   intros r s,
   change (v r) ^ (m:ℕ) ≤ (v s) ^ (m:ℕ) ↔ _,
@@ -78,7 +78,7 @@ begin
   { exact iff.rfl }
 end
 
-lemma is_equiv_of_pow_self (v : valuation R Γ₀) (n : ℕ+) : is_equiv v (v^n) :=
-by simpa using v.is_equiv_of_pow 1 n
+lemma is_equiv_pow_self (v : valuation R Γ₀) (n : ℕ+) : is_equiv v (v^n) :=
+by simpa using v.is_equiv_pow_pow 1 n
 
 end valuation
