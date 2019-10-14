@@ -6,6 +6,7 @@ import for_mathlib.char_p
 
 import valuation.perfection
 import perfectoid_space
+import perfectoid_field
 
 noncomputable theory
 open_locale classical
@@ -155,49 +156,25 @@ end⟩
 
 end laurent_series_perfection
 
-namespace valuation
-variables {R : Type*} [comm_ring R]
-variables {Γ₀ : Type*} [linear_ordered_comm_group_with_zero Γ₀]
+def vlsp (K : Type) [discrete_field K] (b : {r : nnreal // 0 < r ∧ r < 1}) :=
+laurent_series_perfection K
 
-local attribute [instance] classical.decidable_linear_order
+namespace vlsp
+variables (p : nat.primes) (K : Type) [discrete_field K] [char_p K p]
+variables (b : {r : nnreal // 0 < r ∧ r < 1})
+include p
 
-def le_one_subring (v : valuation R Γ₀) := {r : R | v r ≤ 1}
+instance : discrete_field (vlsp K b) :=
+laurent_series_perfection.discrete_field p K
 
-instance le_one_subring.is_subring (v : valuation R Γ₀) : is_subring v.le_one_subring :=
--- @subtype.comm_ring R _ {r : R | v r ≤ 1}
-{ zero_mem := show v 0 ≤ 1, by simp,
-  one_mem := show v 1 ≤ 1, by simp,
-  add_mem := λ r s (hr : v r ≤ 1) (hs : v s ≤ 1), show v (r+s) ≤ 1,
-  by calc v (r + s) ≤ max (v r) (v s) : v.map_add r s
-                ... ≤ 1 : max_le hr hs,
-  neg_mem := λ r (hr : v r ≤ 1), show v (-r) ≤ 1, by rwa [v.map_neg],
-  mul_mem := λ r s (hr : v r ≤ 1) (hs : v s ≤ 1), show v (r*s) ≤ 1,
-  begin
-    rw v.map_mul,
-    refine le_trans (actual_ordered_comm_monoid.mul_le_mul_right' hr) _,
-    rwa one_mul
-  end }
+local attribute [instance] valued.subgroups_basis subgroups_basis.topology
+  ring_filter_basis.topological_ring valued.uniform_space
 
-instance coe_nat_le_one_subring (v : valuation R Γ₀) :
-  has_coe ℕ v.le_one_subring := by apply_instance
+instance : valued (vlsp K b) := laurent_series_perfection.valued p K b
 
-end valuation
 
-section pfd_fld
-parameter (p : nat.primes)
-variables (K : Type)
 
--- class perfectoid_field : Type 1 :=
--- [fld : discrete_field K]
--- [top : uniform_space K]
--- [top_fld : topological_division_ring K]
--- [complete : complete_space K]
--- [sep : separated K]
--- (v : valuation K nnreal)
--- (non_discrete : ∀ ε : nnreal, 0 < ε → ∃ x : K, 1 < v x ∧ v x < 1 + ε)
--- (Frobenius : surjective (Frob v.le_one_subring ∕p))
-
-end pfd_fld
+end vlsp
 
 section
 open uniform_space
@@ -247,7 +224,7 @@ variables {α : Type*} [ring α] [uniform_space α] [topological_ring α] [unifo
 local infix `^` := monoid.pow
 
 @[move_cast]
-lemma coe_pow (a : α) (n : ℕ): ((a^n : α) : completion α) = a^n :=
+lemma coe_pow (a : α) (n : ℕ) : ((a^n : α) : completion α) = a^n :=
 begin
   induction n with n ih,
   exact completion.coe_one _,

@@ -1,8 +1,38 @@
+import for_mathlib.nnreal
+
 import valuation.topology
-import examples.char_p
+import Huber_pair
 import Frobenius
 
 set_option old_structure_cmd true -- do we do this or not?
+
+namespace valuation
+variables {R : Type*} [comm_ring R]
+variables {Γ₀ : Type*} [linear_ordered_comm_group_with_zero Γ₀]
+
+local attribute [instance] classical.decidable_linear_order
+
+def le_one_subring (v : valuation R Γ₀) := {r : R | v r ≤ 1}
+
+instance le_one_subring.is_subring (v : valuation R Γ₀) : is_subring v.le_one_subring :=
+-- @subtype.comm_ring R _ {r : R | v r ≤ 1}
+{ zero_mem := show v 0 ≤ 1, by simp,
+  one_mem := show v 1 ≤ 1, by simp,
+  add_mem := λ r s (hr : v r ≤ 1) (hs : v s ≤ 1), show v (r+s) ≤ 1,
+  by calc v (r + s) ≤ max (v r) (v s) : v.map_add r s
+                ... ≤ 1 : max_le hr hs,
+  neg_mem := λ r (hr : v r ≤ 1), show v (-r) ≤ 1, by rwa [v.map_neg],
+  mul_mem := λ r s (hr : v r ≤ 1) (hs : v s ≤ 1), show v (r*s) ≤ 1,
+  begin
+    rw v.map_mul,
+    refine le_trans (actual_ordered_comm_monoid.mul_le_mul_right' hr) _,
+    rwa one_mul
+  end }
+
+instance coe_nat_le_one_subring (v : valuation R Γ₀) :
+  has_coe ℕ v.le_one_subring := by apply_instance
+
+end valuation
 
 class nondiscrete_valued_field (K : Type*) extends discrete_field K :=
 (v : valuation K nnreal)
