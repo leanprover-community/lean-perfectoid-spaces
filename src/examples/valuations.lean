@@ -40,22 +40,45 @@ strict_mono.le_iff_le (linear_ordered_comm_group_with_zero.pow_strict_mono Γ₀
 
 end
 
+namespace valuation
 variables {R : Type*} [ring R]
+variables {Γ₀   : Type*} [linear_ordered_comm_group_with_zero Γ₀]
+variables (v : valuation R Γ₀)
 
-variables {Γ₀   : Type*}  [linear_ordered_comm_group_with_zero Γ₀]
-
-instance valuation.pow : has_pow (valuation R Γ₀) ℕ+ :=
-⟨λ v n, { to_fun := λ r, (v r)^n.val,
+instance : has_pow (valuation R Γ₀) ℕ+ :=
+⟨λ v n, { to_fun := λ r, (v r)^(n : ℕ),
   map_one' := by rw [v.map_one, one_pow],
   map_mul' := λ x y, by rw [v.map_mul, mul_pow],
-  map_zero' := by rw [valuation.map_zero, ← nat.succ_pred_eq_of_pos n.2, pow_succ, zero_mul],
+  map_zero' := show (v 0)^n.val = 0,
+    by rw [valuation.map_zero, ← nat.succ_pred_eq_of_pos n.2, pow_succ, zero_mul],
   map_add' := begin
     intros x y,
     wlog vyx : v y ≤ v x using x y,
-    { have : (v y)^n.val ≤ (v x)^n.val, by apply linear_ordered_comm_group_with_zero.pow_mono ; assumption,
+    { have : (v y)^(n:ℕ) ≤ (v x)^(n:ℕ),
+        by apply linear_ordered_comm_group_with_zero.pow_mono ; assumption,
       rw max_eq_left this,
       apply linear_ordered_comm_group_with_zero.pow_mono,
       convert v.map_add x y,
       rw max_eq_left vyx },
     { rwa [add_comm, max_comm] },
   end }⟩
+
+@[simp] protected lemma pow_one : v^(1:ℕ+) = v :=
+ext $ λ r, pow_one (v r)
+
+protected lemma pow_mul (m n : ℕ+) : v^(m*n) = (v^m)^n :=
+ext $ λ r, pow_mul (v r) m n
+
+lemma is_equiv_of_pow (v : valuation R Γ₀) (m n : ℕ+) : is_equiv (v^m) (v^n) :=
+begin
+  intros r s,
+  change (v r) ^ (m:ℕ) ≤ (v s) ^ (m:ℕ) ↔ _,
+  rw [← linear_ordered_comm_group_with_zero.pow_le_pow, ← pow_mul, ← pow_mul,
+      mul_comm, pow_mul, pow_mul, linear_ordered_comm_group_with_zero.pow_le_pow],
+  { exact iff.rfl }
+end
+
+lemma is_equiv_of_pow_self (v : valuation R Γ₀) (n : ℕ+) : is_equiv v (v^n) :=
+by simpa using v.is_equiv_of_pow 1 n
+
+end valuation
