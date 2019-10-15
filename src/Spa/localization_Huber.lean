@@ -108,7 +108,7 @@ begin
 end
 
 /--The natural map from the localization A⟮T/s⟯ of a Huber pair A
-at a rational open subset D(T/s)
+at a rational open subset R(T/s)
 to the valuation field of a valuation that does not have s in its support.-/
 noncomputable def to_valuation_field (hs : v s ≠ 0) : A⟮T/s⟯ → (valuation_field v) :=
 Huber_ring.away.lift T s (valuation_field_mk v) (unit_s hs) rfl
@@ -149,13 +149,13 @@ lemma to_valuation_field_cts_aux {r : spa.rational_open_data A} {v : spa A}
 (hv : v ∈ r.open_set) : (Spv.out v.1) (r.s) ≠ 0 := hv.2
 
 /-- The natural map from A(T/s) to the valuation field of a valuation v contained in
-the rational open subset D(T/s). -/
+the rational open subset R(T/s). -/
 def to_valuation_field {r : spa.rational_open_data A} {v : spa A} (hv : v ∈ r.open_set) :
   spa.rational_open_data.localization r → valuation_field (Spv.out (v.val)) :=
 (to_valuation_field $ to_valuation_field_cts_aux hv)
 
 /-- The natural map from A(T/s) to the valuation field of a valuation v contained in
-the rational open subset D(T/s) is a ring homomorphism. -/
+the rational open subset R(T/s) is a ring homomorphism. -/
 instance {r : spa.rational_open_data A} {v : spa A} (hv : v ∈ r.open_set) :
   is_ring_hom (to_valuation_field hv) := by {delta to_valuation_field, apply_instance}
 
