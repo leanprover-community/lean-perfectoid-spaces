@@ -32,7 +32,7 @@ and define the map on the sections s in F(U) for open neigbourhoods U of x.
 But we have to check a compatibility condition, and this takes some effort.
 
 Let us translate this to the context of the structure presheaf of the adic spectrum.
-The sections above a rational open subset D(T/s) are:
+The sections above a rational open subset R(T/s) are:
 
   rat_open_data_completion r := A<T/s>
 
@@ -56,7 +56,7 @@ local attribute [instance] valued.uniform_space
 namespace rational_open_data
 
 /-- The natural map from A<T/s> to the completion of the valuation field of a valuation v
-contained in D(T/s). -/
+contained in R(T/s). -/
 noncomputable def to_complete_valuation_field (r : rational_open_data A) {v : spa A}
   (hv : v ∈ r.open_set) :
   rat_open_data_completion r → completion (valuation_field (Spv.out v.1)) :=
@@ -65,7 +65,7 @@ completion.map (Huber_pair.rational_open_data.to_valuation_field hv)
 variables {r r1 r2 : rational_open_data A} {v : spa A} (hv : v ∈ r.open_set)
 
 /-- The natural map from A<T/s> to the completion of the valuation field of a valuation v
-contained in D(T/s) is a ring homomorphism. -/
+contained in R(T/s) is a ring homomorphism. -/
 instance to_complete_valuation_field_is_ring_hom :
   is_ring_hom (r.to_complete_valuation_field hv) :=
 completion.is_ring_hom_map (Huber_pair.rational_open_data.to_valuation_field_cts hv)
