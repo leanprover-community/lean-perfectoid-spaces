@@ -96,7 +96,6 @@ instance valued.topological_division_ring [valued K] : topological_division_ring
       apply hs,
       change v (y⁻¹ - x⁻¹) < γ,
       simp only [mem_set_of_eq] at y_in,
--- and the fact that a valued field is completable
       rw [coe_min, units.coe_mul, units.coe_mul] at y_in,
       exact valuation.inversion_estimate _ x_ne y_in
     end,
