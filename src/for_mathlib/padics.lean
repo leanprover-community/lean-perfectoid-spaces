@@ -100,6 +100,8 @@ begin
   simp [p₀, p₁, norm, padic_norm, padic_val_rat, fpow_neg, padic.cast_eq_of_rat_of_nat],
 end
 
+open normed_field
+
 @[simp] lemma norm_p_pow (n : ℤ) : ∥(p^n : ℚ_[p])∥ = p^-n :=
 by rw [norm_fpow, norm_p, fpow_neg, one_div_eq_inv,
   ← fpow_inv, ← fpow_inv, ← fpow_mul, ← fpow_mul, mul_comm]
@@ -159,7 +161,7 @@ namespace padic_int
 open local_ring
 
 lemma norm_mul (x y : ℤ_[p]) : ∥x*y∥ = ∥x∥*∥y∥ :=
-by exact_mod_cast norm_mul (x:ℚ_[p]) (y:ℚ_[p])
+by exact_mod_cast normed_field.norm_mul (x:ℚ_[p]) (y:ℚ_[p])
 
 lemma norm_pow (x : ℤ_[p]) : ∀ (n : ℕ), ∥x^n∥ = ∥x∥^n
 | 0     := by simp
@@ -347,7 +349,7 @@ lemma padic.exists_repr (x : ℚ_[p]) (hx : x ≠ 0) :
   ∃ (u : units ℤ_[p]) (n : ℤ), x = (u : ℤ_[p])*p^n :=
 begin
   have : ∥x * (p : ℚ_[p])^(-x.valuation)∥ ≤ 1,
-  { rw [_root_.norm_mul, padic.norm_eq_pow_val hx, norm_fpow, padic.norm_p,
+  { rw [normed_field.norm_mul, padic.norm_eq_pow_val hx, normed_field.norm_fpow, padic.norm_p,
       ← mul_fpow, mul_inv_cancel, one_fpow],
     exact_mod_cast nat.prime.ne_zero ‹_› },
   let y : ℤ_[p] := ⟨x * (p : ℚ_[p])^(-x.valuation), this⟩,

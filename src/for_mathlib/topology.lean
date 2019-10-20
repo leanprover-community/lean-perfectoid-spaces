@@ -1,4 +1,5 @@
 import topology.opens
+import topology.algebra.continuous_functions
 
 import for_mathlib.filter
 import for_mathlib.data.set.basic

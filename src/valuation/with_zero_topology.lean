@@ -38,7 +38,7 @@ topological_space.mk_of_nhds (nhds_fun Γ₀)
 local attribute [instance] linear_ordered_comm_group_with_zero.topological_space
 
 /--The neighbourhoods {γ | γ < γ₀} of 0 form a directed set indexed by the invertible elements γ₀.-/
-@[sanity_skip]
+@[nolint]
 lemma directed_lt : directed (≥) (λ (γ₀ : units Γ₀), principal {γ : Γ₀ | γ < ↑γ₀}) :=
 begin
   intros γ₁ γ₂,
@@ -226,7 +226,7 @@ variable {Γ₀}
 
 /--The filter basis around nonzero elements of
 a linearly ordered group with zero element adjoined.-/
-@[sanity_skip]
+@[nolint]
 def ne_zero_filter_basis (x : Γ₀) : filter_basis Γ₀ :=
 { sets := ({({x} : set Γ₀)} : set (set Γ₀)),
   ne_empty := by simp,
@@ -279,7 +279,7 @@ variable {Γ₀}
 variables (α : Type*) [linear_ordered_comm_group α]
 
 /--The discrete topology on a linearly ordered commutative group.-/
-@[sanity_skip] def discrete_ordered_comm_group : topological_space α := ⊥
+@[nolint] def discrete_ordered_comm_group : topological_space α := ⊥
 local attribute [instance] discrete_ordered_comm_group
 
 lemma ordered_comm_group_is_discrete : discrete_topology α := ⟨rfl⟩

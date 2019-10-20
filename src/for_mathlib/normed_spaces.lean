@@ -2,7 +2,7 @@ import analysis.normed_space.basic
 import analysis.specific_limits
 import for_mathlib.topology
 
-open set metric function
+open set metric function normed_field
 
 lemma nondiscrete_normed_field.nondiscrete {k  : Type*} [nondiscrete_normed_field k] :
   ¬ discrete_topology k :=
