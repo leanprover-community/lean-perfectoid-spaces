@@ -7,8 +7,6 @@ import power_bounded
 /-!
 # Perfectoid Spaces
 
-by Kevin Buzzard, Johan Commelin, and Patrick Massot
-
 Definitions in this file follow Scholze's paper: Étale cohomology of diamonds,
 specifically Definition 3.1 and 3.19
 
