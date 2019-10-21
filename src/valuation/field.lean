@@ -161,9 +161,6 @@ open valued
 
 local notation `v` := valued.value
 
--- until the end of this section, all linearly ordered commutative groups will be endowed with
--- the discrete topology
-
 local attribute [instance, priority 0] valued.uniform_space valued.uniform_add_group
 
 local notation `hat` K := completion K
