@@ -72,10 +72,6 @@ namespace valuation
 variables {Γ₀ : Type u} [linear_ordered_comm_group_with_zero Γ₀]
 variables (v : valuation R Γ₀)
 
-/- The following instance used to be unneeded. -/
-instance : is_group_hom (units.map (v.on_valuation_field : v.valuation_field →* Γ₀)) :=
-sorry
-
 /-- The elements of `units (valuation_field v)` with norm 1. -/
 definition valuation_field_norm_one :=
 is_group_hom.ker (units.map (v.on_valuation_field : v.valuation_field →* Γ₀))
@@ -620,7 +616,7 @@ units.map' $ valfield_of_valfield_of_eq_supp h
 two valuations with the same support is a group homomorphism.-/
 instance valfield_units.is_group_hom (h : supp v₁ = supp v₂) :
   is_group_hom (valfield_units_of_valfield_units_of_eq_supp h) :=
-by sorry --unfold valfield_units_of_valfield_units_of_eq_supp; apply_instance
+by unfold valfield_units_of_valfield_units_of_eq_supp; apply_instance
 
 lemma units_valfield_of_units_valfield_of_eq_supp_mk
   (h : supp v₁ = supp v₂) (r : R) (hr : r ∉ supp v₁) :
