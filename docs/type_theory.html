@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8">
+
+<title>Lean perfectoid spaces</title>
+<link rel="canonical" href="https://leanprover-community.github.io/lean-perfectoid-spaces/" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#157878">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="pygments.css">
+  <script>
+MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\\(', '\\)']],
+
+    macros: {
+      Prop: "{\\mathrm{Prop}}",
+      Type: "{\\mathrm{Type}}",
+      NN: "{\\mathbb{N}}",
+      ZZ: "{\\mathbb{Z}}",
+      RR: "{\\mathbb{R}}",
+      F: "{\\mathscr{F}}",
+      id: "{\\mathop{id}}",
+      Opens: "{\\mathop{Opens}}",
+      bold: ["{\\bf #1}", 1]
+  }
+  },
+};
+</script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+  </head>
+  <body>
+    <section class="page-header">
+	    <a href="https://leanprover-community.github.io/lean-perfectoid-spaces/"><h1 class="project-name">Lean perfectoid spaces</h1></a> <h2 class="project-tagline">by Kevin Buzzard, Johan Commelin, and Patrick Massot</h2>
+      
+        <a href="https://github.com/leanprover-community/lean-perfectoid-spaces" class="btn">View on GitHub</a>
+    </section>
+
+    <section class="main-content">
+
+			<h1 id="what-does-formalizing-mean">What does formalizing mean?</h1>
+<p>In this page, we will try to explain to regular mathematicians what is means to formalize something using a proof assistant. Specific examples will use the Lean theorem prover, that we used for the perfectoid spaces project. But almost everything on this page applies verbatim to Coq, and most things would apply to Isabelle as well.</p>
+<h2 id="foundations">Foundations</h2>
+<p>Foundations of mathematics are almost entirely irrelevant to mathematicians. This is still mostly true when using a proof assistant. But of course they are very relevant to the question this page is meant to answer. Another reason to discuss foundations is they have a huge impact on how the proof assistant can fill in the implicit details of our mathematical statements. In Lean this so-called <em>elaboration process</em> is mostly made of term unification and instance resolution, that will be briefly described below.</p>
+<h3 id="types-and-typing-judgments">Types and typing judgments</h3>
+<p>Most mathematicians that get corned into saying something about foundations mention Zermelo-Fraenkel set theory (without or withour knowing anything about that topic). This is not the kind of foundations Lean uses, it uses type theory. The main issue with set theory as a foundational framework is that it is completely unstructured. Everything is a set, and there are only two relations: equality and membership. For instance $\pi \in \cos$ is a well-formed mathematical statement (which is hopefully wrong). The huge variety of nature of mathematical objects is, from this foundational perspective, only a psychological layer that we put on top of set membership. By contrast, as indicated by its name, type theory very carefully keeps track of the type of mathematical objects. Just like every mathematicial object is a set when formalized using set theory, it is a <em>term</em> having some <em>type</em> when formalized in type theory. Type theory provides many[^1] powerful ways of combining existing types of objects into new ones. The most fundamental such combination takes two types $A$ and $B$ and returns the type $A \to B$ of functions from $A$ to $B$ (at this point “function” is only a name). Complicated terms are made from juxtaposition of simpler ones, and the typing rules dictate the type of any (legal) juxtaposition. For instance, if $x$ is a term with type $A$ and $f$ is a term with type $A \to B$ then $f x$, also written as $f(x)$, has type $B$. It is crucial to understand that this so-called “typing judgment” happens at the meta-theoretic level, not inside the formalized theory. It does not need to be proven inside the theory, just as we don’t need to prove the rules of logic when doing regular mathematics. Since typing information is so important, there is a notation for it. We write $x : A$ to say that $x$ has type $A$.</p>
+<p>In order to easily express all of mathematics, it is important that type are allowed to depend on terms. For instance, given a term $n$ with type $\NN$, we can form the type $\RR^n$. Such a type is called a dependent type.</p>
+<p>Up to this point, type theory is actualy closer to regular maths than set theory. What is much more exotic is how the reduction rules coming from $\lambda$-calculus enter the game. There is a conversion relation on terms. For instance, if we consider the term $(n \mapsto 2\cdot n) : \NN \to \NN$, then the term $(n \mapsto 2\cdot n) 3$ converts to $2\cdot 3$ which, by definition of multiplication, converts to $6$. Again this happens at the meta-theoretic level, it cannot be proved or disproved inside the theory, only observed.<br />
+Together with the typing rule given above, this conversion rule justifies the name “function type”. We will say that $(n \mapsto 2 \cdot n) 3$ is <em>definitionally</em> equal to $6$. In this page, this word will always be used in this very specific technical sense.</p>
+<p>Unfortunately, computer scientists have strong emotional bounds to a very weird way of denoting functions like $n \mapsto 2\cdot n$. They write is as $\lambda\, n, 2\cdot n$ or, when they need to explicit the variable type, $\lambda\, n : \NN, 2\cdot n$. Getting used to that is surprisingly not so hard.</p>
+<h3 id="curry-howard-and-proofs">Curry-Howard and proofs</h3>
+<p>Applying typing rules is the core activity of a proof assistant based on type theory (such as Lean), it is done by the so-called <em>kernel</em>. Remarkably, this includes checking proofs, thanks to the Curry-Howard isomorphism, as we will now explain. Each mathematical statement is also a type of mathematical object, and a proof of such a statement is a term having this type. Proof checking is thus a particular kind of typing judgment. For instance, if $P$ and $Q$ are statements, then the statement $P \implies Q$ is the function type $P \to Q$. Indeed there is no need to introduce a new typing judgment since we want exactly the same rule as above: give $h_P : P$ (ie. $h_P$ is a term of type $P$, ie. $h_P$ a proof of $P$) and $h : P \to Q$ (ie. $h$ is a proof that $P$ implies $Q$) then $h\, h_P : Q$ (ie. $h\, h_P$ is a proof of $Q$).</p>
+<p>Type themselves live in so-called universes. Universes forms a countable sequence. This is necessary in order to avoid paradoxes analogous to Russel’s barber paradox in set theory, but this kind of consideration is not relevant to us. More importantly, this allows to see types as terms. Mathematical statements are types whose universe is called $\Prop$. Usual mathematical types, like $\NN$ or $\RR$ have universe $\Type$. Using this and dependent types, we can now express the idea of a predicates, ie mathematical statement depending on a mathematical object. For instance, being even is a predicate depending on a natural number, hence it has type $\NN \to \Prop$. For any given natural number $n$, we get the type $\mathrm{even}(n) : \Prop$, and a term of type $\mathrm{even}(n)$ is a proof that $n$ is even.</p>
+<p>In order to express the universal quantifier, one needs a mild generalization of function types, where the target type can depend on the input value. For instance, a proof of the statement $\forall n, \mathrm{even(2n)}$ is seen as the function sending a natural number $n$ to a proof that $2n$ is even. Say we have a proof of this statement, ie a term $\mathrm{double\_even} : \forall n, \mathrm{even(2n)}$, and a term $\mathrm{succ\_odd} : \forall n, \mathrm{even}(n) \to \mathrm{odd(n+1)}$. We now want to use those to prove that, for every $n$, $2n+1$ is odd. It means we need a term whose type is $\forall n, \mathrm{odd(2n+1)}$, ie a function with input $n$ and output a proof that $2n+1$ is odd. Given any $n$, it suffices to apply $\mathrm{succ\_odd}$ to $2n$ and a proof that $2n$ is even. And $\mathrm{double\_even}\, n$ is precisely the later. So our full proof term is $n \mapsto \mathrm{succ\_odd}\; 2n\; (\mathrm{double\_even}\, n)$. This is almost valid Lean code, we only need to remember to use $\lambda$ instead of $\mapsto$, and also remember computers don’t like implicit multiplication.</p>
+<div class="highlight"><pre><span class="kd">lemma</span> <span class="n">test</span> <span class="o">:</span> <span class="bp">∀</span> <span class="n">n</span><span class="o">,</span> <span class="n">odd</span> <span class="o">(</span><span class="mi">2</span><span class="bp">*</span><span class="n">n</span> <span class="bp">+</span> <span class="mi">1</span><span class="o">)</span> <span class="o">:=</span>
+<span class="bp">λ</span> <span class="n">n</span><span class="o">,</span> <span class="n">odd_succ</span> <span class="o">(</span><span class="mi">2</span><span class="bp">*</span><span class="n">n</span><span class="o">)</span> <span class="o">(</span><span class="n">double_even</span> <span class="n">n</span><span class="o">)</span>
+</pre></div>
+
+<p>Now, you may wonder how Lean know that $n$ has type $\NN$ in the above snippet. This is already using the benefits of carefully tracking the types of mathematical objects. Indeed, we assumed above that $\mathrm{even}$ and $\mathrm{odd}$ have type $\NN \to \Prop$, so Lean can infer that, in the statement, <code>2*n + 1</code> necessarily has type $\NN$, and then so does <code>n</code>. The same reasonning allow to start the proof term with <code>λ n</code> instead of <code>λ n : ℕ</code>. This so-called unification procedure is actually much more powerful. For instance, one can leave holes using <code>_</code> wherever a term is expected, and Lean will try to fill this hole by unification. In our example, we could have written:</p>
+<div class="highlight"><pre><span class="kd">lemma</span> <span class="n">test</span> <span class="o">:</span> <span class="bp">∀</span> <span class="n">n</span><span class="o">,</span> <span class="n">odd</span> <span class="o">(</span><span class="mi">2</span><span class="bp">*</span><span class="n">n</span> <span class="bp">+</span> <span class="mi">1</span><span class="o">)</span> <span class="o">:=</span>
+<span class="bp">λ</span> <span class="n">n</span><span class="o">,</span> <span class="n">odd_succ</span> <span class="n">_</span> <span class="o">(</span><span class="n">double_even</span> <span class="n">_</span><span class="o">)</span>
+</pre></div>
+
+<p>The first hole is filled by unifying the expected type <code>odd (2*n + 1)</code> with the type of <code>odd_succ _</code> which is <code>even ?₁ → odd (?₁+1)</code> for some unknown <code>?₁</code>. This first unification succeeds by setting <code>?₁ = 2*n</code>. Then Lean needs to unify the type <code>even (2*?₂)</code> of <code>double_even _</code> with the expected <code>even (2*n)</code> and again there is only one solution, which is <code>?₂ = n</code>. Of course we don’t gain much in the simple example, but unification is crucial in more complicated examples.</p>
+<p>One should note that the unification process is not part of the kernel. The kernel (which needs to be trusted, hence very simple) receives the fully elaborated term <code>λ n : ℕ, odd_succ (2*n) (double_even n)</code>, applies typing rules to compute its type, and compares with the fully elaborated statement <code>∀ n : ℕ, odd (2*n + 1)</code>. This process is so much simpler than being a full proof assistant that there are at least three alternative checkers, written in three different programming languages (Lean itself is written in C++, and there are checkers written in Haskell, Scala, and Rust).</p>
+<p>Even with good elaboration, writing proof terms by hand very quickly becomes unsustainable. There is a huge layer called the tactic framework whose role is to interact with the user, and write proof terms off stage. Again this layer is not trusted, it builds terms whose type is checked by the kernel.</p>
+<h3 id="inductive-types">Inductive types</h3>
+<p>We haven’t yet described enough way to build types. For instance, we haven’t seen have to build the type $\NN$. Surprisingly related, we have explained universal quantifiers, but not existential ones, conjunctions and disjunctions. All those things are inductive types.</p>
+<p>The following is Lean’s definition of natural number, following Peano’s axioms:</p>
+<div class="highlight"><pre><span class="kd">inductive</span> <span class="n">ℕ</span>
+<span class="bp">|</span> <span class="n">zero</span> <span class="o">:</span> <span class="n">ℕ</span>
+<span class="bp">|</span> <span class="n">succ</span> <span class="o">:</span> <span class="n">ℕ</span> <span class="bp">→</span> <span class="n">ℕ</span>
+</pre></div>
+
+<p>It reads: there are exactly two ways to build a term of type <code>ℕ</code>, either the constant <code>zero</code>, or apply the function <code>succ</code> to a term with type <code>ℕ</code>. Implicitly, it also says that those two ways are unrelated (more on that below, but it guarantees that <code>zero</code> is not equal to <code>succ n</code> for any <code>n</code>).</p>
+<p>Remember that, deep down, the only things that exist are terms and types, and, at the meta-theoretic level, typing judgments and term conversions (aka definitional equality).</p>
+<p>The definition does a number of those deep things. Visibly, it postulates the existence of two terms <code>zero : ℕ</code> and <code>succ : ℕ → ℕ</code>. But it also postulate the existence of the corresponding induction principle, which is term <code>rec</code> of type:</p>
+<div class="highlight"><pre><span class="bp">∀</span> <span class="o">{</span><span class="n">C</span> <span class="o">:</span> <span class="n">ℕ</span> <span class="bp">→</span> <span class="kt">Sort</span> <span class="n">u</span><span class="o">},</span> <span class="n">C</span> <span class="n">zero</span> <span class="bp">→</span> <span class="o">(</span><span class="bp">∀</span> <span class="o">(</span><span class="n">n</span> <span class="o">:</span> <span class="n">ℕ</span><span class="o">),</span> <span class="n">C</span> <span class="n">n</span> <span class="bp">→</span> <span class="n">C</span> <span class="o">(</span><span class="n">succ</span> <span class="n">n</span><span class="o">))</span> <span class="bp">→</span> <span class="bp">∀</span> <span class="o">(</span><span class="n">n</span> <span class="o">:</span> <span class="n">ℕ</span><span class="o">),</span> <span class="n">C</span> <span class="n">n</span>
+</pre></div>
+
+<p>where <code>Sort u</code> means any fixed universe (for instance $\Prop$ or $\Type$).</p>
+<h4 id="todo"> TODO:</h4>
+<ul>
+<li>finish this explanation</li>
+<li>explain exists, and, or</li>
+<li>explain <code>group G</code>.</li>
+</ul>
+
+      <footer class="site-footer">
+          <span class="site-footer-owner"><a href="https://github.com/leanprover-community/lean-perfectoid-spaces">lean-perfectoid-spaces</a> is maintained by <a href="https://github.com/leanprover-community">leanprover-community</a>.</span>
+        
+      </footer>
+    </section>
+  </body>
+</html>
+
