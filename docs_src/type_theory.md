@@ -1,18 +1,8 @@
 ---
-title: What does formalizing mean?
+title: Foundations
 ---
 
-# What does formalizing mean?
-
-In this page, 
-we will try to explain to regular mathematicians what is means to
-formalize something using a proof assistant.
-Specific examples will use the Lean theorem prover,
-that we used for the perfectoid spaces project.
-But almost everything on this page applies verbatim to Coq,
-and most things would apply to Isabelle as well.
-
-## Foundations
+# What are the foundations of this project?
 
 Foundations of mathematics are almost entirely irrelevant to mathematicians. 
 This is still mostly true when using a proof assistant.
@@ -21,13 +11,15 @@ to answer.
 Another reason to discuss foundations is they have a huge impact on how
 the proof assistant can fill in the implicit details of our mathematical
 statements.
-In Lean this so-called *elaboration process* is mostly made of term
-unification and instance resolution, 
-that will be briefly described below.
+Specific examples will use the Lean theorem prover,
+that we used for the perfectoid spaces project.
+But almost everything on this page applies verbatim to Coq.
+Indeed, the calculus of inductive construction (the foundational system
+we will briefly describe) was invented for Coq.
 
-### Types and typing judgments
+## Types and typing judgments
 
-Most mathematicians that get corned into saying something about
+Most mathematicians that get cornered into saying something about
 foundations mention Zermelo-Fraenkel set theory
 (with or without knowing anything about that topic).
 This is not the kind of foundations Lean uses,
@@ -92,7 +84,7 @@ when they need to make the variable type explicit,
 $\lambda\\, n : \NN, 2\cdot n$.
 Getting used to that is surprisingly not so hard.
 
-### Curry-Howard and proofs
+## Curry-Howard and proofs
 
 Applying typing rules is the core activity of a proof assistant based on
 type theory (such as Lean), it is done by the so-called *kernel*. 
@@ -129,6 +121,7 @@ and a term of type $\mathrm{even}(n)$ is a proof that $n$ is even.
 In order to express the universal quantifier,
 one needs a mild generalization of function types, 
 where the target type can depend on the input value.
+There are sometimes called dependent function types.
 For instance, a proof of the statement $\forall n, \mathrm{even(2n)}$ is
 seen as the function sending a natural number $n$ to a proof that $2n$
 is even.
@@ -203,7 +196,7 @@ and write proof terms off stage.
 Again this layer is not trusted, it builds terms whose type
 is checked by the kernel.
 
-### Inductive types
+## Inductive types
 
 We haven't yet described enough ways to build types.
 For instance, we haven't seen have to build the type $\NN$.
@@ -222,8 +215,8 @@ It reads: there are exactly two ways to build a term of type `ℕ`, either
 the constant `zero`, or apply the function `succ` to a term with type
 `ℕ`.
 Implicitly, it also says that those two ways are unrelated
-(more on that below, but it guarantees that `zero` is not
-equal to `succ n` for any `n`).
+(in particular it guarantees that `zero` is not equal to `succ n` for
+any `n`).
 
 Remember that, deep down, the only things that exist are terms and types, 
 and, at the meta-theoretic level, typing judgments and term conversions
@@ -233,15 +226,81 @@ The definition does a number of those deep things.
 Visibly, it postulates the existence of two terms `zero : ℕ` and 
 `succ : ℕ → ℕ`.
 But it also postulate the existence of the corresponding induction
-principle, which is term `rec` of type:
+principle.
+This is a term whose type is a bit complicated,
+but the important thing is it allows to recover the usual proof by
+induction principle (if, for some predicate $P$ on $\NN$,
+$P\\, 0$ holds and $P\\\, n \implies P\\, (succ\\, n)$ then $P\\, n$ hold for
+all $n$) and the possibility of defining sequences by induction (given 
+$u_0$ and the constraint $u_{n+1} = f(u_n)$).
+
+Again this is much closer to mathematical intuition than building a
+model of Peano's axioms in ZF set theory.
+
+More generally, inductive types can take parameters (there is none in our example),
+have arbitrarily many "constructors" (here there are two: `zero` and `succ`) which can
+take arbitrarily many arguments (no argument in the case of `zero`
+and one argument in the case of `succ`).
+These arguments can be terms of the type being defined (as in `succ`),
+modulo some technical condition which prevents circular constructions.
+
+Amazingly, together with dependent function types, 
+inductive types allow to build everything else.
+For instance, among logical operation, we have described only
+implication and the $\forall$ quantifier.
+Everything else is defined using inductive types.
+For instance, the definition of the logical operation "and" is:
 ```lean
-∀ {C : ℕ → Sort u}, C zero → (∀ (n : ℕ), C n → C (succ n)) → ∀ (n : ℕ), C n
+inductive And (P Q : Prop) :
+| intro (h : P) (h' : Q) : And
 ```
-where `Sort u` means any fixed universe (for instance $\Prop$ or $\Type$).
+It says that, for any two statements `P` and `Q`,
+one can define and inductive type `And P Q`,
+and the only way to build a term having this type
+is to use the function `intro` which takes a proof
+`h` of `P` and a proof `h'` of `Q`.
+The corresponding induction principle guarantees
+that using a term whose type is `And P Q` is the same
+as doing whatever we want with a the ingredients taken
+by `intro`.
 
-####  TODO: 
+As an exercise, you can think about the definition of the "or" operator:
+```lean
+inductive Or (P Q : Prop) :
+| left (h : P) : Or
+| right (h' : Q) : Or
+```
+Surprisingly, even equality is not a primitive notion in those
+foundations, and is defined as an inductive type.
 
-* finish this explanation
-* explain exists, and, or
-* explain `group G`.
+Inductive types also allow to define structures.
+For instance, a commutative magma structure on a type $M$
+is made of a multiplication operation and the assertion that
+this multiplication is commutative. 
+Multiplication `mul` takes two terms with type $M$ and returns a term with
+type $M$.
+```lean
+inductive comm_magma (M : Type)
+| make (mul : M × M → M) (comm : ∀ a b : M, mul (a, b) = mul (b, a)) : comm_magma
+```
+Here the constructor is called `make`, it says that building a term
+whose type is `comm_magma M` takes exactly a function `mul : M × M → M`
+and a term `comm` stating this operation is commutative.
+The induction principle says that anything which follows from those
+ingredients follows from having fixed a commutative monoid structure on
+`M`. 
+Of course Lean provides many facilities in order to define and use such
+structures,
+including facilities for building rich structures extending simpler
+ones,
+but this does not change anything to those foundations.
 
+##  The axiom of choice and computation
+
+One often reads that proof assistant love constructive mathematics and
+don't like the axiom of choice.
+A much better approximation of the truth is that some users of proof
+assistants have those tastes.
+Proof assistants that we know have no issue at all postulating the axiom
+of choice, and Lean users in general don't even notice when they use it
+(although Lean does report it if asked about it).

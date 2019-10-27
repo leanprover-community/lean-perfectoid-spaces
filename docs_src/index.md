@@ -89,12 +89,37 @@ If you want to explore the project code interactively, you can read our
 
 You're welcome to ask questions at the [Zulip chat](https://leanprover.zulipchat.com/#narrow/stream/116395-maths/topic/Perfectoid.20spaces).
 
-## I am a mathematician. How do I learn Lean?
+## I am a mathematician. I want to know more about Lean.
 
-You can read [theorem proving in Lean](https://leanprover.github.io/theorem_proving_in_lean/). Do note however that this whole thing is all very beta at the minute. We think [Tom Hales describes it best](https://jiggerwit.wordpress.com/2018/04/14/the-architecture-of-proof-assistants/).
+There are various ways to approach the subject of proof assistants for
+mathematicians.
 
+If you want to see what proving things interactively look like, you can go to 
+[first proofs online](https://leanprover-community.github.io/lean-web-editor/#url=https%3A%2F%2Fraw.githubusercontent.com%2Fleanprover-community%2Ftutorials%2Fmaster%2Fsrc%2Ffirst_proofs.lean),
+wait for a few seconds until you see "Lean is ready" instead of "Lean is
+busy" at the very top of the page. Then you can read everything, moving
+your cursor inside proofs (between `begin` and `end`) to see what Lean
+has to say on the right hand side. Here Lean is executed in the
+web-browser, so performance is very limited, and you'll need to 
+ignore the comment saying that right-clicking on a word allow to jump to
+its definition. 
 
-## Useful references
+For a more active experience, you can try the [natural number game](http://wwwf.imperial.ac.uk/~buzzard/xena/natural_number_game/)
+where you will be able to define natural numbers and their basic
+operations, and prove things like commutativity of addition.
+
+If you are interested in the logical foundations, and
+understanding what the computer does when checking definitions and
+proofs, you can try [this page](type_theory.html).
+
+If any of those three methods make you curious to learn more, the
+canonical next step is to read [theorem proving in Lean](https://leanprover.github.io/theorem_proving_in_lean/).
+You can also [install Lean](https://github.com/leanprover-community/mathlib/blob/master/README.md#installation).
+At any point in the process, it is a good idea to 
+ask questions at the [Zulip chat](https://leanprover.zulipchat.com/),
+especially in the [new members stream](https://leanprover.zulipchat.com/#narrow/stream/113489-new-members).
+
+## Useful mathematical references
 
 [Brian Conrad's learning seminar](http://math.stanford.edu/~conrad/Perfseminar/).
 
