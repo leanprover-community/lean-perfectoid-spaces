@@ -11,7 +11,7 @@ Building on earlier work by many people, starting from first
 principles, we arrived at
 ```lean
 -- We fix a prime number p
-parameter (p : Prime)
+parameter (p : primes)
 
 /-- A perfectoid ring is a Huber ring that is complete, uniform,
 that has a pseudo-uniformizer whose p-th power divides p in the power bounded subring,
