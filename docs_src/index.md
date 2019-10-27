@@ -87,7 +87,7 @@ If you want to explore the project code interactively, you can read our
 
 ### Chat
 
-You're welcome to ask questions at the [Zulip chat](https://leanprover.zulipchat.com/#narrow/stream/116395-maths/topic/Perfectoid.20spaces)
+You're welcome to ask questions at the [Zulip chat](https://leanprover.zulipchat.com/#narrow/stream/116395-maths/topic/Perfectoid.20spaces).
 
 ## I am a mathematician. How do I learn Lean?
 
