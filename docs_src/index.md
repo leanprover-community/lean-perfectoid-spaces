@@ -102,4 +102,4 @@ You can read [theorem proving in Lean](https://leanprover.github.io/theorem_prov
 
 [Fontaine's text for Seminaire Bourbaki](http://www.bourbaki.ens.fr/TEXTES/1057.pdf).
 
-[Torsten Wedhorn's notes on adic spaces](http://wwwf.imperial.ac.uk/~buzzard/docs/AdicSpaces.pdf).
+[Torsten Wedhorn's notes on adic spaces](https://arxiv.org/abs/1910.05934).
