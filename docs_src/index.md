@@ -65,7 +65,7 @@ spaces. All other nodes have a size depending on how many nodes use
 them. You can play with the [gephi source](perfectoid.gephi). 
 Note that, although the definition of perfectoid spaces is
 there, we are still working on making the project more beautiful, so
-the graph maybe be not perfectly faithful to its current state.
+the graph may be not perfectly faithful to its current state.
 
 In order to get a legible graph, we had to remove some foundational nodes
 like the definition of equality, existential quantifier, or powerset
