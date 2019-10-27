@@ -29,7 +29,7 @@ that will be briefly described below.
 
 Most mathematicians that get corned into saying something about
 foundations mention Zermelo-Fraenkel set theory
-(without or withour knowing anything about that topic).
+(with or without knowing anything about that topic).
 This is not the kind of foundations Lean uses,
 it uses type theory.
 The main issue with set theory as a foundational framework is that it is
@@ -64,7 +64,7 @@ Since typing information is so important, there is a notation for it.
 We write $x : A$ to say that $x$ has type $A$.
 
 In order to easily express all of mathematics, 
-it is important that type are allowed to depend on terms.
+it is important that types are allowed to depend on terms.
 For instance, given a term $n$ with type $\NN$, 
 we can form the type $\RR^n$.
 Such a type is called a dependent type.
@@ -88,7 +88,7 @@ technical sense.
 Unfortunately, computer scientists have strong emotional bounds to a
 very weird way of denoting functions like $n \mapsto 2\cdot n$.
 They write is as $\lambda\\, n, 2\cdot n$ or,
-when they need to explicit the variable type,
+when they need to make the variable type explicit,
 $\lambda\\, n : \NN, 2\cdot n$.
 Getting used to that is surprisingly not so hard.
 
@@ -106,21 +106,21 @@ For instance, if $P$ and $Q$ are statements,
 then the statement $P \implies Q$ is the function type $P \to Q$.
 Indeed there is no need to introduce a new typing judgment since we want
 exactly the same rule as above:
-give $h_P : P$ (ie. $h_P$ is a term of type $P$, ie. $h_P$ a proof of $P$) 
-and $h : P \to Q$ (ie. $h$ is a proof that $P$ implies $Q$) then
+give $h_P : P$ (i.e. $h_P$ is a term of type $P$, i.e. $h_P$ a proof of $P$) 
+and $h : P \to Q$ (i.e. $h$ is a proof that $P$ implies $Q$) then
 $h\\, h_P : Q$ (ie. $h\\, h_P$ is a proof of $Q$).
 
 Type themselves live in so-called universes. 
 Universes forms a countable sequence.
 This is necessary in order to avoid paradoxes analogous
-to Russel's barber paradox in set theory,
+to Russell's barber paradox in set theory,
 but this kind of consideration is not relevant to us.
 More importantly, this allows to see types as terms.
 Mathematical statements are types whose universe is called $\Prop$.
 Usual mathematical types, like $\NN$ or $\RR$ have universe $\Type$.
 Using this and dependent types, we can now express the idea of a
 predicates, 
-ie mathematical statement depending on a mathematical object.
+i.e. mathematical statement depending on a mathematical object.
 For instance, being even is a predicate depending on a natural number,
 hence it has type $\NN \to \Prop$.
 For any given natural number $n$, we get the type $\mathrm{even}(n) : \Prop$, 
@@ -164,7 +164,7 @@ type $\NN \to \Prop$,
 so Lean can infer that, in the statement,
 `2*n + 1` necessarily has type $\NN$,
 and then so does `n`.
-The same reasonning allow to start the proof term with `λ n` instead
+The same reasonning allows us to start the proof term with `λ n` instead
 of `λ n : ℕ`.
 This so-called unification procedure is actually much more powerful.
 For instance, one can leave holes using `_` wherever a term is 
@@ -205,7 +205,7 @@ is checked by the kernel.
 
 ### Inductive types
 
-We haven't yet described enough way to build types.
+We haven't yet described enough ways to build types.
 For instance, we haven't seen have to build the type $\NN$.
 Surprisingly related, we have explained universal quantifiers,
 but not existential ones, conjunctions and disjunctions.
