@@ -104,7 +104,7 @@ web-browser, so performance is very limited, and you'll need to
 ignore the comment saying that right-clicking on a word allow to jump to
 its definition. 
 
-For a more active experience, you can try the [natural number game](http://wwwf.imperial.ac.uk/~buzzard/xena/natural_number_game/)
+For a more interactive experience, you can try the [natural number game](http://wwwf.imperial.ac.uk/~buzzard/xena/natural_number_game/)
 where you will be able to define natural numbers and their basic
 operations, and prove things like commutativity of addition.
 
