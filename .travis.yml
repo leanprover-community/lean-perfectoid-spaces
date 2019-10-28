@@ -25,4 +25,4 @@ jobs:
     - env: TASK="check build"
       language: bash
       script:
-        - leanpkg build
+        - travis_wait leanpkg build
