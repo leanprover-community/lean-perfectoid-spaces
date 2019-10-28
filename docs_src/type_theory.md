@@ -240,7 +240,7 @@ principle.
 This is a term whose type is a bit complicated,
 but the important thing is it allows to recover the usual proof by
 induction principle (if, for some predicate $P$ on $\NN$,
-$P\\, 0$ holds and $P\\\, n \implies P\\, (succ\\, n)$ then $P\\, n$ hold for
+$P\\, 0$ holds and $P\\\, d \implies P\\, (succ\\, d)$ then $P\\, n$ hold for
 all $n$) and the possibility of defining sequences by induction (given 
 $u_0$ and the constraint $u_{n+1} = f(u_n)$).
 
@@ -256,7 +256,7 @@ modulo some technical condition which prevents circular constructions.
 
 Amazingly, together with dependent function types, 
 inductive types allow to build everything else.
-For instance, among logical operation, we have described only
+For instance, amongst logical operations, we have described only
 implication and the $\forall$ quantifier.
 Everything else is defined using inductive types.
 For instance, the definition of the logical operation "and" is:
@@ -265,14 +265,13 @@ inductive And (P Q : Prop) :
 | intro (h : P) (h' : Q) : And
 ```
 It says that, for any two statements `P` and `Q`,
-one can define and inductive type `And P Q`,
+one can define an inductive type `And P Q`,
 and the only way to build a term having this type
 is to use the function `intro` which takes a proof
 `h` of `P` and a proof `h'` of `Q`.
 The corresponding induction principle guarantees
-that using a term whose type is `And P Q` is the same
-as doing whatever we want with a the ingredients taken
-by `intro`.
+that we can do something using a term whose type is `And P Q`
+if we can do it with the ingredients taken by `intro`.
 
 As an exercise, you can think about the definition of the "or" operator:
 ```lean
@@ -280,10 +279,14 @@ inductive Or (P Q : Prop) :
 | left (h : P) : Or
 | right (h' : Q) : Or
 ```
-Surprisingly, even equality is not a primitive notion in those
+
+Note that this time we have two constructors, and hence two ways of
+constructing a term of type `Or P Q`.
+
+Surprisingly, even equality is not a primitive notion in these
 foundations, and is defined as an inductive type.
 
-Inductive types also allow to define structures.
+Inductive types also allow us to define structures.
 For instance, a commutative magma structure on a type $M$
 is made of a multiplication operation and the assertion that
 this multiplication is commutative. 
@@ -293,9 +296,9 @@ type $M$.
 inductive comm_magma (M : Type)
 | make (mul : M × M → M) (comm : ∀ a b : M, mul (a, b) = mul (b, a)) : comm_magma
 ```
-Here the constructor is called `make`, it says that building a term
-whose type is `comm_magma M` takes exactly a function `mul : M × M → M`
-and a term `comm` stating this operation is commutative.
+Here the constructor is called `make`, it says to build a term
+whose type is `comm_magma M` we need exactly a function `mul : M × M → M`
+and a term `comm` proving that this operation is commutative.
 The induction principle says that anything which follows from those
 ingredients follows from having fixed a commutative monoid structure on
 `M`. 
@@ -303,14 +306,18 @@ Of course Lean provides many facilities in order to define and use such
 structures,
 including facilities for building rich structures extending simpler
 ones,
-but this does not change anything to those foundations.
+but this does not change anything about these foundations.
 
 ##  The axiom of choice and computation
 
-One often reads that proof assistant love constructive mathematics and
+One often reads that proof assistant users love constructive mathematics and
 don't like the axiom of choice.
 A much better approximation of the truth is that some users of proof
 assistants have those tastes.
 Proof assistants that we know have no issue at all postulating the axiom
 of choice, and Lean users in general don't even notice when they use it
-(although Lean does report it if asked about it).
+(although Lean does report it if asked about it). Using the axiom
+of choice in some code might make the corresponding functions noncomputable.
+However many mathematicians are often far more concerned with reasoning about
+functions (that is, proving theorems about them) than actually computing
+them, and so noncomputability is not an issue in practice.
