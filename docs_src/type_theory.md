@@ -14,7 +14,7 @@ statements.
 Specific examples will use the Lean theorem prover,
 that we used for the perfectoid spaces project.
 But almost everything on this page applies verbatim to Coq.
-Indeed, the calculus of inductive construction (the foundational system
+Indeed, the calculus of inductive constructions (the foundational system
 we will briefly describe) was invented for Coq.
 
 ## Types and typing judgments
@@ -79,7 +79,7 @@ technical sense.
 
 Unfortunately, computer scientists have strong emotional bounds to a
 very weird way of denoting functions like $n \mapsto 2\cdot n$.
-They write is as $\lambda\\, n, 2\cdot n$ or,
+They write it as $\lambda\\, n, 2\cdot n$ or,
 when they need to make the variable type explicit,
 $\lambda\\, n : \NN, 2\cdot n$.
 Getting used to that is surprisingly not so hard.
@@ -87,7 +87,7 @@ Getting used to that is surprisingly not so hard.
 ## Curry-Howard and proofs
 
 Applying typing rules is the core activity of a proof assistant based on
-type theory (such as Lean), it is done by the so-called *kernel*. 
+type theory (such as Lean), and it is done by the so-called *kernel*. 
 Remarkably, this includes checking proofs, thanks to the Curry-Howard
 isomorphism,
 as we will now explain.
@@ -98,7 +98,7 @@ For instance, if $P$ and $Q$ are statements,
 then the statement $P \implies Q$ is the function type $P \to Q$.
 Indeed there is no need to introduce a new typing judgment since we want
 exactly the same rule as above:
-give $h_P : P$ (i.e. $h_P$ is a term of type $P$, i.e. $h_P$ a proof of $P$) 
+given $h_P : P$ (i.e. $h_P$ is a term of type $P$, i.e. $h_P$ a proof of $P$) 
 and $h : P \to Q$ (i.e. $h$ is a proof that $P$ implies $Q$) then
 $h\\, h_P : Q$ (ie. $h\\, h_P$ is a proof of $Q$).
 
@@ -137,7 +137,7 @@ ie a function with input $n$ and output a proof that
 $2n+1$ is odd.
 Given any $n$, it suffices to apply $\mathrm{succ\\_odd}$ to 
 $2n$ and a proof that $2n$ is even.
-And $\mathrm{double\\_even}\\, n$ is precisely the later.
+And $\mathrm{double\\_even}\\, n$ is precisely the latter.
 So our full proof term is 
 $n \mapsto \mathrm{succ\\_odd}\\; 2n\\; (\mathrm{double\\_even}\\, n)$.
 This is almost valid Lean code, we only need to remember
@@ -192,9 +192,19 @@ Even with good elaboration,
 writing proof terms by hand very quickly becomes unsustainable.
 There is a huge layer called the tactic framework whose role is
 to interact with the user,
-and write proof terms off stage.
-Again this layer is not trusted, it builds terms whose type
+and write proof terms off stage. For example, it takes a very
+long time to prove from first principles
+that $(a+b)^3=a^3+3*a*b^2+3*a*b^2+b^3$ for integers $a$ and $b$,
+the main problem being that re-arranging the sum of eight terms
+using only commutativity and associativity is incredibly tedious
+for a human.
+However Lean's `ring` tactic produces a proof of this immediately
+without the user having to worry about doing it by hand.
+Again this tactic layer is not trusted, it builds terms whose type
 is checked by the kernel.
+To put it another way,
+tactics create candidates for proofs,
+and then the kernel checks that they are actually correct proofs.
 
 ## Inductive types
 
