@@ -285,6 +285,14 @@ constructing a term of type `Or P Q`.
 
 Surprisingly, even equality is not a primitive notion in these
 foundations, and is defined as an inductive type.
+Now we can finally point out the deepest difference between
+foundations based on set theory and type theory. In order to use set
+theory, one needs to have developped (first order) logic, with its
+logical connective and deduction rules. And then proofs have nothing in
+common with mathematical objects, they live purely at the meta-theoretic
+level. In dependent type theory with inductive types, logic is expressed
+inside the theory, and proofs are mathematical objects living inside the
+theory.
 
 Inductive types also allow us to define structures.
 For instance, a commutative magma structure on a type $M$
