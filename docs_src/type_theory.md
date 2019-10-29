@@ -16,6 +16,12 @@ that we used for the perfectoid spaces project.
 But almost everything on this page applies verbatim to Coq.
 Indeed, the calculus of inductive constructions (the foundational system
 we will briefly describe) was invented for Coq.
+Section 3.1 of the
+[Mathematical Components Book](https://math-comp.github.io/mcb/),
+and the first four chapters of 
+[Theorem Proving in Lean](https://leanprover.github.io/theorem_proving_in_lean/)
+are much longer (and much more authoritative) explanations about the
+same topic.
 
 ## Types and typing judgments
 
