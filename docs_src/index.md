@@ -83,11 +83,11 @@ lattice should be understood in the order relation theoretic sense, not
 its group theoretic sense.
 
 If you want to explore the project code interactively, you can read our
-[installation instructions](install.html).
-
-### Chat
-
-You're welcome to ask questions at the [Zulip chat](https://leanprover.zulipchat.com/#narrow/stream/116395-maths/topic/Perfectoid.20spaces).
+[installation instructions](install.html). 
+You can also read [the paper](https://arxiv.org/abs/1910.12320) we wrote about
+this project. Note however that this paper was written for people who are
+somewhat familiar with formalized mathematics. If you are not used to this way of doing mathematics, you should probably first read the next section.
+In any case, you're welcome to ask questions about this project at the [Zulip chat](https://leanprover.zulipchat.com/#narrow/stream/116395-maths/topic/Perfectoid.20spaces).
 
 ## I am a mathematician. I want to know more about Lean.
 
