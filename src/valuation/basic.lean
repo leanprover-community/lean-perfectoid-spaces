@@ -247,6 +247,22 @@ begin
   rwa [v₁.map_zero, v₂.map_zero] at this,
 end
 
+lemma eq_zero (h : v₁.is_equiv v₂) {r : R} :
+  v₁ r = 0 ↔ v₂ r = 0 :=
+by { rw [← v₁.map_zero, ← v₂.map_zero], exact h.val_eq }
+
+lemma eq_one (h : v₁.is_equiv v₂) {r : R} :
+  v₁ r = 1 ↔ v₂ r = 1 :=
+by { rw [← v₁.map_one, ← v₂.map_one], exact h.val_eq }
+
+lemma lt_iff (h : v₁.is_equiv v₂) {r s : R} :
+  v₁ r < v₁ s ↔ v₂ r < v₂ s :=
+by { have := not_iff_not_of_iff (h s r), push_neg at this, exact this }
+
+lemma lt_one (h : v₁.is_equiv v₂) {r : R} :
+  v₁ r < 1 ↔ v₂ r < 1 :=
+by { rw [← v₁.map_one, ← v₂.map_one], exact h.lt_iff }
+
 end is_equiv -- end of namespace
 
 lemma is_equiv_of_map_strict_mono [ring R] {v : valuation R Γ₀}
@@ -307,7 +323,17 @@ begin
   cases x; [left, {right, cases x}]; refl
 end
 
-lemma is_trivial_iff_val_le_one {K : Type*} [division_ring K] {v : valuation K Γ₀} :
+lemma is_equiv.is_trivial {v₁ : valuation R Γ₀} {v₂ : valuation R Γ'₀} (h : v₁.is_equiv v₂) :
+  v₁.is_trivial ↔ v₂.is_trivial :=
+begin
+  apply forall_congr, intro r,
+  exact or_congr h.eq_zero h.eq_one,
+end
+
+section division_ring
+variables {K : Type*} [division_ring K]
+
+lemma is_trivial_iff_val_le_one {v : valuation K Γ₀} :
   v.is_trivial ↔ ∀ x:K, v x ≤ 1 :=
 begin
   split; intros h x,
@@ -323,6 +349,23 @@ begin
       { rwa v.ne_zero_iff at h₁, } },
     { push_neg at hx, exact ⟨_, hx⟩ } }
 end
+
+lemma exists_lt_one_of_not_trivial (v : valuation K Γ₀) (hv : ¬ v.is_trivial) :
+  ∃ x : K, v x < 1 ∧ v x ≠ 0 :=
+begin
+  delta is_trivial at hv, push_neg at hv, rcases hv with ⟨x, h₁, h₂⟩,
+  by_cases hx : v x < 1, { use [x, hx, h₁] },
+  use x⁻¹,
+  have xne : x ≠ 0, { rwa ← v.ne_zero_iff },
+  rw [v.map_inv' xne, ← linear_ordered_structure.inv_lt_inv _ _, inv_inv'', inv_one',
+      ← v.map_inv' xne, v.ne_zero_iff],
+  { push_neg at hx, replace hx := lt_of_le_of_ne hx (ne.symm h₂),
+    exact ⟨hx, inv_ne_zero xne⟩ },
+  { exact one_ne_zero },
+  { rw [← v.map_inv' xne, v.ne_zero_iff], exact inv_ne_zero xne },
+end
+
+end division_ring
 
 end trivial -- end of section
 

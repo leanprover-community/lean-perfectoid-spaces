@@ -214,6 +214,15 @@ end
 lemma pow_ne_zero {a : α} {n : ℕ} (h : a ≠ 0) : a^n ≠ 0 :=
 assume H, h $ eq_zero_of_pow_eq_zero H
 
+lemma zero_pow (n : ℕ) (hn : n ≠ 0) : (0:α)^n = 0 :=
+begin
+  rcases nat.exists_eq_succ_of_ne_zero hn with ⟨n,rfl⟩,
+  rw [pow_succ, zero_mul], refl
+end
+
+lemma zero_pow_pnat (n : ℕ+) : (0:α)^(n:ℕ) = 0 :=
+zero_pow n (ne_of_gt n.2)
+
 theorem pow_sub (a : α) {m n : ℕ} (ha : a ≠ 0) (h : n ≤ m) : a^(m - n) = a^m * (a^n)⁻¹ :=
 have h1 : m - n + n = m, from nat.sub_add_cancel h,
 have h2 : a^(m - n) * a^n = a^m, by rw [←pow_add, h1],
