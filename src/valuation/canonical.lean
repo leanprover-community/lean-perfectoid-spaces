@@ -55,7 +55,7 @@ it's easier for us because it's in a smaller universe).
 -/
 
 local attribute [instance] classical.prop_decidable
-local attribute [instance, priority 0] classical.decidable_linear_order
+local attribute [instance, priority 0] classical.DLO
 noncomputable theory
 
 universes u u₀ u₁ u₂ u₃

@@ -100,7 +100,7 @@ attribute [simp] hom.stalk
 
 /-- A morphism of pre-valued ringed spaces is determined by the data
 of the morphism of the structure presheaves.-/
-@[extensionality]
+@[ext]
 lemma hom_ext {X Y : PreValuedRingedSpace.{u}} (f g : hom X Y) :
   f.fmap = g.fmap → f = g :=
 by { cases f, cases g, tidy }

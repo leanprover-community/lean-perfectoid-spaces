@@ -81,7 +81,7 @@ variables {a b c d : α}
 open group_with_zero
 
 local attribute [instance] classical.prop_decidable
-local attribute [instance, priority 0] classical.decidable_linear_order
+local attribute [instance, priority 0] classical.DLO
 
 @[simp] lemma zero_le {a : α} : 0 ≤ a :=
 linear_ordered_comm_group_with_zero.zero_le' a

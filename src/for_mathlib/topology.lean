@@ -182,7 +182,7 @@ lemma comp (dh : dense_embedding h) (df : dense_embedding f) : dense_embedding (
   induced := (dh.to_inducing.comp df.to_inducing).induced }
 
 lemma of_homeo (h : α ≃ₜ β) : dense_embedding h :=
-{ dense := (dense_range_iff_closure_eq _).mpr $
+{ dense := dense_range_iff_closure_range.mpr $
              (range_iff_surjective.mpr h.to_equiv.surjective).symm ▸ closure_univ,
   inj := h.to_equiv.injective,
   induced := h.induced_eq.symm, }
@@ -335,7 +335,7 @@ lemma dense_range.mem_nhds {α : Type*} [topological_space α] {β : Type*} [top
   ∃ a : α, f a ∈ U :=
 begin
   rcases exists_mem_of_ne_empty (mem_closure_iff_nhds.mp
-    (((dense_range_iff_closure_eq f).mp h).symm ▸ mem_univ b : b ∈ closure (range f)) U U_in)
+    ((dense_range_iff_closure_range.mp h).symm ▸ mem_univ b : b ∈ closure (range f)) U U_in)
     with ⟨_, h, a, rfl⟩,
   exact ⟨a, h⟩
 end

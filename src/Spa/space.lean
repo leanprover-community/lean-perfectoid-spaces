@@ -44,7 +44,7 @@ variables {A : Huber_pair}
 /-- The coercion from the adic spectrum of a Huber pair to the ambient valuation spectrum.-/
 instance : has_coe (spa A) (Spv A) := ⟨subtype.val⟩
 
-@[extensionality]
+@[ext]
 lemma ext (v₁ v₂ : spa A) (h : (Spv.out ↑v₁).is_equiv (Spv.out (↑v₂ : Spv A))) :
   v₁ = v₂ :=
 subtype.val_injective $ Spv.ext _ _ h
@@ -94,7 +94,7 @@ variables (r : rational_open_data A)
 
 attribute [instance] Tfin
 
-@[extensionality]
+@[ext]
 lemma ext {r₁ r₂ : rational_open_data A} (hs : r₁.s = r₂.s) (hT : r₁.T = r₂.T) :
   r₁ = r₂ :=
 begin

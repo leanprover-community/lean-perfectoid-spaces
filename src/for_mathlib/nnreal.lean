@@ -10,8 +10,9 @@ namespace nnreal
 @[simp] lemma coe_max (x y : nnreal) : ((max x y : nnreal) : ℝ) = max (x : ℝ) (y : ℝ) :=
 by { delta max, split_ifs; refl }
 
-@[simp, move_cast] lemma coe_pow (x : nnreal) (n : ℕ) : ((x^n : nnreal) : ℝ) = x^n :=
-by { induction n with n ih, { refl }, simp [nat.succ_eq_add_one, pow_add, ih], }
+-- Has already been declared.
+-- @[simp, move_cast] lemma coe_pow (x : nnreal) (n : ℕ) : ((x^n : nnreal) : ℝ) = x^n :=
+-- by { induction n with n ih, { refl }, simp [nat.succ_eq_add_one, pow_add, ih], }
 
 noncomputable instance : has_pow nnreal ℝ :=
 { pow := λ x q, ⟨x^q, real.rpow_nonneg_of_nonneg x.2 q⟩ }
@@ -25,7 +26,7 @@ lemma mul_rpow : (a*b)^x = a^x * b^x :=
 subtype.coe_ext.mpr $ real.mul_rpow a.2 b.2
 
 @[elim_cast] lemma rpow_nat_cast (n : ℕ) : a^(n:ℝ) = a^n :=
-subtype.coe_ext.mpr $ by exact_mod_cast real.rpow_nat_cast a n
+subtype.coe_ext.mpr $ by { rw coe_pow, exact real.rpow_nat_cast a n }
 
 @[simp] lemma rpow_one : a^(1:ℝ) = a :=
 subtype.coe_ext.mpr $

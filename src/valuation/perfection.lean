@@ -97,7 +97,7 @@ def perfection : valuation (perfect_closure R p) nnreal :=
     -- It finds two instances that aren't defeq.
     intros r s,
     convert perfection.f_add v p r s,
-    delta classical.decidable_linear_order nnreal.decidable_linear_order,
+    delta classical.DLO nnreal.decidable_linear_order,
     congr,
   end }
 

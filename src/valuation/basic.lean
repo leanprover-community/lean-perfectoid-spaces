@@ -38,7 +38,7 @@ on R / J = `ideal.quotient J` is `on_quot v h`.
 local attribute [instance] classical.prop_decidable
 noncomputable theory
 
-local attribute [instance, priority 0] classical.decidable_linear_order
+local attribute [instance, priority 0] classical.DLO
 
 open function ideal linear_ordered_structure
 
@@ -85,7 +85,7 @@ variables {R} {Γ₀} (v : valuation R Γ₀) {x y z : R}
 @[simp] lemma map_pow  : ∀ x (n:ℕ), v (x^n) = (v x)^n :=
 @is_monoid_hom.map_pow _ _ _ _ v (monoid_hom.is_monoid_hom v.to_monoid_hom)
 
-@[extensionality] lemma ext {v₁ v₂ : valuation R Γ₀} (h : ∀ r, v₁ r = v₂ r) : v₁ = v₂ :=
+@[ext] lemma ext {v₁ v₂ : valuation R Γ₀} (h : ∀ r, v₁ r = v₂ r) : v₁ = v₂ :=
 by { cases v₁, cases v₂, congr, funext r, exact h r }
 
 lemma ext_iff {v₁ v₂ : valuation R Γ₀} : v₁ = v₂ ↔ ∀ r, v₁ r = v₂ r :=

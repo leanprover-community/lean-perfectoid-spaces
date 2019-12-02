@@ -42,7 +42,7 @@ begin
     { exact emb.is_open_map _ V.is_open },
     { apply_instance },
     { rwa ← set.image_subset_iff at hV } },
-  { apply continuous.tendsto (emb.continuous),
+  { apply emb.continuous.tendsto,
     rwa is_group_hom.map_one f }
 end
 
@@ -63,7 +63,7 @@ begin
     rw set.mem_smul_set at hx,
     rcases hx with ⟨y, hy, rfl⟩,
     exact hy },
-  { apply continuous_mul continuous_const continuous_id,
+  { apply continuous_const.mul continuous_id,
     exact U.is_open,
     apply_instance },
   { refine {..}; intros,
@@ -108,7 +108,7 @@ begin
   use V,
   work_on_goal 0 {
     rwa [set.pointwise_mul_eq_image, set.image_subset_iff] },
-  apply mem_nhds_sets (continuous_mul' _ U.is_open),
+  apply mem_nhds_sets (continuous_mul _ U.is_open),
   simpa only [prod.fst_zero, prod.snd_zero, set.mem_preimage, mul_zero] using U.zero_mem
 end
 

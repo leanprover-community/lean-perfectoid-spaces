@@ -330,7 +330,7 @@ def add_group_with_zero_nhd.of_open_add_subgroup
     change map δ_G (filter.prod Z Z) ≤ Z,
     have key₁: map δ_H (nhds (0, 0)) ≤ N,
     { rw [show N = nhds (δ_H (0, 0)), by simp [*]],
-      exact continuous_sub'.tendsto _ },
+      exact continuous_sub.tendsto _ },
     have key₂ : δ_G ∘ ι⨯ι = ι ∘ δ_H,
     { ext p,
       change (p.1 : G) - (p.2 : G) = (p.1 - p.2 : G),
@@ -388,9 +388,9 @@ begin
   refine comap_eq_of_inverse (λ h, g*h) _ _ _,
   { funext x; simp },
   { suffices : tendsto (λ h,g⁻¹*h) (nhds g) (nhds (g⁻¹ * g)), { simpa },
-    exact tendsto_mul tendsto_const_nhds tendsto_id },
+    exact tendsto.mul tendsto_const_nhds tendsto_id },
   { suffices : tendsto (λ h, g*h) (nhds 1) (nhds (g*1)), { simpa },
-    exact tendsto_mul tendsto_const_nhds tendsto_id }
+    exact tendsto.mul tendsto_const_nhds tendsto_id }
 end
 
 @[to_additive]
@@ -606,7 +606,7 @@ begin
   have l : function.left_inverse (λ (x : G), x * g⁻¹) (λ (x : G), x * g), from λ x, by simp,
   have r : function.right_inverse (λ (x : G), x * g⁻¹) (λ (x : G), x * g), from λ x, by simp,
   rw image_eq_preimage_of_inverse l r,
-  have : continuous (λ (x : G), x * g⁻¹), from continuous_mul continuous_id continuous_const,
+  have : continuous (λ (x : G), x * g⁻¹), from continuous_id.mul continuous_const,
   apply this.tendsto g,
   simpa,
 end

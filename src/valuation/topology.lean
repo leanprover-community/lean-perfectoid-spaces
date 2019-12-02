@@ -11,7 +11,7 @@ In this file, we define the topology induced by a valuation on a ring.
 local attribute [instance] classical.prop_decidable
 noncomputable theory
 
-local attribute [instance, priority 0] classical.decidable_linear_order
+local attribute [instance, priority 0] classical.DLO
 
 open set valuation linear_ordered_structure
 

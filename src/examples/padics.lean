@@ -189,11 +189,11 @@ def padic.bundled_valuation : valuation ℚ_[p] nnreal :=
     split,
     { apply le_trans (le_max_left ∥x∥ ∥y∥),
       apply le_of_eq, symmetry, convert nnreal.coe_max _ _,
-      delta classical.decidable_linear_order nnreal.decidable_linear_order real.decidable_linear_order,
+      delta classical.DLO nnreal.decidable_linear_order real.decidable_linear_order,
       congr, },
     { apply le_trans (le_max_right ∥x∥ ∥y∥),
       apply le_of_eq, symmetry, convert nnreal.coe_max _ _,
-      delta classical.decidable_linear_order nnreal.decidable_linear_order real.decidable_linear_order,
+      delta classical.DLO nnreal.decidable_linear_order real.decidable_linear_order,
       congr, },
   end }
 

@@ -25,7 +25,7 @@ Then we extend the valuation given on `K` to a valuation on `hat K`.
 
 open filter set linear_ordered_structure
 
-local attribute [instance, priority 0] classical.decidable_linear_order
+local attribute [instance, priority 0] classical.DLO
 
 local notation `𝓝` x: 70 := nhds x
 

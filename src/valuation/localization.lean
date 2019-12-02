@@ -20,7 +20,7 @@ of v. See [Wedhorn; 1.26].
 -/
 
 local attribute [instance] classical.prop_decidable
-local attribute [instance] classical.decidable_linear_order
+local attribute [instance] classical.DLO
 noncomputable theory
 
 universes u u₀

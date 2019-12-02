@@ -13,8 +13,9 @@ variables {α : Type*} {β : Type*} (f : α → β)
 lemma set.image_ne_empty (s : set α) (h : s ≠ ∅) : f '' s ≠ ∅ :=
 λ H, h (image_eq_empty.1 H)
 
-@[simp] lemma set.range_ne_empty {α : Type u} {β : Type v} {f : α → β} : range f ≠ ∅ ↔ nonempty α :=
-by classical ; simp
+-- Has already been declared...
+-- @[simp] lemma set.range_ne_empty {α : Type u} {β : Type v} {f : α → β} : range f ≠ ∅ ↔ nonempty α :=
+-- by classical ; simp
 
 @[simp] lemma set.exists_mem_range {α : Type u} {β : Type v} {f : α → β} {P : β → Prop} :
   (∃ b ∈ range f, P b) ↔ ∃ a, P (f a) :=

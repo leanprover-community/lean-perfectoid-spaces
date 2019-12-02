@@ -108,7 +108,7 @@ begin
   { letI : topological_space (hat K × hat K) := prod.topological_space,
     have : continuous_at (λ y : hat K, ((y, hat_inv y) : hat K × hat K)) x,
       from continuous_at.prod_mk continuous_id.continuous_at (continuous_hat_inv x_ne),
-    exact (_root_.continuous_mul'.continuous_at.comp this : _) },
+    exact (_root_.continuous_mul.continuous_at.comp this : _) },
   have clo : x ∈ closure (c '' -{0}),
   { have := dense_inducing_coe.dense x,
     rw [← image_univ, show (univ : set K) = {0} ∪ -{0}, from (union_compl_self _).symm, image_union] at this,
