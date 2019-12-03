@@ -303,7 +303,7 @@ def padic.Spa_unique : unique (Spa $ padic.Huber_pair p) :=
             valuation.map_fpow_eq_one_iff, ← valuation.map_fpow_eq_one_iff n hn] at H,
           { exact le_of_eq H, },
           contrapose! h,
-          rw [h, fpow_zero, mul_one, nnreal.coe_le], apply le_of_eq,
+          rw [h, fpow_zero, mul_one, ← nnreal.coe_le], apply le_of_eq,
           erw ← padic_int.is_unit_iff, exact is_unit_unit _, } } },
     { exact spa.map_plus v ⟨x, h⟩, }
   end,

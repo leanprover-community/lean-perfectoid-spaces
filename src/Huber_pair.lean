@@ -42,7 +42,7 @@ lemma plus_is_topological_ring (h : is_ring_of_integral_elements Rplus R) :
   begin
     rw h.to_open_embedding.to_embedding.to_inducing.continuous_iff,
     simp only [function.comp, algebra.map_add],
-    apply continuous_add,
+    apply continuous.add,
     all_goals { apply continuous.comp h.to_open_embedding.continuous },
     { exact continuous_fst },
     { exact continuous_snd },
@@ -51,7 +51,7 @@ lemma plus_is_topological_ring (h : is_ring_of_integral_elements Rplus R) :
   begin
     rw h.to_open_embedding.to_embedding.to_inducing.continuous_iff,
     simp only [function.comp, algebra.map_mul],
-    apply continuous_mul,
+    apply continuous.mul,
     all_goals { apply continuous.comp h.to_open_embedding.continuous },
     { exact continuous_fst },
     { exact continuous_snd },
@@ -60,8 +60,7 @@ lemma plus_is_topological_ring (h : is_ring_of_integral_elements Rplus R) :
   begin
     rw h.to_open_embedding.to_embedding.to_inducing.continuous_iff,
     simp only [function.comp, algebra.map_neg],
-    apply continuous_neg,
-    exact h.to_open_embedding.continuous,
+    exact h.to_open_embedding.continuous.neg,
   end }
 
 end is_ring_of_integral_elements

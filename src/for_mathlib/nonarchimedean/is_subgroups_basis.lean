@@ -142,7 +142,7 @@ include h_directed h_left_mul h_mul
 
 def of_indexed_of_comm : subgroups_basis R :=
 { sets := range G,
-  ne_empty := range_ne_empty.mpr nonempty_of_inhabited,
+  ne_empty := range_ne_empty _,
   directed := begin
     rintros _ _ ⟨i, rfl⟩ ⟨j, rfl⟩,
     rw exists_mem_range,

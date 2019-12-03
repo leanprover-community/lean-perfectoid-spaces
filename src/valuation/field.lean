@@ -258,7 +258,7 @@ lemma valued.continuous_extension : continuous (valued.extension : (hat K) → �
     { have : tendsto (λ p : (hat K) × hat K, p.1*p.2⁻¹) ((𝓝 1).prod 𝓝 1) 𝓝 1,
       { rw ← nhds_prod_eq,
         conv {congr, skip, skip, rw ← (one_mul (1 : hat K))},
-        refine tendsto_mul continuous_fst.continuous_at (tendsto.comp _ continuous_snd.continuous_at),
+        refine tendsto.mul continuous_fst.continuous_at (tendsto.comp _ continuous_snd.continuous_at),
         convert topological_division_ring.continuous_inv (1 : hat K) zero_ne_one.symm,
         exact inv_one.symm },
       rcases tendsto_prod_self_iff.mp this V V_in with ⟨U, U_in, hU⟩,
@@ -282,15 +282,12 @@ lemma valued.continuous_extension : continuous (valued.extension : (hat K) → �
       { intro x,
         simp only [mul_assoc, inv_mul_cancel h, mul_one] },
       have c : continuous  (λ (x : hat K), x * x₀⁻¹),
-        from continuous_mul continuous_id continuous_const,
+        from continuous_id.mul continuous_const,
       rw image_eq_preimage_of_inverse l r,
       rw ← mul_inv_cancel h at V'_in,
       exact c.continuous_at V'_in },
     have : ∃ (z₀ : K) (y₀ ∈ V'), coe z₀ = y₀*x₀ ∧ z₀ ≠ 0,
-    { -- TODO add next line to mathlib main completion file
-      have : dense_range (coe : K → hat K) := (dense_range_iff_closure_eq _).mpr completion.dense,
-
-      rcases dense_range.mem_nhds this nhds_right with ⟨z₀, y₀, y₀_in, h⟩,
+    { rcases dense_range.mem_nhds completion.dense nhds_right with ⟨z₀, y₀, y₀_in, h⟩,
       refine ⟨z₀, y₀, y₀_in, ⟨h.symm, _⟩⟩,
       intro hz,
       rw hz at h,
@@ -330,11 +327,11 @@ valuation (hat K) (Γ₀ K) :=
   map_mul' := λ x y, begin
     apply completion.induction_on₂ x y,
     { have c1 : continuous (λ (x : (hat K) × hat K), valued.extension (x.1 * x.2)),
-        from valued.continuous_extension.comp (continuous_mul continuous_fst continuous_snd),
+        from valued.continuous_extension.comp (continuous_fst.mul continuous_snd),
 
       have c2 : continuous (λ (x : (hat K) × hat K), valued.extension x.1 * valued.extension x.2),
-        from continuous_mul (valued.continuous_extension.comp continuous_fst)
-                            (valued.continuous_extension.comp continuous_snd),
+        from (valued.continuous_extension.comp continuous_fst).mul
+              (valued.continuous_extension.comp continuous_snd),
       exact is_closed_eq c1 c2 },
     { intros x y,
       norm_cast,
@@ -344,9 +341,9 @@ valuation (hat K) (Γ₀ K) :=
     rw le_max_iff,
     apply completion.induction_on₂ x y,
     { exact is_closed_union
-        (is_closed_le ((valued.continuous_extension).comp continuous_add')
+        (is_closed_le ((valued.continuous_extension).comp continuous_add)
         ((valued.continuous_extension).comp continuous_fst))
-        (is_closed_le ((valued.continuous_extension).comp continuous_add')
+        (is_closed_le ((valued.continuous_extension).comp continuous_add)
         ((valued.continuous_extension).comp continuous_snd)) },
     { intros x y,
       norm_cast,
