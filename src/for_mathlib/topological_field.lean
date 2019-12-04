@@ -75,7 +75,7 @@ instance top_monoid_units [topological_ring R] [topological_space $ units R] [in
       induced_compose, key, ← induced_compose],
   apply induced_mono,
   rw ← continuous_iff_le_induced,
-  exact continuous_mul',
+  exact continuous_mul,
 end⟩
 end topological_ring
 
@@ -126,6 +126,6 @@ lemma continuous_units_inv : continuous (λ x, x.inv : units K → K) :=
 begin
   change continuous (coe ∘ (λ x, x⁻¹ : units K → units K)),
   refine (topological_ring.induced_units.continuous_coe K).comp _,
-  exact continuous_inv',
+  exact _root_.continuous_inv,
 end
 end topological_division_ring

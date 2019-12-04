@@ -91,7 +91,7 @@ def f_map.to_presheaf_of_rings_f_map
   presheaf_of_rings.f_map F.to_presheaf_of_rings G.to_presheaf_of_rings :=
 { ..f}
 
-@[extensionality]
+@[ext]
 lemma presheaf_of_topological_rings.f_map.ext
   {X : Type u} [topological_space X] {Y : Type u} [topological_space Y]
   {F : presheaf_of_topological_rings X} {G : presheaf_of_topological_rings Y}

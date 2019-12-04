@@ -22,7 +22,7 @@ See also Wedhorn 4.7.
 
 universes u u₀ u₁ u₂ u₃
 
-local attribute [instance, priority 0] classical.decidable_linear_order
+local attribute [instance, priority 0] classical.DLO
 
 /-- Valuation spectrum of a ring. -/
 -- Note that the valuation takes values in a group in the same universe as R.
@@ -141,7 +141,7 @@ begin
   simp [this],
 end
 
-@[extensionality]
+@[ext]
 lemma ext (v₁ v₂ : Spv R) (h : (Spv.out v₁).is_equiv (Spv.out v₂)) :
   v₁ = v₂ :=
 by simpa only [Spv.mk_out] using Spv.sound h

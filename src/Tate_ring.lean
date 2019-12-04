@@ -57,7 +57,7 @@ begin
     erw set.image_eq_preimage_of_inverse inv.1 inv.2,
     have : tendsto (λ (u : R), u * ↑ϖ.1⁻¹ ^ (N + 1)) (nhds 0) (nhds 0),
     { conv {congr, skip, skip, rw ←(zero_mul (↑ϖ.1⁻¹ ^ (N + 1) : R))},
-        exact tendsto_mul tendsto_id tendsto_const_nhds },
+        exact tendsto_id.mul tendsto_const_nhds },
     exact this U'_nhds },
   use [V, V_nhds],
   rintros _ ⟨u, u_in, rfl⟩ b ⟨n, rfl⟩,

@@ -15,7 +15,7 @@ lemma separated_of_group_hom {f : α → β} [is_add_group_hom f] (hf : continuo
   separated_map f := (uniform_continuous_of_continuous hf).separated_map
 
 lemma uniform_continuous₂_add : uniform_continuous₂ ((+) : α → α → α) :=
-uniform_continuous_add'
+uniform_continuous_add
 
 local attribute [instance] separation_setoid
 
@@ -40,7 +40,7 @@ instance uniform_space_sep_quot.add_group : add_group (sep_quot α) :=
   end,
   neg := sep_quot.map add_group.neg,
   add_left_neg := sep_quot.map₂_map_left_self_const uniform_continuous₂_add.separated_map
-    uniform_continuous_neg'.separated_map (0 : α) add_left_neg }
+    uniform_continuous_neg.separated_map (0 : α) add_left_neg }
 
 -- MOVEME
 theorem uniform_add_group.mk'' {α} [uniform_space α] [add_group α]
@@ -49,7 +49,7 @@ theorem uniform_add_group.mk'' {α} [uniform_space α] [add_group α]
 ⟨uniform_continuous.comp h₁ (uniform_continuous.prod_mk uniform_continuous_fst (h₂.comp uniform_continuous_snd))⟩
 
 instance : uniform_add_group (sep_quot α) :=
-uniform_add_group.mk'' (sep_quot.uniform_continuous_map₂ uniform_continuous₂_add) (sep_quot.uniform_continuous_map uniform_continuous_neg')
+uniform_add_group.mk'' (sep_quot.uniform_continuous_map₂ uniform_continuous₂_add) (sep_quot.uniform_continuous_map uniform_continuous_neg)
 
 lemma sep_quot.add_mk (a b : α) : ⟦a⟧ + ⟦b⟧ = ⟦a+b⟧ :=
 sep_quot.map₂_mk_mk uniform_continuous₂_add.separated_map _ _

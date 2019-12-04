@@ -15,7 +15,7 @@ A subset U ⊆ Γ₀ is open if 0 ∉ U or if there is an invertible γ₀ ∈ �
 
 -/
 
-local attribute [instance, priority 0] classical.decidable_linear_order
+local attribute [instance, priority 0] classical.DLO
 
 local notation `𝓝` x: 70 := nhds x
 
@@ -206,7 +206,7 @@ end
 /--The filter basis around the 0 element of a linearly ordered group with zero element adjoined.-/
 def zero_filter_basis : filter_basis Γ₀ :=
 { sets := range (λ γ : units Γ₀, {x : Γ₀ | x < γ}),
-  ne_empty := range_ne_empty.mpr ⟨1⟩,
+  ne_empty := range_ne_empty _,
   directed := begin
     intros s t hs ht,
     rw mem_range at hs ht,

@@ -6,7 +6,6 @@ import for_mathlib.ideal_operations
 import for_mathlib.normed_spaces
 import for_mathlib.nnreal
 import for_mathlib.padics
-import for_mathlib.polynomial
 
 import adic_space
 
@@ -189,11 +188,11 @@ def padic.bundled_valuation : valuation ℚ_[p] nnreal :=
     split,
     { apply le_trans (le_max_left ∥x∥ ∥y∥),
       apply le_of_eq, symmetry, convert nnreal.coe_max _ _,
-      delta classical.decidable_linear_order nnreal.decidable_linear_order real.decidable_linear_order,
+      delta classical.DLO nnreal.decidable_linear_order real.decidable_linear_order,
       congr, },
     { apply le_trans (le_max_right ∥x∥ ∥y∥),
       apply le_of_eq, symmetry, convert nnreal.coe_max _ _,
-      delta classical.decidable_linear_order nnreal.decidable_linear_order real.decidable_linear_order,
+      delta classical.DLO nnreal.decidable_linear_order real.decidable_linear_order,
       congr, },
   end }
 
@@ -303,7 +302,7 @@ def padic.Spa_unique : unique (Spa $ padic.Huber_pair p) :=
             valuation.map_fpow_eq_one_iff, ← valuation.map_fpow_eq_one_iff n hn] at H,
           { exact le_of_eq H, },
           contrapose! h,
-          rw [h, fpow_zero, mul_one, nnreal.coe_le], apply le_of_eq,
+          rw [h, fpow_zero, mul_one, ← nnreal.coe_le], apply le_of_eq,
           erw ← padic_int.is_unit_iff, exact is_unit_unit _, } } },
     { exact spa.map_plus v ⟨x, h⟩, }
   end,
