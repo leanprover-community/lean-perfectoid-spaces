@@ -4,7 +4,6 @@ import ring_theory.subring
 
 import for_mathlib.rings
 import for_mathlib.equiv
-import for_mathlib.order
 
 import valuation.linear_ordered_comm_group_with_zero
 
