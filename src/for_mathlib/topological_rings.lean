@@ -22,11 +22,11 @@ instance subring_has_zero (R : Type u) [comm_ring R] (S : set R) [HS : is_subrin
 
 instance topological_subring (A₀ : set A) [is_subring A₀] : topological_ring A₀ :=
 { continuous_neg := continuous_subtype_mk _ $ (continuous_neg A).comp continuous_subtype_val,
-  continuous_add := continuous_subtype_mk _ $ continuous.add
-    (continuous_subtype_val.comp continuous_fst)
+  continuous_add := continuous_subtype_mk _ $
+    (continuous_subtype_val.comp continuous_fst).add
     ( continuous_subtype_val.comp continuous_snd),
-  continuous_mul := continuous_subtype_mk _ $ continuous.mul
-    (continuous_subtype_val.comp continuous_fst)
+  continuous_mul := continuous_subtype_mk _ $
+    (continuous_subtype_val.comp continuous_fst).mul
     (continuous_subtype_val.comp continuous_snd) }
 
 lemma half_nhds {s : set A} (hs : s ∈ (nhds (0 : A))) :

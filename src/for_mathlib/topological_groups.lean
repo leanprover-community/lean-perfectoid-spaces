@@ -387,10 +387,10 @@ lemma nhds_translation_mul_inv_left (g : G) :
 begin
   refine comap_eq_of_inverse (λ h, g*h) _ _ _,
   { funext x; simp },
-  { suffices : tendsto (λ h,g⁻¹*h) (nhds g) (nhds (g⁻¹ * g)), { simpa },
-    exact tendsto.mul tendsto_const_nhds tendsto_id },
-  { suffices : tendsto (λ h, g*h) (nhds 1) (nhds (g*1)), { simpa },
-    exact tendsto.mul tendsto_const_nhds tendsto_id }
+  { suffices : tendsto (λ h,g⁻¹*h) (nhds g) (nhds (g⁻¹ * g)), by simpa,
+    exact tendsto_const_nhds.mul tendsto_id },
+  { suffices : tendsto (λ h, g*h) (nhds 1) (nhds (g*1)), by simpa,
+    exact tendsto_const_nhds.mul tendsto_id }
 end
 
 @[to_additive]

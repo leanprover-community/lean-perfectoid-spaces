@@ -6,7 +6,6 @@ import for_mathlib.ideal_operations
 import for_mathlib.normed_spaces
 import for_mathlib.nnreal
 import for_mathlib.padics
-import for_mathlib.polynomial
 
 import adic_space
 
