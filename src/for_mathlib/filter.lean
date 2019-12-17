@@ -209,7 +209,7 @@ universes u v
 protected def prod {α : Type u} {β : Type v} (B : filter_basis α) (B' : filter_basis β) :
   filter_basis (α × β) :=
 { sets :=  (uncurry' set.prod) '' (B.sets.prod B'.sets),
-  ne_empty := image_ne_empty _ _ (set.prod_neq_empty_iff.2 ⟨B.ne_empty, B'.ne_empty⟩),
+  ne_empty := image_ne_empty _ _ (set.prod_ne_empty_iff.2 ⟨B.ne_empty, B'.ne_empty⟩),
   directed := begin
     rintros _ _ ⟨⟨P, P'⟩, ⟨P_in, P_in'⟩, rfl⟩ ⟨⟨Q, Q'⟩, ⟨Q_in, Q_in'⟩, rfl⟩,
     rcases filter_basis.directed P_in Q_in with ⟨U, U_in, hU⟩,
