@@ -523,7 +523,7 @@ end
 
 /-- If supp(v₁)=supp(v₂) then the natural map Frac(R/supp(v₁)) → Frac(R/supp(v₂)) is a
 homomorphism of fields. -/
-instance (h : supp v₁ = supp v₂) : is_field_hom (valfield_of_valfield_of_eq_supp h) :=
+instance is_ring_hom_of_supp (h : supp v₁ = supp v₂) : is_ring_hom (valfield_of_valfield_of_eq_supp h) :=
 by delta valfield_of_valfield_of_eq_supp; apply_instance
 
 -- This should be possible using type class inference but there are max class

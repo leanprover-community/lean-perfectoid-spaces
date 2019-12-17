@@ -2,7 +2,6 @@ import data.padics
 import ring_theory.noetherian
 
 import for_mathlib.group_with_zero
-import for_mathlib.field_power
 import for_mathlib.ideal_operations
 
 noncomputable theory
@@ -312,9 +311,6 @@ instance coe_is_ring_hom : is_ring_hom (coe : ℤ_[p] → ℚ_[p]) :=
 { map_one := rfl,
   map_mul := coe_mul,
   map_add := coe_add }
-
-def algebra : algebra ℤ_[p] ℚ_[p] :=
-@algebra.of_ring_hom ℤ_[p] _ _ _ (coe) padic_int.coe_is_ring_hom
 
 private lemma aux (p : ℚ) (n : ℤ) (hp : 1 ≤ p) (h : p ^ n < p) : p ^ n ≤ 1 :=
 by simpa using fpow_le_of_le hp (le_of_not_lt $ λ h' : 0 < n, not_le_of_lt h $

@@ -1,7 +1,5 @@
 import data.padics
 
-import for_mathlib.field_power
-import for_mathlib.finset
 import for_mathlib.ideal_operations
 import for_mathlib.normed_spaces
 import for_mathlib.nnreal
