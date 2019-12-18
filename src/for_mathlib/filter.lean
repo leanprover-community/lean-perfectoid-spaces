@@ -32,9 +32,6 @@ omit H
 
 
 open lattice
-lemma filter.map_inf_le (f : α → β) (F G : filter α) : map f (F ⊓ G) ≤ map f F ⊓ map f G :=
-(le_inf (map_mono inf_le_left) (map_mono inf_le_right))
-
 variables (φ : α → β)
 
 lemma tendsto_pure (F : filter α) (b : β) : tendsto φ F (pure b) ↔ φ ⁻¹' {b} ∈ F :=

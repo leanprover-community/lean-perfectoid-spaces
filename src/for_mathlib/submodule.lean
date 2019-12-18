@@ -29,11 +29,13 @@ begin
     apply span_induction hsi,
     { rintros _ ⟨s, hs, i, hi, rfl⟩,
       apply subset_span,
-      exact ⟨s, hs, a * i, I.mul_mem_left hi, mul_left_comm a s i⟩ },
+      refine ⟨s, hs, a * i, I.mul_mem_left hi, _⟩,
+      rw [← mul_assoc, mul_comm s a, mul_assoc, smul_def''],
+      refl },
     { rw smul_zero, apply submodule.zero_mem (span _ _) },
     { intros, rw smul_add, apply submodule.add_mem (span _ _), assumption' },
     { intros b si hsi,
-      rw [show a • b • si = b • a • si, from mul_left_comm _ _ _],
+      rw [show a • b • si = b • a • si, by {simp}],
       apply submodule.smul_mem (span _ _) b hsi } } }
 end
 
@@ -59,8 +61,7 @@ begin
   refine span_induction hx (λ x hx, subset_span hx) (span S' X).zero_mem
     (λ x y hx hy, (span S' X).add_mem hx hy) _,
   intros n b hb,
-  change ↑n * b ∈ _,
-  erw ← gsmul_eq_mul,
+  erw [smul_def'', ← gsmul_eq_mul],
   apply is_add_subgroup.gsmul_mem hb,
 end
 (span_mono subset_span)

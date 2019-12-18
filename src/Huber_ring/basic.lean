@@ -101,9 +101,9 @@ begin
     rw set.image_subset_iff,
     exact set.subset.trans (ideal.pow_le_pow $ nat.le_succ n) hn },
   { apply emb.continuous.tendsto,
-    rw show algebra.to_fun A (0:A₀) = 0,
-    { apply is_ring_hom.map_zero },
-    exact hU }
+    convert hU,
+    haveI : is_ring_hom (algebra.to_fun A : A₀ → A) := algebra.is_ring_hom,
+    exact is_ring_hom.map_zero _ }
 end
 
 end Huber_ring

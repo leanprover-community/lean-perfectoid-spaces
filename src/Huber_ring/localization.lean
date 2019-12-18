@@ -222,12 +222,13 @@ begin
     exact hv },
   replace hV : span ℤ _ ≤ span ℤ _ := span_mono hV,
   erw [← span_mul_span, ← submodule.smul_def] at hV,
+  haveI : is_ring_hom (to_fun A : A₀ → A) := algebra.is_ring_hom,
   -- Choose m such that I^m ⊆ V
   cases H₂ _ (mem_nhds_sets (emb.continuous _ V.is_open) _) with m hm,
   work_on_goal 1 {
-    erw [mem_preimage, is_ring_hom.map_zero (to_fun A)],
-    { exact V.zero_mem },
-    apply_instance },
+    show to_fun A (0 : A₀) ∈ V,
+    convert V.zero_mem,
+    exact is_ring_hom.map_zero _ },
   rw ← image_subset_iff at hm,
   change to_fun A '' ↑(I ^ m) ⊆ ↑V at hm,
   erw [← span_int_eq (V : set A), ← span_int_eq (↑(I^m) : set A₀)] at hm,
@@ -455,7 +456,7 @@ begin
       exact is_add_submonoid.add_mem ha hb },
     { rw [submodule.smul_def, span_mul_span],
       intros d a ha,
-      rw [(show d • a = ↑d * a, from rfl), is_ring_hom.map_mul (lift T s f fs hs), mul_comm],
+      rw [smul_def'', is_ring_hom.map_mul (lift T s f fs hs), mul_comm],
       rcases (finsupp.mem_span_iff_total ℤ).mp (by rw set.image_id; exact ha) with ⟨l, hl₁, hl₂⟩,
       rw finsupp.mem_supported at hl₁,
       rw [← hl₂, finsupp.total_apply] at ha ⊢,
@@ -463,7 +464,8 @@ begin
       refine is_add_submonoid.finset_sum_mem ↑(span _ _) _ _ _,
       intros b hb',
       apply subset_span,
-      show (↑(_ : ℤ) * _) * _ ∈ _,
+      --show (↑(_ : ℤ) * _) * _ ∈ _,
+      simp only [smul_def''],
       rcases hl₁ hb' with ⟨v, hv, b, hb, rfl⟩,
       refine ⟨↑(l (v * b)) * v, _, b * lift T s f fs hs ↑d, _, _⟩,
       { rw ← gsmul_eq_mul, exact is_add_subgroup.gsmul_mem hv },
@@ -488,7 +490,7 @@ begin
         { intros a b ha hb,
           rw is_ring_hom.map_add (lift T s f fs hs),
           exact is_add_submonoid.add_mem ha hb } },
-      { simp [mul_assoc] } } }
+      { simpa [mul_assoc] } } }
 end
 
 end
