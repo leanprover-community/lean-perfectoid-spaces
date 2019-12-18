@@ -187,7 +187,8 @@ noncomputable def inter_aux (r1 r2 : rational_open_data A) : rational_open_data 
         exact (ideal.span_le.mpr hn) } },
     { apply emb.continuous.tendsto,
       rw show algebra.to_fun A (0:A₀) = 0,
-      { apply is_ring_hom.map_zero },
+      { haveI : is_ring_hom (algebra.to_fun A : A₀ → A) := algebra.is_ring_hom,
+        apply is_ring_hom.map_zero },
       exact (mem_nhds_sets r2.Hopen $ ideal.zero_mem $ ideal.span r2.T) }
   end }
 

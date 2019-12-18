@@ -302,7 +302,7 @@ lemma valued.continuous_extension : continuous (valued.extension : (hat K) → �
     change y*x₀ = coe x at hy,
     have : valued.v K (x*z₀⁻¹) = 1,
     { apply hV,
-      rw [completion.coe_mul, is_field_hom.map_inv' (coe : K → hat K) z₀_ne, ← hy, hz₀, mul_inv'],
+      rw [completion.coe_mul, is_ring_hom.map_inv' (coe : K → hat K) z₀_ne, ← hy, hz₀, mul_inv'],
       assoc_rw mul_inv_cancel h,
       rw mul_one,
       solve_by_elim },

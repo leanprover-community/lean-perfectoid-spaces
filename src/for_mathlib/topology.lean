@@ -84,7 +84,7 @@ begin
   rw [continuous_within_at, this, ← comp_app i g, ← congr_fun H x] at hi, clear this,
   have := calc
     map g (comap g 𝓝 g x) = map g (comap  g 𝓝 g x ⊓ ⊤) : by rw inf_top_eq
-    ... ≤ map g (comap g 𝓝 g x) ⊓ map g ⊤ : map_inf_le g _ _
+    ... ≤ map g (comap g 𝓝 g x) ⊓ map g ⊤ : map_inf_le
     ... ≤ 𝓝 g x ⊓ map g ⊤ : inf_le_inf map_comap_le (le_refl _),
   exact le_trans (map_mono this) hi,
 end
@@ -363,7 +363,7 @@ begin
   rw ← bot_lt_iff_ne_bot,
   calc
     ⊥   < map f (𝓝 x ⊓ principal s) : bot_lt_iff_ne_bot.mpr (map_ne_bot hx)
-    ... ≤ (map f 𝓝 x) ⊓ (map f $ principal s) : map_inf_le _ _ _
+    ... ≤ (map f 𝓝 x) ⊓ (map f $ principal s) : map_inf_le
     ... = (map f 𝓝 x) ⊓ (principal $ f '' s) : by rw map_principal
     ... ≤ 𝓝 (f x) ⊓ (principal $ f '' s) : inf_le_inf hf (le_refl _)
 end
