@@ -40,7 +40,7 @@ iff is straightforward (but I didn't think about it too carefully). However we
 definitely cannot prove the → direction of this iff in this repo yet because we
 don't have enough API for cont. Here is an indication
 of part of the problem. localization r2 is just A[1/r2.s]. But we cannot prove yet r2.s is
-invertible in localization.r1, even though we know it doesn't canish anywhere on
+invertible in localization.r1, even though we know it doesn't vanish anywhere on
 rational_open r2 and hence on rational_open r1, because the fact that it doesn't vanish anywhere
 on rational_open r1 only means that it's not in any prime ideal corresponding
 to a *continuous* valuation on localization r1 which is bounded by 1 on some + subring;
