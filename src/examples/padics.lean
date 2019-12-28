@@ -71,7 +71,7 @@ lemma is_integrally_closed : is_integrally_closed ℤ_[p] ℚ_[p] :=
     rintros x ⟨f, f_monic, hf⟩,
     have bleh : eval₂ (algebra_map ℚ_[p]) x ((finset.range (nat_degree f)).sum (λ (i : ℕ), C (coeff f i) * X^i)) =
       ((finset.range (nat_degree f)).sum (λ (i : ℕ), eval₂ (algebra_map ℚ_[p]) x $ C (coeff f i) * X^i)),
-    { exact (finset.sum_hom _).symm },
+    { exact (finset.sum_hom _ _).symm },
     erw subtype.val_range,
     show ∥x∥ ≤ 1,
     rw [f_monic.as_sum, aeval_def, eval₂_add, eval₂_pow, eval₂_X] at hf,
