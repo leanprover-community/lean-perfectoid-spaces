@@ -10,7 +10,7 @@ import for_mathlib.rings
 import topology.algebra.open_subgroup
 
 local attribute [instance] set.pointwise_mul_semiring
-local attribute [instance] set.pointwise_mul_action
+local attribute [instance] set.smul_set_action
 
 /--A topological group is non-archimedean if every neighborhood of 1 contains an open subgroup.-/
 definition topological_group.nonarchimedean (G : Type*)
@@ -63,7 +63,7 @@ begin
     rw set.mem_smul_set at hx,
     rcases hx with ⟨y, hy, rfl⟩,
     exact hy },
-  { exact continuous_const.mul continuous_id U U.is_open },
+  { exact continuous_const.mul continuous_id U.val U.is_open },
   { refine {..}; intros,
     { show r * 0 ∈ U, simpa using U.zero_mem },
     { show r * (_ + _) ∈ U, rw left_distrib, apply U.add_mem, assumption' },

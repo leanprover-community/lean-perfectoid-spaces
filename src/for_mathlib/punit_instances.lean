@@ -16,6 +16,6 @@ lemma subset_subsingleton {α : Type*} [subsingleton α] (s : set α) :
 begin
   rw [classical.or_iff_not_imp_left, set.eq_univ_iff_forall],
   intros h x,
-  cases set.exists_mem_of_ne_empty h with y hy,
+  cases set.ne_empty_iff_nonempty.1 h with y hy,
   rwa subsingleton.elim x y
 end

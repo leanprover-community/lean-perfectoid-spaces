@@ -370,4 +370,4 @@ end
 
 /-- The ring of p-adic integers has characteristic 0.-/
 instance padic_int.char_zero : char_zero ℤ_[p] :=
-{ cast_inj := λ m n, by { rw subtype.coe_ext, norm_cast, exact char_zero.cast_inj _, } }
+⟨λ m n, by { rw subtype.coe_ext, norm_cast, apply char_zero.cast_injective }⟩

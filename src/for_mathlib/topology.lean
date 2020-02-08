@@ -147,9 +147,7 @@ have dhf : dense_inducing (h ∘ f),
     intros t ht,
     rw [dh.nhds_eq_comap x, mem_comap_sets] at ht,
     rcases ht with ⟨u, hu, hinc⟩,
-    replace H := H u hu,
-    rw ne_empty_iff_exists_mem at H ⊢,
-    rcases H with ⟨v, hv1, a, rfl⟩,
+    rcases H u hu with ⟨v, hv1, a, rfl⟩,
     use f a,
     split, swap, apply mem_range_self,
     apply mem_of_mem_of_subset _ hinc,
@@ -212,7 +210,7 @@ begin
     intro x,
     have key : f ⁻¹' {f x} ∈ nhds x,
       from mem_nhds_sets (h $ f x) (set.mem_insert (f x) ∅),
-    calc map f (nhds x) ≤ pure (f x) : (tendsto_pure f (nhds x) (f x)).2 key
+    calc map f (nhds x) ≤ pure (f x) : le_pure_iff.mpr key
         ... ≤ nhds (f x) : pure_le_nhds _ }
 end
 
@@ -239,10 +237,7 @@ lemma discrete_of_embedding_discrete {X : Type*} {Y : Type*} [topological_space 
 begin
   rw discrete_iff_nhds_eq_pure,
   intro x,
-  rw [hf.to_inducing.nhds_eq_comap, nhds_discrete],
-  suffices : f ⁻¹' {f x} = {x}, by simpa,
-  ext,
-  simp [hf.inj]
+  rw [hf.to_inducing.nhds_eq_comap, nhds_discrete, comap_pure hf.inj]
 end
 
 lemma is_open_singleton_iff {X : Type*} [topological_space X] {x : X} :
@@ -334,7 +329,7 @@ lemma dense_range.mem_nhds {α : Type*} [topological_space α] {β : Type*} [top
   {f : α → β} (h : dense_range f) {b : β} {U : set β} (U_in : U ∈ nhds b) :
   ∃ a : α, f a ∈ U :=
 begin
-  rcases exists_mem_of_ne_empty (mem_closure_iff_nhds.mp
+  rcases (mem_closure_iff_nhds.mp
     ((dense_range_iff_closure_range.mp h).symm ▸ mem_univ b : b ∈ closure (range f)) U U_in)
     with ⟨_, h, a, rfl⟩,
   exact ⟨a, h⟩

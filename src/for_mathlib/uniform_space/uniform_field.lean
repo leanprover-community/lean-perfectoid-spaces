@@ -86,10 +86,10 @@ begin
   { apply cauchy_comap,
     { rw completion.comap_coe_eq_uniformity, exact le_refl _ },
     { exact cauchy_nhds },
-    { exact dense_inducing_coe.comap_nhds_neq_bot } },
+    { exact dense_inducing_coe.comap_nhds_ne_bot } },
   { have eq_bot : 𝓝 ↑(0 : K) ⊓ 𝓝 y = ⊥,
     { by_contradiction h,
-      exact y_ne (eq_of_nhds_neq_bot  h).symm },
+      exact y_ne (eq_of_nhds_ne_bot  h).symm },
     rw [dense_inducing_coe.nhds_eq_comap (0 : K), ← comap_inf,  eq_bot],
     exact comap_bot },
 end

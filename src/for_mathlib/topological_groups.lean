@@ -195,7 +195,7 @@ begin
   { intros x U U_in,
     rw f.mem_N at U_in,
     rcases U_in with ⟨V, V_in, H⟩,
-    simpa [mem_pure] using H (mem_image_of_mem _ (group_filter_basis.one V_in)) },
+    simpa using H (mem_image_of_mem _ (group_filter_basis.one V_in)) },
   { intros x U U_in,
     rw f.mem_N at U_in,
     rcases U_in with ⟨V, V_in, H⟩,
@@ -325,10 +325,10 @@ def add_group_with_zero_nhd.of_open_add_subgroup
     let δ_G := λ (p : G × G), p.1 - p.2,
     let δ_H := λ (p : H × H), p.1 - p.2,
     let ι : H → G := subtype.val,
-    let N := nhds (0 : H),
+    let N := 𝓝 (0 : H),
     let Z := map subtype.val N,
     change map δ_G (filter.prod Z Z) ≤ Z,
-    have key₁: map δ_H (nhds (0, 0)) ≤ N,
+    have key₁: map δ_H (𝓝 (0, 0)) ≤ N,
     { rw [show N = nhds (δ_H (0, 0)), by simp [*]],
       exact continuous_sub.tendsto _ },
     have key₂ : δ_G ∘ ι⨯ι = ι ∘ δ_H,
@@ -339,7 +339,7 @@ def add_group_with_zero_nhd.of_open_add_subgroup
     calc map δ_G (filter.prod Z Z)
           = map δ_G (map (ι ⨯ ι) $ filter.prod N N) : by rw prod_map_map_eq;refl
       ... = map ι (map δ_H $ filter.prod N N)       : map_comm key₂ _
-      ... = map ι (map δ_H $ nhds (0, 0))           : by rw ← nhds_prod_eq
+      ... = map ι (map δ_H $ 𝓝 (0, 0))           : by rw ← nhds_prod_eq
       ... ≤ map ι N : map_mono key₁
   end,
   ..‹add_comm_group G› }
@@ -570,19 +570,14 @@ variables {α : Type*} {β : Type*} [topological_space β]
 lemma exists_limit_of_ultimately_const {φ : α → β} {f : filter α} (hf : f ≠ ⊥)
 {U : set α} (hU : U ∈ f) (h : ∀ x y ∈ U,  φ x = φ y) : ∃ b, tendsto φ f (nhds b) :=
 begin
-  have U_ne : U ≠ ∅,
-  { intro U_empty,
-    rw U_empty at hU,
-    exact mt empty_in_sets_eq_bot.1 hf hU },
-  cases exists_mem_of_ne_empty U_ne with x₀ x₀_in,
+  obtain ⟨x₀, x₀_in⟩ : ∃ x₀, x₀ ∈ U, from nonempty_of_mem_sets hf hU,
   use φ x₀,
   have : U ⊆ φ ⁻¹' {φ x₀},
   { intros x x_in,
     simp [h x x₀ x_in x₀_in] },
-  have : tendsto φ f (pure $ φ x₀),
-  { rw tendsto_pure,
-    exact mem_sets_of_superset hU this},
-  exact le_trans this (pure_le_nhds _)
+  calc
+   map φ f ≤ pure (φ x₀) : by { rw [le_pure_iff, mem_map], exact mem_sets_of_superset hU this}
+       ... ≤ 𝓝 φ x₀ : pure_le_nhds _
 end
 end
 
@@ -629,7 +624,7 @@ begin
   intro h,
   have : ι ⁻¹' ((λ x, x*h) '' V') ∈ comap ι (nhds h),
     from ⟨(λ (x : H), x * h) '' V', mul_right_nhds_one V'_in h, subset.refl _⟩,
-  apply exists_limit_of_ultimately_const dι.comap_nhds_neq_bot this, clear this,
+  apply exists_limit_of_ultimately_const dι.comap_nhds_ne_bot this, clear this,
   intros x y x_in y_in,
   rw mem_preimage at x_in y_in,
   rcases x_in with ⟨vₓ, vₓ_in, hx⟩,

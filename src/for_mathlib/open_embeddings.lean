@@ -12,7 +12,7 @@ def is_open_map.map (h : is_open_map f) : opens α → opens β :=
 λ U, ⟨f '' U.1, h U.1 U.2⟩
 
 def opens.map (U : opens α) : opens U → opens α :=
-is_open_map.map subtype.val $ (subtype_val.open_embedding U.2).is_open_map
+is_open_map.map subtype.val $ (is_open.open_embedding_subtype_val  U.2).is_open_map
 
 def opens.map_mono {U : opens α} {V W : opens U} (HVW : V ⊆ W) : opens.map U V ⊆ opens.map U W :=
 λ x h, set.image_subset _ HVW h

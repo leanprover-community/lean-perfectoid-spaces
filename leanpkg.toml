@@ -1,8 +1,8 @@
 [package]
 name = "lean-perfectoid-spaces"
 version = "0.1"
-lean_version = "3.4.2"
+lean_version = "leanprover-community/lean:3.5.1"
 path = "src"
 
 [dependencies]
-mathlib = {git = "https://github.com/leanprover-community/mathlib", rev = "340fa14657208c612a2a5348ef12014133cd9650"}
+mathlib = {git = "https://github.com/leanprover-community/mathlib", rev = "2e18388b55b60cdf5648e222c27bfc7389f9d64a"}

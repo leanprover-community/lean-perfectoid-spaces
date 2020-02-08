@@ -5,7 +5,7 @@ open set filter function lattice add_group_with_zero_nhd
 
 --local attribute [instance] pointwise_mul pointwise_add
 local attribute [instance] set.pointwise_mul_semiring
-local attribute [instance] set.pointwise_mul_action
+local attribute [instance] set.smul_set_action
 
 local notation `𝓝` x: 70 := nhds x
 
@@ -142,7 +142,7 @@ include h_directed h_left_mul h_mul
 
 def of_indexed_of_comm : subgroups_basis R :=
 { sets := range G,
-  ne_empty := range_ne_empty _,
+  ne_empty := range_nonempty _,
   directed := begin
     rintros _ _ ⟨i, rfl⟩ ⟨j, rfl⟩,
     rw exists_mem_range,
@@ -162,7 +162,9 @@ def of_indexed_of_comm : subgroups_basis R :=
     rw exists_mem_range',
     rcases h_left_mul x i with ⟨j, h⟩,
     use j,
-    rwa [← image_subset_iff, ← smul_set_eq_image]
+    rw ← image_subset_iff,
+    change (λ y, x • y) '' G j ⊆ G i,
+    rwa ← smul_set_eq_image,
   end,
   h_right_mul := begin
     rintros x _ ⟨i, rfl⟩,
@@ -170,7 +172,9 @@ def of_indexed_of_comm : subgroups_basis R :=
     rcases h_left_mul x i with ⟨j, h⟩,
     use j,
     simp only [mul_comm],
-    rwa [← image_subset_iff, ← smul_set_eq_image]
+    rw ← image_subset_iff,
+    change  (λ y, x • y) '' G j ⊆ G i,
+    rwa ← smul_set_eq_image
   end }
 
 end comm_ring

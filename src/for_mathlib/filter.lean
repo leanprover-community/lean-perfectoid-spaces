@@ -32,12 +32,7 @@ omit H
 
 
 open lattice
-variables (φ : α → β)
-
-lemma tendsto_pure (F : filter α) (b : β) : tendsto φ F (pure b) ↔ φ ⁻¹' {b} ∈ F :=
-tendsto_principal
-
-variables {G : filter β} {s : set α} {t : set β} {φ}
+variables {G : filter β} {s : set α} {t : set β} {φ : α → β}
 
 lemma mem_comap_sets_of_inj (h : ∀ a a', φ a = φ a' → a = a') :
   s ∈ comap φ G ↔ ∃ t ∈ G, s = φ ⁻¹' t :=
@@ -81,7 +76,7 @@ end
 
 class filter_basis (α : Type*) :=
 (sets : set $ set α)
-(ne_empty : sets ≠ ∅) -- avoid the degenerate case of an empty filter basis
+(ne_empty : sets.nonempty) -- avoid the degenerate case of an empty filter basis
 (directed : ∀ {s t}, s ∈ sets → t ∈ sets → ∃ u ∈ sets, u ⊆ s ∩ t)
 
 namespace filter_basis
@@ -95,10 +90,10 @@ instance : has_mem (set α) (filter_basis α) := ⟨λ s B, s ∈ B.sets⟩
 lemma mem_iff {B : filter_basis α} {s : set α} : s ∈ B ↔ s ∈ B.sets := iff.rfl
 
 def default (B : filter_basis α) : set α :=
-classical.some (ne_empty_iff_exists_mem.1 B.ne_empty)
+B.ne_empty.some
 
 def default_in (B : filter_basis α) : B.default ∈ B :=
-classical.some_spec (ne_empty_iff_exists_mem.1 B.ne_empty)
+B.ne_empty.some_mem
 
 def filter : filter α := generate B.sets
 
@@ -142,7 +137,7 @@ end
 
 def map {β : Type*} (f : α → β) (B : filter_basis α) : filter_basis β :=
 { sets := (image f) '' B.sets,
-  ne_empty := image_ne_empty _ _ B.ne_empty,
+  ne_empty := image_nonempty _ _ B.ne_empty,
   directed := begin
     rintros _ _ ⟨U, U_in, rfl⟩ ⟨V, V_in, rfl⟩,
     rcases filter_basis.directed U_in V_in with ⟨W, W_in, UVW⟩,
@@ -206,7 +201,7 @@ universes u v
 protected def prod {α : Type u} {β : Type v} (B : filter_basis α) (B' : filter_basis β) :
   filter_basis (α × β) :=
 { sets :=  (uncurry' set.prod) '' (B.sets.prod B'.sets),
-  ne_empty := image_ne_empty _ _ (set.prod_ne_empty_iff.2 ⟨B.ne_empty, B'.ne_empty⟩),
+  ne_empty := image_nonempty _ _ (set.prod_nonempty_iff.2 ⟨B.ne_empty, B'.ne_empty⟩),
   directed := begin
     rintros _ _ ⟨⟨P, P'⟩, ⟨P_in, P_in'⟩, rfl⟩ ⟨⟨Q, Q'⟩, ⟨Q_in, Q_in'⟩, rfl⟩,
     rcases filter_basis.directed P_in Q_in with ⟨U, U_in, hU⟩,

@@ -10,8 +10,8 @@ by { rw subset_compl_comm, simp }
 
 variables {α : Type*} {β : Type*} (f : α → β)
 
-lemma set.image_ne_empty (s : set α) (h : s ≠ ∅) : f '' s ≠ ∅ :=
-λ H, h (image_eq_empty.1 H)
+lemma set.image_nonempty (s : set α) (h : s.nonempty) : (f '' s).nonempty :=
+⟨f h.some, mem_image_of_mem _ h.some_mem⟩
 
 @[simp] lemma set.exists_mem_range {α : Type u} {β : Type v} {f : α → β} {P : β → Prop} :
   (∃ b ∈ range f, P b) ↔ ∃ a, P (f a) :=
