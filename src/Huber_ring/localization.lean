@@ -51,7 +51,7 @@ universes u v
 local attribute [instance, priority 0] classical.prop_decidable
 
 local attribute [instance] set.pointwise_mul_comm_semiring
-local attribute [instance] set.pointwise_mul_action
+local attribute [instance] set.smul_set_action
 local attribute [instance] set.pointwise_mul_image_is_semiring_hom
 
 namespace Huber_ring
@@ -78,6 +78,8 @@ instance : algebra A A⟮T/s⟯ := by delta away; apply_instance
 
 /-- The coercion from A to A⟮T/s⟯. -/
 instance : has_coe A A⟮T/s⟯ := ⟨λ a, (of_id A A⟮T/s⟯ : A → A⟮T/s⟯) a⟩
+
+set_option class.instance_max_depth 50
 
 /--An auxiliary subring, used to define the topology on `away T s`-/
 def D.aux : set A⟮T/s⟯ :=
