@@ -219,7 +219,7 @@ begin
   have hV : ↑K * (V : set A) ⊆ U,
   { rintros _ ⟨k, hk, v, hv, rfl⟩,
     apply classical.some_spec (nonarch.left_mul_subset U k),
-    refine ⟨k, set.mem_singleton _, v, _, rfl⟩,
+    refine ⟨v, _, rfl⟩,
     apply (finset.inf_le hk : V ≤ _),
     exact hv },
   replace hV : span ℤ _ ≤ span ℤ _ := span_mono hV,
@@ -302,7 +302,10 @@ begin
     change s_inv * (algebra_map _ _) = _ • (algebra_map _ _),
     rw [algebra.map_mul, ← mul_assoc],
     congr },
-  { apply ring.mem_closure, exact ⟨s_inv, hs_inv, _, ⟨t, ht, rfl⟩, rfl⟩ }
+  { apply ring.mem_closure,
+    refine ⟨t, ⟨t, ht, rfl⟩, _⟩,
+    rw set.mem_singleton_iff at hs_inv,
+    rw hs_inv, refl }
 end
 
 /--Helper lemma. A special case of mul_left, where the element a is the inverse of a power of s.-/
@@ -478,14 +481,13 @@ begin
         { rw is_ring_hom.map_one (lift T s f fs hs), exact is_submonoid.one_mem _ },
         { rw [is_ring_hom.map_neg (lift T s f fs hs), is_ring_hom.map_one (lift T s f fs hs)],
           exact is_add_subgroup.neg_mem (is_submonoid.one_mem _) },
-        { rintros _ ⟨sinv, hsinv, _, ⟨t, ht, rfl⟩, rfl⟩ b hb,
+        { rintros _ ⟨_, ⟨t, ht, rfl⟩, rfl⟩ b hb,
           rw is_ring_hom.map_mul (lift T s f fs hs),
           refine is_submonoid.mul_mem _ hb,
           apply ring.mem_closure,
-          erw [is_ring_hom.map_mul (lift T s f fs hs), lift_of],
-          refine ⟨_, _, _, ⟨t, ht, rfl⟩, rfl⟩,
-          rw mem_singleton_iff at hsinv ⊢,
-          subst hsinv,
+          erw [smul_eq_mul, is_ring_hom.map_mul (lift T s f fs hs), lift_of],
+          refine ⟨_, ⟨t, ht, rfl⟩, _⟩,
+          congr' 1,
           erw [← units.coe_map' (lift T s f fs hs), ← units.ext_iff, (units.map' _).map_inv,
             inv_inj', units.ext_iff, ← hs],
           { exact lift_of T s fs hs s } },
