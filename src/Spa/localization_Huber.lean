@@ -23,7 +23,7 @@ variables {A : Huber_pair}
 namespace Huber_pair
 open valuation linear_ordered_structure
 
-local attribute [instance] set.pointwise_mul_action
+local attribute [instance] set.smul_set_action
 
 local notation `A⟮T/s⟯` := spa.rational_open_data.localization rd
 local notation `s` := rd.s
@@ -35,6 +35,8 @@ def unit_s (hs : v s ≠ 0) : units (valuation_field v) :=
 units.mk0 (valuation_field_mk v s) $ valuation_field_mk_ne_zero v s hs
 
 example : (λ r, localization.of (valuation_ID_mk v r)) = valuation_field_mk v := rfl
+
+set_option class.instance_max_depth 64
 
 /--The set T/s (for some rational open subset D(T,s)) considered as subset of the valuation field.-/
 def v_T_over_s (hs : v s ≠ 0) : set (valuation_field v) :=
@@ -49,10 +51,8 @@ begin
   let u := unit_s hs,
   have remember_this : valuation_field_mk v s = u.val := rfl,
   unfold v_T_over_s at Hk,
-  rw set.mem_smul_set at Hk,
-  rcases Hk with ⟨l, Hl, rfl⟩,
-  rw v'.map_mul,
-  rcases Hl with ⟨t, ht, rfl⟩,
+  rcases Hk with ⟨l, ⟨t, ht, rfl⟩, rfl⟩,
+  rw [smul_eq_mul, v'.map_mul],
   change v' (↑(unit_s hs)⁻¹) * _ ≤ _,
   rw mul_comm,
   apply le_of_le_mul_right
