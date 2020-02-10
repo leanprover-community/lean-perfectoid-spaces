@@ -16,8 +16,7 @@ A subset U ⊆ Γ₀ is open if 0 ∉ U or if there is an invertible γ₀ ∈ �
 -/
 
 local attribute [instance, priority 0] classical.DLO
-
-local notation `𝓝` x: 70 := nhds x
+open_locale topological_space
 
 namespace linear_ordered_comm_group_with_zero
 open topological_space filter set linear_ordered_structure
@@ -72,7 +71,8 @@ begin
   intros x U U_in,
   by_cases hx : x = 0,
   { simp [hx, nhds_fun] at U_in ⊢,
-    rw [mem_infi (directed_lt Γ₀) ⟨1⟩, mem_Union] at U_in,
+    change U ∈ ⨅ (γ₀ : units Γ₀), principal {γ : Γ₀ | γ < ↑γ₀} at U_in,
+    rw mem_infi (directed_lt Γ₀) ⟨1⟩ at U_in,
     cases U_in with γ₀ h,
     use {γ : Γ₀ | γ < ↑γ₀},
     rw mem_principal_sets at h,
@@ -123,11 +123,10 @@ begin
   simp [nhds_fun],
   rw mem_infi (directed_lt Γ₀) ⟨1⟩,
   { split,
-    { rintro ⟨_, ⟨γ₀, rfl⟩, H⟩,
+    { rintro ⟨γ₀, H⟩,
       rw mem_principal_sets at H,
       use [γ₀, H] },
     { rintro ⟨γ₀, H⟩,
-      rw mem_Union,
       use γ₀,
       rwa mem_principal_sets } }
 end
@@ -146,7 +145,7 @@ variable (Γ₀)
 
 /--The topology on a linearly ordered group with zero element adjoined
 is compatible with the order structure.-/
-lemma ordered_topology : ordered_topology Γ₀ :=
+lemma ordered_topology : order_closed_topology Γ₀ :=
 { is_closed_le' :=
   begin
     show is_open {p : Γ₀ × Γ₀ | ¬p.fst ≤ p.snd},
@@ -175,7 +174,7 @@ lemma ordered_topology : ordered_topology Γ₀ :=
 local attribute [instance] ordered_topology
 
 /--The topology on a linearly ordered group with zero element adjoined is T₂ (aka Hausdorff).-/
-lemma t2_space : t2_space Γ₀ := ordered_topology.to_t2_space
+lemma t2_space : t2_space Γ₀ := order_closed_topology.to_t2_space
 
 local attribute [instance] t2_space
 
@@ -206,7 +205,7 @@ end
 /--The filter basis around the 0 element of a linearly ordered group with zero element adjoined.-/
 def zero_filter_basis : filter_basis Γ₀ :=
 { sets := range (λ γ : units Γ₀, {x : Γ₀ | x < γ}),
-  ne_empty := range_ne_empty _,
+  ne_empty := range_nonempty _,
   directed := begin
     intros s t hs ht,
     rw mem_range at hs ht,

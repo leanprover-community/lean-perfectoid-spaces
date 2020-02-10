@@ -118,7 +118,7 @@ variables {α : Type*} {β : Type*} [topological_space α] [topological_space β
 lemma is_open_map.image_nhds {f : α → β} (hf : is_open_map f)
   {x : α} {U : set α} (hU : U ∈ nhds x) : f '' U ∈ nhds (f x) :=
 begin
-  apply (is_open_map_iff_nhds_le f).mp hf x,
+  apply (is_open_map_iff_nhds_le).mp hf x,
   change f ⁻¹' (f '' U) ∈ nhds x,
   filter_upwards [hU],
   exact set.subset_preimage_image f U

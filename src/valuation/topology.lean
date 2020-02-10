@@ -8,14 +8,12 @@ import valuation.basic
 In this file, we define the topology induced by a valuation on a ring.
 -/
 
-local attribute [instance] classical.prop_decidable
+open_locale classical topological_space
 noncomputable theory
 
 local attribute [instance, priority 0] classical.DLO
 
 open set valuation linear_ordered_structure
-
-local notation `𝓝` x: 70 := nhds x
 
 section
 variables {Γ₀ : Type*} [linear_ordered_comm_group_with_zero Γ₀]
@@ -77,7 +75,7 @@ valuation.map_add _ _ _
 /-- The basis of open subgroups for the topology on a valued ring.-/
 def subgroups_basis : subgroups_basis R :=
 { sets := range (valued.v R).subgroup,
-  ne_empty := ne_empty_of_mem (mem_range_self 1),
+  ne_empty := ⟨_, mem_range_self 1⟩,
   directed := begin
     rintros _ _ ⟨γ₀, rfl⟩ ⟨γ₁, rfl⟩,
     rw exists_mem_range,
