@@ -12,7 +12,7 @@ constructing the valuations on the stalks of the structure presheaf.
 
 open_locale classical
 local attribute [instance] set.pointwise_mul_comm_semiring
-local attribute [instance] set.pointwise_mul_action
+local attribute [instance] set.smul_set_action
 
 local postfix `⁺` : 66 := λ A : Huber_pair, A.plus
 
@@ -134,6 +134,8 @@ lemma nonarchimedean (r : rational_open_data A) :
   topological_add_group.nonarchimedean (localization r) :=
 subgroups_basis.nonarchimedean
 
+set_option class.instance_max_depth 38
+
 /--If A is a Huber pair, and r = D(T,s) a rational open subset of Spa(A),
 and coe is the localization map A → A(T/s),
 then `power_bounded_data r` is the set { coe(t)/s | t ∈ T } ⊆ A(T/s).-/
@@ -141,8 +143,6 @@ def power_bounded_data (r : rational_open_data A) : set (localization r) :=
 let s_inv : localization r :=
   ((localization.to_units ⟨r.s, ⟨1, by simp⟩⟩)⁻¹ : units (localization r)) in
 (s_inv • (coe : A → localization r) '' r.T)
-
-set_option class.instance_max_depth 38
 
 theorem power_bounded (r : rational_open_data A) :
   is_power_bounded_subset (power_bounded_data r) :=
@@ -192,7 +192,9 @@ that the image of T1/s1 under the localization map is power-bounded in the ring 
 This is done in the following lemma. -/
 
 local attribute [instance] set.pointwise_mul_comm_semiring
-local attribute [instance] set.pointwise_mul_action
+local attribute [instance] set.smul_set_action
+
+set_option class.instance_max_depth 38
 
 lemma localization_map_is_cts_aux {r1 r2 : rational_open_data A} (h : r1 ≤ r2) :
 is_power_bounded_subset
@@ -200,17 +202,13 @@ is_power_bounded_subset
 begin
   refine power_bounded.subset _ (localization.power_bounded r2),
   intros x hx,
-  rcases hx with ⟨y, hy, hz, ⟨t₁, ht₁, rfl⟩, rfl⟩,
-  rw set.mem_singleton_iff at hy, rw hy, clear hy, clear y,
+  rcases hx with ⟨_, ⟨t₁, ht₁, rfl⟩, rfl⟩,
   let h' := h, -- need it later
   rcases h with ⟨a, ha, h₂⟩,
   rcases h₂ t₁ ht₁ with ⟨t₂, ht₂, N, hN⟩,
   show ↑(s_inv_aux r1 r2 _)⁻¹ * to_fun (localization r2) t₁ ∈
     localization.mk 1 ⟨r2.s, _⟩ • (of_id ↥A (localization r2)).to_fun '' r2.T,
-  rw set.mem_smul_set,
-  use (of_id ↥A (localization r2)).to_fun t₂,
-  existsi _, swap,
-    rw set.mem_image, use t₂, use ht₂,
+  refine ⟨(of_id ↥A (localization r2)).to_fun t₂, ⟨t₂, ht₂, rfl⟩, _⟩,
   rw [←units.mul_left_inj (s_inv_aux r1 r2 h'), units.mul_inv_cancel_left],
   show to_fun (localization r2) t₁ = to_fun (localization r2) (r1.s) *
     (localization.mk 1 ⟨r2.s, _⟩ * to_fun (localization r2) t₂),

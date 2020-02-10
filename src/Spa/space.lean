@@ -10,7 +10,7 @@ a basis for the topology on the adic spectrum of a Huber pair.
 
 open_locale classical
 local attribute [instance] set.pointwise_mul_comm_semiring
-local attribute [instance] set.pointwise_mul_action
+local attribute [instance] set.smul_set_action
 
 local postfix `⁺` : 66 := λ A : Huber_pair, A.plus
 
