@@ -11,7 +11,7 @@ import topology.opens
 
 universes u v
 
-open topological_space lattice lattice.lattice
+open topological_space lattice
 
 section opens
 

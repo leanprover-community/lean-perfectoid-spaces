@@ -1,4 +1,4 @@
-import data.equiv.algebra
+import data.equiv.mul_add
 import group_theory.quotient_group
 
 -- Some stuff is now in mathlib

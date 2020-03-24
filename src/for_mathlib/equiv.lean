@@ -1,7 +1,7 @@
 import data.equiv.basic algebra.group
 import order.basic logic.basic -- needed for order stuff
 import for_mathlib.with_zero
-import data.equiv.algebra
+import data.equiv.mul_add
 
 def equiv.with_zero_equiv {α β : Type*} (h : α ≃ β) : (with_zero α) ≃ (with_zero β) :=
 { to_fun := with_zero.map h,
