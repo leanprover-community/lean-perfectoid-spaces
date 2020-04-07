@@ -21,9 +21,10 @@ lemma set.image_nonempty (s : set α) (h : s.nonempty) : (f '' s).nonempty :=
   (∃ b, b ∈ range f ∧ P b) ↔ ∃ a, P (f a) :=
 ⟨by rintros ⟨b, ⟨a, rfl⟩, h⟩ ; exact ⟨a, h⟩, λ ⟨a, h⟩, ⟨f a, mem_range_self a, h⟩⟩
 
+/- Seems to exist already...
 lemma set.image_inter_subset (s t : set α) : f '' (s ∩ t) ⊆ f '' s ∩ f '' t :=
 by { rintros _ ⟨x, x_in, rfl⟩, exact ⟨mem_image_of_mem f x_in.1, mem_image_of_mem f x_in.2⟩ }
-
+-/
 
 def prod.map' {α₁ : Type*} {α₂ : Type*} {β₁ : Type*} {β₂ : Type*}
   (f : α₁ → α₂) (g : β₁ → β₂) : α₁ × β₁ → α₂ × β₂ := λ p : α₁ × β₁, ⟨f p.1, g p.2⟩

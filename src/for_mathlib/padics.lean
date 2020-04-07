@@ -1,7 +1,7 @@
 import data.padics
 import ring_theory.noetherian
 
-import for_mathlib.group_with_zero
+import algebra.group_with_zero
 import for_mathlib.ideal_operations
 
 noncomputable theory

@@ -1,26 +1,26 @@
 import data.equiv.basic algebra.group
 import order.basic logic.basic -- needed for order stuff
-import for_mathlib.with_zero
+-- import for_mathlib.with_zero
 import data.equiv.mul_add
 
-def equiv.with_zero_equiv {α β : Type*} (h : α ≃ β) : (with_zero α) ≃ (with_zero β) :=
-{ to_fun := with_zero.map h,
-  inv_fun := with_zero.map h.symm,
-  left_inv := λ x, begin cases x, refl, show some _ = some _, congr, exact h.left_inv x end,
-  right_inv := λ x, begin cases x, refl, show some _ = some _, congr, exact h.right_inv x end,
-}
+-- def equiv.with_zero_equiv {α β : Type*} (h : α ≃ β) : (with_zero α) ≃ (with_zero β) :=
+-- { to_fun := with_zero.map h,
+--   inv_fun := with_zero.map h.symm,
+--   left_inv := λ x, begin cases x, refl, show some _ = some _, congr, exact h.left_inv x end,
+--   right_inv := λ x, begin cases x, refl, show some _ = some _, congr, exact h.right_inv x end,
+-- }
 
 variables {α : Type*} {β : Type*} {γ : Type*}
 
 namespace mul_equiv
 variables [monoid α] [monoid β] [monoid γ]
 
-def to_with_zero_mul_equiv (h : α ≃* β) : (with_zero α) ≃* (with_zero β) :=
-{ map_mul' := λ x y,
-  begin cases x; cases y; try { refl},
-    show some _ = some _, congr, exact @is_mul_hom.map_mul _ _ _ _ h _ x y
-  end,
-  ..h.to_equiv.with_zero_equiv }
+-- def to_with_zero_mul_equiv (h : α ≃* β) : (with_zero α) ≃* (with_zero β) :=
+-- { map_mul' := λ x y,
+--   begin cases x; cases y; try { refl},
+--     show some _ = some _, congr, exact @is_mul_hom.map_mul _ _ _ _ h _ x y
+--   end,
+--   ..h.to_equiv.with_zero_equiv }
 
 end mul_equiv
 
@@ -109,9 +109,9 @@ def preorder_equiv.to_lt_equiv {α : Type*} {β : Type*} [preorder α] [preorder
   (he : α ≃≤ β) : α ≃< β := {lt_map := he.to_equiv.lt_map_of_le_map he.le_map
   ..he.to_equiv}
 
-def preorder_equiv.to_with_zero_preorder_equiv {α : Type*} {β : Type*} [preorder α] [preorder β]
-  (he : α ≃≤ β) : (with_zero α) ≃≤ (with_zero β) :=
-  { le_map := with_zero.map_le he.le_map
-    ..he.to_equiv.with_zero_equiv}
+-- def preorder_equiv.to_with_zero_preorder_equiv {α : Type*} {β : Type*} [preorder α] [preorder β]
+--   (he : α ≃≤ β) : (with_zero α) ≃≤ (with_zero β) :=
+--   { le_map := with_zero.map_le he.le_map
+--     ..he.to_equiv.with_zero_equiv}
 
 -- equiv of top spaces is already done -- it's called homeomorph in topology/constructions.lean
