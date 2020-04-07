@@ -40,9 +40,9 @@ lemma opens_supr_mem {γ : Type*} (X : γ → opens α)
 : ∀ i x, x ∈ (X i).val → x ∈ (⋃ X).val :=
 λ i x Hx,
 begin
-    unfold supr,
-    simp only [set.mem_Union, set.sUnion_image, set.bUnion_range, opens.Sup_s],
-    exact ⟨i, Hx⟩,
+  unfold supr,
+  simp only [set.mem_Union, set.sUnion_image, set.bUnion_range, opens.Sup_s],
+  exact ⟨i, Hx⟩,
 end
 
 lemma opens_supr_subset {γ : Type*} (X : γ → opens α)
