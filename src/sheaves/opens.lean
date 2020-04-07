@@ -38,10 +38,11 @@ def opens.empty : opens α := ⟨∅, is_open_empty⟩
 
 lemma opens_supr_mem {γ : Type*} (X : γ → opens α)
 : ∀ i x, x ∈ (X i).val → x ∈ (⋃ X).val :=
-λ i x Hx, let Xi := X i in
+λ i x Hx,
 begin
-    unfold supr; simp,
-    exact ⟨Xi.1, ⟨⟨Xi.2, i, by simp⟩, Hx⟩⟩,
+    unfold supr,
+    simp only [set.mem_Union, set.sUnion_image, set.bUnion_range, opens.Sup_s],
+    exact ⟨i, Hx⟩,
 end
 
 lemma opens_supr_subset {γ : Type*} (X : γ → opens α)
