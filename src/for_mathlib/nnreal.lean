@@ -6,9 +6,12 @@ import valuation.linear_ordered_comm_group_with_zero
 
 namespace nnreal
 
+-- This one has been PR'd
 @[simp, move_cast] lemma coe_max (x y : nnreal) : ((max x y : nnreal) : ℝ) = max (x : ℝ) (y : ℝ) :=
 by { delta max, split_ifs; refl }
 
+-- This stuff is already in mathlib
+/--/
 noncomputable instance : has_pow nnreal ℝ :=
 { pow := λ x q, ⟨x^q, real.rpow_nonneg_of_nonneg x.2 q⟩ }
 
@@ -29,7 +32,7 @@ by exact_mod_cast (mul_one a)
 
 lemma rpow_le_rpow {a b : nnreal} (h : a ≤ b) (hx : 0 ≤ x) : a^x ≤ b^x :=
 show (a^x : ℝ) ≤ b^x, from real.rpow_le_rpow a.2 h hx
-
+-/
 open linear_ordered_structure
 
 /-- The nonnegative real numbers form a linearly ordered commutative group with zero.-/

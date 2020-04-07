@@ -30,7 +30,7 @@ class linear_ordered_comm_group_with_zero (α : Type*)
 (zero_le' : ∀ a, (0:α) ≤ a)
 
 -- namespace with_zero
--- 
+--
 -- /-- Adjoining a zero element to a linearly ordered commutative group
 -- gives a linearly ordered commutative group with zero.-/
 -- instance (α : Type*) [linear_ordered_comm_group α] [decidable_eq α] :
@@ -42,7 +42,7 @@ class linear_ordered_comm_group_with_zero (α : Type*)
 --   .. (infer_instance : has_inv (with_zero α)),
 --   .. (infer_instance : zero_ne_one_class (with_zero α)),
 --   .. (infer_instance : mul_zero_class (with_zero α)) }
--- 
+--
 -- end with_zero
 
 namespace linear_ordered_comm_group_with_zero
