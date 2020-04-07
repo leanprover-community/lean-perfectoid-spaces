@@ -9,7 +9,7 @@ example {α : Type} [decidable_eq α] (a x : α) : (a ∈ ({x} : set α)) = (a �
 -- PR'ed
 lemma set.mem_compl_singleton_iff {α : Type*} {a x : α} : x ∈ -({a} : set α) ↔ x ≠ a :=
 by simp only [set.mem_singleton_iff, set.mem_compl_eq]
-#check finset.not_mem_singleton
+
 -- PR'ed
 lemma set.subset_compl_singleton_iff {α : Type*} {a : α} {s : set α} : s ⊆ -({a} : set α) ↔ a ∉ s :=
 by { rw subset_compl_comm, simp }
