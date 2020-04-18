@@ -2,9 +2,7 @@ import data.finset data.set.function tactic
 open set
 universes u v
 
--- "PR'ed" means mathlib #2353
-
-example {α : Type} [decidable_eq α] (a x : α) : (a ∈ ({x} : set α)) = (a ∈ ({x} : finset α)) := rfl
+-- "PR'ed" means mathlib #2353 (now merged as commit a8797ce73ef6464314045c3c724673345db9f91a)
 
 -- PR'ed
 lemma set.mem_compl_singleton_iff {α : Type*} {a x : α} : x ∈ -({a} : set α) ↔ x ≠ a :=
@@ -31,10 +29,9 @@ exists_range_iff
   (∃ b, b ∈ range f ∧ P b) ↔ ∃ a, P (f a) :=
 ⟨by rintros ⟨b, ⟨a, rfl⟩, h⟩ ; exact ⟨a, h⟩, λ ⟨a, h⟩, ⟨f a, mem_range_self a, h⟩⟩
 
-/- Seems to exist already...
+-- this is in an earlier PR by Patrick (now merged)
 lemma set.image_inter_subset (s t : set α) : f '' (s ∩ t) ⊆ f '' s ∩ f '' t :=
 by { rintros _ ⟨x, x_in, rfl⟩, exact ⟨mem_image_of_mem f x_in.1, mem_image_of_mem f x_in.2⟩ }
--/
 
 -- not about sets so not PR'ed
 def prod.map' {α₁ : Type*} {α₂ : Type*} {β₁ : Type*} {β₂ : Type*}
