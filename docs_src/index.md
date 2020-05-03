@@ -95,7 +95,7 @@ There are various ways to approach the subject of proof assistants for
 mathematicians.
 
 If you want to see what proving things interactively look like, you can go to 
-[first proofs online](https://leanprover-community.github.io/lean-web-editor/#url=https%3A%2F%2Fraw.githubusercontent.com%2Fleanprover-community%2Ftutorials%2Fmaster%2Fsrc%2Ffirst_proofs.lean),
+[first proofs online](https://leanprover-community.github.io/lean-web-editor/#url=https%3A%2F%2Fraw.githubusercontent.com%2Fleanprover-community%2Ftutorials%2Fmaster%2Fsrc%2Fexercises%2F00_first_proofs.lean),
 wait for a few seconds until you see "Lean is ready" instead of "Lean is
 busy" at the very top of the page. Then you can read everything, moving
 your cursor inside proofs (between `begin` and `end`) to see what Lean
