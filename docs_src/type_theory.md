@@ -85,9 +85,9 @@ technical sense.
 
 Unfortunately, computer scientists have strong emotional bounds to a
 very weird way of denoting functions like $n \mapsto 2\cdot n$.
-They write it as $\lambda\\, n, 2\cdot n$ or,
+They write it as $\lambda\, n, 2\cdot n$ or,
 when they need to make the variable type explicit,
-$\lambda\\, n : \NN, 2\cdot n$.
+$\lambda\, n : \NN, 2\cdot n$.
 Getting used to that is surprisingly not so hard.
 
 ## Curry-Howard and proofs
@@ -106,7 +106,7 @@ Indeed there is no need to introduce a new typing judgment since we want
 exactly the same rule as above:
 given $h_P : P$ (i.e. $h_P$ is a term of type $P$, i.e. $h_P$ a proof of $P$) 
 and $h : P \to Q$ (i.e. $h$ is a proof that $P$ implies $Q$) then
-$h\\, h_P : Q$ (ie. $h\\, h_P$ is a proof of $Q$).
+$h\, h_P : Q$ (ie. $h\, h_P$ is a proof of $Q$).
 
 Type themselves live in so-called universes. 
 Universes forms a countable sequence.
@@ -132,20 +132,20 @@ For instance, a proof of the statement $\forall n, \mathrm{even(2n)}$ is
 seen as the function sending a natural number $n$ to a proof that $2n$
 is even.
 Say we have a proof of this statement, ie a term
-$\mathrm{double\\_even} : \forall n, \mathrm{even(2n)}$,
+$\mathrm{double\_even} : \forall n, \mathrm{even(2n)}$,
 and a term 
-$\mathrm{succ\\_odd} : \forall n, \mathrm{even}(n) \to \mathrm{odd(n+1)}$.
+$\mathrm{succ\_odd} : \forall n, \mathrm{even}(n) \to \mathrm{odd(n+1)}$.
 We now want to use those to prove that, for every $n$, 
 $2n+1$ is odd.
 It means we need a term whose type is
 $\forall n, \mathrm{odd(2n+1)}$,
 ie a function with input $n$ and output a proof that
 $2n+1$ is odd.
-Given any $n$, it suffices to apply $\mathrm{succ\\_odd}$ to 
+Given any $n$, it suffices to apply $\mathrm{succ\_odd}$ to 
 $2n$ and a proof that $2n$ is even.
-And $\mathrm{double\\_even}\\, n$ is precisely the latter.
+And $\mathrm{double\_even}\, n$ is precisely the latter.
 So our full proof term is 
-$n \mapsto \mathrm{succ\\_odd}\\; 2n\\; (\mathrm{double\\_even}\\, n)$.
+$n \mapsto \mathrm{succ\_odd}\; 2n\; (\mathrm{double\_even}\, n)$.
 This is almost valid Lean code, we only need to remember
 to use $\lambda$ instead of $\mapsto$,
 and also remember computers don't like implicit multiplication.
@@ -200,7 +200,7 @@ There is a huge layer called the tactic framework whose role is
 to interact with the user,
 and write proof terms off stage. For example, it takes a very
 long time to prove from first principles
-that $(a+b)^3=a^3+3*a*b^2+3*a*b^2+b^3$ for integers $a$ and $b$,
+that $(a+b)^3=a^3+3ab^2+3ab^2+b^3$ for integers $a$ and $b$,
 the main problem being that re-arranging the sum of eight terms
 using only commutativity and associativity is incredibly tedious
 for a human.
@@ -246,7 +246,7 @@ principle.
 This is a term whose type is a bit complicated,
 but the important thing is it allows to recover the usual proof by
 induction principle (if, for some predicate $P$ on $\NN$,
-$P\\, 0$ holds and $P\\\, d \implies P\\, (succ\\, d)$ then $P\\, n$ hold for
+$P\, 0$ holds and $P\, d \implies P\, (succ\, d)$ then $P\, n$ hold for
 all $n$) and the possibility of defining sequences by induction (given 
 $u_0$ and the constraint $u_{n+1} = f(u_n)$).
 
