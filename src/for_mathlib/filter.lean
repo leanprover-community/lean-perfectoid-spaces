@@ -35,7 +35,7 @@ open lattice
 variables (φ : α → β)
 
 lemma tendsto_pure (F : filter α) (b : β) : tendsto φ F (pure b) ↔ φ ⁻¹' {b} ∈ F :=
-tendsto_principal
+le_pure_iff
 
 variables {G : filter β} {s : set α} {t : set β} {φ}
 
@@ -95,7 +95,7 @@ instance : has_mem (set α) (filter_basis α) := ⟨λ s B, s ∈ B.sets⟩
 lemma mem_iff {B : filter_basis α} {s : set α} : s ∈ B ↔ s ∈ B.sets := iff.rfl
 
 def default (B : filter_basis α) : set α :=
-classical.some (ne_empty_iff_exists_mem.1 B.ne_empty)
+-- classical.some (ne_empty_iff_exists_mem.1 B.ne_empty)
 
 def default_in (B : filter_basis α) : B.default ∈ B :=
 classical.some_spec (ne_empty_iff_exists_mem.1 B.ne_empty)
