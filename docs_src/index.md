@@ -84,7 +84,7 @@ its group theoretic sense.
 
 If you want to explore the project code interactively, you can read our
 [installation instructions](install.html). 
-You can also read [the paper](https://arxiv.org/abs/1910.12320) we wrote about
+You can also read [the paper](#publication) we wrote about
 this project. Note however that this paper was written for people who are
 somewhat familiar with formalized mathematics. If you are not used to this way of doing mathematics, you should probably first read the next section.
 In any case, you're welcome to ask questions about this project at the [Zulip chat](https://leanprover.zulipchat.com/#narrow/stream/116395-maths/topic/Perfectoid.20spaces).
@@ -118,6 +118,13 @@ You can also [install Lean](https://github.com/leanprover-community/mathlib/blob
 At any point in the process, it is a good idea to 
 ask questions at the [Zulip chat](https://leanprover.zulipchat.com/),
 especially in the [new members stream](https://leanprover.zulipchat.com/#narrow/stream/113489-new-members).
+
+## Publication
+
+> Kevin Buzzard, Johan Commelin, Patrick Massot.
+> *Formalising perfectoid spaces*.
+> [CPP 2020: 299-312](https://dl.acm.org/doi/10.1145/3372885.3373830).
+> arXiv:[1910.12320](https://arxiv.org/abs/1910.12320).
 
 ## Useful mathematical references
 
