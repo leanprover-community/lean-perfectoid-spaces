@@ -70,7 +70,7 @@ MathJax = {
 <p>After these introductory lines, we are almost ready to turn to the subject at hand. But we first need to introduce some notation and terminology.</p>
 <div class="highlight"><pre><span></span><span class="kn">section</span>
 <span class="c1">-- notation for the power bounded subring</span>
-<span class="n">local</span> <span class="kn">postfix</span> <span class="bp">`</span><span class="err">ᵒ</span><span class="bp">`</span> <span class="o">:</span> <span class="mi">66</span> <span class="o">:=</span> <span class="n">power_bounded_subring</span>
+<span class="kn">local</span> <span class="kd">postfix</span> <span class="bp">`ᵒ`</span> <span class="o">:</span> <span class="mi">66</span> <span class="o">:=</span> <span class="n">power_bounded_subring</span>
 </pre></div>
 
 <p>We start a section, and then setup notation for the power bounded subring. Because a postfix <code>ᵒ</code> is also useful as notation for other concepts, we choose to make this notation local to this file, instead of global notation for every file that imports this file.</p>
@@ -79,15 +79,15 @@ MathJax = {
 
 <p>This block opens some namespaces. Namespaces exist to avoid naming conflicts. As an example, there are functions <code>nat.add</code> and <code>int.add</code>, that define the addition on natural numbers and integers respectively. Thus we have two functions <code>add</code>, one in the namespace <code>nat</code>, and the other in the namespace <code>int</code>.</p>
 <p>By opening a namespace, we don’t have to write down the namespace prefix when referring to a definition or lemma in the namespace. For example, <code>topological_space.opens X</code> is the type of all open subsets of <code>X</code>. But because we open the namespace <code>topological_space</code>, we can simply write <code>opens X</code> later on in the file.</p>
-<div class="highlight"><pre><span></span><span class="kn">parameter</span> <span class="o">(</span><span class="n">p</span> <span class="o">:</span> <span class="n">primes</span><span class="o">)</span>
+<div class="highlight"><pre><span></span><span class="kd">parameter</span> <span class="o">(</span><span class="n">p</span> <span class="o">:</span> <span class="n">primes</span><span class="o">)</span>
 </pre></div>
 
 <p>Once and for all (in this file) we fix a prime number <code>p</code>.</p>
-<div class="highlight"><pre><span></span><span class="kn">structure</span> <span class="n">perfectoid_ring</span> <span class="o">(</span><span class="n">R</span> <span class="o">:</span> <span class="kt">Type</span><span class="o">)</span> <span class="o">[</span><span class="n">Huber_ring</span> <span class="n">R</span><span class="o">]</span> <span class="kn">extends</span> <span class="n">Tate_ring</span> <span class="n">R</span> <span class="o">:</span> <span class="kt">Prop</span> <span class="o">:=</span>
+<div class="highlight"><pre><span></span><span class="kd">structure</span> <span class="n">perfectoid_ring</span> <span class="o">(</span><span class="n">R</span> <span class="o">:</span> <span class="kt">Type</span><span class="o">)</span> <span class="o">[</span><span class="n">Huber_ring</span> <span class="n">R</span><span class="o">]</span> <span class="kd">extends</span> <span class="n">Tate_ring</span> <span class="n">R</span> <span class="o">:</span> <span class="kt">Prop</span> <span class="o">:=</span>
 <span class="o">(</span><span class="n">complete</span>  <span class="o">:</span> <span class="n">is_complete_hausdorff</span> <span class="n">R</span><span class="o">)</span>
 <span class="o">(</span><span class="n">uniform</span>   <span class="o">:</span> <span class="n">is_uniform</span> <span class="n">R</span><span class="o">)</span>
-<span class="o">(</span><span class="n">ramified</span>  <span class="o">:</span> <span class="bp">∃</span> <span class="n">ϖ</span> <span class="o">:</span> <span class="n">pseudo_uniformizer</span> <span class="n">R</span><span class="o">,</span> <span class="n">ϖ</span><span class="err">^</span><span class="n">p</span> <span class="err">∣</span> <span class="n">p</span> <span class="k">in</span> <span class="n">R</span><span class="err">ᵒ</span><span class="o">)</span>
-<span class="o">(</span><span class="n">Frobenius</span> <span class="o">:</span> <span class="n">surjective</span> <span class="o">(</span><span class="n">Frob</span> <span class="n">R</span><span class="err">ᵒ∕</span><span class="n">p</span><span class="o">))</span>
+<span class="o">(</span><span class="n">ramified</span>  <span class="o">:</span> <span class="bp">∃</span> <span class="n">ϖ</span> <span class="o">:</span> <span class="n">pseudo_uniformizer</span> <span class="n">R</span><span class="o">,</span> <span class="n">ϖ</span><span class="bp">^</span><span class="n">p</span> <span class="bp">∣</span> <span class="n">p</span> <span class="k">in</span> <span class="n">R</span><span class="bp">ᵒ</span><span class="o">)</span>
+<span class="o">(</span><span class="n">Frobenius</span> <span class="o">:</span> <span class="n">surjective</span> <span class="o">(</span><span class="n">Frob</span> <span class="n">R</span><span class="bp">ᵒ∕</span><span class="n">p</span><span class="o">))</span>
 </pre></div>
 
 <p>In this block there are a lot of things going on. This block defines a predicate, because it is of the form <code>structure something : Prop := something</code>. Indeed, <code>Prop</code> is the type of propositions: theorems, lemmas, properties, predicates… The predicate in question is <code>perfectoid_ring</code>, and it is a predicate for Huber rings. (Technically, it defines the predicate for types <code>R</code> endowed with the structure of a Huber ring.) The predicate extends another predicate, namely <code>Tate_ring R</code>, which is defined in one of the files that were imported at the top of this file. In addition to the conditions put forth in the predicate <code>Tate_ring</code>, this predicate imposes four new conditions: * it requires <code>R</code> to be complete and Hausdorff * <code>R</code> should be uniform * it asks for the existence of a pseudo-uniformizer, whose <code>p</code>-th power divides <code>p</code> in the subring <code>Rᵒ</code> * and finally it requires that the p’th power map on the power-bounded subring modulo <code>p</code> is surjective.</p>
@@ -107,19 +107,19 @@ MathJax = {
 </pre></div>
 
 <p>This comment explains the symbol <code>CLVRS</code> that is used in the rest of the file. It is a category that is defined in one of the imported files.</p>
-<div class="highlight"><pre><span></span><span class="c">/-</span><span class="cm">- Condition for an object of CLVRS to be perfectoid: every point should have an open</span>
-<span class="cm">neighbourhood isomorphic to Spa(A) for some perfectoid ring A.-/</span>
-<span class="n">def</span> <span class="n">is_perfectoid</span> <span class="o">(</span><span class="n">X</span> <span class="o">:</span> <span class="n">CLVRS</span><span class="o">)</span> <span class="o">:</span> <span class="kt">Prop</span> <span class="o">:=</span>
+<div class="highlight"><pre><span></span><span class="sd">/-- Condition for an object of CLVRS to be perfectoid: every point should have an open</span>
+<span class="sd">neighbourhood isomorphic to Spa(A) for some perfectoid ring A.-/</span>
+<span class="kd">def</span> <span class="n">is_perfectoid</span> <span class="o">(</span><span class="n">X</span> <span class="o">:</span> <span class="n">CLVRS</span><span class="o">)</span> <span class="o">:</span> <span class="kt">Prop</span> <span class="o">:=</span>
 <span class="bp">∀</span> <span class="n">x</span> <span class="o">:</span> <span class="n">X</span><span class="o">,</span> <span class="bp">∃</span> <span class="o">(</span><span class="n">U</span> <span class="o">:</span> <span class="n">opens</span> <span class="n">X</span><span class="o">)</span> <span class="o">(</span><span class="n">A</span> <span class="o">:</span> <span class="n">Huber_pair</span><span class="o">)</span> <span class="o">[</span><span class="n">perfectoid_ring</span> <span class="n">A</span><span class="o">],</span>
-<span class="o">(</span><span class="n">x</span> <span class="err">∈</span> <span class="n">U</span><span class="o">)</span> <span class="bp">∧</span> <span class="o">(</span><span class="n">Spa</span> <span class="n">A</span> <span class="err">≊</span> <span class="n">U</span><span class="o">)</span>
+<span class="o">(</span><span class="n">x</span> <span class="bp">∈</span> <span class="n">U</span><span class="o">)</span> <span class="bp">∧</span> <span class="o">(</span><span class="n">Spa</span> <span class="n">A</span> <span class="bp">≊</span> <span class="n">U</span><span class="o">)</span>
 </pre></div>
 
 <p>We now define a predicate on objects of the category <code>CVLRS</code>. Such an object is perfectoid if every point has an open neighbourhood that is isomorphic to the adic spectrum of a perfectoid ring.</p>
 <p>Finally we define the type of perfectoid spaces. It is the type of all objects of <code>CLVRS</code> that satisfy the predicate <code>is_perfectoid</code>.</p>
-<div class="highlight"><pre><span></span><span class="c">/-</span><span class="cm">- The category of perfectoid spaces.-/</span>
-<span class="n">def</span> <span class="n">PerfectoidSpace</span> <span class="o">:=</span> <span class="o">{</span><span class="n">X</span> <span class="o">:</span> <span class="n">CLVRS</span> <span class="bp">//</span> <span class="n">is_perfectoid</span> <span class="n">X</span><span class="o">}</span>
+<div class="highlight"><pre><span></span><span class="sd">/-- The category of perfectoid spaces.-/</span>
+<span class="kd">def</span> <span class="n">PerfectoidSpace</span> <span class="o">:=</span> <span class="o">{</span><span class="n">X</span> <span class="o">:</span> <span class="n">CLVRS</span> <span class="bp">//</span> <span class="n">is_perfectoid</span> <span class="n">X</span><span class="o">}</span>
 
-<span class="kn">end</span>
+<span class="kd">end</span>
 </pre></div>
 
       <footer class="site-footer">
