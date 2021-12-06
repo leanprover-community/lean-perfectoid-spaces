@@ -13,7 +13,7 @@ $ cd lean-perfectoid-spaces
 /lean-perfectoid-spaces$ leanpkg build
 ```
 Cut'n'paste-friendly version:
-```
+```bash
 git clone https://github.com/leanprover-community/lean-perfectoid-spaces
 cd lean-perfectoid-spaces
 leanpkg configure
