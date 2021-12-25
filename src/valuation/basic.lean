@@ -246,6 +246,22 @@ begin
   rwa [v₁.map_zero, v₂.map_zero] at this,
 end
 
+lemma eq_zero (h : v₁.is_equiv v₂) {r : R} :
+  v₁ r = 0 ↔ v₂ r = 0 :=
+by { rw [← v₁.map_zero, ← v₂.map_zero], exact h.val_eq }
+
+lemma eq_one (h : v₁.is_equiv v₂) {r : R} :
+  v₁ r = 1 ↔ v₂ r = 1 :=
+by { rw [← v₁.map_one, ← v₂.map_one], exact h.val_eq }
+
+lemma lt_iff (h : v₁.is_equiv v₂) {r s : R} :
+  v₁ r < v₁ s ↔ v₂ r < v₂ s :=
+by { have := not_iff_not_of_iff (h s r), push_neg at this, exact this }
+
+lemma lt_one (h : v₁.is_equiv v₂) {r : R} :
+  v₁ r < 1 ↔ v₂ r < 1 :=
+by { rw [← v₁.map_one, ← v₂.map_one], exact h.lt_iff }
+
 end is_equiv -- end of namespace
 
 lemma is_equiv_of_map_strict_mono [ring R] {v : valuation R Γ₀}
@@ -321,6 +337,13 @@ begin
       { exact one_ne_zero },
       { rwa v.ne_zero_iff at h₁, } },
     { push_neg at hx, exact ⟨_, hx⟩ } }
+end
+
+lemma is_equiv.is_trivial {v₁ : valuation R Γ₀} {v₂ : valuation R Γ'₀} (h : v₁.is_equiv v₂) :
+  v₁.is_trivial ↔ v₂.is_trivial :=
+begin
+  apply forall_congr, intro r,
+  exact or_congr h.eq_zero h.eq_one,
 end
 
 end trivial -- end of section
